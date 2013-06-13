@@ -767,7 +767,7 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 	*/
 	sp = csp = (Uint32 *) src->pixels;
 	dp = (Uint32 *) dst->pixels;
-	dgap = dst->pitch / 4 - dst->w;
+	dgap = dst->pitch / dst->format->BytesPerPixel - dst->w;
 
 	if (flipx) csp += (src->w-1);
 	if (flipy) csp  = ( (Uint32*)csp + src->pitch*(src->h-1) );
@@ -796,7 +796,7 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 			csy -= dst->h;
 			(*csay)++;
 		}
-		(*csay) *= src->pitch / 4 * (flipy ? -1 : 1);
+		(*csay) *= src->pitch / dst->format->BytesPerPixel * (flipy ? -1 : 1);
 		csay++;
 	}
 	/*
