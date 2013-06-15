@@ -54,12 +54,12 @@ namespace
 	
 struct HairBleach
 {
-	static const Uint8 ColorGroup = 15<<4;
-	static const Uint8 ColorShade = 15;
+	static const Uint32 ColorGroup = 15<<4;
+	static const Uint32 ColorShade = 15;
 
-	static const Uint8 Hair = 9 << 4;
-	static const Uint8 Face = 6 << 4;
-	static inline void func(Uint8& src, const Uint8& cutoff, int, int, int)
+	static const Uint32 Hair = 9 << 4;
+	static const Uint32 Face = 6 << 4;
+	static inline void func(Uint32& src, const Uint32& cutoff, int, int, int)
 	{
 		if(src > cutoff && src <= Face + 15)
 		{
@@ -487,17 +487,17 @@ XcomResourcePack::XcomResourcePack(std::vector<std::pair<std::string, ExtraSprit
 	{
 		//cheast frame
 		Surface *surf = xcom_1->getFrame(4*8 + i);
-		ShaderMove<Uint8> head = ShaderMove<Uint8>(surf);
+		ShaderMove<Uint32> head = ShaderMove<Uint32>(surf);
 		GraphSubset dim = head.getBaseDomain();
 		surf->lock();
 		dim.beg_y = 6;
 		dim.end_y = 9;
 		head.setDomain(dim);
-		ShaderDraw<HairBleach>(head, ShaderScalar<Uint8>(HairBleach::Face+5));
+		ShaderDraw<HairBleach>(head, ShaderScalar<Uint32>(HairBleach::Face+5));
 		dim.beg_y = 9;
 		dim.end_y = 10;
 		head.setDomain(dim);
-		ShaderDraw<HairBleach>(head, ShaderScalar<Uint8>(HairBleach::Face+6));
+		ShaderDraw<HairBleach>(head, ShaderScalar<Uint32>(HairBleach::Face+6));
 		surf->unlock();
 	}
 	
@@ -505,7 +505,7 @@ XcomResourcePack::XcomResourcePack(std::vector<std::pair<std::string, ExtraSprit
 	{
 		//fall frame
 		Surface *surf = xcom_1->getFrame(264 + i);
-		ShaderMove<Uint8> head = ShaderMove<Uint8>(surf);
+		ShaderMove<Uint32> head = ShaderMove<Uint32>(surf);
 		GraphSubset dim = head.getBaseDomain();
 		dim.beg_y = 0;
 		dim.end_y = 24;
@@ -513,7 +513,7 @@ XcomResourcePack::XcomResourcePack(std::vector<std::pair<std::string, ExtraSprit
 		dim.end_x = 20;
 		head.setDomain(dim);
 		surf->lock();
-		ShaderDraw<HairBleach>(head, ShaderScalar<Uint8>(HairBleach::Face+6));
+		ShaderDraw<HairBleach>(head, ShaderScalar<Uint32>(HairBleach::Face+6));
 		surf->unlock();
 	}
 	

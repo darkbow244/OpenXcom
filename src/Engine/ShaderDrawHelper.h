@@ -218,16 +218,16 @@ public:
 
 /**
  * This is surface argument to `ShaderDraw`.
- * every pixel of this surface will have type `Uint8`.
+ * every pixel of this surface will have type `Uint32`.
  * Can be constructed from `Surface*`.
  * Modify pixels of this surface, that will modifying original data.
  */	
 template<>
-class ShaderBase<Uint8>
+class ShaderBase<Uint32>
 {
 public:
-	typedef Uint8* PixelPtr;
-	typedef Uint8& PixelRef;
+	typedef Uint32* PixelPtr;
+	typedef Uint32& PixelRef;
 	
 protected:
 	const PixelPtr _orgin;
@@ -254,7 +254,7 @@ public:
      * @param s vector that are treated as surface
      */		
 	inline ShaderBase(Surface* s):
-		_orgin((Uint8*) s->getSurface()->pixels),
+		_orgin((Uint32*) s->getSurface()->pixels),
 		_range_base(s->getWidth(), s->getHeight()),
 		_range_domain(s->getWidth(), s->getHeight()),
 		_pitch(s->getSurface()->pitch)		
@@ -272,7 +272,7 @@ public:
      * @param max_x x dimension of `f`
      * @param max_y y dimension of `f`
      */	
-	inline ShaderBase(std::vector<Uint8>& f, int max_x, int max_y):
+	inline ShaderBase(std::vector<Uint32>& f, int max_x, int max_y):
 		_orgin(&(f[0])),
 		_range_base(max_x, max_y),
 		_range_domain(max_x, max_y),
@@ -311,16 +311,16 @@ public:
 
 /**
  * This is surface argument to `ShaderDraw`.
- * every pixel of this surface will have type `const Uint8`.
+ * every pixel of this surface will have type `const Uint32`.
  * Can be constructed from `const Surface*`.
  * You cant modify pixel in that surface.
  */	
 template<>
-class ShaderBase<const Uint8>
+class ShaderBase<const Uint32>
 {
 public:
-	typedef const Uint8* PixelPtr;
-	typedef const Uint8& PixelRef;
+	typedef const Uint32* PixelPtr;
+	typedef const Uint32& PixelRef;
 	
 protected:
 	const PixelPtr _orgin;
@@ -340,7 +340,7 @@ public:
 	}
 	
 	///copy constructor	
-	inline ShaderBase(const ShaderBase<Uint8>& s):
+	inline ShaderBase(const ShaderBase<Uint32>& s):
 		_orgin(s.ptr()),
 		_range_base(s.getBaseDomain()),
 		_range_domain(s.getDomain()),
@@ -357,7 +357,7 @@ public:
      * @param s vector that are treated as surface
      */	
 	inline ShaderBase(const Surface* s):
-		_orgin((Uint8*) s->getSurface()->pixels),
+		_orgin((Uint32*) s->getSurface()->pixels),
 		_range_base(s->getWidth(), s->getHeight()),
 		_range_domain(s->getWidth(), s->getHeight()),
 		_pitch(s->getSurface()->pitch)		
@@ -375,7 +375,7 @@ public:
      * @param max_x x dimension of `f`
      * @param max_y y dimension of `f`
      */
-	inline ShaderBase(const std::vector<Uint8>& f, int max_x, int max_y):
+	inline ShaderBase(const std::vector<Uint32>& f, int max_x, int max_y):
 		_orgin(&(f[0])),
 		_range_base(max_x, max_y),
 		_range_domain(max_x, max_y),

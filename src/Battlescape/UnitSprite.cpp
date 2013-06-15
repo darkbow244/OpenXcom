@@ -110,7 +110,7 @@ struct ColorFace
 
 	static const Uint8 Hair = 9 << 4;
 	static const Uint8 Face = 6 << 4;
-	static inline void func(Uint8& src, const Uint8& hair_color, const Uint8& face_color, int, int)
+	static inline void func(Uint32& src, const Uint32& hair_color, const Uint32& face_color, int, int)
 	{
 		if((src & ColorGroup) == Hair)
 		{
