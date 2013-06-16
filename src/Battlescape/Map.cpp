@@ -75,7 +75,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param visibleMapHeight Current visible map height.
  */
-Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false)
+Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight, int bpp) : InteractiveSurface(width, height, x, y, bpp), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false)
 {
 	_previewSetting = Options::getInt("battleNewPreviewPath");
 	if (Options::getBool("TraceAI"))
@@ -203,7 +203,7 @@ void Map::draw()
  */
 void Map::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
-	Surface::setPalette(colors, firstcolor, ncolors);
+	_originalColors = colors;
 	for (std::vector<MapDataSet*>::const_iterator i = _save->getMapDataSets()->begin(); i != _save->getMapDataSets()->end(); ++i)
 	{
 		(*i)->getSurfaceset()->setPalette(colors, firstcolor, ncolors);
@@ -1078,7 +1078,7 @@ void Map::cacheUnits()
  */
 void Map::cacheUnit(BattleUnit *unit)
 {
-	UnitSprite *unitSprite = new UnitSprite(_spriteWidth, _spriteHeight, 0, 0);
+	UnitSprite *unitSprite = new UnitSprite(_spriteWidth, _spriteHeight, 0, 0, 32);
 	unitSprite->setPalette(this->getPalette());
 	bool invalid, dummy;
 	int numOfParts = unit->getArmor()->getSize() == 1?1:unit->getArmor()->getSize()*2;

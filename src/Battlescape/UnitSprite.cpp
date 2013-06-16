@@ -44,7 +44,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-UnitSprite::UnitSprite(int width, int height, int x, int y) : Surface(width, height, x, y), _unit(0), _itemA(0), _itemB(0), _unitSurface(0), _itemSurfaceA(0), _itemSurfaceB(0), _part(0), _animationFrame(0)
+UnitSprite::UnitSprite(int width, int height, int x, int y, int bpp) : Surface(width, height, x, y, bpp), _unit(0), _itemA(0), _itemB(0), _unitSurface(0), _itemSurfaceA(0), _itemSurfaceB(0), _part(0), _animationFrame(0)
 {
 
 
@@ -105,11 +105,11 @@ namespace
 
 struct ColorFace
 {
-	static const Uint8 ColorGroup = 15<<4;
-	static const Uint8 ColorShade = 15;
+	static const Uint32 ColorGroup = 15<<4;
+	static const Uint32 ColorShade = 15;
 
-	static const Uint8 Hair = 9 << 4;
-	static const Uint8 Face = 6 << 4;
+	static const Uint32 Hair = 9 << 4;
+	static const Uint32 Face = 6 << 4;
 	static inline void func(Uint32& src, const Uint32& hair_color, const Uint32& face_color, int, int)
 	{
 		if((src & ColorGroup) == Hair)
@@ -247,7 +247,7 @@ void UnitSprite::drawRoutine0()
 						break;
 				}
 				lock();
-				ShaderDraw<ColorFace>(ShaderSurface(this), ShaderScalar(hair_color), ShaderScalar(face_color));
+//				ShaderDraw<ColorFace>(ShaderSurface(this), ShaderScalar(hair_color), ShaderScalar(face_color));
 				unlock();
 			}
 		}
@@ -491,11 +491,11 @@ void UnitSprite::drawRoutine0()
 					break;
 			}
 			lock();
-			ShaderDraw<ColorFace>(ShaderSurface(newLeftArm), ShaderScalar(hair_color), ShaderScalar(face_color));
+/*			ShaderDraw<ColorFace>(ShaderSurface(newLeftArm), ShaderScalar(hair_color), ShaderScalar(face_color));
 			ShaderDraw<ColorFace>(ShaderSurface(newRightArm), ShaderScalar(hair_color), ShaderScalar(face_color));
 			ShaderDraw<ColorFace>(ShaderSurface(newTorso), ShaderScalar(hair_color), ShaderScalar(face_color));
 			ShaderDraw<ColorFace>(ShaderSurface(newLegs), ShaderScalar(hair_color), ShaderScalar(face_color));
-			unlock();
+*/			unlock();
 			torso = newTorso;
 			legs = newLegs;
 			leftArm = newLeftArm;
