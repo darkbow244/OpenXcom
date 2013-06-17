@@ -163,7 +163,7 @@ GlobeStaticData static_data;
 
 struct Ocean
 {
-	static inline void func(Uint32& dest, const int&, const int&, const int&, const int&)
+	static inline void func(Uint8& dest, const int&, const int&, const int&, const int&)
 	{
 		dest = Palette::blockOffset(12) + 0;
 	}
@@ -171,7 +171,7 @@ struct Ocean
 
 struct CreateShadow
 {
-	static inline Uint32 getShadowValue(const Uint32& dest, const Cord& earth, const Cord& sun, const Sint16& noise)
+	static inline Uint8 getShadowValue(const Uint8& dest, const Cord& earth, const Cord& sun, const Sint16& noise)
 	{
 		Cord temp = earth;
 		//diff
@@ -231,7 +231,7 @@ struct CreateShadow
 		}
 	}
 	
-	static inline void func(Uint32& dest, const Cord& earth, const Cord& sun, const Sint16& noise, const int&)
+	static inline void func(Uint8& dest, const Cord& earth, const Cord& sun, const Sint16& noise, const int&)
 	{
 		if(dest && earth.z)
 			dest = getShadowValue(dest, earth, sun, noise);

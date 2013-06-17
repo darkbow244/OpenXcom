@@ -203,7 +203,7 @@ void Map::draw()
  */
 void Map::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
-	_originalColors = colors;
+	Surface::setPalette(colors, firstcolor, ncolors);
 	for (std::vector<MapDataSet*>::const_iterator i = _save->getMapDataSets()->begin(); i != _save->getMapDataSets()->end(); ++i)
 	{
 		(*i)->getSurfaceset()->setPalette(colors, firstcolor, ncolors);
@@ -1078,7 +1078,7 @@ void Map::cacheUnits()
  */
 void Map::cacheUnit(BattleUnit *unit)
 {
-	UnitSprite *unitSprite = new UnitSprite(_spriteWidth, _spriteHeight, 0, 0, 32);
+	UnitSprite *unitSprite = new UnitSprite(_spriteWidth, _spriteHeight, 0, 0, 8);
 	unitSprite->setPalette(this->getPalette());
 	bool invalid, dummy;
 	int numOfParts = unit->getArmor()->getSize() == 1?1:unit->getArmor()->getSize()*2;

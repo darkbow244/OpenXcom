@@ -110,13 +110,13 @@ struct controler<ShaderMove<Pixel> > : public controler_base<typename ShaderMove
 
 }//namespace helper
 
-inline ShaderMove<Uint32> ShaderSurface(Surface* s)
+inline ShaderMove<Uint8> ShaderSurface(Surface* s)
 {
-	return ShaderMove<Uint32>(s);
+	return ShaderMove<Uint8>(s);
 }
-inline ShaderMove<Uint32> ShaderSurface(Surface* s, int x, int y)
+inline ShaderMove<Uint8> ShaderSurface(Surface* s, int x, int y)
 {
-	return ShaderMove<Uint32>(s, x, y);
+	return ShaderMove<Uint8>(s, x, y);
 }
 
 }//namespace OpenXcom

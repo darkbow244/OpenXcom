@@ -830,7 +830,7 @@ struct ColorReplace
 	* @param shade value of shade of this surface
 	* @param newColor new color to set (it should be offseted by 4)
 	*/
-	static inline void func(Uint32& dest, const Uint32& src, const int& shade, const int& newColor, const int&)
+	static inline void func(Uint8& dest, const Uint8& src, const int& shade, const int& newColor, const int&)
 	{
 		if(src)
 		{
@@ -859,7 +859,7 @@ struct StandartShade
 	* @param notused
 	* @param notused
 	*/
-	static inline void func(Uint32& dest, const Uint32& src, const int& shade, const int&, const int&)
+	static inline void func(Uint8& dest, const Uint8& src, const int& shade, const int&, const int&)
 	{
 		if(src)
 		{
@@ -889,7 +889,7 @@ struct StandartShade
  */
 void Surface::blitNShade(Surface *surface, int x, int y, int off, bool half, int newBaseColor)
 {
-	ShaderMove<Uint32> src(this, x, y);
+	ShaderMove<Uint8> src(this, x, y);
 	if(half)
 	{
 		GraphSubset g = src.getDomain();
