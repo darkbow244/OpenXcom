@@ -589,7 +589,9 @@ void BattlescapeState::mapOver(Action *action)
 		{
 			// Set the mouse cursor back
 			SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-			SDL_WarpMouse(xBeforeMouseScrolling, yBeforeMouseScrolling);
+			assert (0 && "FIXME");
+			SDL_Window *win = 0;
+			SDL_WarpMouseInWindow(win, xBeforeMouseScrolling, yBeforeMouseScrolling);
 			SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 		}
 		// Check the threshold
