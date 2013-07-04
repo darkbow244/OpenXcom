@@ -343,8 +343,8 @@ void InteractiveSurface::mouseOut(Action *action, State *state)
  */
 void InteractiveSurface::keyboardPress(Action *action, State *state)
 {
-	std::map<SDLKey, ActionHandler>::iterator allHandler = _keyPress.find(SDLK_UNKNOWN);
-	std::map<SDLKey, ActionHandler>::iterator oneHandler = _keyPress.find(action->getDetails()->key.keysym.sym);
+	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyPress.find(SDLK_UNKNOWN);
+	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyPress.find(action->getDetails()->key.keysym.sym);
 	if (allHandler != _keyPress.end())
 	{
 		ActionHandler handler = allHandler->second;
@@ -368,8 +368,8 @@ void InteractiveSurface::keyboardPress(Action *action, State *state)
  */
 void InteractiveSurface::keyboardRelease(Action *action, State *state)
 {
-	std::map<SDLKey, ActionHandler>::iterator allHandler = _keyRelease.find(SDLK_UNKNOWN);
-	std::map<SDLKey, ActionHandler>::iterator oneHandler = _keyRelease.find(action->getDetails()->key.keysym.sym);
+	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyRelease.find(SDLK_UNKNOWN);
+	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyRelease.find(action->getDetails()->key.keysym.sym);
 	if (allHandler != _keyRelease.end())
 	{
 		ActionHandler handler = allHandler->second;
@@ -467,7 +467,7 @@ void InteractiveSurface::onMouseOut(ActionHandler handler)
  * @param handler Action handler.
  * @param key Keyboard button to check for (note: ignores key modifiers). Set to 0 for any key.
  */
-void InteractiveSurface::onKeyboardPress(ActionHandler handler, SDLKey key)
+void InteractiveSurface::onKeyboardPress(ActionHandler handler, SDL_Keycode key)
 {
 	if (handler != 0)
 	{
@@ -484,7 +484,7 @@ void InteractiveSurface::onKeyboardPress(ActionHandler handler, SDLKey key)
  * @param handler Action handler.
  * @param key Keyboard button to check for (note: ignores key modifiers). Set to 0 for any key.
  */
-void InteractiveSurface::onKeyboardRelease(ActionHandler handler, SDLKey key)
+void InteractiveSurface::onKeyboardRelease(ActionHandler handler, SDL_Keycode key)
 {
 	if (handler != 0)
 	{

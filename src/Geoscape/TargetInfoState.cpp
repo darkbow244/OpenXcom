@@ -64,8 +64,8 @@ TargetInfoState::TargetInfoState(Game *game, Target *target) : State(game), _tar
 	_btnOk->setColor(Palette::blockOffset(8)+5);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&TargetInfoState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&TargetInfoState::btnOkClick, (SDLKey)Options::getInt("keyOk"));
-	_btnOk->onKeyboardPress((ActionHandler)&TargetInfoState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&TargetInfoState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
+	_btnOk->onKeyboardPress((ActionHandler)&TargetInfoState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
 
 	_txtTitle->setColor(Palette::blockOffset(8)+10);
 	_txtTitle->setBig();

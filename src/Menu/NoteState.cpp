@@ -16,84 +16,74 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "UfoLostState.h"
+#include "NoteState.h"
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Language.h"
+#include "../Engine/Font.h"
 #include "../Engine/Palette.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
+#include "LanguageState.h"
 #include "../Engine/Options.h"
 
 namespace OpenXcom
 {
 
 /**
- * Initializes all the elements in the Ufo Lost window.
+ * Initializes all the elements in the Main Menu window.
  * @param game Pointer to the core game.
- * @param id Name of the UFO.
  */
-UfoLostState::UfoLostState(Game *game, std::wstring id) : State(game), _id(id)
+NoteState::NoteState(Game *game) : State(game)
 {
-	_screen = false;
-
 	// Create objects
-	_window = new Window(this, 192, 104, 32, 48, POPUP_BOTH);
-	_btnOk = new TextButton(60, 12, 98, 112);
-	_txtTitle = new Text(160, 30, 48, 72);
+	_window = new Window(this, 256, 130, 32, 35, POPUP_BOTH);
+	_btnOk = new TextButton(192, 20, 64, 136);
+	_txtTitle = new Text(240, 70, 40, 45);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(7)), Palette::backPos, 16);
+	_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
+	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(0)), Palette::backPos, 16);
 
 	add(_window);
 	add(_btnOk);
 	add(_txtTitle);
-
+	
 	centerAllSurfaces();
 
 	// Set up objects
 	_window->setColor(Palette::blockOffset(8)+5);
-	_window->setBackground(_game->getResourcePack()->getSurface("BACK15.SCR"));
+	_window->setBackground(_game->getResourcePack()->getSurface("BACK01.SCR"));
 
 	_btnOk->setColor(Palette::blockOffset(8)+5);
-	_btnOk->setText(tr("STR_OK"));
-	_btnOk->onMouseClick((ActionHandler)&UfoLostState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&UfoLostState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
-	_btnOk->onKeyboardPress((ActionHandler)&UfoLostState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnOk->setText(L"OK");
+	_btnOk->onMouseClick((ActionHandler)&NoteState::btnOkClick);
+	_btnOk->onKeyboardPress((ActionHandler)&NoteState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
+	_btnOk->onKeyboardPress((ActionHandler)&NoteState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
 
 	_txtTitle->setColor(Palette::blockOffset(8)+5);
-	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);
-	std::wstring s = _id;
-	s += L'\n';
-	s += tr("STR_TRACKING_LOST");
-	_txtTitle->setText(s);
+	_txtTitle->setBig();
+	_txtTitle->setWordWrap(true);
+	_txtTitle->setText(L"NOTE\x02This is an early development build of OpenXcom!\n\nThe project is still work-in-progress, so a lot of features are incomplete or completely missing.\n\nDo not be alarmed, this is completely normal!");
 }
 
 /**
  *
  */
-UfoLostState::~UfoLostState()
+NoteState::~NoteState()
 {
 
 }
 
 /**
- * Resets the palette.
- */
-void UfoLostState::init()
-{
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(7)), Palette::backPos, 16);
-}
-
-/**
- * Returns to the previous screen.
+ * Closes the window.
  * @param action Pointer to an action.
  */
-void UfoLostState::btnOkClick(Action *)
+void NoteState::btnOkClick(Action *)
 {
-	_game->popState();
+	_game->setState(new LanguageState(_game));
 }
 
 }

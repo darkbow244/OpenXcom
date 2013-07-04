@@ -282,7 +282,7 @@ GraphsState::GraphsState(Game *game) : State(game)
 	_btnIncome->onMouseClick((ActionHandler)&GraphsState::btnIncomeClick);
 	_btnFinance->onMouseClick((ActionHandler)&GraphsState::btnFinanceClick);
 	_btnGeoscape->onMouseClick((ActionHandler)&GraphsState::btnGeoscapeClick);
-	_btnGeoscape->onKeyboardPress((ActionHandler)&GraphsState::btnGeoscapeClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnGeoscape->onKeyboardPress((ActionHandler)&GraphsState::btnGeoscapeClick, (SDL_Keycode)Options::getInt("keyCancel"));
 
 	centerAllSurfaces();
 }
