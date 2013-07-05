@@ -490,7 +490,7 @@ int FlcInit(const char *filename)
 	  flc.mainscreen = flc.realscreen->getSurface()->getSurface();
   } else
   {
-	  flc.mainscreen = SDL_AllocSurface(SDL_SWSURFACE, flc.screen_w, flc.screen_h, 8, 0, 0, 0, 0);
+	  flc.mainscreen = SDL_CreateRGBSurface(SDL_SWSURFACE, flc.screen_w, flc.screen_h, 8, 0, 0, 0, 0);
   }
   return 0;
   //SDLInit(filename);

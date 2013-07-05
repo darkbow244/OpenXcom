@@ -20,7 +20,7 @@
 #include <cmath>
 #include <sstream>
 #include <iomanip>
-#include <SDL_gfxPrimitives.h>
+//#include <SDL_gfxPrimitives.h>
 #include "Map.h"
 #include "Camera.h"
 #include "BattlescapeState.h"
@@ -1054,7 +1054,7 @@ void BattlescapeState::btnVisibleUnitClick(Action *action)
 		_map->getCamera()->centerOnPosition(_visibleUnit[btnID]->getPosition());
 	}
 
-	action->getDetails()->type = SDL_NOEVENT; // consume the event
+	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
 }
 
 /**
@@ -1064,7 +1064,7 @@ void BattlescapeState::btnVisibleUnitClick(Action *action)
 void BattlescapeState::btnLaunchClick(Action *action)
 {
 	_battleGame->launchAction();
-	action->getDetails()->type = SDL_NOEVENT; // consume the event
+	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
 }
 
 /**
@@ -1074,7 +1074,7 @@ void BattlescapeState::btnLaunchClick(Action *action)
 void BattlescapeState::btnPsiClick(Action *action)
 {
 	_battleGame->psiButtonAction();
-	action->getDetails()->type = SDL_NOEVENT; // consume the event
+	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
 }
 
 /**
@@ -1451,6 +1451,7 @@ inline void BattlescapeState::handle(Action *action)
  */
 void BattlescapeState::saveAIMap()
 {
+	assert (0 && "FIXME");
 	Uint32 start = SDL_GetTicks();
 	BattleUnit *unit = _save->getSelectedUnit();
 	if (!unit) return;
@@ -1461,7 +1462,7 @@ void BattlescapeState::saveAIMap()
 
 	int expMax = 0;
 
-	SDL_Surface *img = SDL_AllocSurface(0, w * 8, h * 8, 24, 0xff, 0xff00, 0xff0000, 0);
+	SDL_Surface *img = SDL_CreateRGBSurface(0, w * 8, h * 8, 24, 0xff, 0xff00, 0xff0000, 0);
 	Log(LOG_INFO) << "unit = " << unit->getId();
 	memset(img->pixels, 0, img->pitch * img->h);
 
@@ -1503,7 +1504,7 @@ void BattlescapeState::saveAIMap()
 			if (t->getTUCost(MapData::O_FLOOR, MT_FLY) != 255 && t->getTUCost(MapData::O_OBJECT, MT_FLY) != 255)
 			{
 				SDL_FillRect(img, &r, SDL_MapRGB(img->format, 255, 0, 0x20));
-				characterRGBA(img, r.x, r.y,'*' , 0x7f, 0x7f, 0x7f, 0x7f);
+				//characterRGBA(img, r.x, r.y,'*' , 0x7f, 0x7f, 0x7f, 0x7f);
 			} else
 			{
 				if (!t->getUnit()) SDL_FillRect(img, &r, SDL_MapRGB(img->format, 0x50, 0x50, 0x50)); // gray for blocked tile
@@ -1520,13 +1521,13 @@ void BattlescapeState::saveAIMap()
 					{
 					case FACTION_HOSTILE:
 						// #4080C0 is Volutar Blue
-						characterRGBA(img, r.x, r.y, (tilePos.z - z) ? 'a' : 'A', 0x40, 0x80, 0xC0, 0xff);
+						//characterRGBA(img, r.x, r.y, (tilePos.z - z) ? 'a' : 'A', 0x40, 0x80, 0xC0, 0xff);
 						break;
 					case FACTION_PLAYER:
-						characterRGBA(img, r.x, r.y, (tilePos.z - z) ? 'x' : 'X', 255, 255, 127, 0xff);
+						//characterRGBA(img, r.x, r.y, (tilePos.z - z) ? 'x' : 'X', 255, 255, 127, 0xff);
 						break;
 					case FACTION_NEUTRAL:
-						characterRGBA(img, r.x, r.y, (tilePos.z - z) ? 'c' : 'C', 255, 127, 127, 0xff);
+						//characterRGBA(img, r.x, r.y, (tilePos.z - z) ? 'c' : 'C', 255, 127, 127, 0xff);
 						break;
 					}
 					break;
@@ -1537,12 +1538,12 @@ void BattlescapeState::saveAIMap()
 
 			if (t->getMapData(MapData::O_NORTHWALL) && t->getMapData(MapData::O_NORTHWALL)->getTUCost(MT_FLY) == 255)
 			{
-				lineRGBA(img, r.x, r.y, r.x+r.w, r.y, 0x50, 0x50, 0x50, 255);
+				//lineRGBA(img, r.x, r.y, r.x+r.w, r.y, 0x50, 0x50, 0x50, 255);
 			}
 
 			if (t->getMapData(MapData::O_WESTWALL) && t->getMapData(MapData::O_WESTWALL)->getTUCost(MT_FLY) == 255)
 			{
-				lineRGBA(img, r.x, r.y, r.x, r.y+r.h, 0x50, 0x50, 0x50, 255);
+				//lineRGBA(img, r.x, r.y, r.x, r.y+r.h, 0x50, 0x50, 0x50, 255);
 			}
 		}
 	}
@@ -1551,7 +1552,7 @@ void BattlescapeState::saveAIMap()
 
 	ss.str("");
 	ss << "z = " << tilePos.z;
-	stringRGBA(img, 12, 12, ss.str().c_str(), 0, 0, 0, 0x7f);
+	//stringRGBA(img, 12, 12, ss.str().c_str(), 0, 0, 0, 0x7f);
 
 	int i = 0;
 	do
