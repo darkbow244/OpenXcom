@@ -93,7 +93,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 		SDL_WM_GrabInput( SDL_GRAB_ON );
 	}
 	// Set the window caption
-	SDL_WM_SetCaption(title.c_str(), 0);
+	/* SDL_WM_SetCaption(title.c_str(), 0); FIXME */
 
 #ifdef _WIN32
 	// Set the window icon
@@ -108,8 +108,6 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 		SetClassLongPtr(hwnd, GCLP_HICON, (LONG_PTR)icon);
 	}
 #endif
-
-	SDL_EnableUNICODE(1);
 
 	// Create display
 	Screen::BASE_WIDTH = Options::getInt("baseXResolution");
@@ -209,6 +207,7 @@ void Game::run()
 				case SDL_QUIT:
 					_quit = true;
 					break;
+#if 0
 				case SDL_ACTIVEEVENT:
 					switch (reinterpret_cast<SDL_ActiveEvent*>(&_event)->state)
 					{
@@ -231,9 +230,11 @@ void Game::run()
 						_screen->setResolution(_event.resize.w, _event.resize.h);
 					}
 					break;
+#endif
 				case SDL_MOUSEMOTION:
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
+				case SDL_MOUSEWHEEL:
 					// Skip mouse events if they're disabled
 					if (!_mouseActive) continue;
 					// re-gain focus on mouse-over or keypress.
