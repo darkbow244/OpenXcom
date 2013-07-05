@@ -99,6 +99,10 @@ void InteractiveSurface::handle(Action *action, State *state)
 	{
 		action->setMouseAction(action->getDetails()->button.x, action->getDetails()->button.y, getX(), getY());
 	}
+	else if (action->getDetails()->type == SDL_MOUSEWHEEL)
+	{
+		action->setMouseAction(action->getDetails()->wheel.x, action->getDetails()->wheel.y, getX(), getY());
+	}
 	else if (action->getDetails()->type == SDL_MOUSEMOTION)
 	{
 		action->setMouseAction(action->getDetails()->motion.x, action->getDetails()->motion.y, getX(), getY());
@@ -158,6 +162,10 @@ void InteractiveSurface::handle(Action *action, State *state)
 			setButtonPressed(action->getDetails()->button.button, true);
 			mousePress(action, state);
 		}
+	}
+	else if (action->getDetails()->type == SDL_MOUSEWHEEL)
+	{
+		mousePress(action, state);
 	}
 	else if (action->getDetails()->type == SDL_MOUSEBUTTONUP)
 	{

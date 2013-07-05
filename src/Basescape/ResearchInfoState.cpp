@@ -229,8 +229,14 @@ void ResearchInfoState::setAssignedScientist()
  */
 void ResearchInfoState::handleWheel(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP) moreByValue(_changeValueByMouseWheel);
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN) lessByValue(_changeValueByMouseWheel);
+	const SDL_Event &ev(*action->getDetails());
+	if (ev.type == SDL_MOUSEWHEEL)
+	{
+		if (ev.wheel.y < 0)
+			moreByValue(_changeValueByMouseWheel);
+		else
+			lessByValue(_changeValueByMouseWheel);
+	}
 }
 
 /**
