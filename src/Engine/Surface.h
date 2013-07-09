@@ -22,6 +22,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <string>
+#include <vector>
 
 namespace OpenXcom
 {
@@ -41,8 +42,9 @@ protected:
 	SDL_Rect _crop;
 	bool _visible, _hidden, _redraw;
 	SDL_Color *_originalColors;
-	void *_misalignedPixelBuffer, *_alignedBuffer;
+	void *_alignedBuffer;
 	int _dx, _dy;
+	std::vector<SDL_Color> _palette;
 public:
 	/// Creates a new surface with the specified size and position.
 	Surface(int width, int height, int x = 0, int y = 0, int bpp = 8);

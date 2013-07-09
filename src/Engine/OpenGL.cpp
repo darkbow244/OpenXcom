@@ -58,7 +58,7 @@ std::string strGLError(GLenum glErr)
 }
 
 
-
+#define SDL_ColorOrder GL_RGBA //color odrer compatybile with SDL_Color struct
 #define glGetProcAddress(name) SDL_GL_GetProcAddress(name)
 
 #ifndef __APPLE__
@@ -100,8 +100,11 @@ Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, iwidth);
 	glErrorCheck();
     glTexImage2D(GL_TEXTURE_2D,
-      /* mip-map level = */ 0, /* internal format = */ GL_RGB16_EXT,
-      width, height, /* border = */ 0, /* format = */ GL_BGRA,
+      /* mip-map level = */ 0,
+      /* internal format = */ GL_RGB16_EXT,
+      width, height,
+      /* border = */ 0,
+      /* format = */ SDL_ColorOrder,
       iformat, buffer);
 	glErrorCheck();
 
@@ -155,15 +158,16 @@ Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-	glErrorCheck();
+    glErrorCheck();
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, buffer_surface->getSurface()->pitch / buffer_surface->getSurface()->format->BytesPerPixel);
 
 	glErrorCheck();
 
     glTexSubImage2D(GL_TEXTURE_2D,
-      /* mip-map level = */ 0, /* x = */ 0, /* y = */ 0,
-      iwidth, iheight, GL_BGRA, iformat, buffer);
+      /* mip-map level = */ 0,
+      /* x = */ 0, /* y = */ 0,
+      iwidth, iheight, SDL_ColorOrder, iformat, buffer);
 
 
     //OpenGL projection sets 0,0 as *bottom-left* of screen.
