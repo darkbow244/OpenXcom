@@ -17,6 +17,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Surface.h"
+#include "Screen.h"
 #include "ShaderDraw.h"
 #include <fstream>
 #include <SDL_gfxPrimitives.h>
@@ -37,7 +38,7 @@
 
 namespace OpenXcom
 {
-
+	
 /**
  * Sets up a blank 8bpp surface with the specified size and position,
  * with pure black as the transparent color.
@@ -50,7 +51,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param bpp Bits-per-pixel depth.
  */
-Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _originalColors(0), _misalignedPixelBuffer(0), _alignedBuffer(0)
+Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _originalColors(0), _alignedBuffer(0), _palette(256)
 {
 	//_surface = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 8, 0, 0, 0, 0);
 	int pitch = (bpp/8) * ((width+15)& ~0xF);
@@ -71,8 +72,24 @@ Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _
 #endif
 	
 	memset(_alignedBuffer, 0, pitch * height * (bpp/8));
-	
-	_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer,width, height, bpp, pitch, 0, 0, 0, 0);
+	if(bpp == 32)
+	{
+		//made _surface->pixels compatible with SDL_Color and OpenGL RGBA format
+		assert(sizeof(SDL_Color) == 4);
+		SDL_Color red	= {255,   0,   0,   0};
+		SDL_Color green	= {  0, 255,   0,   0};
+		SDL_Color blue	= {  0,   0, 255,   0};
+		SDL_Color alpha	= {  0,   0,   0,   0}; //== 0x0
+		_surface = SDL_CreateRGBSurfaceFrom(
+				_alignedBuffer,
+				width, height, bpp, pitch,
+				*reinterpret_cast<Uint32*>(&red),
+				*reinterpret_cast<Uint32*>(&green),
+				*reinterpret_cast<Uint32*>(&blue),
+				*reinterpret_cast<Uint32*>(&alpha));
+	}
+	else
+		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, pitch, 0, 0, 0, 0);
 
 	if (_surface == 0)
 	{
@@ -85,15 +102,21 @@ Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _
 	_crop.h = 0;
 	_crop.x = 0;
 	_crop.y = 0;
+	_dx = Screen::getDX();
+	_dy = Screen::getDY();
 }
 
 /**
  * Performs a deep copy of an existing surface.
  * @param other Surface to copy from.
  */
-Surface::Surface(const Surface& other)
+Surface::Surface(const Surface& other) : _palette(256)
 {
+	if(!other._surface->format->palette)
+		_palette = other._palette;
 	_surface = SDL_ConvertSurface(other._surface, other._surface->format, other._surface->flags);
+	if(!_surface)
+		std::cout << SDL_GetError() <<std::endl;
 	_x = other._x;
 	_y = other._y;
 	_crop.w = other._crop.w;
@@ -104,7 +127,6 @@ Surface::Surface(const Surface& other)
 	_hidden = other._hidden;
 	_redraw = other._redraw;
 	_originalColors = other._originalColors;
-	_misalignedPixelBuffer = 0;
 	_alignedBuffer = 0;
 }
 
@@ -176,7 +198,6 @@ void Surface::loadImage(const std::string &filename)
 	_alignedBuffer = 0;
 	SDL_FreeSurface(_surface);
 	_surface = 0;
-	_misalignedPixelBuffer = 0;
 	
 	// SDL only takes UTF-8 filenames
 	// so here's an ugly hack to match this ugly reasoning
@@ -634,10 +655,15 @@ SDL_Rect *Surface::getCrop()
  */
 void Surface::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
-	if (_surface->format->BitsPerPixel != 32)
+//	if (_surface->format->BitsPerPixel != 32)
+//		SDL_SetColors(_surface, colors, firstcolor, ncolors);
+	if(_surface->format->palette)
 		SDL_SetColors(_surface, colors, firstcolor, ncolors);
 	else
 		_originalColors = colors;
+//	else
+//		for(int i = 0; i< ncolors; ++i)
+//			_palette[firstcolor + i] = colors[firstcolor + i];
 }
 
 /**
@@ -646,10 +672,14 @@ void Surface::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
  */
 SDL_Color *Surface::getPalette() const
 {
-	if (_surface->format->BitsPerPixel != 32)
+//	if (_surface->format->BitsPerPixel != 32)
+//		return _surface->format->palette->colors;
+	if(_surface->format->palette)
 		return _surface->format->palette->colors;
 	else
 		return _originalColors;
+//	else
+//		return (SDL_Color *)&(_palette[0]);
 }
 
 /**
@@ -843,6 +873,19 @@ struct ColorReplace
 		}
 	}
 	
+	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade, const int& newColor)
+	{
+		if(src)
+		{
+			const int newShade = (src&15) + shade;
+			if (newShade > 15)
+				// so dark it would flip over to another color - make it black instead
+				dest = palette[15];
+			else
+				dest = palette[newColor | newShade];
+		}
+	}
+	
 };
 
 /**
@@ -869,6 +912,19 @@ struct StandartShade
 				dest = 15;
 			else
 				dest = (src&(15<<4)) | newShade;
+		}
+	}
+	
+	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade, const int&)
+	{
+		if(src)
+		{
+			const int newShade = (src&15) + shade;
+			if (newShade > 15)
+				// so dark it would flip over to another color - make it black instead
+				dest = palette[15];
+			else
+				dest = palette[(src&(15<<4)) | newShade];
 		}
 	}
 	
@@ -900,10 +956,19 @@ void Surface::blitNShade(Surface *surface, int x, int y, int off, bool half, int
 	{
 		--newBaseColor;
 		newBaseColor <<= 4;
-		ShaderDraw<ColorReplace>(ShaderSurface(surface), src, ShaderScalar(off), ShaderScalar(newBaseColor));
+		if(surface->_surface->format->BitsPerPixel != 32)
+			ShaderDraw<ColorReplace>(ShaderSurface(surface), src, ShaderScalar(off), ShaderScalar(newBaseColor));
+		else
+			ShaderDraw<ColorReplace>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(this->getPalette()), ShaderScalar(off), ShaderScalar(newBaseColor));
+			
 	}
 	else
-		ShaderDraw<StandartShade>(ShaderSurface(surface), src, ShaderScalar(off));
+	{
+		if(surface->_surface->format->BitsPerPixel != 32)
+			ShaderDraw<StandartShade>(ShaderSurface(surface), src, ShaderScalar(off));
+		else
+			ShaderDraw<StandartShade>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(this->getPalette()), ShaderScalar(off));
+	}
 		
 }
 
@@ -914,4 +979,15 @@ void Surface::invalidate()
 {
 	_redraw = true;
 }
+
+void Surface::setDX(int dx)
+{
+	_dx = dx;
+}
+
+void Surface::setDY(int dy)
+{
+	_dy = dy;
+}
+
 }
