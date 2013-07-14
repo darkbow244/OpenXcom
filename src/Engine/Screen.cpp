@@ -30,6 +30,8 @@
 #include "Zoom.h"
 #include "OpenGL.h"
 #include "Timer.h"
+#include "ShaderDraw.h"
+#include "ShaderMove.h"
 #include <SDL.h>
 
 namespace OpenXcom
@@ -144,6 +146,21 @@ void Screen::handle(Action *action)
 	}
 }
 
+namespace
+{
+
+/**
+ * Helper function swaping betwean SDL (RGB) and Windows (BGR) color formats
+ */
+struct SwapColors
+{
+	inline static void func(SDL_Color& src, const int&, const int&, const int&, const int&)
+	{
+		std::swap(src.b, src.r);
+	}
+};
+
+}
 
 /**
  * Renders the buffer's contents onto the screen, applying
@@ -156,6 +173,10 @@ void Screen::flip()
 {
 	if (getWidth() != BASE_WIDTH || getHeight() != BASE_HEIGHT || isOpenGLEnabled())
 	{
+		//change swap colors, if colors is flicking someone probaby call flip without clear()
+		//because flip() leave screen colors in wrong state
+		if(!isOpenGLEnabled())
+			ShaderDraw<SwapColors>(ShaderMove<SDL_Color>(_surface));
 		Zoom::flipWithZoom(_surface->getSurface(), _screen, &glOutput);
 	}
 	else

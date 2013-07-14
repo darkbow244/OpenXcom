@@ -112,11 +112,7 @@ Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _
  */
 Surface::Surface(const Surface& other) : _palette(256)
 {
-	if(!other._surface->format->palette)
-		_palette = other._palette;
 	_surface = SDL_ConvertSurface(other._surface, other._surface->format, other._surface->flags);
-	if(!_surface)
-		std::cout << SDL_GetError() <<std::endl;
 	_x = other._x;
 	_y = other._y;
 	_crop.w = other._crop.w;
@@ -655,15 +651,11 @@ SDL_Rect *Surface::getCrop()
  */
 void Surface::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
-//	if (_surface->format->BitsPerPixel != 32)
-//		SDL_SetColors(_surface, colors, firstcolor, ncolors);
-	if(_surface->format->palette)
+	if (_surface->format->BitsPerPixel != 32)
 		SDL_SetColors(_surface, colors, firstcolor, ncolors);
 	else
-		_originalColors = colors;
-//	else
-//		for(int i = 0; i< ncolors; ++i)
-//			_palette[firstcolor + i] = colors[firstcolor + i];
+		for(int i = 0; i< ncolors; ++i)
+			_palette[firstcolor + i] = colors[firstcolor + i];
 }
 
 /**
@@ -672,14 +664,10 @@ void Surface::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
  */
 SDL_Color *Surface::getPalette() const
 {
-//	if (_surface->format->BitsPerPixel != 32)
-//		return _surface->format->palette->colors;
-	if(_surface->format->palette)
+	if (_surface->format->BitsPerPixel != 32)
 		return _surface->format->palette->colors;
 	else
-		return _originalColors;
-//	else
-//		return (SDL_Color *)&(_palette[0]);
+		return (SDL_Color *)&(_palette[0]);
 }
 
 /**
@@ -873,6 +861,16 @@ struct ColorReplace
 		}
 	}
 	
+	/**
+	 * Function used by ShaderDraw in Surface::blitNShade
+	 * set shade and replace color in that surface
+	 * 8bit -> 32bit version
+     * @param dest destination pixel
+     * @param src source pixel
+     * @param palette palette of source pixel
+     * @param shade value of shade of this surface
+     * @param newColor new color to set (it should be offseted by 4)
+     */
 	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade, const int& newColor)
 	{
 		if(src)

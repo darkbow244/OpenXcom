@@ -254,7 +254,7 @@ struct CreateShadow
  * @param y Y position in pixels.
  */
 Globe::Globe(Game *game, int cenX, int cenY, int width, int height, int x, int y):
-	InteractiveSurface(width, height, x, y, 32),
+	InteractiveSurface(width, height, x, y, 8),
 	_rotLon(0.0), _rotLat(0.0),
 	_cenX(cenX), _cenY(cenY), _game(game),
 	_blink(true), _hover(false), _cacheLand()
@@ -895,6 +895,8 @@ void Globe::cache(std::list<Polygon*> *polygons, std::list<Polygon*> *cache)
  */
 void Globe::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
+	Surface::setPalette(colors, firstcolor, ncolors);
+
 	_texture->setPalette(colors, firstcolor, ncolors);
 	
 	_countries->setPalette(colors, firstcolor, ncolors);
@@ -980,7 +982,7 @@ void Globe::draw()
 void Globe::drawOcean()
 {
 	lock();
-	drawCircle32bit(_cenX+1, _cenY, _radius[_zoom]+20, Palette::getRGBA(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors(), Palette::blockOffset(12)+0));
+	drawCircle(_cenX+1, _cenY, _radius[_zoom]+20, Palette::blockOffset(12)+0);
 //	ShaderDraw<Ocean>(ShaderSurface(this));
 	unlock();
 }

@@ -530,6 +530,7 @@ void FlcMain(void (*frameCallBack)())
 		  switch(event.type) {
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_KEYDOWN:
+			  flc.realscreen->clear();
 			  return;
 			break;
 			case SDL_QUIT:
