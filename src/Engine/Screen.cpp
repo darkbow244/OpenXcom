@@ -154,7 +154,7 @@ namespace
  */
 struct SwapColors
 {
-	inline static void func(SDL_Color& src, const int&, const int&, const int&, const int&)
+	inline static void func(SDL_Color& src)
 	{
 		std::swap(src.b, src.r);
 	}

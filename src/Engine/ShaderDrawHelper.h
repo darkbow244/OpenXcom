@@ -289,8 +289,7 @@ struct controler<Scalar<T> >
 template<>
 struct controler<Nothing>
 {
-	const int i;
-	inline controler(const Nothing&) : i(0)
+	inline controler(const Nothing&)
 	{
 		
 	}
@@ -333,10 +332,10 @@ struct controler<Nothing>
 		//nothing
 	}
 	
-	inline const int& get_ref()
-	{
-		return i;
-	}
+	/**
+	 * Dont return anything
+	 */
+	inline void get_ref() { }
 };
 
 /**

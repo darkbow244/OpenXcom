@@ -849,7 +849,7 @@ struct ColorReplace
 	* @param shade value of shade of this surface
 	* @param newColor new color to set (it should be offseted by 4)
 	*/
-	static inline void func(Uint8& dest, const Uint8& src, const int& shade, const int& newColor, const int&)
+	static inline void func(Uint8& dest, const Uint8& src, const int& shade, const int& newColor)
 	{
 		if(src)
 		{
@@ -901,7 +901,7 @@ struct StandartShade
 	* @param notused
 	* @param notused
 	*/
-	static inline void func(Uint8& dest, const Uint8& src, const int& shade, const int&, const int&)
+	static inline void func(Uint8& dest, const Uint8& src, const int& shade)
 	{
 		if(src)
 		{
@@ -914,7 +914,7 @@ struct StandartShade
 		}
 	}
 	
-	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade, const int&)
+	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade)
 	{
 		if(src)
 		{
