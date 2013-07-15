@@ -51,7 +51,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param bpp Bits-per-pixel depth.
  */
-Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _originalColors(0), _alignedBuffer(0), _palette(256)
+Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _originalColors(0), _alignedBuffer(0), _palette(0)
 {
 	//_surface = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 8, 0, 0, 0, 0);
 	int pitch = (bpp/8) * ((width+15)& ~0xF);
@@ -74,6 +74,7 @@ Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _
 	memset(_alignedBuffer, 0, pitch * height * (bpp/8));
 	if(bpp == 32)
 	{
+		_palette.resize(255);
 		//made _surface->pixels compatible with SDL_Color and OpenGL RGBA format
 		assert(sizeof(SDL_Color) == 4);
 		SDL_Color red	= {255,   0,   0,   0};
@@ -110,7 +111,7 @@ Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _
  * Performs a deep copy of an existing surface.
  * @param other Surface to copy from.
  */
-Surface::Surface(const Surface& other) : _palette(256)
+Surface::Surface(const Surface& other) : _palette(other._palette)
 {
 	_surface = SDL_ConvertSurface(other._surface, other._surface->format, other._surface->flags);
 	_x = other._x;
