@@ -321,7 +321,8 @@ void ManageAlienContainmentState::lstItemsLeftArrowClick(Action *action)
 void ManageAlienContainmentState::lstItemsMousePress(Action *action)
 {
 	_sel = _lstAliens->getSelectedRow();
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+	const SDL_Event &ev(*action->getDetails());
+	if (ev.type == SDL_MOUSEWHEEL)
 	{
 		_timerInc->stop();
 		_timerDec->stop();
@@ -329,18 +330,10 @@ void ManageAlienContainmentState::lstItemsMousePress(Action *action)
 			&& action->getAbsoluteXMouse() >= _lstAliens->getArrowsLeftEdge()
 			&& action->getAbsoluteXMouse() <= _lstAliens->getArrowsRightEdge())
 		{
-			increaseByValue(_changeValueByMouseWheel);
-		}
-	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN)
-	{
-		_timerInc->stop();
-		_timerDec->stop();
-		if (_allowChangeListValuesByMouseWheel
-			&& action->getAbsoluteXMouse() >= _lstAliens->getArrowsLeftEdge()
-			&& action->getAbsoluteXMouse() <= _lstAliens->getArrowsRightEdge())
-		{
-			decreaseByValue(_changeValueByMouseWheel);
+			if (ev.wheel.y < 0)
+				increaseByValue(_changeValueByMouseWheel);
+			else
+				decreaseByValue(_changeValueByMouseWheel);
 		}
 	}
 }
