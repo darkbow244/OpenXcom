@@ -100,7 +100,7 @@ PauseState::PauseState(Game *game, OptionsOrigin origin) : State(game), _origin(
 	_btnCancel->setColor(Palette::blockOffset(15)-1);
 	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->onMouseClick((ActionHandler)&PauseState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&PauseState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&PauseState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
 
 	_txtTitle->setColor(Palette::blockOffset(15)-1);
 	_txtTitle->setAlign(ALIGN_CENTER);
