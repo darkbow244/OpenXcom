@@ -20,7 +20,7 @@ grt,
                                                                   ----+
 */
 
-#define version "0.2"
+//#define version "0.2"
 /*
 */
 #include <stdio.h>
@@ -199,7 +199,7 @@ void COLORS256()
       i++;
     }
 	flc.realscreen->setPalette(flc.colors, NumColorsSkip, i);
-	SDL_SetColors(flc.mainscreen, flc.colors, NumColorsSkip, i);
+	SDL_SetPaletteColors(flc.mainscreen->format->palette, flc.colors, NumColorsSkip, i);
 	flc.realscreen->getSurface(); // force palette update to really happen
   }
 } /* COLORS256 */
@@ -360,7 +360,7 @@ void DECODE_COLOR()
       i++;
     }
 	flc.realscreen->setPalette(flc.colors, NumColorsSkip, i);
-    SDL_SetColors(flc.mainscreen, flc.colors, NumColorsSkip, i);
+    SDL_SetPaletteColors(flc.mainscreen->format->palette, flc.colors, NumColorsSkip, i);
 	flc.realscreen->getSurface(); // force palette update to really happen
   }
 } /* DECODE_COLOR  */
