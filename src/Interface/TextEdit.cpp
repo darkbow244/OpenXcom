@@ -463,17 +463,15 @@ void TextEdit::keyboardPress(Action *action, State *state)
 			}
 			break;
 		default:
-			assert (0 && "FIXME");
-#if 0
-			Uint16 key = action->getDetails()->key.keysym.unicode;
+			/* FIXME: support unicode again */
+			Uint16 key = action->getDetails()->key.keysym.sym;
 			if (((_numerical && key >= L'0' && key <= L'9') ||
 				(!_numerical && ((key >= L' ' && key <= L'~') || key >= 160))) &&
 				!exceedsMaxWidth((wchar_t)key))
 			{
-				_value.insert(_caretPos, 1, (wchar_t)action->getDetails()->key.keysym.unicode);
+				_value.insert(_caretPos, 1, (wchar_t)action->getDetails()->key.keysym.sym);
 				_caretPos++;
 			}
-#endif
 		}
 	}
 	_redraw = true;
