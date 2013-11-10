@@ -21,7 +21,7 @@
 #include "ShaderDraw.h"
 #include <vector>
 #include <fstream>
-//#include <SDL_gfxPrimitives.h>
+#include <SDL_gfxPrimitives.h>
 #include <SDL_image.h>
 #include <SDL_endian.h>
 #include "Palette.h"
@@ -147,7 +147,7 @@ Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _
 		throw Exception(SDL_GetError());
 	}
 
-	SDL_SetColorKey(_surface, 1, 0);
+	SDL_SetColorKey(_surface, SDL_TRUE, 0);
 
 	_crop.w = 0;
 	_crop.h = 0;
@@ -564,8 +564,7 @@ void Surface::drawRect(SDL_Rect *rect, Uint8 color)
  */
 void Surface::drawLine(Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 color)
 {
-	assert (0 && "FIXME");
-	//lineColor(_surface, x1, y1, x2, y2, Palette::getRGBA(getPalette(), color));
+	lineColor(_surface, x1, y1, x2, y2, Palette::getRGBA(getPalette(), color));
 }
 
 /**
@@ -577,8 +576,7 @@ void Surface::drawLine(Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 color)
  */
 void Surface::drawCircle(Sint16 x, Sint16 y, Sint16 r, Uint8 color)
 {
-	assert (0 && "FIXME");
-	//filledCircleColor(_surface, x, y, r, Palette::getRGBA(getPalette(), color));
+	filledCircleColor(_surface, x, y, r, Palette::getRGBA(getPalette(), color));
 }
 
 /**
@@ -590,8 +588,7 @@ void Surface::drawCircle(Sint16 x, Sint16 y, Sint16 r, Uint8 color)
  */
 void Surface::drawPolygon(Sint16 *x, Sint16 *y, int n, Uint8 color)
 {
-	assert (0 && "FIXME");
-	//filledPolygonColor(_surface, x, y, n, Palette::getRGBA(getPalette(), color));
+	filledPolygonColor(_surface, x, y, n, Palette::getRGBA(getPalette(), color));
 }
 
 /**
@@ -605,8 +602,7 @@ void Surface::drawPolygon(Sint16 *x, Sint16 *y, int n, Uint8 color)
  */
 void Surface::drawTexturedPolygon(Sint16 *x, Sint16 *y, int n, Surface *texture, int dx, int dy)
 {
-	assert (0 && "FIXME");
-	//texturedPolygon(_surface, x, y, n, texture->getSurface(), dx, dy);
+	texturedPolygon(_surface, x, y, n, texture->getSurface(), dx, dy);
 }
 
 /**
@@ -618,8 +614,7 @@ void Surface::drawTexturedPolygon(Sint16 *x, Sint16 *y, int n, Surface *texture,
  */
 void Surface::drawString(Sint16 x, Sint16 y, const char *s, Uint8 color)
 {
-	assert (0 && "FIXME");
-	//stringColor(_surface, x, y, s, Palette::getRGBA(getPalette(), color));
+	stringColor(_surface, x, y, s, Palette::getRGBA(getPalette(), color));
 }
 
 /**
