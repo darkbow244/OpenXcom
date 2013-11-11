@@ -8,16 +8,44 @@ LOCAL_MODULE := main
 
 SDL_PATH := ../SDL
 
-OXC_PATH := ../../../src
+SDL_GFX_PATH := ../SDL_gfx
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include
+SDL_IMAGE_PATH := ../SDL2_image
+
+YAMLCPP_PATH := ../yamlcpp
+
+BOOST_PATH := ../boost
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include \
+	$(LOCAL_PATH)/$(SDL_GFX_PATH) \
+	$(LOCAL_PATH)/$(SDL_IMAGE_PATH)
 
 # Add your application source files here...
 LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
-	$(OXC_PATH)/main.cpp
+	$(subst $(LOCAL_PATH)/,, \
+	$(LOCAL_PATH)/../../../src/main.cpp \
+	$(LOCAL_PATH)/../../../src/lodepng.cpp \
+	$(wildcard $(LOCAL_PATH)/../../../src/Basescape/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Battlescape/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Engine/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Engine/Scalers/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Geoscape/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Interface/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Menu/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Resource/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Ruleset/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Savegame/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Ufopaedia/*.cpp))
 
 LOCAL_SHARED_LIBRARIES := SDL2
 
 LOCAL_LDLIBS := -lGLESv1_CM -llog
+
+# yaml-cpp
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(YAMLCPP_PATH)/include \
+					$(LOCAL_PATH)/$(BOOST_PATH)/include
+LOCAL_SRC_FILES += \
+	$(subst $(LOCAL_PATH)/,, \
+	$(wildcard $(LOCAL_PATH)/$(YAMLCPP_PATH)/src/*.cpp))
 
 include $(BUILD_SHARED_LIBRARY)
