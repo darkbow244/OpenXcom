@@ -40,7 +40,7 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
 	$(wildcard $(LOCAL_PATH)/../../../src/Savegame/*.cpp) \
 	$(wildcard $(LOCAL_PATH)/../../../src/Ufopaedia/*.cpp))
 
-LOCAL_SHARED_LIBRARIES := SDL2
+LOCAL_SHARED_LIBRARIES := SDL2 SDL2_image SDL2_mixer SDL_gfx
 
 LOCAL_LDLIBS := -lGLESv1_CM -llog
 
