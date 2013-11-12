@@ -37,6 +37,7 @@ grt,
 #include "Exception.h"
 #include "Zoom.h"
 #include "../aresame.h"
+#include "Surface.h"
 
 namespace OpenXcom
 {

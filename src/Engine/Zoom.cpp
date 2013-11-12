@@ -28,8 +28,6 @@
 #include "Options.h"
 #include "Screen.h"
 
-#include "OpenGL.h"
-
 // Scale2X
 #include "Scalers/scalebit.h"
 
