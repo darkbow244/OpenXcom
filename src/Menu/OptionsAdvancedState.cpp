@@ -19,6 +19,7 @@
 #include "OptionsAdvancedState.h"
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Language.h"
@@ -117,7 +118,7 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 		std::string settingName = (*i).first;
 		(*i).second = Options::getBool(settingName);
 		std::wstring setting =  (*i).second ? tr("STR_YES").c_str() : tr("STR_NO").c_str();
-		transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
+		std::transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
 		_lstOptions->addRow(2, tr("STR_" + settingName).c_str(), setting.c_str());
 		++sel;
 	}
@@ -140,7 +141,7 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 		{
 			ss << i->second;
 		}
-		transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
+		std::transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
 		_lstOptions->addRow(2, tr("STR_" + settingName).c_str(), ss.str().c_str());
 		++sel;
 	}
@@ -274,7 +275,7 @@ void OptionsAdvancedState::lstOptionsMouseOver(Action *)
 		settingName = _settingIntSet.at(sel - _boolQuantity).first;
 	}
 
-	transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
+	std::transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
 	ss << "STR_" << settingName.c_str() << "_DESC";
 	_txtDescription->setText(tr(ss.str()).c_str());
 }
