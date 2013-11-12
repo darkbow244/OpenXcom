@@ -351,7 +351,7 @@ void InteractiveSurface::mouseOut(Action *action, State *state)
  */
 void InteractiveSurface::keyboardPress(Action *action, State *state)
 {
-	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyPress.find(SDLK_UNKNOWN);
+	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyPress.find((SDL_Keycode)SDLK_UNKNOWN);
 	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyPress.find(action->getDetails()->key.keysym.sym);
 	if (allHandler != _keyPress.end())
 	{
@@ -376,7 +376,7 @@ void InteractiveSurface::keyboardPress(Action *action, State *state)
  */
 void InteractiveSurface::keyboardRelease(Action *action, State *state)
 {
-	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyRelease.find(SDLK_UNKNOWN);
+	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyRelease.find((SDL_Keycode)SDLK_UNKNOWN);
 	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyRelease.find(action->getDetails()->key.keysym.sym);
 	if (allHandler != _keyRelease.end())
 	{
