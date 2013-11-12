@@ -73,7 +73,7 @@ inline void* NewAligned(int bpp, int width, int height)
 
 #ifndef _WIN32
 
-	#ifdef __MORPHOS__
+	#if defined(__MORPHOS__) || defined(__ANDROID__)
 
 	buffer = calloc( total, 1 );
 	if (!buffer)
