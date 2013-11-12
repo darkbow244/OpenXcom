@@ -30,7 +30,6 @@
 #include "Options.h"
 #include "CrossPlatform.h"
 #include "Zoom.h"
-#include "OpenGL.h"
 #include "Timer.h"
 #include <SDL.h>
 
@@ -358,6 +357,7 @@ void Screen::setResolution(int width, int height)
 		_topBlackBand = _bottomBlackBand = _leftBlackBand = _rightBlackBand = _cursorTopBlackBand = _cursorLeftBlackBand = 0;
 	}
 
+#if 0
 	if (isOpenGLEnabled()) 
 	{
 		glOutput.init(BASE_WIDTH, BASE_HEIGHT);
@@ -366,6 +366,7 @@ void Screen::setResolution(int width, int height)
 		glOutput.setVSync(Options::getBool("vSyncForOpenGL"));
 		OpenGL::checkErrors = Options::getBool("checkOpenGLErrors");
 	}
+#endif
 
 	Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32.";
 }

@@ -21,7 +21,6 @@
 
 #include <SDL.h>
 #include <string>
-#include "OpenGL.h"
 
 namespace OpenXcom
 {
@@ -57,7 +56,7 @@ private:
 	SDL_Color deferredPalette[256];
 	int _numColors, _firstColor;
 	bool _pushPalette;
-	OpenGL glOutput;
+	//OpenGL glOutput;
 	Surface *_surface;
 	SDL_Texture *_texture;
 public:
