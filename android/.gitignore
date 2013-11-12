@@ -2,6 +2,7 @@ libs
 obj
 jni/SDL
 jni/SDL2_image
+jni/SDL2_mixer
 jni/SDL_gfx
 jni/boost
 jni/yamlcpp
