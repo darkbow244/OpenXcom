@@ -9,3 +9,6 @@ jni/SDL2_mixer
 jni/SDL_gfx
 jni/boost
 jni/yamlcpp
+jni/libwebp
+jni/libmikmod
+jni/smpeg
