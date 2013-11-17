@@ -685,6 +685,9 @@ std::string noExt(const std::string &filename)
  */
 std::string getLocale()
 {
+#ifdef __ANDROID__
+	return std::string("en-US");
+#endif
 #ifdef _WIN32
 	char language[9], country[9];
 
