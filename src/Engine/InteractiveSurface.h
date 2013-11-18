@@ -98,6 +98,7 @@ public:
 	virtual void keyboardPress(Action *action, State *state);
 	/// Processes a keyboard key release event.
 	virtual void keyboardRelease(Action *action, State *state);
+	virtual void textInput(Action *action, State *state);
 	/// Check this surface to see if it's a textlist button.
 	void setListButton();
 };

@@ -17,7 +17,6 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "TextEdit.h"
-#include <sstream>
 #include "../Engine/Action.h"
 #include "../Engine/Font.h"
 #include "../Engine/Timer.h"
@@ -463,6 +462,8 @@ void TextEdit::keyboardPress(Action *action, State *state)
 			}
 			break;
 		default:
+			break;
+#if 0
 			/* FIXME: support unicode again */
 			Uint16 key = action->getDetails()->key.keysym.sym;
 			if (((_numerical && key >= L'0' && key <= L'9') ||
@@ -472,11 +473,21 @@ void TextEdit::keyboardPress(Action *action, State *state)
 				_value.insert(_caretPos, 1, (wchar_t)action->getDetails()->key.keysym.sym);
 				_caretPos++;
 			}
+#endif
 		}
 	}
 	_redraw = true;
 
 	InteractiveSurface::keyboardPress(action, state);
+}
+
+void TextEdit::textInput(Action *action, State *state)
+{
+	std::string text(action->getDetails()->text.text);
+	/* FIXME: this does not work with extended characters */
+	_value += std::wstring(text.begin(), text.end());
+	_caretPos = _value.length();
+	_redraw = true;
 }
 
 }

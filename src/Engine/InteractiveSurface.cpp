@@ -190,6 +190,10 @@ void InteractiveSurface::handle(Action *action, State *state)
 		{
 			keyboardRelease(action, state);
 		}
+		else if (action->getDetails()->type == SDL_TEXTINPUT)
+		{
+			textInput(action, state);
+		}
 	}
 }
 
@@ -390,6 +394,11 @@ void InteractiveSurface::keyboardRelease(Action *action, State *state)
 		ActionHandler handler = oneHandler->second;
 		(state->*handler)(action);
 	}
+}
+
+void InteractiveSurface::textInput(Action *action, State *state)
+{
+	//TODO: do nothing?
 }
 
 /**
