@@ -21,6 +21,7 @@
 #include "../Engine/Font.h"
 #include "../Engine/Timer.h"
 #include "../Engine/Options.h"
+#include "../Engine/Language.h"
 
 namespace OpenXcom
 {
@@ -462,18 +463,8 @@ void TextEdit::keyboardPress(Action *action, State *state)
 			}
 			break;
 		default:
+			// Letter keys are handled in textInput
 			break;
-#if 0
-			/* FIXME: support unicode again */
-			Uint16 key = action->getDetails()->key.keysym.sym;
-			if (((_numerical && key >= L'0' && key <= L'9') ||
-				(!_numerical && ((key >= L' ' && key <= L'~') || key >= 160))) &&
-				!exceedsMaxWidth((wchar_t)key))
-			{
-				_value.insert(_caretPos, 1, (wchar_t)action->getDetails()->key.keysym.sym);
-				_caretPos++;
-			}
-#endif
 		}
 	}
 	_redraw = true;
@@ -484,8 +475,7 @@ void TextEdit::keyboardPress(Action *action, State *state)
 void TextEdit::textInput(Action *action, State *state)
 {
 	std::string text(action->getDetails()->text.text);
-	/* FIXME: this does not work with extended characters */
-	_value += std::wstring(text.begin(), text.end());
+	_value += Language::utf8ToWstr(text);
 	_caretPos = _value.length();
 	_redraw = true;
 }
