@@ -255,12 +255,6 @@ void Game::run()
 							setState(new TestState(this));
 						}
 					}
-#ifdef __ANDROID__
-					// Show virtual keyboard with menu button
-					if (_event.type == SDL_KEYDOWN &&
-							_event.key.keysym.scancode == 118)
-						SDL_StartTextInput();
-#endif
 					break;
 			}
 		}

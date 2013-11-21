@@ -69,6 +69,16 @@ void TextEdit::focus()
 		_caretPos = _value.length();
 		_blink = true;
 		_timer->start();
+#ifdef __ANDROID__
+		// Show virtual keyboard
+		SDL_Rect r;
+		r.x = getX();
+		r.y = getY();
+		r.w = getWidth();
+		r.h = getHeight();
+		SDL_SetTextInputRect(&r);
+		SDL_StartTextInput();
+#endif
 		_redraw = true;
 	}
 	InteractiveSurface::focus();
@@ -86,6 +96,9 @@ void TextEdit::deFocus()
 	_timer->stop();
 	/* TODO: have a look a this */
 	//SDL_EnableKeyRepeat(0, SDL_DEFAULT_REPEAT_INTERVAL);
+#ifdef __ANDROID__
+	SDL_StopTextInput();
+#endif
 }
 
 /**
