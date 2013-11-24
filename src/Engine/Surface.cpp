@@ -765,9 +765,11 @@ void Surface::paletteShift(int off, int mul, int mid)
 		_originalColors[i].r = getPalette()[i].r;
 		_originalColors[i].g = getPalette()[i].g;
 		_originalColors[i].b = getPalette()[i].b;
+		_originalColors[i].a = getPalette()[i].a;
 		newColors[i].r = getPalette()[j].r;
 		newColors[i].g = getPalette()[j].g;
 		newColors[i].b = getPalette()[j].b;
+		newColors[i].a = getPalette()[j].a;
 	}
 
 	// assign it and free it
