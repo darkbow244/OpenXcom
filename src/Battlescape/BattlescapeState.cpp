@@ -361,13 +361,13 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups()
 	_btnStats->onMouseOut((ActionHandler)&BattlescapeState::txtTooltipOut);
 
 	_btnLeftHandItem->onMouseClick((ActionHandler)&BattlescapeState::btnLeftHandItemClick);
-	_btnLeftHandItem->onKeyboardPress((ActionHandler)&BattlescapeState::btnLeftHandItemClick, (SDLKey)Options::getInt("keyBattleUseLeftHand"));
+	_btnLeftHandItem->onKeyboardPress((ActionHandler)&BattlescapeState::btnLeftHandItemClick, (SDL_Keycode)Options::getInt("keyBattleUseLeftHand"));
 	_btnLeftHandItem->setTooltip("STR_USE_LEFT_HAND");
 	_btnLeftHandItem->onMouseIn((ActionHandler)&BattlescapeState::txtTooltipIn);
 	_btnLeftHandItem->onMouseOut((ActionHandler)&BattlescapeState::txtTooltipOut);
 
 	_btnRightHandItem->onMouseClick((ActionHandler)&BattlescapeState::btnRightHandItemClick);
-	_btnRightHandItem->onKeyboardPress((ActionHandler)&BattlescapeState::btnRightHandItemClick, (SDLKey)Options::getInt("keyBattleUseRightHand"));
+	_btnRightHandItem->onKeyboardPress((ActionHandler)&BattlescapeState::btnRightHandItemClick, (SDL_Keycode)Options::getInt("keyBattleUseRightHand"));
 	_btnRightHandItem->setTooltip("STR_USE_RIGHT_HAND");
 	_btnRightHandItem->onMouseIn((ActionHandler)&BattlescapeState::txtTooltipIn);
 	_btnRightHandItem->onMouseOut((ActionHandler)&BattlescapeState::txtTooltipOut);
