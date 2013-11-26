@@ -160,6 +160,7 @@ InventoryState::InventoryState(Game *game, bool tu, BattlescapeState *parent) : 
 
 	_btnOk->onMouseClick((ActionHandler)&InventoryState::btnOkClick);
 	_btnOk->onKeyboardPress((ActionHandler)&InventoryState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&InventoryState::btnOkClick, (SDL_Keycode)Options::getInt("keyBattleInventory"));
 	_btnPrev->onMouseClick((ActionHandler)&InventoryState::btnPrevClick);
 	_btnPrev->onKeyboardPress((ActionHandler)&InventoryState::btnPrevClick, (SDL_Keycode)Options::getInt("keyBattlePrevUnit"));
 	_btnNext->onMouseClick((ActionHandler)&InventoryState::btnNextClick);

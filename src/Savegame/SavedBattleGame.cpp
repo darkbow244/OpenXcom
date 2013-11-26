@@ -199,7 +199,7 @@ void SavedBattleGame::load(const YAML::Node &node, Ruleset *rule, SavedGame* sav
 		_units.push_back(unit);
 		if (faction == FACTION_PLAYER)
 		{
-			if (unit->getId() == selectedUnit)
+			if ((unit->getId() == selectedUnit) || (_selectedUnit == 0 && !unit->isOut()))
 				_selectedUnit = unit;
 			
 			// silly hack to fix mind controlled aliens
@@ -774,7 +774,7 @@ void SavedBattleGame::endTurn()
 			prepareNewTurn();
 			_turn++;
 			_side = FACTION_PLAYER;
-			if (_lastSelectedUnit && !_lastSelectedUnit->isOut())
+			if (_lastSelectedUnit && _lastSelectedUnit->isSelectable(FACTION_PLAYER, false, false))
 				_selectedUnit = _lastSelectedUnit;
 			else
 				selectNextPlayerUnit();
@@ -788,7 +788,7 @@ void SavedBattleGame::endTurn()
 		prepareNewTurn();
 		_turn++;
 		_side = FACTION_PLAYER;
-		if (_lastSelectedUnit && !_lastSelectedUnit->isOut())
+		if (_lastSelectedUnit && _lastSelectedUnit->isSelectable(FACTION_PLAYER, false, false))
 			_selectedUnit = _lastSelectedUnit;
 		else
 			selectNextPlayerUnit();
@@ -868,6 +868,15 @@ bool SavedBattleGame::getDebugMode() const
 BattlescapeState *SavedBattleGame::getBattleState()
 {
 	return _battleState;
+}
+
+/**
+ * Gets the BattlescapeState.
+ * @return Pointer to the BattlescapeState.
+ */
+BattlescapeGame *SavedBattleGame::getBattleGame()
+{
+	return _battleState->getBattleGame();
 }
 
 /**
@@ -1649,6 +1658,8 @@ void SavedBattleGame::resetTiles()
 {
 	for (int i = 0; i != getMapSizeXYZ(); ++i)
 	{
+		_tiles[i]->setDiscovered(false, 0);
+		_tiles[i]->setDiscovered(false, 1);
 		_tiles[i]->setDiscovered(false, 2);
 	}
 }

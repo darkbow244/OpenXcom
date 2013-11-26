@@ -39,7 +39,7 @@ namespace OpenXcom
  * @param game Pointer to the core game.
  * @param origin Game section that originated this state.
  */
-SavedGameState::SavedGameState(Game *game, OptionsOrigin origin) : State(game), _origin(origin), _showMsg(true), _noUI(false)
+SavedGameState::SavedGameState(Game *game, OptionsOrigin origin, int firstValidRow) : State(game), _origin(origin), _showMsg(true), _noUI(false), _firstValidRow(firstValidRow)
 {
 	_screen = false;
 
@@ -52,7 +52,8 @@ SavedGameState::SavedGameState(Game *game, OptionsOrigin origin) : State(game), 
 	_txtTime = new Text(30, 9, 184, 32);
 	_txtDate = new Text(38, 9, 214, 32);
 	_txtStatus = new Text(320, 17, 0, 92);
-	_lstSaves = new TextList(288, 120, 8, 40);
+	_lstSaves = new TextList(288, 112, 8, 40);
+	_txtDetails = new Text(288, 9, 16, 160);
 
 	// Set palette
 	if (_origin != OPT_BATTLESCAPE)
@@ -69,6 +70,7 @@ SavedGameState::SavedGameState(Game *game, OptionsOrigin origin) : State(game), 
 	add(_txtDate);
 	add(_lstSaves);
 	add(_txtStatus);
+	add(_txtDetails);
 
 	centerAllSurfaces();
 
@@ -109,6 +111,12 @@ SavedGameState::SavedGameState(Game *game, OptionsOrigin origin) : State(game), 
 	_lstSaves->setSelectable(true);
 	_lstSaves->setBackground(_window);
 	_lstSaves->setMargin(8);
+	_lstSaves->onMouseOver((ActionHandler)&SavedGameState::lstSavesMouseOver);
+	_lstSaves->onMouseOut((ActionHandler)&SavedGameState::lstSavesMouseOut);
+
+	_txtDetails->setColor(Palette::blockOffset(15)-1);
+	_txtDetails->setSecondaryColor(Palette::blockOffset(8)+10);
+	_txtDetails->setText(tr("STR_DETAILS").arg(L""));
 }
 
 /**
@@ -117,7 +125,7 @@ SavedGameState::SavedGameState(Game *game, OptionsOrigin origin) : State(game), 
  * @param origin Game section that originated this state.
  * @param showMsg True if need to show messages like "Loading game" or "Saving game".
  */
-SavedGameState::SavedGameState(Game *game, OptionsOrigin origin, bool showMsg) : State(game), _origin(origin), _showMsg(showMsg), _noUI(true)
+SavedGameState::SavedGameState(Game *game, OptionsOrigin origin, int firstValidRow, bool showMsg) : State(game), _origin(origin), _showMsg(showMsg), _noUI(true), _firstValidRow(firstValidRow)
 {
 	if (_showMsg)
 	{
@@ -183,7 +191,7 @@ void SavedGameState::init()
 void SavedGameState::updateList()
 {
 	_lstSaves->clearList();
-	_saves = SavedGame::getList(_lstSaves, _game->getLanguage());
+	_saves = SavedGame::getList(_lstSaves, _game->getLanguage(), &_details);
 }
 
 /**
@@ -204,6 +212,22 @@ void SavedGameState::updateStatus(const std::string &msg)
 void SavedGameState::btnCancelClick(Action *)
 {
 	_game->popState();
+}
+
+void SavedGameState::lstSavesMouseOver(Action *)
+{
+	int sel = _lstSaves->getSelectedRow() - _firstValidRow;
+	std::wstring wstr;
+	if (sel >= 0 && sel < (int)_saves.size())
+	{
+		wstr = _details[sel];
+	}
+	_txtDetails->setText(tr("STR_DETAILS").arg(wstr));
+}
+
+void SavedGameState::lstSavesMouseOut(Action *)
+{
+	_txtDetails->setText(tr("STR_DETAILS").arg(L""));
 }
 
 }

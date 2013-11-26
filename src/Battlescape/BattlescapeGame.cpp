@@ -476,7 +476,10 @@ void BattlescapeGame::endTurn()
 		}
 	}
 
-	if (_save->getSide() != FACTION_NEUTRAL && _endTurnRequested)
+	bool battleComplete = liveAliens == 0 || liveSoldiers == 0;
+
+	if ((_save->getSide() != FACTION_NEUTRAL || battleComplete)
+		&& _endTurnRequested)
 	{
 		_parentState->getGame()->pushState(new NextTurnState(_parentState->getGame(), _save, _parentState));
 	}
@@ -1267,14 +1270,9 @@ void BattlescapeGame::primaryAction(const Position &pos)
 						// show a little infobox if it's successful
 						Game *game = _parentState->getGame();
 						if (_currentAction.type == BA_PANIC)
-						{
-							BattleUnit *unit = _save->getTile(_currentAction.target)->getUnit();
-							game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_HAS_PANICKED", unit->getGender()).arg(unit->getName(game->getLanguage()))));
-						}
+							game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_MORALE_ATTACK_SUCCESSFUL")));
 						else if (_currentAction.type == BA_MINDCONTROL)
-						{
 							game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_MIND_CONTROL_SUCCESSFUL")));
-						}
 						_parentState->updateSoldierInfo();
 					}
 					if (builtinpsi)
