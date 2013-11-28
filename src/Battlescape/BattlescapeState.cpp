@@ -250,6 +250,9 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups()
 	_map->onMousePress((ActionHandler)&BattlescapeState::mapPress);
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
+#ifdef __ANDROID__
+	_map->onKeyboardPress((ActionHandler)&BattlescapeState::mapKey, 0);
+#endif
 
 	// there is some cropping going on here, because the icons image is 320x200 while we only need the bottom of it.
 	Surface *s = _game->getResourcePack()->getSurface("ICONS.PCK");
@@ -750,6 +753,16 @@ void BattlescapeState::mapIn(Action *)
 	isMouseScrolling = false;
 	_map->setButtonsPressed(SDL_BUTTON_RIGHT, false);
 }
+
+#ifdef __ANDROID__
+void BattlescapeState::mapKey(Action *action)
+{
+	if (action->getDetails()->key.keysym.scancode == SDL_SCANCODE_AC_BACK)
+	{
+		_battleGame->cancelCurrentAction();
+	}
+}
+#endif
 
 /**
  * Moves the selected unit up.
