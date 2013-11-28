@@ -113,7 +113,6 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 	_settingBoolSet.push_back(std::pair<std::string, bool>("skipNextTurnScreen", false));
 
 	_boolQuantity = _settingBoolSet.size();
-	int sel = 0;
 	for (std::vector<std::pair<std::string, bool> >::iterator i = _settingBoolSet.begin(); i != _settingBoolSet.end(); ++i)
 	{
 		std::string settingName = (*i).first;
@@ -121,7 +120,6 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 		std::wstring setting =  (*i).second ? tr("STR_YES").c_str() : tr("STR_NO").c_str();
 		std::transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
 		_lstOptions->addRow(2, tr("STR_" + settingName).c_str(), setting.c_str());
-		++sel;
 	}
 	
 	_settingIntSet.push_back(std::pair<std::string, int>("battleNewPreviewPath", 0));
@@ -131,12 +129,12 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 
 	for (std::vector<std::pair<std::string, int> >::iterator i = _settingIntSet.begin(); i != _settingIntSet.end(); ++i)
 	{
-		std::string settingName = (*i).first;
-		(*i).second = Options::getInt(settingName);
+		std::string settingName = i->first;
+		i->second = Options::getInt(settingName);
 		std::wstringstream ss;
-		if (i->first == "battleNewPreviewPath")
+		if (settingName == "battleNewPreviewPath")
 		{
-			ss << updatePathString(sel - _settingBoolSet.size()).c_str();
+			ss << updatePathString(i->second).c_str();
 		}
 		else
 		{
@@ -144,7 +142,6 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 		}
 		std::transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
 		_lstOptions->addRow(2, tr("STR_" + settingName).c_str(), ss.str().c_str());
-		++sel;
 	}
 
 	_lstOptions->setSelectable(true);
@@ -222,7 +219,7 @@ void OptionsAdvancedState::lstOptionsPress(Action *action)
 			{
 				_settingIntSet.at(intSel).second = 3;
 			}
-			ss << updatePathString(intSel).c_str();
+			ss << updatePathString(_settingIntSet.at(intSel).second).c_str();
 			break;
 		case 1: // explosion height
 			_settingIntSet.at(intSel).second += increment;
@@ -288,7 +285,7 @@ void OptionsAdvancedState::lstOptionsMouseOut(Action *)
 
 std::wstring OptionsAdvancedState::updatePathString(int sel)
 {
-	switch (_settingIntSet.at(sel).second)
+	switch (sel)
 	{
 	case 0:
 		return tr("STR_NONE_UC");
