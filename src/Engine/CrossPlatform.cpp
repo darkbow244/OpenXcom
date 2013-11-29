@@ -118,6 +118,7 @@ std::vector<std::string> findDataFolders()
 #endif
 
 #ifdef __ANDROID__
+	list.push_back("/sdcard/openxcom/data/");
 	list.push_back("/storage/extSdCard/openxcom/data/");
 	return list;
 #endif
@@ -216,6 +217,7 @@ std::vector<std::string> findUserFolders()
 #endif
 
 #ifdef __ANDROID__
+	list.push_back("/sdcard/openxcom/");
 	list.push_back("/storage/extSdCard/openxcom/");
 	return list;
 #endif
@@ -289,7 +291,7 @@ std::string findConfigFolder()
 #endif
 
 #ifdef __ANDROID__
-	return "/storage/extSdCard/openxcom/";
+	return "/sdcard/openxcom/";
 #endif
 
 #if defined(_WIN32) || defined(__APPLE__)
