@@ -30,7 +30,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _isHovered(false), _isFocused(true), _listButton(false)
+InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _isHovered(false), _isFocused(true), _listButton(false)
 {
 }
 
@@ -192,6 +192,10 @@ void InteractiveSurface::handle(Action *action, State *state)
 				mouseClick(action, state);
 			}
 		}
+	}
+	else if (action->getDetails()->type == SDL_FINGERMOTION)
+	{
+		fingerMotion(action, state);
 	}
 
 	if (_isFocused)
@@ -410,6 +414,14 @@ void InteractiveSurface::keyboardRelease(Action *action, State *state)
 	}
 }
 
+void InteractiveSurface::fingerMotion(Action *action, State *state)
+{
+	if (_fingerMotion != 0)
+	{
+		(state->*_fingerMotion)(action);
+	}
+}
+
 void InteractiveSurface::textInput(Action *action, State *state)
 {
 	//TODO: do nothing?
@@ -525,6 +537,11 @@ void InteractiveSurface::onKeyboardRelease(ActionHandler handler, SDL_Keycode ke
 	{
 		_keyRelease.erase(key);
 	}
+}
+
+void InteractiveSurface::onFingerMotion(ActionHandler handler)
+{
+	_fingerMotion = handler;
 }
 
 /**

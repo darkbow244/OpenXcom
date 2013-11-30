@@ -43,7 +43,7 @@ private:
 	Uint8 _buttonsPressed;
 protected:
 	std::map<Uint8, ActionHandler> _click, _press, _release;
-	ActionHandler _in, _over, _out;
+	ActionHandler _in, _over, _out, _fingerMotion;
 	std::map<SDL_Keycode, ActionHandler> _keyPress, _keyRelease;
 	bool _isHovered, _isFocused, _listButton;
 
@@ -84,6 +84,7 @@ public:
 	void onKeyboardPress(ActionHandler handler, SDL_Keycode key = SDLK_UNKNOWN);
 	/// Hooks an action handler to releasing a key when the surface is focused.
 	void onKeyboardRelease(ActionHandler handler, SDL_Keycode key = SDLK_UNKNOWN);
+	void onFingerMotion(ActionHandler handler);
 	/// Processes a mouse button press event.
 	virtual void mousePress(Action *action, State *state);
 	/// Processes a mouse button release event.
@@ -100,6 +101,7 @@ public:
 	virtual void keyboardPress(Action *action, State *state);
 	/// Processes a keyboard key release event.
 	virtual void keyboardRelease(Action *action, State *state);
+	virtual void fingerMotion(Action *action, State *state);
 	virtual void textInput(Action *action, State *state);
 	/// Check this surface to see if it's a textlist button.
 	void setListButton();
