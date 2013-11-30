@@ -88,7 +88,11 @@ void createDefault()
 	setInt("musicVolume", MIX_MAX_VOLUME);
 	setString("language", "");
 	setInt("battleScrollSpeed", 12); // 4, 8, 12, 16, 24
+#ifdef __ANDROID__
+	setInt("battleScrollType", SCROLL_DRAG); // just for preventing auto
+#else
 	setInt("battleScrollType", SCROLL_AUTO);
+#endif
 	setInt("battleScrollDragButton", SDL_BUTTON_MIDDLE);
 	setBool("battleScrollDragInvert", false); // true drags away from the cursor, false drags towards (like a grab)
 	setInt("battleScrollDragTimeTolerance", 300); // miliSecond
