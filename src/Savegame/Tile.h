@@ -224,8 +224,6 @@ public:
 	int getOverlaps() const;
 	/// increment the overlap value on this tile.
 	void addOverlap();
-	void setAimed(bool aimed);
-	bool isAimed();
 };
 
 }

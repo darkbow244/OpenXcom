@@ -1162,11 +1162,7 @@ bool BattlescapeGame::cancelCurrentAction(bool bForce)
 
 	if (_save->getPathfinding()->removePreview() && bPreviewed) return true;
 
-	if (_aimedPos != Position())
-	{
-		_save->getTile(_aimedPos)->setAimed(false);
-		_aimedPos = Position();
-	}
+	_aimedPos = Position();
 
 	if (_states.empty() || bForce)
 	{
@@ -1291,11 +1287,12 @@ void BattlescapeGame::primaryAction(const Position &pos)
 		}
 		else
 		{
-			/* shooting */
-			if (_aimedPos != Position())
-				_save->getTile(_aimedPos)->setAimed(false);
-
-			if (pos == _aimedPos)
+			/* shooting: shoot on 2nd click for android, direct otherwise */
+			if (pos == _aimedPos
+#ifndef __ANDROID__
+					|| true
+#endif	
+					)
 			{
 				_currentAction.target = pos;
 				getMap()->setCursorType(CT_NONE);
@@ -1307,9 +1304,6 @@ void BattlescapeGame::primaryAction(const Position &pos)
 			else
 			{
 				_aimedPos = pos;
-				Tile *tile = _save->getTile(pos);
-				tile->setMarkerColor(3);
-				tile->setAimed(true);
 			}
 		}
 	}

@@ -634,25 +634,6 @@ void Map::drawTerrain(Surface *surface)
 							tmpSurface->blitNShade(surface, screenPosition.x - 16, screenPosition.y - (20 - tile->getTerrainLevel()), 0, false, tileColor);
 						}
 					}
-					// Draw Aim Preview
-					if (tile->isAimed())
-					{
-						if (itZ > 0 && tile->hasNoFloor(tileBelow))
-						{
-							tmpSurface = _res->getSurfaceSet("Pathfinding")->getFrame(23);
-							if (tmpSurface)
-							{
-								tmpSurface->blitNShade(surface, screenPosition.x - 16, screenPosition.y - 20, 0, false, tile->getMarkerColor());
-							}
-						}
-						int overlay = tile->getPreview() + 11;
-						tmpSurface = _res->getSurfaceSet("Pathfinding")->getFrame(overlay);
-						if (tmpSurface)
-						{
-							const int adjustment = 20 - tile->getTerrainLevel();
-							tmpSurface->blitNShade(surface, screenPosition.x - 16, screenPosition.y - adjustment, 0, false, tile->getMarkerColor());
-						}
-					}
 					// Draw cursor front
 					if (_cursorType != CT_NONE && _selectorX > itX - _cursorSize && _selectorY > itY - _cursorSize && _selectorX < itX+1 && _selectorY < itY+1 && !_save->getBattleState()->getMouseOverIcons())
 					{

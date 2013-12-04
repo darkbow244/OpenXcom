@@ -876,14 +876,4 @@ void Tile::addOverlap()
 	++_overlaps;
 }
 
-void Tile::setAimed(bool aimed)
-{
-	_aimed = aimed;
-}
-
-bool Tile::isAimed()
-{
-	return _aimed;
-}
-
 }
