@@ -104,10 +104,8 @@ void createDefault()
 	setInt("battleExplosionHeight", 0); //0, 1, 2, 3
 #ifdef __ANDROID__
 	setInt("battleNewPreviewPath", 3); // for android, set full preview by default
-	setBool("battleShootPreview", true); // for android, also shoot preview
 #else
 	setInt("battleNewPreviewPath", 0); // requires double-click to confirm moves 0 = none, 1 = arrows, 2 = numbers, 3 = full
-	setBool("battleShootPreview", false); // double click to shoot
 #endif
 	setBool("battleRangeBasedAccuracy", false);
 	setBool("fpsCounter", false);

@@ -111,7 +111,6 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 	_settingBoolSet.push_back(std::pair<std::string, bool>("psiStrengthEval", false));
 	_settingBoolSet.push_back(std::pair<std::string, bool>("anytimePsiTraining", false));
 	_settingBoolSet.push_back(std::pair<std::string, bool>("skipNextTurnScreen", false));
-	_settingBoolSet.push_back(std::pair<std::string, bool>("battleShootPreview", false));
 
 	_boolQuantity = _settingBoolSet.size();
 	for (std::vector<std::pair<std::string, bool> >::iterator i = _settingBoolSet.begin(); i != _settingBoolSet.end(); ++i)

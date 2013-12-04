@@ -1292,30 +1292,10 @@ void BattlescapeGame::primaryAction(const Position &pos)
 		else
 		{
 			/* shooting */
-			bool shoot = false;
-			if (!Options::getBool("battleShootPreview"))
-			{
-				shoot = true;
-			}
-			else
-			{
-				if (_aimedPos != Position())
-					_save->getTile(_aimedPos)->setAimed(false);
+			if (_aimedPos != Position())
+				_save->getTile(_aimedPos)->setAimed(false);
 
-				if (pos == _aimedPos)
-				{
-					shoot = true;
-				}
-				else
-				{
-					_aimedPos = pos;
-					Tile *tile = _save->getTile(pos);
-					tile->setMarkerColor(3);
-					tile->setAimed(true);
-				}
-			}
-
-			if (shoot)
+			if (pos == _aimedPos)
 			{
 				_currentAction.target = pos;
 				getMap()->setCursorType(CT_NONE);
@@ -1323,6 +1303,13 @@ void BattlescapeGame::primaryAction(const Position &pos)
 				_currentAction.cameraPosition = getMap()->getCamera()->getMapOffset();
 				_states.push_back(new ProjectileFlyBState(this, _currentAction));
 				statePushFront(new UnitTurnBState(this, _currentAction)); // first of all turn towards the target
+			}
+			else
+			{
+				_aimedPos = pos;
+				Tile *tile = _save->getTile(pos);
+				tile->setMarkerColor(3);
+				tile->setAimed(true);
 			}
 		}
 	}
