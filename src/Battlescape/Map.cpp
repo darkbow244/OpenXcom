@@ -75,7 +75,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param visibleMapHeight Current visible map height.
  */
-Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false), _scrollAccumX(0), _scrollAccumY(0)
+Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false)
 {
 	_previewSetting = Options::getInt("battleNewPreviewPath");
 	if (Options::getBool("traceAI"))
@@ -864,23 +864,7 @@ void Map::mouseOver(Action *action, State *state)
  */
 void Map::fingerMotion(Action *action, State *state)
 {
-	_scrollAccumX += action->getDetails()->tfinger.dx *
-		Options::getInt("baseXResolution");
-	_scrollAccumY += action->getDetails()->tfinger.dy *
-		Options::getInt("baseYResolution");
-	int scrollIncX = 0;
-	int scrollIncY = 0;
-	if (std::abs(_scrollAccumX) > 1)
-	{
-		scrollIncX = (int)_scrollAccumX;
-		_scrollAccumX -= scrollIncX;
-	}
-	if (std::abs(_scrollAccumY) > 1)
-	{
-		scrollIncY = (int)_scrollAccumY;
-		_scrollAccumY -= scrollIncY;
-	}
-	_camera->scrollXY(scrollIncX, scrollIncY, false);
+	InteractiveSurface::fingerMotion(action, state);
 }
 
 

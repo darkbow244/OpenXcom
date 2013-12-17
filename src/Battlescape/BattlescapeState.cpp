@@ -91,7 +91,8 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState(Game *game) : State(game), _popups()
+BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(),
+	_scrollAccumX(0), _scrollAccumY(0), _swipeFromSoldier(false)
 {
 	//game->getScreen()->setScale(1.0);
 	int screenWidth = Options::getInt("baseXResolution");
@@ -248,8 +249,10 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups()
 	_map->init();
 	_map->onMouseOver((ActionHandler)&BattlescapeState::mapOver);
 	_map->onMousePress((ActionHandler)&BattlescapeState::mapPress);
+	_map->onMouseRelease((ActionHandler)&BattlescapeState::mapRelease);
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
+	_map->onFingerMotion((ActionHandler)&BattlescapeState::fingerMotion);
 #ifdef __ANDROID__
 	_map->onKeyboardPress((ActionHandler)&BattlescapeState::mapKey, 0);
 #endif
@@ -666,6 +669,31 @@ void BattlescapeState::mapPress(Action *action)
 			mouseScrollingStartTime = SDL_GetTicks();
 		}
 	}
+
+#ifdef __ANDROID__
+	Position pos;
+	_map->getSelectorPosition(&pos);
+	if (pos == _save->getSelectedUnit()->getPosition())
+	{
+		_swipeFromSoldier = true;
+	}
+	else
+	{
+		_swipeFromSoldier = false;
+	}
+#endif
+}
+
+void BattlescapeState::mapRelease(Action *action)
+{
+#ifdef __ANDROID__
+	Position pos;
+	_map->getSelectorPosition(&pos);
+	if (_swipeFromSoldier && pos != _save->getSelectedUnit()->getPosition())
+	{
+		_battleGame->secondaryAction(pos);
+	}
+#endif
 }
 
 /**
@@ -752,6 +780,32 @@ void BattlescapeState::mapIn(Action *)
 {
 	isMouseScrolling = false;
 	_map->setButtonsPressed(SDL_BUTTON_RIGHT, false);
+}
+
+void BattlescapeState::fingerMotion(Action *action)
+{
+	//don't scroll if we swipe from soldier, which is used to substitute right
+	//click in android
+	if (_swipeFromSoldier)
+		return;
+
+	_scrollAccumX += action->getDetails()->tfinger.dx *
+		Options::getInt("baseXResolution");
+	_scrollAccumY += action->getDetails()->tfinger.dy *
+		Options::getInt("baseYResolution");
+	int scrollIncX = 0;
+	int scrollIncY = 0;
+	if (std::abs(_scrollAccumX) > 1)
+	{
+		scrollIncX = (int)_scrollAccumX;
+		_scrollAccumX -= scrollIncX;
+	}
+	if (std::abs(_scrollAccumY) > 1)
+	{
+		scrollIncY = (int)_scrollAccumY;
+		_scrollAccumY -= scrollIncY;
+	}
+	_map->getCamera()->scrollXY(scrollIncX, scrollIncY, false);
 }
 
 #ifdef __ANDROID__
