@@ -600,12 +600,17 @@ void Zoom::flipWithZoom(SDL_Surface *src, SDL_Surface *dst, int topBlackBand, in
 {
 	assert (0 && "not implemented");
 #if 0
-	if (Screen::isOpenGLEnabled() && glOut->buffer_surface)
+	if (Screen::isOpenGLEnabled())
 	{
-		SDL_BlitSurface(src, 0, glOut->buffer_surface->getSurface(), 0); // TODO; this is less than ideal...
+#ifndef __NO_OPENGL
+		if (glOut->buffer_surface)
+		{
+			SDL_BlitSurface(src, 0, glOut->buffer_surface->getSurface(), 0); // TODO; this is less than ideal...
 
-		glOut->refresh(glOut->linear, glOut->iwidth, glOut->iheight, dst->w, dst->h, topBlackBand, bottomBlackBand, leftBlackBand, rightBlackBand);
-		SDL_GL_SwapBuffers();
+			glOut->refresh(glOut->linear, glOut->iwidth, glOut->iheight, dst->w, dst->h, topBlackBand, bottomBlackBand, leftBlackBand, rightBlackBand);
+			SDL_GL_SwapBuffers();
+		}
+#endif
 	}
 	else if (topBlackBand <= 0 && bottomBlackBand <= 0 && leftBlackBand <= 0 && rightBlackBand <= 0)
 	{

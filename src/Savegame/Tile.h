@@ -77,6 +77,7 @@ protected:
 	int _preview;
 	int _TUMarker;
 	int _overlaps;
+	bool _danger;
 	bool _aimed;
 public:
 	/// Creates a tile.
@@ -224,6 +225,11 @@ public:
 	int getOverlaps() const;
 	/// increment the overlap value on this tile.
 	void addOverlap();
+	/// set the danger flag on this tile (so the AI will avoid it).
+	void setDangerous();
+	/// check the danger flag on this tile.
+	bool getDangerous();
+
 };
 
 }

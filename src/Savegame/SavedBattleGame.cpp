@@ -897,11 +897,17 @@ void SavedBattleGame::resetUnitTiles()
 	{
 		if (!(*i)->isOut())
 		{
+			int size = (*i)->getArmor()->getSize() - 1;
 			if ((*i)->getTile() && (*i)->getTile()->getUnit() == (*i))
 			{
-				(*i)->getTile()->setUnit(0); // XXX XXX XXX doesn't this fail to clear 3 out of 4 tiles for 2x2 units?
+				for (int x = size; x >= 0; x--)
+				{
+					for (int y = size; y >= 0; y--)
+					{
+						getTile((*i)->getTile()->getPosition() + Position(x,y,0))->setUnit(0);
+					}
+				}
 			}
-			int size = (*i)->getArmor()->getSize() - 1;
 			for (int x = size; x >= 0; x--)
 			{
 				for (int y = size; y >= 0; y--)
@@ -918,7 +924,37 @@ void SavedBattleGame::resetUnitTiles()
 		}
 	}
 }
+ 
+/**
+ * Gives access to the "storage space" vector, for distribution of items in base defense missions.
+ */
+std::vector<Position> &SavedBattleGame::getStorageSpace()
+{
+	return _storageSpace;
+}
 
+/**
+ * Move all the leftover items in base defense missions to random locations in the storage facilities
+ * @param t the tile where all our goodies are initially stored.
+ */
+void SavedBattleGame::randomizeItemLocations(Tile *t)
+{
+	if (!_storageSpace.empty())
+	{
+		for (std::vector<BattleItem*>::iterator it = t->getInventory()->begin(); it != t->getInventory()->end();)
+		{
+			if ((*it)->getSlot()->getId() == "STR_GROUND")
+			{
+				getTile(_storageSpace.at(RNG::generate(0, _storageSpace.size() -1)))->addItem(*it, (*it)->getSlot());
+				it = t->getInventory()->erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
+}
 /**
  * Removes an item from the game. Eg. when ammo item is depleted.
  * @param item The Item to remove.
@@ -1005,7 +1041,7 @@ void SavedBattleGame::setObjectiveDestroyed(bool flag)
 	if (flag && Options::getBool("battleAutoEnd"))
 	{
 		setSelectedUnit(0);
-		_battleState->getBattleGame()->statePushBack(0);
+		_battleState->getBattleGame()->requestEndTurn();
 	}
 }
 
@@ -1099,6 +1135,7 @@ Node *SavedBattleGame::getPatrolNode(bool scout, BattleUnit *unit, Node *fromNod
 			&& !(n->getType() & Node::TYPE_DANGEROUS)													// don't go there if an alien got shot there; stupid behavior like that
 			&& setUnitPosition(unit, n->getPosition(), true)											// check if not already occupied
 			&& getTile(n->getPosition()) && !getTile(n->getPosition())->getFire()						// you are not a firefighter; do not patrol into fire
+			&& (unit->getFaction() != FACTION_HOSTILE || !getTile(n->getPosition())->getDangerous())	// aliens don't run into a grenade blast
 			&& (!scout || n != fromNode)																// scouts push forward
 			&& n->getPosition().x > 0 && n->getPosition().y > 0)
 		{
@@ -1366,7 +1403,8 @@ bool SavedBattleGame::setUnitPosition(BattleUnit *bu, const Position &position, 
 		for (int y = size; y >= 0; y--)
 		{
 			Tile *t = getTile(position + Position(x,y,0));
-			if (t == 0 || (t->getUnit() != 0 && t->getUnit() != bu) || t->getTUCost(MapData::O_OBJECT, bu->getArmor()->getMovementType()) == 255)
+			Tile *tb = getTile(position + Position(x,y,-1));
+			if (t == 0 || (t->getUnit() != 0 && t->getUnit() != bu) || t->getTUCost(MapData::O_OBJECT, bu->getArmor()->getMovementType()) == 255 || (t->hasNoFloor(tb) && bu->getArmor()->getMovementType() != MT_FLY))
 			{
 				return false;
 			}
@@ -1391,7 +1429,7 @@ bool SavedBattleGame::setUnitPosition(BattleUnit *bu, const Position &position, 
 		{
 			if (x==0 && y==0)
 			{
-				bu->setPosition(position + Position(x,y,0));
+				bu->setPosition(position);
 			}
 			getTile(position + Position(x,y,0))->setUnit(bu, getTile(position + Position(x,y,-1)));
 		}
