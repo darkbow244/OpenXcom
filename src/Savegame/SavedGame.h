@@ -53,6 +53,18 @@ class Soldier;
 enum GameDifficulty { DIFF_BEGINNER = 0, DIFF_EXPERIENCED, DIFF_VETERAN, DIFF_GENIUS, DIFF_SUPERHUMAN };
 
 /**
+ * Container for savegame info displayed on listings.
+ */
+struct SaveInfo
+{
+	std::string fileName;
+	std::wstring displayName;
+	time_t timestamp;
+	std::wstring isoDate, isoTime;
+	std::wstring details;
+};
+
+/**
  * The game data that gets written to disk when the game is saved.
  * A saved game holds all the variable info in a game like funds,
  * game time, current bases and contents, world activities, score, etc.
@@ -63,7 +75,7 @@ private:
 	std::wstring _name;
 	GameDifficulty _difficulty;
 	GameTime *_time;
-	std::vector<int> _funds, _maintenance, _researchScores;
+	std::vector<int> _funds, _maintenance, _researchScores, _incomes, _expenditures;
 	double _globeLon, _globeLat;
 	int _globeZoom;
 	std::map<std::string, int> _ids;
@@ -93,7 +105,7 @@ public:
 	/// Cleans up the saved game.
 	~SavedGame();
 	/// Gets list of saves in the user directory.
-	static std::vector<std::string> getList(TextList *list, Language *lang, std::vector<std::wstring> *details);
+	static std::vector<SaveInfo> getList(Language *lang);
 	/// Loads a saved game from YAML.
 	void load(const std::string &filename, Ruleset *rule);
 	/// Saves a saved game to YAML.
@@ -190,6 +202,10 @@ public:
 	void addResearchScore(int score);
 	/// gets the list of research scores
 	std::vector<int> getResearchScores();
+	/// gets the list of incomes.
+	std::vector<int> getIncomes();
+	/// gets the list of expenditures.
+	std::vector<int> getExpenditures();
 	/// gets whether or not the player has been warned
 	bool getWarned() const;
 	/// sets whether or not the player has been warned

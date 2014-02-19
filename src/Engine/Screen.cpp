@@ -68,7 +68,7 @@ void Screen::makeVideoFlags()
  * @warning Currently the game is designed for 8bpp, so there's no telling what'll
  * happen if you use a different value.
  */
-Screen::Screen(int width, int height, int bpp, bool fullscreen, int windowedModePositionX, int windowedModePositionY) : _window(0), _renderer(0), _bpp(bpp), _scaleX(1.0), _scaleY(1.0), _fullscreen(fullscreen), _numColors(0), _firstColor(0), _surface(0)
+Screen::Screen(int width, int height, int bpp, bool fullscreen, int windowedModePositionX, int windowedModePositionY) : _window(0), _renderer(0), _bpp(bpp), _scaleX(1.0), _scaleY(1.0), _fullscreen(fullscreen), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0)
 {
 	char *prev = (char*)"";
 	if (!_fullscreen && (windowedModePositionX != -1 || windowedModePositionY != -1))
@@ -287,6 +287,8 @@ void Screen::setResolution(int width, int height)
 				SDL_TEXTUREACCESS_STREAMING, BASE_WIDTH, BASE_HEIGHT);
 	}
 	SDL_SetColorKey(_surface->getSurface(), 0, 0); // turn off color key! 
+	Options::setInt("displayWidth", getWidth());
+	Options::setInt("displayHeight", getHeight());
 	_scaleX = getWidth() / (double)BASE_WIDTH;
 	_scaleY = getHeight() / (double)BASE_HEIGHT;
 
@@ -360,11 +362,13 @@ void Screen::setResolution(int width, int height)
 #if 0
 	if (isOpenGLEnabled()) 
 	{
+#ifndef __NO_OPENGL
 		glOutput.init(BASE_WIDTH, BASE_HEIGHT);
 		glOutput.linear = Options::getBool("useOpenGLSmoothing"); // setting from shader file will override this, though
 		glOutput.set_shader(CrossPlatform::getDataFile(Options::getString("useOpenGLShader")).c_str());
 		glOutput.setVSync(Options::getBool("vSyncForOpenGL"));
 		OpenGL::checkErrors = Options::getBool("checkOpenGLErrors");
+#endif
 	}
 #endif
 
@@ -437,23 +441,21 @@ void Screen::screenshot(const std::string &filename) const
 {
 	assert (0 && "FIXME: no time for screenshots");
 #if 0
-	SDL_Surface *screenshot = SDL_CreateRGBSurface(0, getWidth(), getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
-
-
+	SDL_Surface *screenshot = SDL_AllocSurface(0, getWidth(), getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
+	
 	if (isOpenGLEnabled())
 	{
+#ifndef __NO_OPENGL
 		GLenum format = GL_RGB;
-
-		#ifndef __NO_OPENGL
 
 		for (int y = 0; y < getHeight(); ++y)
 		{
 			glReadPixels(0, getHeight()-(y+1), getWidth(), 1, format, GL_UNSIGNED_BYTE, ((Uint8*)screenshot->pixels) + y*screenshot->pitch);
 		}
 		glErrorCheck();
-		
-		#endif
-	} else
+#endif
+	}
+	else
 	{
 		SDL_BlitSurface(_screen, 0, screenshot, 0);
 	}

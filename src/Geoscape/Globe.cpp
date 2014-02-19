@@ -254,6 +254,7 @@ struct CreateShadow
 Globe::Globe(Game *game, int cenX, int cenY, int width, int height, int x, int y):
 	InteractiveSurface(width, height, x, y),
 	_rotLon(0.0), _rotLat(0.0),
+	_hoverLon(0.0), _hoverLat(0.0),
 	_cenX(cenX), _cenY(cenY), _game(game),
 	_blink(true), _hover(false), _cacheLand()
 {
@@ -1179,7 +1180,7 @@ void Globe::drawRadars()
 		return;
 /*	Text *label = new Text(80, 9, 0, 0);
 	label->setPalette(getPalette());
-	label->setFonts(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"));
+	label->initText(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"), _game->getLanguage());
 	label->setAlign(ALIGN_LEFT);
 	label->setColor(Palette::blockOffset(15)-1);
 */
@@ -1390,7 +1391,7 @@ void Globe::drawDetail()
 	{
 		Text *label = new Text(100, 9, 0, 0);
 		label->setPalette(getPalette());
-		label->setFonts(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"));
+		label->initText(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"), _game->getLanguage());
 		label->setAlign(ALIGN_CENTER);
 		label->setColor(Palette::blockOffset(15)-1);
 
@@ -1418,7 +1419,7 @@ void Globe::drawDetail()
 	{
 		Text *label = new Text(80, 9, 0, 0);
 		label->setPalette(getPalette());
-		label->setFonts(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"));
+		label->initText(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"), _game->getLanguage());
 		label->setAlign(ALIGN_CENTER);
 		label->setColor(Palette::blockOffset(8)+10);
 

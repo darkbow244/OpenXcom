@@ -22,6 +22,8 @@
 #include <sstream>
 #include <string>
 #include <locale>
+#include <stdint.h>
+#include <sys/stat.h>
 #include "../dirent.h"
 #include "Logger.h"
 #include "Exception.h"
@@ -44,7 +46,6 @@
 #pragma comment(lib, "shlwapi.lib")
 #endif
 #else
-#include <sys/stat.h>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -676,6 +677,11 @@ std::string sanitizeFilename(const std::string &filename)
  */
 std::string noExt(const std::string &filename)
 {
+	size_t dot = filename.find_last_of('.');
+	if (dot == std::string::npos)
+	{
+		return filename;
+	}
 	return filename.substr(0, filename.find_last_of('.'));
 }
 
@@ -706,9 +712,17 @@ std::string getLocale()
 #else
 	std::locale l("");
 	std::string name = l.name();
-	std::string language = name.substr(0, name.find_first_of('_')-1);
-	std::string country = name.substr(name.find_first_of('_')-1, name.find_first_of(".")-1);
-	
+	size_t dash = name.find_first_of('_'), dot = name.find_first_of('.');
+	if (dash == std::string::npos)
+	{
+		return "";
+	}
+	std::string language = name.substr(0, dash - 1);
+	if (dot == std::string::npos)
+	{
+		return language;
+	}
+	std::string country = name.substr(dash - 1, dot - 1);
 	std::ostringstream locale;
 	locale << language << "-" << country;
 	return locale.str();
@@ -730,7 +744,90 @@ bool isQuitShortcut(const SDL_Event &ev)
 	return (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_q && ev.key.keysym.mod & KMOD_LMETA);
 #else
 	//TODO add other OSs shortcuts.
+    (void)ev;
 	return false;
+#endif
+}
+
+/**
+ * Gets the last modified date of a file.
+ * @param path Full path to file.
+ * @return The timestamp in integral format.
+ */
+time_t getDateModified(const std::string &path)
+{
+/*#ifdef _WIN32
+	WIN32_FILE_ATTRIBUTE_DATA info;
+	if (GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &info))
+	{
+		FILETIME ft = info.ftLastWriteTime;
+		LARGE_INTEGER li;
+		li.HighPart = ft.dwHighDateTime;
+		li.LowPart = ft.dwLowDateTime;
+		return li.QuadPart;
+	}
+	else
+	{
+		return 0;
+	}
+#endif*/
+	struct stat info;
+	if (stat(path.c_str(), &info) == 0)
+	{
+		return info.st_mtime;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+/**
+ * Converts a date/time into a human-readable string
+ * using the ISO 8601 standard.
+ * @param time Value in timestamp format.
+ * @return String pair with date and time.
+ */
+std::pair<std::wstring, std::wstring> timeToString(time_t time)
+{
+	wchar_t localDate[25], localTime[25];
+
+/*#ifdef _WIN32
+	LARGE_INTEGER li;
+	li.QuadPart = time;
+	FILETIME ft;
+	ft.dwHighDateTime = li.HighPart;
+	ft.dwLowDateTime = li.LowPart;
+	SYSTEMTIME st;
+	FileTimeToLocalFileTime(&ft, &ft);
+	FileTimeToSystemTime(&ft, &st);
+
+	GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, localDate, 25);
+	GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, localTime, 25);
+#endif*/
+
+	struct tm *timeinfo = localtime(&(time));
+	wcsftime(localDate, 25, L"%Y-%m-%d", timeinfo);
+	wcsftime(localTime, 25, L"%H:%M", timeinfo);
+
+	return std::make_pair(localDate, localTime);
+}
+
+/**
+ * Compares two Unicode strings using natural human ordering.
+ * @param a String A.
+ * @param b String B.
+ * @return String A comes before String B.
+ */
+bool naturalCompare(const std::wstring &a, const std::wstring &b)
+{
+#if defined(_WIN32) && (!defined(__MINGW32__) || defined(__MINGW64_VERSION_MAJOR))
+	return (StrCmpLogicalW(a.c_str(), b.c_str()) < 0);
+#else
+	// sorry unix users you get ASCII sort
+	std::wstring::const_iterator i, j;
+	for (i = a.begin(), j = b.begin(); i != a.end() && j != b.end() && tolower(*i) == tolower(*j); i++, j++);
+	return (i != a.end() && j != b.end() && tolower(*i) < tolower(*j));
 #endif
 }
 

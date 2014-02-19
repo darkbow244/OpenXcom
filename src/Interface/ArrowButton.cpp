@@ -32,7 +32,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-ArrowButton::ArrowButton(ArrowShape shape, int width, int height, int x, int y) : ImageButton(width, height, x, y), _shape(shape), _list(0), _listButton(false)
+ArrowButton::ArrowButton(ArrowShape shape, int width, int height, int x, int y) : ImageButton(width, height, x, y), _shape(shape), _list(0)
 {
 	_timer = new Timer(50);
 	_timer->onTimer((SurfaceHandler)&ArrowButton::scroll);
@@ -65,6 +65,16 @@ bool ArrowButton::isButtonHandled(Uint8 button)
 void ArrowButton::setColor(Uint8 color)
 {
 	ImageButton::setColor(color);
+	_redraw = true;
+}
+
+/**
+ * Changes the shape for the arrow button.
+ * @param shape Shape of the arrow.
+ */
+void ArrowButton::setShape(ArrowShape shape)
+{
+	_shape = shape;
 	_redraw = true;
 }
 

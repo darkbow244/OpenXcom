@@ -62,6 +62,7 @@ private:
 	Tile *_craftInventoryTile;
 	std::string _alienRace;
 	int _alienItemLevel;
+	bool _allowAutoLoadout;
 
 	/// Generates a new battlescape map.
 	void generateMap();
@@ -74,11 +75,9 @@ private:
 	/// Adds a civlian to the game.
 	BattleUnit *addCivilian(Unit *rules);
 	/// Places an item on a soldier based on equipment layout.
-	BattleItem* placeItemByLayout(BattleItem *item);
-	/// Adds an item to the game.
-	BattleItem* addItem(BattleItem *item, bool secondPass);
-	/// Adds an item to a unit.
-	BattleItem* addItem(RuleItem *item, BattleUnit *unit);
+	bool placeItemByLayout(BattleItem *item);
+	/// Adds an item to a unit and the game.
+	bool addItem(BattleItem *item, BattleUnit *unit, bool allowSecondClip = false);
 	/// Loads an XCom MAP file.
 	int loadMAP(MapBlock *mapblock, int xoff, int yoff, RuleTerrain *terrain, int objectIDOffset, bool discovered = false);
 	/// Loads an XCom RMP file.

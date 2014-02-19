@@ -189,6 +189,7 @@ void BattlescapeGame::handleAI(BattleUnit *unit)
 		}
 		if (_save->getSelectedUnit())
 		{
+			_parentState->updateSoldierInfo();
 			getMap()->getCamera()->centerOnPosition(_save->getSelectedUnit()->getPosition());
 			if (_save->getSelectedUnit()->getId() <= unit->getId())
 			{
@@ -336,6 +337,7 @@ void BattlescapeGame::handleAI(BattleUnit *unit)
 		}
 		if (_save->getSelectedUnit())
 		{
+			_parentState->updateSoldierInfo();
 			getMap()->getCamera()->centerOnPosition(_save->getSelectedUnit()->getPosition());
 			if (_save->getSelectedUnit()->getId() <= unit->getId())
 			{
@@ -651,25 +653,8 @@ void BattlescapeGame::handleNonTargetAction()
 			{
 				if (_currentAction.actor->spendTimeUnits(_currentAction.TU))
 				{
-					Position p;
-					Pathfinding::directionToVector(_currentAction.actor->getDirection(), &p);
-					Tile * tile (_save->getTile(_currentAction.actor->getPosition() + p));
-					for (int x = 0; x != _currentAction.actor->getArmor()->getSize(); ++x)
-					{
-						for (int y = 0; y != _currentAction.actor->getArmor()->getSize(); ++y)
-						{
-							tile = _save->getTile(Position(_currentAction.actor->getPosition().x + x, _currentAction.actor->getPosition().y + y, _currentAction.actor->getPosition().z) + p);
-							if (tile->getUnit() && tile->getUnit() != _currentAction.actor)
-							{
-								Position voxel = Position(tile->getPosition().x*16,tile->getPosition().y*16,tile->getPosition().z*24);
-								voxel.x += 8;voxel.y += 8;voxel.z += 8;
-								statePushNext(new ExplosionBState(this, voxel, _currentAction.weapon, _currentAction.actor));
-								break;
-							}
-						}
-						if (tile->getUnit() && tile->getUnit() != _currentAction.actor)
-							break;
-					}
+					Position voxel = _currentAction.target * Position(16, 16, 24) + Position(8,8,8 - _save->getTile(_currentAction.target)->getTerrainLevel());
+					statePushNext(new ExplosionBState(this, voxel, _currentAction.weapon, _currentAction.actor));
 				}
 				else
 				{
@@ -1010,7 +995,7 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, bool justChecking)
 				switch (effectiveTuReserved)
 				{
 				case BA_NONE: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING"); break;
-				default: _parentState->warning("STR_TUS_RESERVED_FOR_KNEELING_AND_FIRING");
+				default: _parentState->warning("STR_TIME_UNITS_RESERVED_FOR_KNEELING_AND_FIRING");
 				}
 			}
 			else
@@ -1238,7 +1223,7 @@ void BattlescapeGame::primaryAction(const Position &pos)
 				if (_currentAction.actor->spendTimeUnits(_currentAction.TU))
 				{
 					_parentState->getGame()->getResourcePack()->getSound("BATTLE.CAT", _currentAction.weapon->getRules()->getHitSound())->play();
-					_parentState->getGame()->pushState (new UnitInfoState(_parentState->getGame(), _save->selectUnit(pos), _parentState));
+					_parentState->getGame()->pushState (new UnitInfoState(_parentState->getGame(), _save->selectUnit(pos), _parentState, false, true));
 					cancelCurrentAction();
 				}
 				else
@@ -1311,11 +1296,14 @@ void BattlescapeGame::primaryAction(const Position &pos)
 		}
 		else if (playableUnitSelected())
 		{
-
-			if (_currentAction.target != pos && bPreviewed)
+			bool modifierPressed = (SDL_GetModState() & KMOD_CTRL) != 0;
+			if (bPreviewed &&
+				(_currentAction.target != pos || (_save->getPathfinding()->isModifierUsed() != modifierPressed)))
+			{
 				_save->getPathfinding()->removePreview();
+			}
 			_currentAction.run = false;
-			_currentAction.strafe = _save->getStrafeSetting() && (SDL_GetModState() & KMOD_CTRL) != 0 && _save->getSelectedUnit()->getTurretType() == -1;
+			_currentAction.strafe = _save->getStrafeSetting() && modifierPressed && _save->getSelectedUnit()->getTurretType() == -1;
 			if (_currentAction.strafe && _save->getTileEngine()->distance(_currentAction.actor->getPosition(), pos) > 1)
 			{
 				_currentAction.run = true;

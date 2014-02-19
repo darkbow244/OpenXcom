@@ -99,7 +99,6 @@ void createDefault()
 	setBool("battleInstantGrenade", false); // set to true if you want to play with the alternative grenade handling
 	setInt("battleExplosionHeight", 0); //0, 1, 2, 3
 	setInt("battleNewPreviewPath", 0); // requires double-click to confirm moves 0 = none, 1 = arrows, 2 = numbers, 3 = full
-	setBool("battleRangeBasedAccuracy", false);
 	setBool("fpsCounter", false);
 	setBool("craftLaunchAlways", false);
 	setBool("globeSeasons", false);
@@ -138,6 +137,9 @@ void createDefault()
     setBool("cursorInBlackBandsInBorderlessWindow", false);
 	setBool("newSeedOnLoad", false);
 	setBool("skipNextTurnScreen", false);
+	setBool("disableAutoEquip", false);
+	setBool("battleUFOExtenderAccuracy", false);
+	setInt("saveOrder", SORT_DATE_DESC);
 
 	// new battle mode data
 	setInt("NewBattleMission", 0);

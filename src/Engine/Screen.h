@@ -46,7 +46,6 @@ private:
 	//SDL_Surface *_screen;
 	SDL_Window *_window;
 	SDL_Renderer *_renderer;
-	void *_misalignedPixelBuffer;
 	int _bpp;
 	double _scaleX, _scaleY;
 	int _topBlackBand, _bottomBlackBand, _leftBlackBand, _rightBlackBand, _cursorTopBlackBand, _cursorLeftBlackBand;

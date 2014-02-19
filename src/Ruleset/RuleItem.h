@@ -23,11 +23,11 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
-enum ItemDamageType { DT_NONE, DT_AP, DT_IN, DT_HE, DT_LASER, DT_PLASMA, DT_STUN, DT_MELEE, DT_ACID, DT_SMOKE };
-enum BattleType { BT_NONE, BT_FIREARM, BT_AMMO, BT_MELEE, BT_GRENADE, BT_PROXIMITYGRENADE, BT_MEDIKIT, BT_SCANNER, BT_MINDPROBE, BT_PSIAMP, BT_FLARE, BT_CORPSE };
-
 namespace OpenXcom
 {
+
+enum ItemDamageType { DT_NONE, DT_AP, DT_IN, DT_HE, DT_LASER, DT_PLASMA, DT_STUN, DT_MELEE, DT_ACID, DT_SMOKE };
+enum BattleType { BT_NONE, BT_FIREARM, BT_AMMO, BT_MELEE, BT_GRENADE, BT_PROXIMITYGRENADE, BT_MEDIKIT, BT_SCANNER, BT_MINDPROBE, BT_PSIAMP, BT_FLARE, BT_CORPSE };
 
 class SurfaceSet;
 class Surface;
@@ -64,7 +64,8 @@ private:
 	bool _recover, _liveAlien;
 	int _blastRadius, _attraction;
 	bool _flatRate, _arcingShot;
-	int _listOrder, _range, _bulletSpeed, _autoShots;
+	int _listOrder, _maxRange, _aimRange, _snapRange, _autoRange, _minRange, _dropoff, _bulletSpeed, _explosionSpeed, _autoShots, _shotgunPellets;
+	std::string _zombieUnit;
 public:
 	/// Creates a blank item ruleset.
 	RuleItem(const std::string &type);
@@ -176,12 +177,32 @@ public:
 	int getAttraction() const;
 	/// Get the list weight for this item.
 	int getListOrder() const;
-	/// Get the max range of this weapon.
-	int getRange() const;
 	/// How fast does a projectile fired from this weapon travel?
 	int getBulletSpeed() const;
+	/// How fast does the explosion animation play?
+	int getExplosionSpeed() const;
 	/// How many auto shots does this weapon fire.
 	int getAutoShots() const;
+	/// is this item a 2 handed weapon?
+	bool isRifle() const;
+	/// is this item a single handed weapon?
+	bool isPistol() const;
+	/// Get the max range of this weapon.
+	int getMaxRange() const;
+	/// Get the max range of aimed shots with this weapon.
+	int getAimRange() const;
+	/// Get the max range of snap shots with this weapon.
+	int getSnapRange() const;
+	/// Get the max range of auto shots with this weapon.
+	int getAutoRange() const;
+	/// Get the minimum effective range of this weapon.
+	int getMinRange() const;
+	/// Get the accuracy dropoff of this weapon.
+	int getDropoff() const;
+	/// Get the number of projectiles to trace.
+	int getShotgunPellets() const;
+	/// Gets the weapon's zombie unit.
+	std::string getZombieUnit() const;
 };
 
 }
