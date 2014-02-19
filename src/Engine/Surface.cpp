@@ -174,7 +174,7 @@ Surface::Surface(const Surface& other)
 		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, pitch, 0, 0, 0, 0);
 		SDL_SetColorKey(_surface, 1, 0);
 		//cant call `setPalette` because its vitual function and it dont work correctly in constructor
-		SDL_SetColors(_surface, other.getPalette(), 0, 255);
+		SDL_SetPaletteColors(_surface->format->palette, other.getPalette(), 0, 255);
 		memcpy(_alignedBuffer, other._alignedBuffer, height*pitch);
 	}
 	else

@@ -668,7 +668,7 @@ if ( WIN32 )
   endif ()
   set ( system_libs ${basic_windows_libs} SDLmain ${static_flags} )
 endif ()
-target_link_libraries ( openxcom ${system_libs} ${SDLIMAGE_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLGFX_LIBRARY} ${SDL2_LIBRARIES} ${YAMLCPP_LIBRARY} )
+target_link_libraries ( openxcom ${system_libs} ${SDLGFX_LIBRARY} ${SDL2_LIBRARIES} ${YAMLCPP_LIBRARY} )
 
 add_custom_command ( TARGET openxcom
   POST_BUILD

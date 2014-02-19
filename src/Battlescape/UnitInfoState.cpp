@@ -392,11 +392,11 @@ UnitInfoState::UnitInfoState(Game *game, BattleUnit *unit, BattlescapeState *par
 		_btnPrev->setText(L"<<");
 		_btnPrev->setColor(Palette::blockOffset(4));
 		_btnPrev->onMouseClick((ActionHandler)&UnitInfoState::btnPrevClick);
-		_btnPrev->onKeyboardPress((ActionHandler)&UnitInfoState::btnPrevClick, (SDLKey)Options::getInt("keyBattlePrevUnit"));
+		_btnPrev->onKeyboardPress((ActionHandler)&UnitInfoState::btnPrevClick, (SDL_Keycode)Options::getInt("keyBattlePrevUnit"));
 		_btnNext->setText(L">>");
 		_btnNext->setColor(Palette::blockOffset(4));
 		_btnNext->onMouseClick((ActionHandler)&UnitInfoState::btnNextClick);
-		_btnNext->onKeyboardPress((ActionHandler)&UnitInfoState::btnNextClick, (SDLKey)Options::getInt("keyBattleNextUnit"));
+		_btnNext->onKeyboardPress((ActionHandler)&UnitInfoState::btnNextClick, (SDL_Keycode)Options::getInt("keyBattleNextUnit"));
 	}
 
 }
