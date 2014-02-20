@@ -107,7 +107,6 @@ void createDefault()
 #else
 	setInt("battleNewPreviewPath", 0); // requires double-click to confirm moves 0 = none, 1 = arrows, 2 = numbers, 3 = full
 #endif
-	setBool("battleRangeBasedAccuracy", false);
 	setBool("fpsCounter", false);
 	setBool("craftLaunchAlways", false);
 	setBool("globeSeasons", false);
@@ -147,6 +146,8 @@ void createDefault()
 	setBool("newSeedOnLoad", false);
 	setBool("skipNextTurnScreen", false);
 	setBool("disableAutoEquip", false);
+	setBool("battleUFOExtenderAccuracy", false);
+	setInt("saveOrder", SORT_DATE_DESC);
 
 	// new battle mode data
 	setInt("NewBattleMission", 0);

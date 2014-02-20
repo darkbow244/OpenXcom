@@ -25,9 +25,14 @@ namespace OpenXcom
  * Creates a new Map Data Object.
  * @param dataset The dataset this object belongs to.
  */
-MapData::MapData(MapDataSet *dataset) : _dataset(dataset)
+MapData::MapData(MapDataSet *dataset) : _dataset(dataset), _specialType(TILE), 
+				_isUfoDoor(false), _stopLOS(false), _isNoFloor(false), _isGravLift(false), _isDoor(false), _blockFire(false), _blockSmoke(false), _baseModule(false),
+				_yOffset(0), _TUWalk(0), _TUFly(0), _TUSlide(0), _terrainLevel(0), _footstepSound(0), _dieMCD(0), _altMCD(0), _objectType(0), _lightSource(0),
+				_armor(0), _flammable(0), _fuel(0), _explosive(0), _bigWall(0), _miniMapIndex(0)
 {
-
+	std::fill_n(_sprite, 8, 0);
+	std::fill_n(_block, 6, 0);
+	std::fill_n(_loftID, 12, 0);
 }
 
 /**
@@ -140,8 +145,9 @@ bool MapData::isGravLift() const
  * @param isDoor True if this is a normal door.
  * @param blockFire True if this blocks fire.
  * @param blockSmoke True if this blocks smoke.
+ * @param baseModule True if this is a base module item.
  */
-void MapData::setFlags(bool isUfoDoor, bool stopLOS, bool isNoFloor, int bigWall, bool isGravLift, bool isDoor, bool blockFire, bool blockSmoke)
+void MapData::setFlags(bool isUfoDoor, bool stopLOS, bool isNoFloor, int bigWall, bool isGravLift, bool isDoor, bool blockFire, bool blockSmoke, bool baseModule)
 {
 	_isUfoDoor = isUfoDoor;
 	_stopLOS = stopLOS;
@@ -151,6 +157,7 @@ void MapData::setFlags(bool isUfoDoor, bool stopLOS, bool isNoFloor, int bigWall
 	_isDoor = isDoor;
 	_blockFire = blockFire;
 	_blockSmoke = blockSmoke;
+	_baseModule = baseModule;
 }
 
 /**
@@ -516,5 +523,14 @@ void MapData::setTUFly(const int TUFly)
 void MapData::setTUSlide(const int TUSlide)
 {
 	_TUSlide = TUSlide;
+}
+
+/**
+ * check if this is an xcom base object.
+ * @return if it is a base object.
+ */
+bool MapData::isBaseModule()
+{
+	return _baseModule;
 }
 }

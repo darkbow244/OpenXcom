@@ -40,7 +40,7 @@ if ( IS_DIRECTORY ${DEPS_DIR} )
 else ( )
   find_package ( SDL2 REQUIRED mixer image )
   find_package ( SDL_gfx REQUIRED )
-  find_package ( Yaml_cpp )
+  find_package ( Yaml_cpp 0.5.0)
 
   if ( NOT SDL2_FOUND )
     message ( FATAL_ERROR "Can't find SDL which is required" )
