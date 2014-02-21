@@ -594,6 +594,12 @@ void UnitInfoState::handle(Action *action)
 		{
 			_game->popState();
 		}
+#ifdef __ANDROID__
+		else if (action->getDetails()->key.keysym.scancode == SDL_SCANCODE_AC_BACK)
+		{
+			_game->popState();
+		}
+#endif
 	}
 }
 
