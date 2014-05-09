@@ -694,9 +694,11 @@ void BattlescapeState::mapRelease(Action *action)
 #ifdef __ANDROID__
 	Position pos;
 	_map->getSelectorPosition(&pos);
-	if (_swipeFromSoldier && pos != _save->getSelectedUnit()->getPosition())
+	if (_swipeFromSoldier)
 	{
-		_battleGame->secondaryAction(pos);
+		if (pos != _save->getSelectedUnit()->getPosition())
+			_battleGame->secondaryAction(pos);
+		_swipeFromSoldier = false;
 	}
 #endif
 }
