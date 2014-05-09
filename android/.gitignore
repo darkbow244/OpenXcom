@@ -2,7 +2,6 @@ libs
 obj
 bin
 gen
-local.properties
 jni/SDL
 jni/SDL2_image
 jni/SDL2_mixer
