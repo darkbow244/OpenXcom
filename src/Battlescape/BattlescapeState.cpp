@@ -91,7 +91,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _scrollAccumX(0), _scrollAccumY(0), _swipeFromSoldier(false)
+BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _scrollAccumX(0), _scrollAccumY(0), _hasScrolled(false), _swipeFromSoldier(false)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 	//game->getScreen()->setScale(1.0);
@@ -656,6 +656,9 @@ void BattlescapeState::mapOver(Action *action)
  */
 void BattlescapeState::mapPress(Action *action)
 {
+	_scrollAccumX = 0;
+	_scrollAccumY = 0;
+	_hasScrolled = false;
 	// don't handle mouseclicks below 140, because they are in the buttons area (it overlaps with map surface)
 	int my = int(action->getAbsoluteYMouse());
 	int mx = int(action->getAbsoluteXMouse());
@@ -812,7 +815,11 @@ void BattlescapeState::fingerMotion(Action *action)
 		scrollIncY = (int)_scrollAccumY;
 		_scrollAccumY -= scrollIncY;
 	}
-	_map->getCamera()->scrollXY(scrollIncX, scrollIncY, false);
+	if (scrollIncX || scrollIncY)
+	{
+		_map->getCamera()->scrollXY(scrollIncX, scrollIncY, false);
+		_hasScrolled = true;
+	}
 }
 
 #ifdef __ANDROID__
@@ -2111,6 +2118,11 @@ void BattlescapeState::txtTooltipOut(Action *action)
 			_txtTooltip->setText(L"");
 		}
 	}
+}
+
+bool BattlescapeState::hasScrolled() const
+{
+	return _hasScrolled;
 }
 
 }

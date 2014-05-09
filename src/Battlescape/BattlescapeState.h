@@ -81,6 +81,7 @@ private:
 	bool _mouseOverIcons;
 	std::string _currentTooltip;
 	float _scrollAccumX, _scrollAccumY;
+	bool _hasScrolled;
 	bool _swipeFromSoldier;
 	/// Popups a context sensitive list of actions the user can choose from.
 	void handleItemClick(BattleItem *item);
@@ -216,6 +217,7 @@ public:
 	void txtTooltipIn(Action *action);
 	/// Handler for hiding tooltip.
 	void txtTooltipOut(Action *action);
+	bool hasScrolled() const;
 };
 
 }
