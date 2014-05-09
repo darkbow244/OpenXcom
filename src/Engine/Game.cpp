@@ -243,6 +243,12 @@ void Game::run()
 					runningState = RUNNING;
 					// Go on, feed the event to others
 #ifdef __ANDROID__
+				case SDL_APP_WILLENTERBACKGROUND:
+					Mix_PauseMusic();
+					break;
+				case SDL_APP_WILLENTERFOREGROUND:
+					Mix_ResumeMusic();
+					break;
 				case SDL_FINGERMOTION:
 #endif
 				default:
