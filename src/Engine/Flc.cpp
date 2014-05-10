@@ -555,6 +555,7 @@ void FlcMain(void (*frameCallBack)())
 			case SDL_KEYDOWN:
 			  return;
 			break;
+#if 0
 			case SDL_VIDEORESIZE:
 				if (Options::allowResize)
 				{
@@ -564,6 +565,7 @@ void FlcMain(void (*frameCallBack)())
 					flc.mainscreen = flc.realscreen->getSurface()->getSurface();
 				}
 				break;
+#endif
 			case SDL_QUIT:
 			  exit(0);
 			default:
