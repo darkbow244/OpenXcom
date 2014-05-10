@@ -412,6 +412,8 @@ set ( menu_src
   Menu/OptionsVideoState.h
   Menu/OptionsAudioState.cpp
   Menu/OptionsAudioState.h
+  Menu/OptionsNoAudioState.cpp
+  Menu/OptionsNoAudioState.h
   Menu/OptionsGeoscapeState.cpp
   Menu/OptionsGeoscapeState.h
   Menu/OptionsModsState.cpp
