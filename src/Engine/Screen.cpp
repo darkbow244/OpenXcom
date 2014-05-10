@@ -203,7 +203,6 @@ void Screen::flip()
 void Screen::clear()
 {
 	_surface->clear();
-	flip();
 #if 0
 	if (_screen->flags & SDL_SWSURFACE) memset(_screen->pixels, 0, _screen->h*_screen->pitch);
 	else SDL_FillRect(_screen, &_clear, 0);
