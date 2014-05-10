@@ -18,6 +18,7 @@
  */
 #include "Window.h"
 #include <SDL.h>
+#include <SDL_mixer.h>
 #include "../aresame.h"
 #include "../Engine/Timer.h"
 #include "../Engine/Sound.h"
@@ -26,7 +27,7 @@
 namespace OpenXcom
 {
 
-const double Window::POPUP_SPEED = 0.075;
+const double Window::POPUP_SPEED = 0.05;
 
 Sound *Window::soundPopup[3] = {0, 0, 0};
 
@@ -39,7 +40,7 @@ Sound *Window::soundPopup[3] = {0, 0, 0};
  * @param y Y position in pixels.
  * @param popup Popup animation.
  */
-Window::Window(State *state, int width, int height, int x, int y, WindowPopup popup) : Surface(width, height, x, y), _bg(0), _color(0), _popup(popup), _popupStep(0.0), _state(state), _contrast(false), _screen(false)
+Window::Window(State *state, int width, int height, int x, int y, WindowPopup popup) : Surface(width, height, x, y), _dx(-x), _dy(-y), _bg(0), _color(0), _popup(popup), _popupStep(0.0), _state(state), _contrast(false), _screen(false)
 {
 	_timer = new Timer(10);
 	_timer->onTimer((SurfaceHandler)&Window::popup);
@@ -133,7 +134,7 @@ void Window::popup()
 		int sound = RNG::generate(0, 2);
 		if (soundPopup[sound] != 0)
 		{
-			soundPopup[sound]->play();
+			soundPopup[sound]->play(Mix_GroupAvailable(0));
 		}
 	}
 	if (_popupStep < 1.0)
@@ -214,8 +215,8 @@ void Window::draw()
 
 	if (_bg != 0)
 	{
-		_bg->getCrop()->x = getX() + square.x - _dx;
-		_bg->getCrop()->y = getY() + square.y - _dy;
+		_bg->getCrop()->x = square.x - _dx;
+		_bg->getCrop()->y = square.y - _dy;
 		_bg->getCrop()->w = square.w ;
 		_bg->getCrop()->h = square.h ;
 		_bg->setX(square.x);
@@ -223,4 +224,23 @@ void Window::draw()
 		_bg->blit(this);
 	}
 }
+
+/**
+ * Changes the horizontal offset of the surface in the X axis.
+ * @param dx X position in pixels.
+ */
+void Window::setDX(int dx)
+{
+	_dx = dx;
+}
+
+/**
+ * Changes the vertical offset of the surface in the Y axis.
+ * @param dy Y position in pixels.
+ */
+void Window::setDY(int dy)
+{
+	_dy = dy;
+}
+
 }

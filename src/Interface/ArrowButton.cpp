@@ -79,7 +79,7 @@ void ArrowButton::setShape(ArrowShape shape)
 }
 
 /**
- * Changes the text associated with the arrow button.
+ * Changes the list associated with the arrow button.
  * This makes the button scroll that list.
  * @param list Pointer to text list.
  */
@@ -333,9 +333,20 @@ void ArrowButton::scroll()
 void ArrowButton::mousePress(Action *action, State *state)
 {
 	ImageButton::mousePress(action, state);
-	if (_list != 0 && action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	if (_list != 0)
 	{
-		_timer->start();
+		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+		{
+			_timer->start();
+		}
+		const SDL_Event &ev(*action->getDetails());
+		if (ev.type == SDL_MOUSEWHEEL)
+		{
+			if (ev.wheel.y < 0)
+				_list->scrollUp(false);
+			else
+				_list->scrollDown(false);
+		}
 	}
 }
 
@@ -361,7 +372,7 @@ void ArrowButton::mouseRelease(Action *action, State *state)
 void ArrowButton::mouseClick(Action *action, State *state)
 {
 	ImageButton::mouseClick(action, state);
-	if (0 != _list && SDL_BUTTON_RIGHT == action->getDetails()->button.button) {
+	if (_list != 0 && SDL_BUTTON_RIGHT == action->getDetails()->button.button) {
 		if (_shape == ARROW_BIG_UP) _list->scrollUp(true);
 		else if (_shape == ARROW_BIG_DOWN) _list->scrollDown(true);
 	}

@@ -56,6 +56,9 @@ PrimeGrenadeState::PrimeGrenadeState(Game *game, BattleAction *action, bool inIn
 		_number[i] = new Text(20, 20, x+((i%8)*24), y-1+((i/8)*25));
 	}
 
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
+
 	// Set up objects
 	SDL_Rect square;
 	square.x = 0;
@@ -93,7 +96,7 @@ PrimeGrenadeState::PrimeGrenadeState(Game *game, BattleAction *action, bool inIn
 		square.h = _button[i]->getHeight()-2;
 		_button[i]->drawRect(&square, Palette::blockOffset(6)+12);
 
-		std::wstringstream ss;
+		std::wostringstream ss;
 		ss << i;
 		add(_number[i]);
 		_number[i]->setBig();
@@ -157,7 +160,7 @@ void PrimeGrenadeState::btnClick(Action *action)
 
 	if (btnID != -1)
 	{
-		if (_inInventoryView) _grenadeInInventory->setExplodeTurn(0 + btnID);
+		if (_inInventoryView) _grenadeInInventory->setFuseTimer(0 + btnID);
 		else _action->value = btnID;
 		_game->popState();
 		if (!_inInventoryView) _game->popState();

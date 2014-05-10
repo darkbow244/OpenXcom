@@ -28,7 +28,7 @@ namespace OpenXcom
  * @param rank String defining the rank.
  */
 Unit::Unit(const std::string &type) : _type(type), _race(""), _rank(""), _armor(""), _standHeight(0), _kneelHeight(0), _floatHeight(0),
-																		_value(0), _deathSound(0), _aggroSound(-1), _moveSound(-1), _intelligence(0), _aggression(0), _specab(SPECAB_NONE),
+																		_value(0), _deathSound(0), _aggroSound(-1), _moveSound(-1), _intelligence(0), _aggression(0), _energyRecovery(30), _specab(SPECAB_NONE),
 																		_spawnUnit(""), _livingWeapon(false)
 {
 }
@@ -45,7 +45,7 @@ Unit::~Unit()
  * Loads the unit from a YAML file.
  * @param node YAML node.
  */
-void Unit::load(const YAML::Node &node)
+void Unit::load(const YAML::Node &node, int modIndex)
 {
 	_type = node["type"].as<std::string>(_type);
 	_race = node["race"].as<std::string>(_race);
@@ -56,14 +56,34 @@ void Unit::load(const YAML::Node &node)
 	_kneelHeight = node["kneelHeight"].as<int>(_kneelHeight);
 	_floatHeight = node["floatHeight"].as<int>(_floatHeight);
 	_value = node["value"].as<int>(_value);
-	_deathSound = node["deathSound"].as<int>(_deathSound);
-	_aggroSound = node["aggroSound"].as<int>(_aggroSound);
-	_moveSound = node["moveSound"].as<int>(_moveSound);
 	_intelligence = node["intelligence"].as<int>(_intelligence);
 	_aggression = node["aggression"].as<int>(_aggression);
+	_energyRecovery = node["energyRecovery"].as<int>(_energyRecovery);
 	_specab = (SpecialAbility)node["specab"].as<int>(_specab);
 	_spawnUnit = node["spawnUnit"].as<std::string>(_spawnUnit);
 	_livingWeapon = node["livingWeapon"].as<bool>(_livingWeapon);
+	
+	if (node["deathSound"])
+	{
+		_deathSound = node["deathSound"].as<int>(_deathSound);
+		// BATTLE.CAT: 55 entries
+		if (_deathSound > 54)
+			_deathSound += modIndex;
+	}
+	if (node["aggroSound"])
+	{
+		_aggroSound = node["aggroSound"].as<int>(_aggroSound);
+		// BATTLE.CAT: 55 entries
+		if (_aggroSound > 54)
+			_aggroSound += modIndex;
+	}
+	if (node["moveSound"])
+	{
+		_moveSound = node["moveSound"].as<int>(_moveSound);
+		// BATTLE.CAT: 55 entries
+		if (_moveSound > 54)
+			_moveSound += modIndex;
+	}
 }
 
 /**
@@ -220,4 +240,9 @@ bool Unit::isLivingWeapon() const
 	return _livingWeapon;
 }
 
+
+int Unit::getEnergyRecovery() const
+{
+	return _energyRecovery;
+}
 }

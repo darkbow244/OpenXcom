@@ -60,6 +60,9 @@ NewResearchListState::NewResearchListState(Game *game, Base *base) : State(game)
 	_txtTitle = new Text(width - 2 * button_x_border, button_height, start_x + button_x_border, start_y + button_y_border);
 	_lstResearch = new TextList(width - 4 * button_x_border, height - 2 * button_height - 2 * button_y_border, start_x + button_x_border, start_y + button_y_border + button_height - 4);
 
+	// Set palette
+	setPalette("PAL_BASESCAPE", 1);
+
 	add(_window);
 	add(_btnOK);
 	add(_txtTitle);
@@ -74,7 +77,7 @@ NewResearchListState::NewResearchListState(Game *game, Base *base) : State(game)
 	_btnOK->setColor(Palette::blockOffset(15)+6);
 	_btnOK->setText(tr("STR_OK"));
 	_btnOK->onMouseClick((ActionHandler)&NewResearchListState::btnOKClick);
-	_btnOK->onKeyboardPress((ActionHandler)&NewResearchListState::btnOKClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnOK->onKeyboardPress((ActionHandler)&NewResearchListState::btnOKClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(13)+10);
 	_txtTitle->setAlign(ALIGN_CENTER);
@@ -95,7 +98,8 @@ NewResearchListState::NewResearchListState(Game *game, Base *base) : State(game)
  */
 void NewResearchListState::init()
 {
-	fillProjectList ();
+	State::init();
+	fillProjectList();
 }
 
 /**
@@ -124,10 +128,10 @@ void NewResearchListState::fillProjectList ()
 	_projects.clear();
 	_lstResearch->clearList();
 	_game->getSavedGame()->getAvailableResearchProjects(_projects, _game->getRuleset() , _base);
-	std::vector<RuleResearch *>::iterator it = _projects.begin ();
-	while  ( it != _projects.end ())
+	std::vector<RuleResearch*>::iterator it = _projects.begin();
+	while (it != _projects.end ())
 	{
-		if((*it)->getRequirements().empty())
+		if ((*it)->getRequirements().empty())
 		{
 			_lstResearch->addRow(1, tr((*it)->getName ()).c_str());
 			++it;
@@ -138,4 +142,5 @@ void NewResearchListState::fillProjectList ()
 		}
 	}
 }
+
 }

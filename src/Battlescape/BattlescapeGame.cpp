@@ -165,7 +165,7 @@ void BattlescapeGame::init()
  */
 void BattlescapeGame::handleAI(BattleUnit *unit)
 {
-	std::wstringstream ss;
+	std::wostringstream ss;
 
 	_tuReserved = BA_NONE;
 	if (unit->getTimeUnits() <= 5)
@@ -200,23 +200,6 @@ void BattlescapeGame::handleAI(BattleUnit *unit)
 		return;
 	}
 
-	if (unit->getMainHandWeapon() && unit->getMainHandWeapon()->getRules()->getBattleType() == BT_FIREARM)
-	{
-		switch (unit->getAggression())
-		{
-		case 0:
-			_tuReserved = BA_AIMEDSHOT;
-			break;
-		case 1:
-			_tuReserved = BA_AUTOSHOT;
-			break;
-		case 2:
-			_tuReserved = BA_SNAPSHOT;
-		default:
-			break;
-		}
-	}
-
 	unit->setVisible(false);
 
 	_save->getTileEngine()->calculateFOV(unit->getPosition()); // might need this populate _visibleUnit for a newly-created alien
@@ -239,7 +222,7 @@ void BattlescapeGame::handleAI(BattleUnit *unit)
 	{
 		_playedAggroSound = false;
 		unit->_hidingForTurn = false;
-		if (_save->getTraceSetting()) { Log(LOG_INFO) << "#" << unit->getId() << "--" << unit->getType(); }
+		if (Options::traceAI) { Log(LOG_INFO) << "#" << unit->getId() << "--" << unit->getType(); }
 	}
 	//AlienBAIState *aggro = dynamic_cast<AlienBAIState*>(ai); // this cast only works when ai was already AlienBAIState at heart
 
@@ -355,7 +338,7 @@ void BattlescapeGame::handleAI(BattleUnit *unit)
 bool BattlescapeGame::kneel(BattleUnit *bu)
 {
 	int tu = bu->isKneeled()?8:4;
-	if (bu->getType() == "SOLDIER" && !bu->isFloating() && checkReservedTU(bu, tu))
+	if (bu->getType() == "SOLDIER" && !bu->isFloating() && ((!bu->isKneeled() && _kneelReserved) || checkReservedTU(bu, tu)))
 	{
 		if (bu->spendTimeUnits(tu))
 		{
@@ -401,7 +384,7 @@ void BattlescapeGame::endTurn()
 	{
 		for (std::vector<BattleItem*>::iterator it = _save->getTiles()[i]->getInventory()->begin(); it != _save->getTiles()[i]->getInventory()->end(); )
 		{
-			if ((*it)->getRules()->getBattleType() == BT_GRENADE && (*it)->getExplodeTurn() == 0)  // it's a grenade to explode now
+			if ((*it)->getRules()->getBattleType() == BT_GRENADE && (*it)->getFuseTimer() == 0)  // it's a grenade to explode now
 			{
 				p.x = _save->getTiles()[i]->getPosition().x*16 + 8;
 				p.y = _save->getTiles()[i]->getPosition().y*16 + 8;
@@ -429,9 +412,9 @@ void BattlescapeGame::endTurn()
 	{
 		for (std::vector<BattleItem*>::iterator it = _save->getItems()->begin(); it != _save->getItems()->end(); ++it)
 		{
-				if (((*it)->getRules()->getBattleType() == BT_GRENADE || (*it)->getRules()->getBattleType() == BT_PROXIMITYGRENADE) && (*it)->getExplodeTurn() > 0)
+				if (((*it)->getRules()->getBattleType() == BT_GRENADE || (*it)->getRules()->getBattleType() == BT_PROXIMITYGRENADE) && (*it)->getFuseTimer() > 0)
 				{
-					(*it)->setExplodeTurn((*it)->getExplodeTurn() - 1);
+					(*it)->setFuseTimer((*it)->getFuseTimer() - 1);
 				}
 		}
 	}
@@ -552,7 +535,7 @@ void BattlescapeGame::checkForCasualties(BattleItem *murderweapon, BattleUnit *m
 
 							if (victim->getFaction() == FACTION_HOSTILE && murderer)
 							{
-								murderer->setTurnsExposed(0);
+								murderer->setTurnsSinceSpotted(0);
 							}
 						}
 						// the winning squad all get a morale increase
@@ -621,12 +604,13 @@ void BattlescapeGame::handleNonTargetAction()
 {
 	if (!_currentAction.targeting)
 	{
+		_currentAction.cameraPosition = Position(0,0,-1);
 		if (_currentAction.type == BA_PRIME && _currentAction.value > -1)
 		{
 			if (_currentAction.actor->spendTimeUnits(_currentAction.TU))
 			{
 				_parentState->warning("STR_GRENADE_IS_ACTIVATED");
-				_currentAction.weapon->setExplodeTurn(_currentAction.value);
+				_currentAction.weapon->setFuseTimer(_currentAction.value);
 			}
 			else
 			{
@@ -653,8 +637,8 @@ void BattlescapeGame::handleNonTargetAction()
 			{
 				if (_currentAction.actor->spendTimeUnits(_currentAction.TU))
 				{
-					Position voxel = _currentAction.target * Position(16, 16, 24) + Position(8,8,8 - _save->getTile(_currentAction.target)->getTerrainLevel());
-					statePushNext(new ExplosionBState(this, voxel, _currentAction.weapon, _currentAction.actor));
+					statePushBack(new ProjectileFlyBState(this, _currentAction));
+					return;
 				}
 				else
 				{
@@ -799,7 +783,7 @@ void BattlescapeGame::statePushBack(BattleState *bs)
  */
 void BattlescapeGame::popState()
 {
-	if (_save->getTraceSetting())
+	if (Options::traceAI)
 	{
 		Log(LOG_INFO) << "BattlescapeGame::popState() #" << _AIActionCounter << " with " << (_save->getSelectedUnit() ? _save->getSelectedUnit()->getTimeUnits() : -9999) << " TU";
 	}
@@ -983,10 +967,15 @@ bool BattlescapeGame::checkReservedTU(BattleUnit *bu, int tu, bool justChecking)
 	{
 		effectiveTuReserved = BA_SNAPSHOT;
 	}
+	// likewise, if we don't have a snap shot available, try aimed.
+	if (bu->getActionTUs(effectiveTuReserved, slowestWeapon) == 0 && effectiveTuReserved == BA_SNAPSHOT)
+	{
+		effectiveTuReserved = BA_AIMEDSHOT;
+	}
 	const int tuKneel = _kneelReserved ? 4 : 0;
 	if ((effectiveTuReserved != BA_NONE || _kneelReserved) &&
 		tu + tuKneel + bu->getActionTUs(effectiveTuReserved, slowestWeapon) > bu->getTimeUnits() &&
-		tuKneel + bu->getActionTUs(effectiveTuReserved, slowestWeapon) <= bu->getTimeUnits())
+		(tuKneel + bu->getActionTUs(effectiveTuReserved, slowestWeapon) <= bu->getTimeUnits() || justChecking))
 	{
 		if (!justChecking)
 		{
@@ -1039,19 +1028,21 @@ bool BattlescapeGame::handlePanickingUnit(BattleUnit *unit)
 {
 	UnitStatus status = unit->getStatus();
 	if (status != STATUS_PANICKING && status != STATUS_BERSERK) return false;
-	unit->setVisible(true);
-	getMap()->getCamera()->centerOnPosition(unit->getPosition());
 	_save->setSelectedUnit(unit);
 
 	// show a little infobox with the name of the unit and "... is panicking"
 	Game *game = _parentState->getGame();
-	if (status == STATUS_PANICKING)
+	if (unit->getVisible() || !Options::noAlienPanicMessages)
 	{
-		game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_HAS_PANICKED", unit->getGender()).arg(unit->getName(game->getLanguage()))));
-	}
-	else
-	{
-		game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_HAS_GONE_BERSERK", unit->getGender()).arg(unit->getName(game->getLanguage()))));
+		getMap()->getCamera()->centerOnPosition(unit->getPosition());
+		if (status == STATUS_PANICKING)
+		{
+			game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_HAS_PANICKED", unit->getGender()).arg(unit->getName(game->getLanguage()))));
+		}
+		else
+		{
+			game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_HAS_GONE_BERSERK", unit->getGender()).arg(unit->getName(game->getLanguage()))));
+		}
 	}
 
 	unit->abortTurn(); //makes the unit go to status STANDING :p
@@ -1114,9 +1105,9 @@ bool BattlescapeGame::handlePanickingUnit(BattleUnit *unit)
 				}
 				else if (ba.weapon->getRules()->getBattleType() == BT_GRENADE)
 				{
-					if (ba.weapon->getExplodeTurn() == -1)
+					if (ba.weapon->getFuseTimer() == -1)
 					{
-						ba.weapon->setExplodeTurn(0);
+						ba.weapon->setFuseTimer(0);
 					}
 					ba.type = BA_THROW;
 					statePushBack(new ProjectileFlyBState(this, ba));
@@ -1143,11 +1134,9 @@ bool BattlescapeGame::handlePanickingUnit(BattleUnit *unit)
   */
 bool BattlescapeGame::cancelCurrentAction(bool bForce)
 {
-	bool bPreviewed = Options::getInt("battleNewPreviewPath") > 0;
+	bool bPreviewed = Options::battleNewPreviewPath != PATH_NONE;
 
 	if (_save->getPathfinding()->removePreview() && bPreviewed) return true;
-
-	_aimedPos = Position();
 
 	if (_states.empty() || bForce)
 	{
@@ -1168,6 +1157,12 @@ bool BattlescapeGame::cancelCurrentAction(bool bForce)
 			}
 			else
 			{
+				if (Options::battleConfirmFireMode && !_currentAction.waypoints.empty())
+				{
+					_currentAction.waypoints.pop_back();
+					getMap()->getWaypoints()->pop_back();
+					return true;
+				}
 				_currentAction.targeting = false;
 				_currentAction.type = BA_NONE;
 				setupCursor();
@@ -1208,7 +1203,7 @@ bool BattlescapeGame::isBusy()
  */
 void BattlescapeGame::primaryAction(const Position &pos)
 {
-	bool bPreviewed = Options::getInt("battleNewPreviewPath") > 0;
+	bool bPreviewed = Options::battleNewPreviewPath != PATH_NONE;
 
 	if (_currentAction.targeting && _save->getSelectedUnit())
 	{
@@ -1220,17 +1215,25 @@ void BattlescapeGame::primaryAction(const Position &pos)
 		}
 		else if (_currentAction.type == BA_USE && _currentAction.weapon->getRules()->getBattleType() == BT_MINDPROBE)
 		{
-			if (_save->selectUnit(pos) && _save->selectUnit(pos)->getFaction() != _save->getSelectedUnit()->getFaction())
+			if (_save->selectUnit(pos) && _save->selectUnit(pos)->getFaction() != _save->getSelectedUnit()->getFaction() && _save->selectUnit(pos)->getVisible())
 			{
-				if (_currentAction.actor->spendTimeUnits(_currentAction.TU))
+				if (!_currentAction.weapon->getRules()->isLOSRequired() ||
+					std::find(_currentAction.actor->getVisibleUnits()->begin(), _currentAction.actor->getVisibleUnits()->end(), _save->selectUnit(pos)) != _currentAction.actor->getVisibleUnits()->end())
 				{
-					_parentState->getGame()->getResourcePack()->getSound("BATTLE.CAT", _currentAction.weapon->getRules()->getHitSound())->play();
-					_parentState->getGame()->pushState (new UnitInfoState(_parentState->getGame(), _save->selectUnit(pos), _parentState, false, true));
-					cancelCurrentAction();
+					if (_currentAction.actor->spendTimeUnits(_currentAction.TU))
+					{
+						_parentState->getGame()->getResourcePack()->getSound("BATTLE.CAT", _currentAction.weapon->getRules()->getHitSound())->play();
+						_parentState->getGame()->pushState (new UnitInfoState(_parentState->getGame(), _save->selectUnit(pos), _parentState, false, true));
+						cancelCurrentAction();
+					}
+					else
+					{
+						_parentState->warning("STR_NOT_ENOUGH_TIME_UNITS");
+					}
 				}
 				else
 				{
-					_parentState->warning("STR_NOT_ENOUGH_TIME_UNITS");
+						_parentState->warning("STR_NO_LINE_OF_FIRE");
 				}
 			}
 		}
@@ -1243,53 +1246,63 @@ void BattlescapeGame::primaryAction(const Position &pos)
 				{
 					_currentAction.weapon = new BattleItem(_parentState->getGame()->getRuleset()->getItem("ALIEN_PSI_WEAPON"), _save->getCurrentItemId());
 				}
-				_currentAction.TU = _currentAction.weapon->getRules()->getTUUse();
+				_currentAction.TU = _currentAction.actor->getActionTUs(_currentAction.type, _currentAction.weapon);
 				_currentAction.target = pos;
-				// get the sound/animation started
-				getMap()->setCursorType(CT_NONE);
-				_parentState->getGame()->getCursor()->setVisible(false);
-				_currentAction.cameraPosition = getMap()->getCamera()->getMapOffset();
-				statePushBack(new ProjectileFlyBState(this, _currentAction));
-				if (_currentAction.TU <= _currentAction.actor->getTimeUnits())
+				if (!_currentAction.weapon->getRules()->isLOSRequired() ||
+					std::find(_currentAction.actor->getVisibleUnits()->begin(), _currentAction.actor->getVisibleUnits()->end(), _save->selectUnit(pos)) != _currentAction.actor->getVisibleUnits()->end())
 				{
-					if (getTileEngine()->psiAttack(&_currentAction))
+					// get the sound/animation started
+					getMap()->setCursorType(CT_NONE);
+					_parentState->getGame()->getCursor()->setVisible(false);
+					_currentAction.cameraPosition = getMap()->getCamera()->getMapOffset();
+					statePushBack(new ProjectileFlyBState(this, _currentAction));
+					if (_currentAction.TU <= _currentAction.actor->getTimeUnits())
 					{
-						// show a little infobox if it's successful
-						Game *game = _parentState->getGame();
-						if (_currentAction.type == BA_PANIC)
-							game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_MORALE_ATTACK_SUCCESSFUL")));
-						else if (_currentAction.type == BA_MINDCONTROL)
-							game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_MIND_CONTROL_SUCCESSFUL")));
-						_parentState->updateSoldierInfo();
+						if (getTileEngine()->psiAttack(&_currentAction))
+						{
+							// show a little infobox if it's successful
+							Game *game = _parentState->getGame();
+							if (_currentAction.type == BA_PANIC)
+								game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_MORALE_ATTACK_SUCCESSFUL")));
+							else if (_currentAction.type == BA_MINDCONTROL)
+								game->pushState(new InfoboxState(game, game->getLanguage()->getString("STR_MIND_CONTROL_SUCCESSFUL")));
+							_parentState->updateSoldierInfo();
+						}
 					}
-					if (builtinpsi)
-					{
-						_save->removeItem(_currentAction.weapon);
-						_currentAction.weapon = 0;
-					}
+				}
+				else
+				{
+						_parentState->warning("STR_NO_LINE_OF_FIRE");
+				}
+				if (builtinpsi)
+				{
+					_save->removeItem(_currentAction.weapon);
+					_currentAction.weapon = 0;
 				}
 			}
 		}
+		else if (Options::battleConfirmFireMode && (_currentAction.waypoints.empty() || pos != _currentAction.waypoints.front()))
+		{
+			_currentAction.waypoints.clear();
+			_currentAction.waypoints.push_back(pos);
+			getMap()->getWaypoints()->clear();
+			getMap()->getWaypoints()->push_back(pos);
+		}
 		else
 		{
-			/* shooting: shoot on 2nd click for android, direct otherwise */
-			if (pos == _aimedPos
-#ifndef __ANDROID__
-					|| true
-#endif	
-					)
+			_currentAction.target = pos;
+			getMap()->setCursorType(CT_NONE);
+			
+			if (Options::battleConfirmFireMode)
 			{
-				_currentAction.target = pos;
-				getMap()->setCursorType(CT_NONE);
-				_parentState->getGame()->getCursor()->setVisible(false);
-				_currentAction.cameraPosition = getMap()->getCamera()->getMapOffset();
-				_states.push_back(new ProjectileFlyBState(this, _currentAction));
-				statePushFront(new UnitTurnBState(this, _currentAction)); // first of all turn towards the target
+				_currentAction.waypoints.clear();
+				getMap()->getWaypoints()->clear();
 			}
-			else
-			{
-				_aimedPos = pos;
-			}
+
+			_parentState->getGame()->getCursor()->setVisible(false);
+			_currentAction.cameraPosition = getMap()->getCamera()->getMapOffset();
+			_states.push_back(new ProjectileFlyBState(this, _currentAction));
+			statePushFront(new UnitTurnBState(this, _currentAction)); // first of all turn towards the target
 		}
 	}
 	else
@@ -1317,7 +1330,7 @@ void BattlescapeGame::primaryAction(const Position &pos)
 				_save->getPathfinding()->removePreview();
 			}
 			_currentAction.run = false;
-			_currentAction.strafe = _save->getStrafeSetting() && modifierPressed && _save->getSelectedUnit()->getTurretType() == -1;
+			_currentAction.strafe = Options::strafe && modifierPressed && _save->getSelectedUnit()->getTurretType() == -1;
 			if (_currentAction.strafe && _save->getTileEngine()->distance(_currentAction.actor->getPosition(), pos) > 1)
 			{
 				_currentAction.run = true;
@@ -1351,7 +1364,7 @@ void BattlescapeGame::secondaryAction(const Position &pos)
 	//  -= turn to or open door =-
 	_currentAction.target = pos;
 	_currentAction.actor = _save->getSelectedUnit();
-	_currentAction.strafe = _save->getStrafeSetting() && (SDL_GetModState() & KMOD_CTRL) != 0 && _save->getSelectedUnit()->getTurretType() > -1;
+	_currentAction.strafe = Options::strafe && (SDL_GetModState() & KMOD_CTRL) != 0 && _save->getSelectedUnit()->getTurretType() > -1;
 	statePushBack(new UnitTurnBState(this, _currentAction));
 }
 
@@ -1505,7 +1518,7 @@ BattleUnit *BattlescapeGame::convertUnit(BattleUnit *unit, std::string newType)
 
 	unit->instaKill();
 
-	if (Options::getBool("battleNotifyDeath") && unit->getFaction() == FACTION_PLAYER && unit->getOriginalFaction() == FACTION_PLAYER)
+	if (Options::battleNotifyDeath && unit->getFaction() == FACTION_PLAYER && unit->getOriginalFaction() == FACTION_PLAYER)
 	{
 		_parentState->getGame()->pushState(new InfoboxState(_parentState->getGame(), _parentState->getGame()->getLanguage()->getString("STR_HAS_BEEN_KILLED", unit->getGender()).arg(unit->getName(_parentState->getGame()->getLanguage()))));
 	}
@@ -1611,7 +1624,7 @@ const Ruleset *BattlescapeGame::getRuleset() const
 void BattlescapeGame::findItem(BattleAction *action)
 {
 	// terrorists don't have hands.
-	if (action->actor->getRankString() != "STR_TERRORIST")
+	if (action->actor->getRankString() != "STR_LIVE_TERRORIST")
 	{
 		// pick the best available item
 		BattleItem *targetItem = surveyItems(action);
@@ -1930,7 +1943,6 @@ void BattlescapeGame::tallyUnits(int &liveAliens, int &liveSoldiers, bool conver
 {
 	liveSoldiers = 0;
 	liveAliens = 0;
-	bool psiCapture = Options::getBool("allowPsionicCapture");
 
 	if (convert)
 	{
@@ -1951,7 +1963,7 @@ void BattlescapeGame::tallyUnits(int &liveAliens, int &liveSoldiers, bool conver
 		{
 			if ((*j)->getOriginalFaction() == FACTION_HOSTILE)
 			{
-				if (!psiCapture || (*j)->getFaction() != FACTION_PLAYER)
+				if (!Options::allowPsionicCapture || (*j)->getFaction() != FACTION_PLAYER)
 				{
 					liveAliens++;
 				}
@@ -2017,7 +2029,7 @@ bool BattlescapeGame::checkForProximityGrenades(BattleUnit *unit)
 					{
 						for (std::vector<BattleItem*>::iterator i = t->getInventory()->begin(); i != t->getInventory()->end(); ++i)
 						{
-							if ((*i)->getRules()->getBattleType() == BT_PROXIMITYGRENADE && (*i)->getExplodeTurn() == 0)
+							if ((*i)->getRules()->getBattleType() == BT_PROXIMITYGRENADE && (*i)->getFuseTimer() == 0)
 							{
 								Position p;
 								p.x = t->getPosition().x*16 + 8;

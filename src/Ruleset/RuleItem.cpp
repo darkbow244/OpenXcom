@@ -34,7 +34,8 @@ RuleItem::RuleItem(const std::string &type) : _type(type), _name(type), _size(0.
 											_battleType(BT_NONE), _twoHanded(false), _waypoint(false), _fixedWeapon(false), _invWidth(1), _invHeight(1),
 											_painKiller(0), _heal(0), _stimulant(0), _woundRecovery(0), _healthRecovery(0), _stunRecovery(0), _energyRecovery(0), _tuUse(0), _recoveryPoints(0), _armor(20), _turretType(-1),
 											_recover(true), _liveAlien(false), _blastRadius(-1), _attraction(0), _flatRate(false), _arcingShot(false), _listOrder(0),
-											_maxRange(200), _aimRange(200), _snapRange(15), _autoRange(7), _minRange(0), _dropoff(2), _bulletSpeed(0), _explosionSpeed(0), _autoShots(3), _shotgunPellets(0), _zombieUnit("")
+											_maxRange(200), _aimRange(200), _snapRange(15), _autoRange(7), _minRange(0), _dropoff(2), _bulletSpeed(0), _explosionSpeed(0), _autoShots(3), _shotgunPellets(0), _zombieUnit(""),
+											_strengthApplied(false), _skillApplied(true), _LOSRequired(false), _meleeSound(39), _meleePower(0), _meleeAnimation(0), _meleeHitSound(-1)
 {
 }
 
@@ -56,7 +57,7 @@ void RuleItem::load(const YAML::Node &node, int modIndex, int listOrder)
 	_type = node["type"].as<std::string>(_type);
 	_name = node["name"].as<std::string>(_name);
 	_requires = node["requires"].as< std::vector<std::string> >(_requires);
-	_size = node["size"].as<float>(_size);
+	_size = node["size"].as<double>(_size);
 	_costBuy = node["costBuy"].as<int>(_costBuy);
 	_costSell = node["costSell"].as<int>(_costSell);
 	_transferTime = node["transferTime"].as<int>(_transferTime);
@@ -103,12 +104,33 @@ void RuleItem::load(const YAML::Node &node, int modIndex, int listOrder)
 		if (_hitSound > 54)
 			_hitSound += modIndex;
 	}
+	if (node["meleeSound"])
+	{
+		_meleeSound = node["meleeSound"].as<int>(_meleeSound);
+		// BATTLE.CAT: 55 entries
+		if (_meleeSound > 54)
+			_meleeSound += modIndex;
+	}
 	if (node["hitAnimation"])
 	{		
 		_hitAnimation = node["hitAnimation"].as<int>(_hitAnimation);
 		// SMOKE.PCK: 56 entries
 		if (_hitAnimation > 55)
 			_hitAnimation += modIndex;
+	}
+	if (node["meleeAnimation"])
+	{
+		_meleeAnimation = node["meleeAnimation"].as<int>(_meleeAnimation);
+		// HIT.PCK: 4 entries
+		if (_meleeAnimation > 3)
+			_meleeAnimation += modIndex;
+	}
+	if (node["meleeHitSound"])
+	{
+		_meleeHitSound = node["meleeHitSound"].as<int>(_meleeHitSound);
+		// BATTLE.CAT: 55 entries
+		if (_meleeHitSound > 54)
+			_meleeHitSound += modIndex;
 	}
 	_power = node["power"].as<int>(_power);
 	_compatibleAmmo = node["compatibleAmmo"].as< std::vector<std::string> >(_compatibleAmmo);
@@ -157,6 +179,10 @@ void RuleItem::load(const YAML::Node &node, int modIndex, int listOrder)
 	_autoShots = node["autoShots"].as<int>(_autoShots);
 	_shotgunPellets = node["shotgunPellets"].as<int>(_shotgunPellets);
 	_zombieUnit = node["zombieUnit"].as<std::string>(_zombieUnit);
+	_strengthApplied = node["strengthApplied"].as<bool>(_strengthApplied);
+	_skillApplied = node["skillApplied"].as<bool>(_skillApplied);
+	_LOSRequired = node["LOSRequired"].as<bool>(_LOSRequired);
+	_meleePower = node["meleePower"].as<int>(_meleePower);
 	if (!_listOrder)
 	{
 		_listOrder = listOrder;
@@ -197,7 +223,7 @@ const std::vector<std::string> &RuleItem::getRequirements() const
  * takes up in a storage facility.
  * @return The storage size.
  */
-float RuleItem::getSize() const
+double RuleItem::getSize() const
 {
 	return _size;
 }
@@ -575,16 +601,16 @@ int RuleItem::getExplosionRadius() const
 		{
 			radius = _power / 20;
 		}
+		// cap the formula to 11
+		if (radius > 11)
+		{
+			radius = 11;
+		}
 	}
 	else
 	{
 		// unless a blast radius is actually defined.
 		radius = _blastRadius;
-	}
-
-	if (radius > 11)
-	{
-		radius = 11;
 	}
 
 	return radius;
@@ -790,5 +816,69 @@ int RuleItem::getShotgunPellets() const
 std::string RuleItem::getZombieUnit() const
 {
 	return _zombieUnit;
+}
+
+/**
+ * Is strength applied to the damage of this weapon?
+ * @return If we should apply strength.
+ */
+bool RuleItem::isStrengthApplied() const
+{
+	return _strengthApplied;
+}
+
+/**
+ * Is skill applied to the accuracy of this weapon?
+ * this only applies to melee weapons.
+ * @return If we should apply skill.
+ */
+bool RuleItem::isSkillApplied() const
+{
+	return _skillApplied;
+}
+
+/**
+ * What sound does this weapon make when you swing this at someone?
+ * @return The weapon's melee attack sound.
+ */
+int RuleItem::getMeleeAttackSound() const
+{
+	return _meleeSound;
+}
+
+/**
+ * What sound does this weapon make when you punch someone in the face with it?
+ * @return The weapon's melee hit sound.
+ */
+int RuleItem::getMeleeHitSound() const
+{
+	return _meleeHitSound;
+}
+
+/**
+ * How much damage does this weapon do when you punch someone in the face with it?
+ * @return The weapon's melee power.
+ */
+int RuleItem::getMeleePower() const
+{
+	return _meleePower;
+}
+
+/**
+ * Is line of sight required for this psionic weapon to function?
+ * @return If line of sight is required.
+ */
+bool RuleItem::isLOSRequired() const
+{
+	return _LOSRequired;
+}
+
+/**
+ * What is the starting frame offset in hit.pck to use for the animation?
+ * @return the starting frame offset in hit.pck to use for the animation.
+ */
+int RuleItem::getMeleeAnimation() const
+{
+	return _meleeAnimation;
 }
 }

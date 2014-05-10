@@ -51,7 +51,7 @@ ResearchCompleteState::ResearchCompleteState(Game * game, const RuleResearch * r
 	_txtResearch = new Text(230, 32, 45, 96);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(0)), Palette::backPos, 16);
+	setPalette("PAL_GEOSCAPE", 0);
 
 	add(_window);
 	add(_btnOk);
@@ -68,12 +68,12 @@ ResearchCompleteState::ResearchCompleteState(Game * game, const RuleResearch * r
 	_btnOk->setColor(Palette::blockOffset(8)+5);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&ResearchCompleteState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&ResearchCompleteState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&ResearchCompleteState::btnOkClick, Options::keyCancel);
 
 	_btnReport->setColor(Palette::blockOffset(8)+5);
 	_btnReport->setText(tr("STR_VIEW_REPORTS"));
 	_btnReport->onMouseClick((ActionHandler)&ResearchCompleteState::btnReportClick);
-	_btnReport->onKeyboardPress((ActionHandler)&ResearchCompleteState::btnReportClick, (SDL_Keycode)Options::getInt("keyOk"));
+	_btnReport->onKeyboardPress((ActionHandler)&ResearchCompleteState::btnReportClick, Options::keyOk);
 
 	_txtTitle->setColor(Palette::blockOffset(15)-1);
 	_txtTitle->setBig();
@@ -88,14 +88,6 @@ ResearchCompleteState::ResearchCompleteState(Game * game, const RuleResearch * r
 	{
 		_txtResearch->setText(tr(research->getName()));
 	}
-}
-
-/**
- * Resets the palette.
- */
-void ResearchCompleteState::init()
-{
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(0)), Palette::backPos, 16);
 }
 
 /**

@@ -45,7 +45,7 @@ namespace OpenXcom
 		_txtTitle = new Text(148, 32, 5, 24);
 
 		// Set palette
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_4")->getColors());
+		setPalette("PAL_BATTLEPEDIA");
 
 		ArticleState::initLayout();
 
@@ -162,7 +162,7 @@ namespace OpenXcom
 
 
 		// AMMO column
-		std::wstringstream ss;
+		std::wostringstream ss;
 
 		for (int i = 0; i<3; ++i)
 		{
@@ -192,7 +192,7 @@ namespace OpenXcom
 				_txtDamage->setAlign(ALIGN_CENTER);
 				_txtDamage->setText(tr("STR_DAMAGE_UC"));
 
-				_txtAmmo = new Text(42, 10, 272, 7);
+				_txtAmmo = new Text(50, 10, 268, 7);
 				add(_txtAmmo);
 				_txtAmmo->setColor(Palette::blockOffset(14)+15);
 				_txtAmmo->setAlign(ALIGN_CENTER);
@@ -212,7 +212,7 @@ namespace OpenXcom
 				}
 				else
 				{
-					for (unsigned int i = 0; i < std::min(ammo_data->size(), (size_t)3); ++i)
+					for (size_t i = 0; i < std::min(ammo_data->size(), (size_t)3); ++i)
 					{
 						ArticleDefinition *ammo_article = _game->getRuleset()->getUfopaediaArticle((*ammo_data)[i]);
 						if (Ufopaedia::isArticleAvailable(_game, ammo_article))

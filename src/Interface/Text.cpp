@@ -36,7 +36,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-Text::Text(int width, int height, int x, int y) : Surface(width, height, x, y), _big(0), _small(0), _font(0), _lang(0), _text(L""), _wrap(false), _invert(false), _contrast(false), _align(ALIGN_LEFT), _valign(ALIGN_TOP), _color(0), _color2(0)
+Text::Text(int width, int height, int x, int y) : Surface(width, height, x, y), _big(0), _small(0), _font(0), _lang(0), _text(L""), _wrap(false), _invert(false), _contrast(false), _indent(false), _align(ALIGN_LEFT), _valign(ALIGN_TOP), _color(0), _color2(0)
 {
 }
 
@@ -65,7 +65,7 @@ std::wstring Text::formatNumber(int value, std::wstring currency)
 	std::wstring thousands_sep = L"\xA0";// Language::cpToWstr(lc->mon_thousands_sep);
 
 	bool negative = (value < 0);
-	std::wstringstream ss;
+	std::wostringstream ss;
 	ss << (negative? -value : value);
 	std::wstring s = ss.str();
 	size_t spacer = s.size() - 3;
@@ -104,7 +104,7 @@ std::wstring Text::formatFunding(int funds)
  */
 std::wstring Text::formatPercentage(int value)
 {
-	std::wstringstream ss;
+	std::wostringstream ss;
 	ss << value << "%";
 	return ss.str();
 }
@@ -163,7 +163,7 @@ void Text::setText(const std::wstring &text)
 	_text = text;
 	processText();
 	// If big text won't fit the space, try small text
-	if (_font == _big && !_wrap && getTextWidth() > getWidth() && _text[_text.size()-1] != L'.')
+	if (_font == _big && (getTextWidth() > getWidth() || getTextHeight() > getHeight()) && _text[_text.size()-1] != L'.')
 	{
 		setSmall();
 	}
@@ -183,12 +183,14 @@ std::wstring Text::getText() const
  * text are automatically split to ensure they stay within the
  * drawing area, otherwise they simply go off the edge.
  * @param wrap Wordwrapping setting.
+ * @param indent Indent wrapped text.
  */
-void Text::setWordWrap(bool wrap)
+void Text::setWordWrap(bool wrap, bool indent)
 {
-	if (wrap != _wrap)
+	if (wrap != _wrap || indent != _indent)
 	{
 		_wrap = wrap;
+		_indent = indent;
 		processText();
 	}
 }
@@ -369,7 +371,7 @@ void Text::processText()
 				font = _small;
 		}
 		// Keep track of spaces for wordwrapping
-		else if (Font::isSpace((*str)[c]))
+		else if (Font::isSpace((*str)[c]) || Font::isSeparator((*str)[c]))
 		{
 			space = c;
 			width += font->getCharSize((*str)[c]).w;
@@ -394,8 +396,23 @@ void Text::processText()
 				if (_lang->getTextWrapping() == WRAP_WORDS || Font::isSpace((*str)[c]))
 				{
 					// Go back to the last space and put a linebreak there
-					(*str)[space] = L'\n';
-					width -= word + font->getCharSize(L' ').w;
+					width -= word;
+					size_t indent = space;
+					if (Font::isSpace((*str)[space]))
+					{
+						width -= font->getCharSize((*str)[space]).w;
+						(*str)[space] = L'\n';
+					}
+					else
+					{
+						str->insert(space+1, L"\n");
+						indent++;
+					}
+					if (_indent)
+					{
+						str->insert(indent+1, L" \xA0");
+						width += font->getCharSize(L' ').w + font->getCharSize(L'\xA0').w;
+					}
 				}
 				else if (_lang->getTextWrapping() == WRAP_LETTERS)
 				{
@@ -492,7 +509,7 @@ void Text::draw()
 	}
 
 	// Show text borders for debugging
-	if (Options::getBool("debugUi"))
+	if (Options::debugUi)
 	{
 		SDL_Rect r;
 		r.w = getWidth();

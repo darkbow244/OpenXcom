@@ -70,6 +70,12 @@ private:
 	///list of dimension of earth on screen per zoom level
 	std::vector<double> _radius;
 
+	bool _isMouseScrolling, _isMouseScrolled;
+	int _xBeforeMouseScrolling, _yBeforeMouseScrolling;
+	double _lonBeforeMouseScrolling, _latBeforeMouseScrolling;
+	Uint32 _mouseScrollingStartTime;
+	int _totalMouseMoveX, _totalMouseMoveY;
+	bool _mouseMovedOverThreshold;
 
 	/// Checks if a point is behind the globe.
 	bool pointBack(double lon, double lat) const;
@@ -83,6 +89,14 @@ private:
 	void cache(std::list<Polygon*> *polygons, std::list<Polygon*> *cache);
 	/// Get position of sun relative to given position in polar cords and date.
 	Cord getSunDirection(double lon, double lat) const;
+	/// Draw globe range circle.
+	void drawGlobeCircle(double lat, double lon, double radius, int segments);
+	/// Special "transparent" line.
+	void XuLine(Surface* surface, Surface* src, double x1, double y1, double x2, double y2, int shade);
+	/// Draw line on globe surface.
+	void drawVHLine(Surface *surface, double lon1, double lat1, double lon2, double lat2, Uint8 color);
+	/// Draw flight path.
+	void drawPath(Surface *surface, double lon1, double lat1, double lon2, double lat2);
 public:
 	/// Creates a new globe at the specified position and size.
 	Globe(Game *game, int cenX, int cenY, int width, int height, int x = 0, int y = 0);
@@ -92,6 +106,7 @@ public:
 	static void loadDat(const std::string &filename, std::list<Polygon*> *polygons);
 	/// Converts polar coordinates to cartesian coordinates.
 	void polarToCart(double lon, double lat, Sint16 *x, Sint16 *y) const;
+	/// Converts polar coordinates to cartesian coordinates.
 	void polarToCart(double lon, double lat, double *x, double *y) const;
 	/// Converts cartesian coordinates to polar coordinates.
 	void cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const;
@@ -145,14 +160,18 @@ public:
 	void drawLand();
 	/// Draws the shadow.
 	void drawShadow();
-	/// Draws the country details of the globe.
+	/// Draws the radar ranges of the globe.
 	void drawRadars();
+	/// Draws the flight paths of the globe.
+	void drawFlights();
 	/// Draws the country details of the globe.
 	void drawDetail();
 	/// Draws all the markers over the globe.
 	void drawMarkers();
 	/// Blits the globe onto another surface.
 	void blit(Surface *surface);
+	/// Special handling for mouse hover.
+	void mouseOver(Action *action, State *state);
 	/// Special handling for mouse presses.
 	void mousePress(Action *action, State *state);
 	/// Special handling for mouse releases.
@@ -171,10 +190,6 @@ public:
 	const LocalizedText &tr(const std::string &id) const;
 	/// Get the localized text.
 	LocalizedText tr(const std::string &id, unsigned n) const;
-	/// Draw globe range circle.
-	void drawGlobeCircle(double lat, double lon, double radius, int segments);
-	/// Special "transparent" line.
-	void XuLine(Surface* surface, Surface* src, double x1, double y1, double x2, double y2, Sint16 Color);
 	/// Sets hover base position.
 	void setNewBaseHoverPos(double lon, double lat);
 	/// Turns on new base hover mode.
@@ -187,9 +202,10 @@ public:
 	bool getShowRadar(void);
 	/// set the _radarLines variable
 	void toggleRadarLines();
-
-	void drawVHLine(double lon1, double lat1, double lon2, double lat2, int colour);
-
+	/// Update the resolution settings, we just resized the window.
+	void resize();
+	/// Set up the radius of earth and stuff.
+	void setupRadii(int width, int height);
 };
 
 }

@@ -24,7 +24,9 @@
 #include "BaseFacility.h"
 #include "../Ruleset/RuleBaseFacility.h"
 #include "Craft.h"
+#include "CraftWeapon.h"
 #include "../Ruleset/RuleCraft.h"
+#include "../Ruleset/RuleCraftWeapon.h"
 #include "../Ruleset/Ruleset.h"
 #include "ItemContainer.h"
 #include "Soldier.h"
@@ -103,29 +105,36 @@ void Base::load(const YAML::Node &node, SavedGame *save, bool newGame, bool newB
 	Target::load(node);
 	_name = Language::utf8ToWstr(node["name"].as<std::string>(""));
 
-	if (!newGame || !Options::getBool("customInitialBase") || newBattleGame)
+	if (!newGame || !Options::customInitialBase || newBattleGame)
 	{
 		for (YAML::const_iterator i = node["facilities"].begin(); i != node["facilities"].end(); ++i)
 		{
 			std::string type = (*i)["type"].as<std::string>();
-			BaseFacility *f = new BaseFacility(_rule->getBaseFacility(type), this);
-			f->load(*i);
-			_facilities.push_back(f);
+			if (_rule->getBaseFacility(type))
+			{
+				BaseFacility *f = new BaseFacility(_rule->getBaseFacility(type), this);
+				f->load(*i);
+				_facilities.push_back(f);
+			}
 		}
 	}
 
 	for (YAML::const_iterator i = node["crafts"].begin(); i != node["crafts"].end(); ++i)
 	{
 		std::string type = (*i)["type"].as<std::string>();
-		Craft *c = new Craft(_rule->getCraft(type), this);
-		c->load(*i, _rule, save);		
-		_crafts.push_back(c);
+		if (_rule->getCraft(type))
+		{
+			Craft *c = new Craft(_rule->getCraft(type), this);
+			c->load(*i, _rule, save);
+			_crafts.push_back(c);
+		}
 	}
 
 	for (YAML::const_iterator i = node["soldiers"].begin(); i != node["soldiers"].end(); ++i)
 	{
 		Soldier *s = new Soldier(_rule->getSoldier("XCOM"), _rule->getArmor("STR_NONE_UC"));
-		s->load(*i, _rule);
+		s->load(*i, _rule, save);
+		s->setCraft(0);
 		if (const YAML::Node &craft = (*i)["craft"])
 		{
 			std::string type = craft["type"].as<std::string>();
@@ -138,10 +147,6 @@ void Base::load(const YAML::Node &node, SavedGame *save, bool newGame, bool newB
 					break;
 				}
 			}
-		}
-		else
-		{
-			s->setCraft(0);
 		}
 		_soldiers.push_back(s);
 	}
@@ -168,24 +173,32 @@ void Base::load(const YAML::Node &node, SavedGame *save, bool newGame, bool newB
 	{
 		int hours = (*i)["hours"].as<int>();
 		Transfer *t = new Transfer(hours);
-		t->load(*i, this, _rule);
-		_transfers.push_back(t);
+		if (t->load(*i, this, _rule, save))
+		{
+			_transfers.push_back(t);
+		}
 	}
 
 	for (YAML::const_iterator i = node["research"].begin(); i != node["research"].end(); ++i)
 	{
 		std::string research = (*i)["project"].as<std::string>();
-		ResearchProject *r = new ResearchProject(_rule->getResearch(research));
-		r->load(*i);
-		_research.push_back(r);
+		if (_rule->getResearch(research))
+		{
+			ResearchProject *r = new ResearchProject(_rule->getResearch(research));
+			r->load(*i);
+			_research.push_back(r);
+		}
 	}
 
 	for (YAML::const_iterator i = node["productions"].begin(); i != node["productions"].end(); ++i)
 	{
 		std::string item = (*i)["item"].as<std::string>();
-		Production *p = new Production(_rule->getManufacture(item), 0);
-		p->load(*i);
-		_productions.push_back(p);
+		if (_rule->getManufacture(item))
+		{
+			Production *p = new Production(_rule->getManufacture(item), 0);
+			p->load(*i);
+			_productions.push_back(p);
+		}
 	}
 
 	_retaliationTarget = node["retaliationTarget"].as<bool>(_retaliationTarget);
@@ -539,11 +552,11 @@ int Base::getAvailableQuarters() const
 }
 
 /**
- * Returns the amount of stores used up
- * by equipment in the base.
+ * Returns the amount of stores used up by equipment in the base,
+ * and equipment about to arrive.
  * @return Storage space.
  */
-int Base::getUsedStores() const
+double Base::getUsedStores()
 {
 	double total = _items->getTotalSize(_rule);
 	for (std::vector<Craft*>::const_iterator i = _crafts.begin(); i != _crafts.end(); ++i)
@@ -560,8 +573,29 @@ int Base::getUsedStores() const
 		{
 			total += (*i)->getQuantity() * _rule->getItem((*i)->getItems())->getSize();
 		}
+		else if ((*i)->getType() == TRANSFER_CRAFT)
+		{
+			Craft *craft = (*i)->getCraft();
+			total += craft->getItems()->getTotalSize(_rule);
+		}
 	}
-	return (int)floor(total);
+	total -= getIgnoredStores();
+	return total;
+}
+
+/**
+ * Checks if the base's stores are overfull.
+ *
+ * Supplying an offset will add/subtract to the used capacity before performing the check.
+ * A positive offset simulates adding items to the stores, whereas a negative offset
+ * can be used to check whether sufficient items have been removed to stop the stores overflowing.
+ * @param offset Adjusts the used capacity.
+ */
+bool Base::storesOverfull(double offset)
+{
+	double capacity = getAvailableStores();
+	double used = getUsedStores();
+	return used + offset > capacity;
 }
 
 /**
@@ -580,6 +614,40 @@ int Base::getAvailableStores() const
 		}
 	}
 	return total;
+}
+
+/**
+ * Determines space taken up by ammo clips about to rearm craft.
+ * @return Ignored storage space.
+ */
+double Base::getIgnoredStores()
+{
+	double space = 0;
+	for (std::vector<Craft*>::iterator c = getCrafts()->begin(); c != getCrafts()->end(); ++c)
+	{
+		if ((*c)->getStatus() == "STR_REARMING")
+		{
+			for (std::vector<CraftWeapon*>::iterator w = (*c)->getWeapons()->begin(); w != (*c)->getWeapons()->end() ; ++w)
+			{
+				if (*w != 0 && (*w)->isRearming())
+				{
+					std::string clip = (*w)->getRules()->getClipItem();
+					int available = getItems()->getItem(clip);
+					if (clip != "" && available > 0)
+					{
+						int clipSize = _rule->getItem(clip)->getClipSize();
+						int needed;
+						if (clipSize > 0)
+						{
+							needed = ((*w)->getRules()->getAmmoMax() - (*w)->getAmmo()) / clipSize;
+						}
+						space += std::min(available, needed) * _rule->getItem(clip)->getSize();
+					}
+				}
+			}
+		}
+	}
+	return space;
 }
 
 /**
@@ -1025,7 +1093,7 @@ int Base::getUsedContainment() const
 			}
 		}
 	}
-	if (Options::getBool("alienContainmentLimitEnforced"))
+	if (Options::storageLimitsEnforced)
 	{
 		for (std::vector<ResearchProject*>::const_iterator i = _research.begin(); i != _research.end(); ++i)
 		{
@@ -1346,8 +1414,8 @@ std::list<std::vector<BaseFacility*>::iterator> Base::getDisconnectedFacilities(
 }
 
 /**
- * removes a base module, and deals with the ramifications thereof
- * @param facility an iterator reference to the facility to destroy and remove.
+ * Removes a base module, and deals with the ramifications thereof.
+ * @param facility An iterator reference to the facility to destroy and remove.
  */
 void Base::destroyFacility(std::vector<BaseFacility*>::iterator facility)
 {
@@ -1372,8 +1440,8 @@ void Base::destroyFacility(std::vector<BaseFacility*>::iterator facility)
 			while (!(*facility)->getCraft()->getItems()->getContents()->empty())
 			{
 				std::map<std::string, int>::iterator i = (*facility)->getCraft()->getItems()->getContents()->begin();
-				_items->addItem((*i).first, (*i).second);
-				(*facility)->getCraft()->getItems()->removeItem((*i).first, (*i).second);
+				_items->addItem(i->first, i->second);
+				(*facility)->getCraft()->getItems()->removeItem(i->first, i->second);
 			}
 			for (std::vector<Craft*>::iterator i = _crafts.begin(); i != _crafts.end(); ++i)
 			{
@@ -1478,9 +1546,9 @@ void Base::destroyFacility(std::vector<BaseFacility*>::iterator facility)
 	}
 	else if ((*facility)->getRules()->getStorage())
 	{
-		// we won't destroy the items physically AT the base, 
+		// we won't destroy the items physically AT the base,
 		// but any items in transit will end up at the dead letter office.
-		if ((getAvailableStores() - getUsedStores()) - (*facility)->getRules()->getStorage() < 0 && !_transfers.empty())
+		if (storesOverfull((*facility)->getRules()->getStorage()) && !_transfers.empty())
 		{
 			for (std::vector<Transfer*>::iterator i = _transfers.begin(); i != _transfers.end(); )
 			{

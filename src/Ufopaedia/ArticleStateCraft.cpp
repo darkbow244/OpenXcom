@@ -43,7 +43,7 @@ namespace OpenXcom
 		_txtTitle = new Text(155, 32, 5, 24);
 
 		// Set palette
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_3")->getColors());
+		setPalette("PAL_UFOPAEDIA");
 
 		ArticleState::initLayout();
 
@@ -74,7 +74,7 @@ namespace OpenXcom
 		_txtStats->setColor(Palette::blockOffset(14)+15);
 		_txtStats->setSecondaryColor(Palette::blockOffset(15)+4);
 
-		std::wstringstream ss;
+		std::wostringstream ss;
 		ss << tr("STR_MAXIMUM_SPEED_UC").arg(Text::formatNumber(craft->getMaxSpeed())) << L'\n';
 		ss << tr("STR_ACCELERATION").arg(craft->getAcceleration()) << L'\n';
 		ss << tr("STR_FUEL_CAPACITY").arg(Text::formatNumber(craft->getMaxFuel())) << L'\n';

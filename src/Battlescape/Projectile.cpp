@@ -20,8 +20,6 @@
 #include <cmath>
 #include "Projectile.h"
 #include "TileEngine.h"
-#include "Position.h"
-#include "BattlescapeGame.h"
 #include "../aresame.h"
 #include "../Engine/SurfaceSet.h"
 #include "../Engine/Surface.h"
@@ -53,7 +51,7 @@ namespace OpenXcom
 Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position targetVoxel) : _res(res), _save(save), _action(action), _origin(origin), _targetVoxel(targetVoxel), _position(0)
 {
 	// this is the number of pixels the sprite will move between frames
-	_speed = Options::getInt("battleFireSpeed");
+	_speed = Options::battleFireSpeed;
 
 	if (_action.weapon)
 	{
@@ -105,8 +103,9 @@ int Projectile::calculateTrajectory(double accuracy, Position originVoxel)
 		!_trajectory.empty() &&
 		_action.actor->getFaction() == FACTION_PLAYER &&
 		_action.autoShotCounter == 1 &&
-		(SDL_GetModState() & KMOD_CTRL) == 0 &&
-		_save->getBattleGame()->getPanicHandled())
+		((SDL_GetModState() & KMOD_CTRL) == 0 || !Options::forceFire) &&
+		_save->getBattleGame()->getPanicHandled() &&
+		_action.type != BA_LAUNCH)
 	{
 		Position hitPos = Position(_trajectory.at(0).x/16, _trajectory.at(0).y/16, _trajectory.at(0).z/24);
 		if (test == V_UNIT && _save->getTile(hitPos) && _save->getTile(hitPos)->getUnit() == 0) //no unit? must be lower
@@ -257,7 +256,7 @@ void Projectile::applyAccuracy(const Position& origin, Position *target, double 
 		double modifier = 0.0;
 		int upperLimit = weapon->getAimRange();
 		int lowerLimit = weapon->getMinRange();
-		if (Options::getBool("battleUFOExtenderAccuracy"))
+		if (Options::battleUFOExtenderAccuracy)
 		{
 			if (_action.type == BA_AUTOSHOT)
 			{
@@ -396,7 +395,28 @@ Surface *Projectile::getSprite() const
  */
 void Projectile::skipTrajectory()
 {
-	_position = _trajectory.size() - 2;
+	_position = _trajectory.size() - 1;
 }
 
+/**
+ * Gets the Position of origin for the projectile
+ * @return origin as a tile position.
+ */
+Position Projectile::getOrigin()
+{
+	// instead of using the actor's position, we'll use the voxel origin translated to a tile position
+	// this is a workaround for large units.
+	return _trajectory.front() / Position(16,16,24);
+}
+
+/**
+ * Gets the INTENDED target for this projectile
+ * it is important to note that we do not use the final position of the projectile here,
+ * but rather the targetted tile
+ * @return target as a tile position.
+ */
+Position Projectile::getTarget()
+{
+	return _action.target;
+}
 }

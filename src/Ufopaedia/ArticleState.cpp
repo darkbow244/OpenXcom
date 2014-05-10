@@ -59,17 +59,13 @@ namespace OpenXcom
 		switch (dt)
 		{
 		case DT_AP:
-		case DT_MELEE:
 			type = "STR_DAMAGE_ARMOR_PIERCING";
-			break;
-		case DT_HE:
-			type = "STR_DAMAGE_HIGH_EXPLOSIVE";
-			break;
-		case DT_SMOKE:
-			type = "STR_DAMAGE_SMOKE";
 			break;
 		case DT_IN:
 			type = "STR_DAMAGE_INCENDIARY";
+			break;
+		case DT_HE:
+			type = "STR_DAMAGE_HIGH_EXPLOSIVE";
 			break;
 		case DT_LASER:
 			type = "STR_DAMAGE_LASER_BEAM";
@@ -79,6 +75,15 @@ namespace OpenXcom
 			break;
 		case DT_STUN:
 			type = "STR_DAMAGE_STUN";
+			break;
+		case DT_MELEE:
+			type = "STR_DAMAGE_MELEE";
+			break;
+		case DT_ACID:
+			type = "STR_DAMAGE_ACID";
+			break;
+		case DT_SMOKE:
+			type = "STR_DAMAGE_SMOKE";
 			break;
 		default:
 			type = "STR_UNKNOWN";
@@ -99,8 +104,8 @@ namespace OpenXcom
 
 		_btnOk->setText(tr("STR_OK"));
 		_btnOk->onMouseClick((ActionHandler)&ArticleState::btnOkClick);
-		_btnOk->onKeyboardPress((ActionHandler)&ArticleState::btnOkClick,(SDL_Keycode)Options::getInt("keyOk"));
-		_btnOk->onKeyboardPress((ActionHandler)&ArticleState::btnOkClick,(SDL_Keycode)Options::getInt("keyCancel"));
+		_btnOk->onKeyboardPress((ActionHandler)&ArticleState::btnOkClick,Options::keyOk);
+		_btnOk->onKeyboardPress((ActionHandler)&ArticleState::btnOkClick,Options::keyCancel);
 		_btnPrev->setText(L"<<");
 		_btnPrev->onMouseClick((ActionHandler)&ArticleState::btnPrevClick);
 		_btnNext->setText(L">>");
@@ -114,7 +119,6 @@ namespace OpenXcom
 	void ArticleState::btnOkClick(Action *)
 	{
 		_game->popState();
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
 	}
 
 	/**

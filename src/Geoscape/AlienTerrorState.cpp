@@ -55,7 +55,7 @@ AlienTerrorState::AlienTerrorState(Game *game, TerrorSite *terror, const std::st
 	_txtCity = new Text(246, 17, 5, 80);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(3)), Palette::backPos, 16);
+	setPalette("PAL_GEOSCAPE", 3);
 
 	add(_window);
 	add(_btnIntercept);
@@ -81,7 +81,7 @@ AlienTerrorState::AlienTerrorState(Game *game, TerrorSite *terror, const std::st
 	_btnCancel->setColor(Palette::blockOffset(8)+5);
 	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->onMouseClick((ActionHandler)&AlienTerrorState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&AlienTerrorState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&AlienTerrorState::btnCancelClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(8)+5);
 	_txtTitle->setBig();
@@ -101,14 +101,6 @@ AlienTerrorState::AlienTerrorState(Game *game, TerrorSite *terror, const std::st
 AlienTerrorState::~AlienTerrorState()
 {
 
-}
-
-/**
- * Resets the palette.
- */
-void AlienTerrorState::init()
-{
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(3)), Palette::backPos, 16);
 }
 
 /**

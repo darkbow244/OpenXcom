@@ -42,6 +42,8 @@ AliensCrashState::AliensCrashState(Game *game) : State(game)
 	_txtTitle = new Text(246, 80, 37, 50);
 
 	// Set palette
+	setPalette("PAL_BATTLESCAPE");
+
 	add(_window);
 	add(_btnOk);
 	add(_txtTitle);
@@ -57,8 +59,8 @@ AliensCrashState::AliensCrashState(Game *game) : State(game)
 	_btnOk->setHighContrast(true);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&AliensCrashState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&AliensCrashState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
-	_btnOk->onKeyboardPress((ActionHandler)&AliensCrashState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&AliensCrashState::btnOkClick, Options::keyOk);
+	_btnOk->onKeyboardPress((ActionHandler)&AliensCrashState::btnOkClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(0)-1);
 	_txtTitle->setHighContrast(true);

@@ -53,6 +53,9 @@ ActionMenuState::ActionMenuState(Game *game, BattleAction *action, int x, int y)
 {
 	_screen = false;
 
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
+
 	for (int i = 0; i < 6; ++i)
 	{
 		_actionMenu[i] = new ActionMenuItem(i, _game, x, y);
@@ -73,37 +76,15 @@ ActionMenuState::ActionMenuState(Game *game, BattleAction *action, int x, int y)
 
 	// priming
 	if ((weapon->getBattleType() == BT_GRENADE || weapon->getBattleType() == BT_PROXIMITYGRENADE)
-		&& _action->weapon->getExplodeTurn() == -1)
+		&& _action->weapon->getFuseTimer() == -1)
 	{
 		addItem(BA_PRIME, "STR_PRIME_GRENADE", &id);
 	}
 
-	if (weapon->getBattleType() == BT_FIREARM)
-	{
-		if (weapon->isWaypoint() || (_action->weapon->getAmmoItem() && _action->weapon->getAmmoItem()->getRules()->isWaypoint()))
-		{
-			addItem(BA_LAUNCH, "STR_LAUNCH_MISSILE", &id);
-		}
-		else
-		{
-			if (weapon->getAccuracyAuto() != 0)
-			{
-				addItem(BA_AUTOSHOT, "STR_AUTO_SHOT", &id);
-			}
-			if (weapon->getAccuracySnap() != 0)
-			{
-				addItem(BA_SNAPSHOT, "STR_SNAP_SHOT", &id);
-			}
-			if (weapon->getAccuracyAimed() != 0)
-			{
-				addItem(BA_AIMEDSHOT, "STR_AIMED_SHOT", &id);
-			}
-		}
-	}
-	else if (weapon->getBattleType() == BT_MELEE)
+	if (weapon->getTUMelee())
 	{
 		// stun rod
-		if (weapon->getDamageType() == DT_STUN)
+		if (weapon->getBattleType() == BT_MELEE && weapon->getDamageType() == DT_STUN)
 		{
 			addItem(BA_HIT, "STR_STUN", &id);
 		}
@@ -130,6 +111,28 @@ ActionMenuState::ActionMenuState(Game *game, BattleAction *action, int x, int y)
 	else if (weapon->getBattleType() == BT_MINDPROBE)
 	{
 		addItem(BA_USE, "STR_USE_MIND_PROBE", &id);
+	}
+	if (weapon->getBattleType() == BT_FIREARM)
+	{
+		if (weapon->isWaypoint() || (_action->weapon->getAmmoItem() && _action->weapon->getAmmoItem()->getRules()->isWaypoint()))
+		{
+			addItem(BA_LAUNCH, "STR_LAUNCH_MISSILE", &id);
+		}
+		else
+		{
+			if (weapon->getAccuracyAuto() != 0)
+			{
+				addItem(BA_AUTOSHOT, "STR_AUTO_SHOT", &id);
+			}
+			if (weapon->getAccuracySnap() != 0)
+			{
+				addItem(BA_SNAPSHOT, "STR_SNAP_SHOT", &id);
+			}
+			if (weapon->getAccuracyAimed() != 0)
+			{
+				addItem(BA_AIMEDSHOT, "STR_AIMED_SHOT", &id);
+			}
+		}
 	}
 
 }
@@ -176,9 +179,9 @@ void ActionMenuState::handle(Action *action)
 		_game->popState();
 	}
 	else if (action->getDetails()->type == SDL_KEYDOWN &&
-		(action->getDetails()->key.keysym.sym == (SDL_Keycode)Options::getInt("keyCancel") ||
-		action->getDetails()->key.keysym.sym == (SDL_Keycode)Options::getInt("keyBattleUseLeftHand") ||
-		action->getDetails()->key.keysym.sym == (SDL_Keycode)Options::getInt("keyBattleUseRightHand")))
+		(action->getDetails()->key.keysym.sym == Options::keyCancel ||
+		action->getDetails()->key.keysym.sym == Options::keyBattleUseLeftHand ||
+		action->getDetails()->key.keysym.sym == Options::keyBattleUseRightHand))
 	{
 		_game->popState();
 	}
@@ -289,7 +292,7 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 			}
 			_game->popState();
 		}
-		else if ((_action->type == BA_STUN || _action->type == BA_HIT) && weapon->getBattleType() == BT_MELEE)
+		else if (_action->type == BA_STUN || _action->type == BA_HIT)
 		{
 			if (!_game->getSavedGame()->getSavedBattle()->getTileEngine()->validMeleeRange(
 				_action->actor->getPosition(),
@@ -307,6 +310,16 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 			_game->popState();
 		}
 	}
+}
+
+/**
+ * Updates the scale.
+ * @param dX delta of X;
+ * @param dY delta of Y;
+ */
+void ActionMenuState::resize(int &dX, int &dY)
+{
+	State::recenter(dX, dY * 2);
 }
 
 }

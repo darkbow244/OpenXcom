@@ -51,7 +51,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-Inventory::Inventory(Game *game, int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _game(game), _selUnit(0), _selItem(0), _tu(true), _groundOffset(0)
+Inventory::Inventory(Game *game, int width, int height, int x, int y, bool base) : InteractiveSurface(width, height, x, y), _game(game), _selUnit(0), _selItem(0), _tu(true), _base(base), _groundOffset(0)
 {
 	_grid = new Surface(width, height, x, y);
 	_items = new Surface(width, height, x, y);
@@ -440,8 +440,8 @@ void Inventory::blit(Surface *surface)
  */
 void Inventory::mouseOver(Action *action, State *state)
 {
-	_selection->setX((int)floor(action->getAbsoluteXMouse()) - _selection->getWidth()/2 - _dx);
-	_selection->setY((int)floor(action->getAbsoluteYMouse()) - _selection->getHeight()/2 - _dy);
+	_selection->setX((int)floor(action->getAbsoluteXMouse()) - _selection->getWidth()/2 - getX());
+	_selection->setY((int)floor(action->getAbsoluteYMouse()) - _selection->getHeight()/2 - getY());
 	InteractiveSurface::mouseOver(action, state);
 }
 
@@ -459,8 +459,8 @@ void Inventory::mouseClick(Action *action, State *state)
 		// Pickup item
 		if (_selItem == 0)
 		{
-			int x = (int)floor(action->getAbsoluteXMouse()) - _dx,
-				y = (int)floor(action->getAbsoluteYMouse()) - _dy;
+			int x = (int)floor(action->getAbsoluteXMouse()) - getX(),
+				y = (int)floor(action->getAbsoluteYMouse()) - getY();
 			RuleInventory *slot = getSlotInPosition(&x, &y);
 			if (slot != 0)
 			{
@@ -549,7 +549,7 @@ void Inventory::mouseClick(Action *action, State *state)
 					else
 					{
 						setSelectedItem(item);
-						if (item->getExplodeTurn() >= 0)
+						if (item->getFuseTimer() >= 0)
 						{
 							_warning->showMessage(_game->getLanguage()->getString("STR_GRENADE_IS_ACTIVATED"));
 						}
@@ -653,8 +653,8 @@ void Inventory::mouseClick(Action *action, State *state)
 			else
 			{
 				// try again, using the position of the mouse cursor, not the item (slightly more intuitive for stacking)
-				x = (int)floor(action->getAbsoluteXMouse())-_dx;
-				y = (int)floor(action->getAbsoluteYMouse())-_dy;
+				x = (int)floor(action->getAbsoluteXMouse()) - getX();
+				y = (int)floor(action->getAbsoluteYMouse()) - getY();
 				slot = getSlotInPosition(&x, &y);
 				if (slot != 0 && slot->getType() == INV_GROUND)
 				{
@@ -682,41 +682,48 @@ void Inventory::mouseClick(Action *action, State *state)
 	{
 		if (_selItem == 0)
 		{
-			if (!_tu)
+			if (!_base || Options::includePrimeStateInSavedLayout)
 			{
-				int x = (int)floor(action->getAbsoluteXMouse()) - _dx,
-					y = (int)floor(action->getAbsoluteYMouse()) - _dy;
-				RuleInventory *slot = getSlotInPosition(&x, &y);
-				if (slot != 0)
+				if (!_tu)
 				{
-					if (slot->getType() == INV_GROUND)
+					int x = (int)floor(action->getAbsoluteXMouse()) - getX(),
+						y = (int)floor(action->getAbsoluteYMouse()) - getY();
+					RuleInventory *slot = getSlotInPosition(&x, &y);
+					if (slot != 0)
 					{
-						x += _groundOffset;
-					}
-					BattleItem *item = _selUnit->getItem(slot, x, y);
-					if (item != 0)
-					{
-						BattleType itemType = item->getRules()->getBattleType();
-						if (BT_GRENADE == itemType || BT_PROXIMITYGRENADE == itemType)
+						if (slot->getType() == INV_GROUND)
 						{
-							if (item->getExplodeTurn() == -1)
+							x += _groundOffset;
+						}
+						BattleItem *item = _selUnit->getItem(slot, x, y);
+						if (item != 0)
+						{
+							BattleType itemType = item->getRules()->getBattleType();
+							if (BT_GRENADE == itemType || BT_PROXIMITYGRENADE == itemType)
 							{
-								// Prime that grenade!
-								if (BT_PROXIMITYGRENADE == itemType)
+								if (item->getFuseTimer() == -1)
 								{
-									_warning->showMessage(_game->getLanguage()->getString("STR_GRENADE_IS_ACTIVATED"));
-									item->setExplodeTurn(0);
+									// Prime that grenade!
+									if (BT_PROXIMITYGRENADE == itemType)
+									{
+										_warning->showMessage(_game->getLanguage()->getString("STR_GRENADE_IS_ACTIVATED"));
+										item->setFuseTimer(0);
+									}
+									else _game->pushState(new PrimeGrenadeState(_game, 0, true, item));
 								}
-								else _game->pushState(new PrimeGrenadeState(_game, 0, true, item));
+								else
+								{
+									_warning->showMessage(_game->getLanguage()->getString("STR_GRENADE_IS_DEACTIVATED"));
+									item->setFuseTimer(-1);  // Unprime the grenade
+								}
 							}
-							else item->setExplodeTurn(-1);  // Unprime the grenade
 						}
 					}
 				}
-			}
-			else
-			{
-				_game->popState(); // Closes the inventory window on right-click (if not in preBattle equip screen!)
+				else
+				{
+					_game->popState(); // Closes the inventory window on right-click (if not in preBattle equip screen!)
+				}
 			}
 		}
 		else
@@ -911,7 +918,7 @@ bool Inventory::canBeStacked(BattleItem *itemA, BattleItem *itemB)
 		// and the same ammo quantity
 		itemA->getAmmoItem()->getAmmoQuantity() == itemB->getAmmoItem()->getAmmoQuantity())) &&
 		// and neither is set to explode
-		itemA->getExplodeTurn() == -1 && itemB->getExplodeTurn() == -1 &&
+		itemA->getFuseTimer() == -1 && itemB->getFuseTimer() == -1 &&
 		// and neither is a corpse or unconscious unit
 		itemA->getUnit() == 0 && itemB->getUnit() == 0 &&
 		// and if it's a medkit, it has the same number of charges

@@ -48,10 +48,13 @@ ScannerState::ScannerState (Game * game, BattleAction *action) : State (game), _
 	_surface2 = new InteractiveSurface(320, 200);
 	_scannerView = new ScannerView(152, 152, 56, 24, _game, _action->actor);
 
-	if (Screen::getDY() > 50)
+	if (_game->getScreen()->getDY() > 50)
 	{
 		_screen = false;
 	}
+
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
 
 	add(_surface2);
 	add(_scannerView);

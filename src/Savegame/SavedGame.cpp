@@ -42,6 +42,7 @@
 #include "ResearchProject.h"
 #include "ItemContainer.h"
 #include "Soldier.h"
+#include "Transfer.h"
 #include "../Ruleset/RuleManufacture.h"
 #include "Production.h"
 #include "TerrorSite.h"
@@ -52,6 +53,11 @@
 
 namespace OpenXcom
 {
+
+const std::string SavedGame::AUTOSAVE_GEOSCAPE = "_autogeo_.asav",
+   				  SavedGame::AUTOSAVE_BATTLESCAPE = "_autobattle_.asav",
+				  SavedGame::QUICKSAVE = "_quick_.asav";
+
 struct findRuleResearch : public std::unary_function<ResearchProject *,
 								bool>
 {
@@ -89,9 +95,8 @@ bool equalProduction::operator()(const Production * p) const
 /**
  * Initializes a brand new saved game according to the specified difficulty.
  */
-SavedGame::SavedGame() : _difficulty(DIFF_BEGINNER), _globeLon(0.0), _globeLat(0.0), _globeZoom(0), _battleGame(0), _debug(false), _warned(false), _detail(true), _radarLines(false), _monthsPassed(-1), _graphRegionToggles(""), _graphCountryToggles(""), _graphFinanceToggles("")
+SavedGame::SavedGame() : _difficulty(DIFF_BEGINNER), _ironman(false), _globeLon(0.0), _globeLat(0.0), _globeZoom(0), _battleGame(0), _debug(false), _warned(false), _monthsPassed(-1), _graphRegionToggles(""), _graphCountryToggles(""), _graphFinanceToggles(""), _selectedBase(0)
 {
-	RNG::init();
 	_time = new GameTime(6, 1, 1, 1999, 12, 0, 0);
 	_alienStrategy = new AlienStrategy();
 	_funds.push_back(0);
@@ -150,54 +155,40 @@ SavedGame::~SavedGame()
 /**
  * Gets all the info of the saves found in the user folder.
  * @param lang Loaded language.
+ * @param autoquick Include autosaves and quicksaves.
  */
-std::vector<SaveInfo> SavedGame::getList(Language *lang)
+std::vector<SaveInfo> SavedGame::getList(Language *lang, bool autoquick)
 {
 	std::vector<SaveInfo> info;
-	std::vector<std::string> saves = CrossPlatform::getFolderContents(Options::getUserFolder(), "sav");
 
+	if (autoquick)
+	{
+		std::vector<std::string> saves = CrossPlatform::getFolderContents(Options::getUserFolder(), "asav");
+		for (std::vector<std::string>::iterator i = saves.begin(); i != saves.end(); ++i)
+		{
+			try
+			{
+				info.push_back(getSaveInfo(*i, lang));
+			}
+			catch (Exception &e)
+			{
+				Log(LOG_ERROR) << e.what();
+				continue;
+			}
+			catch (YAML::Exception &e)
+			{
+				Log(LOG_ERROR) << e.what();
+				continue;
+			}
+		}
+	}
+
+	std::vector<std::string> saves = CrossPlatform::getFolderContents(Options::getUserFolder(), "sav");
 	for (std::vector<std::string>::iterator i = saves.begin(); i != saves.end(); ++i)
 	{
-		std::string file = (*i);
-		std::string fullname = Options::getUserFolder() + file;
 		try
 		{
-			YAML::Node doc = YAML::LoadFile(fullname);
-			SaveInfo save;
-
-			save.fileName = CrossPlatform::noExt(file);
-
-			if (doc["name"])
-			{
-				save.displayName = Language::utf8ToWstr(doc["name"].as<std::string>());
-			}
-			else
-			{
-				save.displayName = Language::fsToWstr(save.fileName);
-			}
-
-			save.timestamp = CrossPlatform::getDateModified(fullname);
-			std::pair<std::wstring, std::wstring> str = CrossPlatform::timeToString(save.timestamp);
-			save.isoDate = str.first;
-			save.isoTime = str.second;
-
-			std::wostringstream details;
-			if (doc["turn"])
-			{
-				details << lang->getString("STR_BATTLESCAPE") << L": " << lang->getString(doc["mission"].as<std::string>()) << L", ";
-				details << lang->getString("STR_TURN").arg(doc["turn"].as<int>());
-			}
-			else
-			{
-				GameTime time = GameTime(6, 1, 1, 1999, 12, 0, 0);
-				time.load(doc["time"]);
-				details << lang->getString("STR_GEOSCAPE") << L": ";
-				details << time.getDayString(lang) << L" " << lang->getString(time.getMonthString()) << L" " << time.getYear() << L", ";
-				details << time.getHour() << L":" << std::setfill(L'0') << std::setw(2) << time.getMinute();
-			}
-			save.details = details.str();
-
-			info.push_back(save);
+			info.push_back(getSaveInfo(*i, lang));
 		}
 		catch (Exception &e)
 		{
@@ -215,6 +206,80 @@ std::vector<SaveInfo> SavedGame::getList(Language *lang)
 }
 
 /**
+ * Gets the info of a specific save file.
+ * @param file Save filename.
+ * @param lang Loaded language.
+ */
+SaveInfo SavedGame::getSaveInfo(const std::string &file, Language *lang)
+{
+	std::string fullname = Options::getUserFolder() + file;
+	YAML::Node doc = YAML::LoadFile(fullname);
+	SaveInfo save;
+
+	save.fileName = file;
+
+	if (save.fileName == QUICKSAVE)
+	{
+		save.displayName = lang->getString("STR_QUICK_SAVE_SLOT");
+		save.reserved = true;
+	}
+	else if (save.fileName == AUTOSAVE_GEOSCAPE)
+	{
+		save.displayName = lang->getString("STR_AUTO_SAVE_GEOSCAPE_SLOT");
+		save.reserved = true;
+	}
+	else if (save.fileName == AUTOSAVE_BATTLESCAPE)
+	{
+		save.displayName = lang->getString("STR_AUTO_SAVE_BATTLESCAPE_SLOT");
+		save.reserved = true;
+	}
+	else
+	{
+		if (doc["name"])
+		{
+			save.displayName = Language::utf8ToWstr(doc["name"].as<std::string>());
+		}
+		else
+		{
+			save.displayName = Language::fsToWstr(CrossPlatform::noExt(file));
+		}
+		save.reserved = false;
+	}
+
+	save.timestamp = CrossPlatform::getDateModified(fullname);
+	std::pair<std::wstring, std::wstring> str = CrossPlatform::timeToString(save.timestamp);
+	save.isoDate = str.first;
+	save.isoTime = str.second;
+
+	std::wostringstream details;
+	if (doc["turn"])
+	{
+		details << lang->getString("STR_BATTLESCAPE") << L": " << lang->getString(doc["mission"].as<std::string>()) << L", ";
+		details << lang->getString("STR_TURN").arg(doc["turn"].as<int>());
+	}
+	else
+	{
+		GameTime time = GameTime(6, 1, 1, 1999, 12, 0, 0);
+		time.load(doc["time"]);
+		details << lang->getString("STR_GEOSCAPE") << L": ";
+		details << time.getDayString(lang) << L" " << lang->getString(time.getMonthString()) << L" " << time.getYear() << L", ";
+		details << time.getHour() << L":" << std::setfill(L'0') << std::setw(2) << time.getMinute();
+	}
+	if (doc["ironman"].as<bool>(false))
+	{
+		details << L" (" << lang->getString("STR_IRONMAN") << L")";
+	}
+	save.details = details.str();
+
+	if (doc["rulesets"])
+	{
+		save.rulesets = doc["rulesets"].as<std::vector<std::string> >();
+	}
+
+	return save;
+}
+
+/**
  * Loads a saved game's contents from a YAML file.
  * @note Assumes the saved game is blank.
  * @param filename YAML filename.
@@ -222,7 +287,7 @@ std::vector<SaveInfo> SavedGame::getList(Language *lang)
  */
 void SavedGame::load(const std::string &filename, Ruleset *rule)
 {
-	std::string s = Options::getUserFolder() + filename + ".sav";
+	std::string s = Options::getUserFolder() + filename;
 	std::vector<YAML::Node> file = YAML::LoadAllFromFile(s);
 	if (file.empty())
 	{
@@ -247,15 +312,14 @@ void SavedGame::load(const std::string &filename, Ruleset *rule)
 	{
 		_name = Language::fsToWstr(filename);
 	}
+	_ironman = brief["ironman"].as<bool>(_ironman);
 
 	// Get full save data
 	YAML::Node doc = file[1];
 	_difficulty = (GameDifficulty)doc["difficulty"].as<int>(_difficulty);
-	if (doc["rng"] && !Options::getBool("newSeedOnLoad"))
-		RNG::init(doc["rng"].as<int>());
+	if (doc["rng"] && (_ironman || !Options::newSeedOnLoad))
+		RNG::setSeed(doc["rng"].as<uint64_t>());
 	_monthsPassed = doc["monthsPassed"].as<int>(_monthsPassed);
-	_radarLines = doc["radarLines"].as<bool>(_radarLines);
-	_detail = doc["detail"].as<bool>(_detail);
 	_graphRegionToggles = doc["graphRegionToggles"].as<std::string>(_graphRegionToggles);
 	_graphCountryToggles = doc["graphCountryToggles"].as<std::string>(_graphCountryToggles);
 	_graphFinanceToggles = doc["graphFinanceToggles"].as<std::string>(_graphFinanceToggles);
@@ -273,17 +337,23 @@ void SavedGame::load(const std::string &filename, Ruleset *rule)
 	for (YAML::const_iterator i = doc["countries"].begin(); i != doc["countries"].end(); ++i)
 	{
 		std::string type = (*i)["type"].as<std::string>();
-		Country *c = new Country(rule->getCountry(type), false);
-		c->load(*i);
-		_countries.push_back(c);
+		if (rule->getCountry(type))
+		{
+			Country *c = new Country(rule->getCountry(type), false);
+			c->load(*i);
+			_countries.push_back(c);
+		}
 	}
 
 	for (YAML::const_iterator i = doc["regions"].begin(); i != doc["regions"].end(); ++i)
 	{
 		std::string type = (*i)["type"].as<std::string>();
-		Region *r = new Region(rule->getRegion(type));
-		r->load(*i);
-		_regions.push_back(r);
+		if (rule->getRegion(type))
+		{
+			Region *r = new Region(rule->getRegion(type));
+			r->load(*i);
+			_regions.push_back(r);
+		}
 	}
 
 	// Alien bases must be loaded before alien missions
@@ -308,9 +378,12 @@ void SavedGame::load(const std::string &filename, Ruleset *rule)
 	for (YAML::const_iterator i = doc["ufos"].begin(); i != doc["ufos"].end(); ++i)
 	{
 		std::string type = (*i)["type"].as<std::string>();
-		Ufo *u = new Ufo(rule->getUfo(type));
-		u->load(*i, *rule, *this);
-		_ufos.push_back(u);
+		if (rule->getUfo(type))
+		{
+			Ufo *u = new Ufo(rule->getUfo(type));
+			u->load(*i, *rule, *this);
+			_ufos.push_back(u);
+		}
 	}
 
 	for (YAML::const_iterator i = doc["waypoints"].begin(); i != doc["waypoints"].end(); ++i)
@@ -337,21 +410,27 @@ void SavedGame::load(const std::string &filename, Ruleset *rule)
 	for(YAML::const_iterator it = doc["discovered"].begin(); it != doc["discovered"].end(); ++it)
 	{
 		std::string research = it->as<std::string>();
-		_discovered.push_back(rule->getResearch(research));
+		if (rule->getResearch(research))
+		{
+			_discovered.push_back(rule->getResearch(research));
+		}
 	}
 	
 	const YAML::Node &research = doc["poppedResearch"];
 	for(YAML::const_iterator it = research.begin(); it != research.end(); ++it)
 	{
 		std::string research = it->as<std::string>();
-		_poppedResearch.push_back(rule->getResearch(research));
+		if (rule->getResearch(research))
+		{
+			_poppedResearch.push_back(rule->getResearch(research));
+		}
 	}
 	_alienStrategy->load(rule, doc["alienStrategy"]);
 
 	for (YAML::const_iterator i = doc["deadSoldiers"].begin(); i != doc["deadSoldiers"].end(); ++i)
 	{
 		Soldier *s = new Soldier(rule->getSoldier("XCOM"), rule->getArmor("STR_NONE_UC"));
-		s->load(*i, rule);
+		s->load(*i, rule, this);
 		_deadSoldiers.push_back(s);
 	}
 
@@ -368,11 +447,11 @@ void SavedGame::load(const std::string &filename, Ruleset *rule)
  */
 void SavedGame::save(const std::string &filename) const
 {
-	std::string s = Options::getUserFolder() + filename + ".sav";
+	std::string s = Options::getUserFolder() + filename;
 	std::ofstream sav(s.c_str());
 	if (!sav)
 	{
-		throw Exception("Failed to save " + filename + ".sav");
+		throw Exception("Failed to save " + filename);
 	}
 
 	YAML::Emitter out;
@@ -388,14 +467,15 @@ void SavedGame::save(const std::string &filename) const
 		brief["mission"] = _battleGame->getMissionType();
 		brief["turn"] = _battleGame->getTurn();
 	}
+	brief["rulesets"] = Options::rulesets;
+	if (_ironman)
+		brief["ironman"] = _ironman;
 	out << brief;
 	// Saves the full game data to the save
 	out << YAML::BeginDoc;
 	YAML::Node node;
 	node["difficulty"] = (int)_difficulty;
 	node["monthsPassed"] = _monthsPassed;
-	node["radarLines"] = _radarLines;
-	node["detail"] = _detail;
 	node["graphRegionToggles"] = _graphRegionToggles;
 	node["graphCountryToggles"] = _graphCountryToggles;
 	node["graphFinanceToggles"] = _graphFinanceToggles;
@@ -501,6 +581,26 @@ GameDifficulty SavedGame::getDifficulty() const
 void SavedGame::setDifficulty(GameDifficulty difficulty)
 {
 	_difficulty = difficulty;
+}
+
+/**
+ * Returns if the game is set to ironman mode.
+ * Ironman games cannot be manually saved.
+ * @return Tony Stark
+ */
+bool SavedGame::isIronman() const
+{
+	return _ironman;
+}
+
+/**
+ * Changes if the game is set to ironman mode.
+ * Ironman games cannot be manually saved.
+ * @param ironman Tony Stark
+ */
+void SavedGame::setIronman(bool ironman)
+{
+	_ironman = ironman;
 }
 
 /**
@@ -695,6 +795,32 @@ std::vector<Region*> *SavedGame::getRegions()
 std::vector<Base*> *SavedGame::getBases()
 {
 	return &_bases;
+}
+
+/**
+ * Returns the last selected player base.
+ * @return Pointer to base.
+ */
+Base *SavedGame::getSelectedBase()
+{
+	// in case a base was destroyed or something...
+	if (_selectedBase < _bases.size())
+	{
+		return _bases.at(_selectedBase);
+	}
+	else
+	{
+		return _bases.front();
+	}
+}
+
+/**
+ * Sets the last selected player base.
+ * @param number of the base.
+ */
+void SavedGame::setSelectedBase(int base)
+{
+	_selectedBase = base;
 }
 
 /**
@@ -1143,9 +1269,10 @@ Soldier *SavedGame::getSoldier(int id) const
 
 /**
  * Handles the higher promotions (not the rookie-squaddie ones).
+ * @param participants a list of soldiers that were actually present at the battle.
  * @return Whether or not some promotions happened - to show the promotions screen.
  */
-bool SavedGame::handlePromotions()
+bool SavedGame::handlePromotions(std::vector<Soldier*> &participants)
 {
 	size_t soldiersPromoted = 0, soldiersTotal = 0;
 
@@ -1159,9 +1286,14 @@ bool SavedGame::handlePromotions()
 	// and the soldier with the heighest promotion score of the rank below it
 
 	size_t filledPositions = 0, filledPositions2 = 0;
+	std::vector<Soldier*>::const_iterator soldier, stayedHome;
+	stayedHome = participants.end();
 	inspectSoldiers(&highestRanked, &filledPositions, RANK_COMMANDER);
 	inspectSoldiers(&highestRanked, &filledPositions2, RANK_COLONEL);
-	if (filledPositions < 1 && filledPositions2 > 0)
+	soldier = std::find(participants.begin(), participants.end(), highestRanked);
+
+	if (filledPositions < 1 && filledPositions2 > 0 &&
+		(!Options::fieldPromotions || soldier != stayedHome))
 	{
 		// only promote one colonel to commander
 		highestRanked->promoteRank();
@@ -1169,21 +1301,30 @@ bool SavedGame::handlePromotions()
 	}
 	inspectSoldiers(&highestRanked, &filledPositions, RANK_COLONEL);
 	inspectSoldiers(&highestRanked, &filledPositions2, RANK_CAPTAIN);
-	if (filledPositions < (soldiersTotal / 23) && filledPositions2 > 0)
+	soldier = std::find(participants.begin(), participants.end(), highestRanked);
+
+	if (filledPositions < (soldiersTotal / 23) && filledPositions2 > 0 &&
+		(!Options::fieldPromotions || soldier != stayedHome))
 	{
 		highestRanked->promoteRank();
 		soldiersPromoted++;
 	}
 	inspectSoldiers(&highestRanked, &filledPositions, RANK_CAPTAIN);
 	inspectSoldiers(&highestRanked, &filledPositions2, RANK_SERGEANT);
-	if (filledPositions < (soldiersTotal / 11) && filledPositions2 > 0)
+	soldier = std::find(participants.begin(), participants.end(), highestRanked);
+
+	if (filledPositions < (soldiersTotal / 11) && filledPositions2 > 0 &&
+		(!Options::fieldPromotions || soldier != stayedHome))
 	{
 		highestRanked->promoteRank();
 		soldiersPromoted++;
 	}
 	inspectSoldiers(&highestRanked, &filledPositions, RANK_SERGEANT);
 	inspectSoldiers(&highestRanked, &filledPositions2, RANK_SQUADDIE);
-	if (filledPositions < (soldiersTotal / 5) && filledPositions2 > 0)
+	soldier = std::find(participants.begin(), participants.end(), highestRanked);
+
+	if (filledPositions < (soldiersTotal / 5) && filledPositions2 > 0 &&
+		(!Options::fieldPromotions || soldier != stayedHome))
 	{
 		highestRanked->promoteRank();
 		soldiersPromoted++;
@@ -1210,12 +1351,7 @@ void SavedGame::inspectSoldiers(Soldier **highestRanked, size_t *total, int rank
 			if ((*j)->getRank() == (SoldierRank)rank)
 			{
 				(*total)++;
-				UnitStats *s = (*j)->getCurrentStats();
-				int v1 = 2 * s->health + 2 * s->stamina + 4 * s->reactions + 4 * s->bravery;
-				int v2 = v1 + 3*( s->tu + 2*( s->firing ) );
-				int v3 = v2 + s->melee + s->throwing + s->strength;
-				if (s->psiSkill > 0) v3 += s->psiStrength + 2 * s->psiSkill;
-				int score = v3 + 10 * ( (*j)->getMissions() + (*j)->getKills() );
+				int score = getSoldierScore(*j);
 				if (score > highestScore)
 				{
 					highestScore = score;
@@ -1223,7 +1359,35 @@ void SavedGame::inspectSoldiers(Soldier **highestRanked, size_t *total, int rank
 				}
 			}
 		}
+		for (std::vector<Transfer*>::iterator j = (*i)->getTransfers()->begin(); j != (*i)->getTransfers()->end(); ++j)
+		{
+			if ((*j)->getType() == TRANSFER_SOLDIER && (*j)->getSoldier()->getRank() == (SoldierRank)rank)
+			{
+				(*total)++;
+				int score = getSoldierScore((*j)->getSoldier());
+				if (score > highestScore)
+				{
+					highestScore = score;
+					*highestRanked = (*j)->getSoldier();
+				}
+			}
+		}
 	}
+}
+
+/**
+ * Evaluate the score of a soldier based on all of his stats, missions and kills.
+ * @param soldier the soldier to get a score for.
+ * @return this soldier's score.
+ */
+int SavedGame::getSoldierScore(Soldier *soldier)
+{
+	UnitStats *s = soldier->getCurrentStats();
+	int v1 = 2 * s->health + 2 * s->stamina + 4 * s->reactions + 4 * s->bravery;
+	int v2 = v1 + 3*( s->tu + 2*( s->firing ) );
+	int v3 = v2 + s->melee + s->throwing + s->strength;
+	if (s->psiSkill > 0) v3 += s->psiStrength + 2 * s->psiSkill;
+	return v3 + 10 * ( soldier->getMissions() + soldier->getKills() );
 }
 
 /**
@@ -1307,7 +1471,7 @@ void SavedGame::addResearchScore(int score)
  * return the list of research scores
  * @return list of research scores.
  */
-std::vector<int> SavedGame::getResearchScores()
+std::vector<int> &SavedGame::getResearchScores()
 {
 	return _researchScores;
 }
@@ -1453,38 +1617,6 @@ void SavedGame::setGraphFinanceToggles(const std::string &value)
 void SavedGame::addMonth()
 {
 	++_monthsPassed;
-}
-
-/*
- * Toggles the state of the radar line drawing.
- */
-void SavedGame::toggleRadarLines()
-{
-	_radarLines = !_radarLines;
-}
-
-/*
- * @return the state of the radar line drawing.
- */
-bool SavedGame::getRadarLines()
-{
-	return _radarLines;
-}
-
-/*
- * Toggles the state of the detail drawing.
- */
-void SavedGame::toggleDetail()
-{
-	_detail = !_detail;
-}
-
-/*
- * @return the state of the detail drawing.
- */
-bool SavedGame::getDetail()
-{
-	return _detail;
 }
 
 /*
