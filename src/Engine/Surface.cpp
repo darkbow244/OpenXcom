@@ -174,7 +174,7 @@ Surface::Surface(const Surface& other)
 		int pitch = GetPitch(bpp, width);
 		_alignedBuffer = NewAligned(bpp, width, height);
 		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, pitch, 0, 0, 0, 0);
-		SDL_SetColorKey(_surface, 1, 0);
+		SDL_SetColorKey(_surface, SDL_TRUE, 0);
 		//cant call `setPalette` because its virtual function and it dont work correctly in constructor
 		SDL_SetPaletteColors(_surface->format->palette, other.getPalette(), 0, 255);
 		memcpy(_alignedBuffer, other._alignedBuffer, height*pitch);
@@ -855,8 +855,8 @@ void Surface::resize(int width, int height)
 	}
 
 	// Copy old contents
-	SDL_SetColorKey(surface, SDL_SRCCOLORKEY, 0);
-	SDL_SetColors(surface, getPalette(), 0, 255);
+	SDL_SetColorKey(surface, SDL_TRUE, 0);
+	SDL_SetPaletteColors(surface->format->palette, getPalette(), 0, 255);
 	SDL_BlitSurface(_surface, 0, surface, 0);
 
 	// Delete old surface
