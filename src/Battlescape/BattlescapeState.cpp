@@ -779,9 +779,9 @@ void BattlescapeState::fingerMotion(Action *action)
 		return;
 
 	_scrollAccumX += action->getDetails()->tfinger.dx *
-		Options::getInt("baseXResolution");
+		Options::baseXResolution;
 	_scrollAccumY += action->getDetails()->tfinger.dy *
-		Options::getInt("baseYResolution");
+		Options::baseYResolution;
 	int scrollIncX = 0;
 	int scrollIncY = 0;
 	if (std::abs(_scrollAccumX) > 1)
