@@ -309,8 +309,6 @@ void Screen::resetDisplay(bool resetVideo)
 		//_surface = new Surface(_baseWidth, _baseHeight, 0, 0, Screen::isHQXEnabled() ? 32 : 8); // only HQX needs 32bpp for this surface; the OpenGL class has its own 32bpp buffer
 		_surface = new Surface(ORIGINAL_WIDTH, ORIGINAL_HEIGHT, 0, 0, 32);
 		if (_surface->getSurface()->format->BitsPerPixel == 8) _surface->setPalette(deferredPalette);
-		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
-				SDL_TEXTUREACCESS_STREAMING, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
 	}
 	SDL_SetColorKey(_surface->getSurface(), 0, 0); // turn off color key! 
 
@@ -324,6 +322,8 @@ void Screen::resetDisplay(bool resetVideo)
 			Log(LOG_ERROR) << SDL_GetError();
 			throw Exception(SDL_GetError());
 		}
+		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
+				SDL_TEXTUREACCESS_STREAMING, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 		SDL_RenderSetLogicalSize(_renderer, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
