@@ -26,6 +26,9 @@
 #include "../Ruleset/RuleSoldier.h"
 #include "../Ruleset/Armor.h"
 #include "../Ruleset/Ruleset.h"
+#include "../Ruleset/StatString.h"
+#include "../Engine/Options.h"
+#include "SavedGame.h"
 
 namespace OpenXcom
 {
@@ -37,7 +40,7 @@ namespace OpenXcom
  * @param names List of name pools for soldier generation.
  * @param id Pointer to unique soldier id for soldier generation.
  */
-Soldier::Soldier(RuleSoldier *rules, Armor *armor, const std::vector<SoldierNamePool*> *names, int id) : _name(L""), _id(0), _improvement(0), _rules(rules), _initialStats(), _currentStats(), _rank(RANK_ROOKIE), _craft(0), _gender(GENDER_MALE), _look(LOOK_BLONDE), _missions(0), _kills(0), _recovery(0), _recentlyPromoted(false), _psiTraining(false), _armor(armor), _equipmentLayout(), _death(0)
+Soldier::Soldier(RuleSoldier *rules, Armor *armor, const std::vector<SoldierNamePool*> *names, int id) : _name(L""), _id(id), _improvement(0), _rules(rules), _initialStats(), _currentStats(), _rank(RANK_ROOKIE), _craft(0), _gender(GENDER_MALE), _look(LOOK_BLONDE), _missions(0), _kills(0), _recovery(0), _recentlyPromoted(false), _psiTraining(false), _armor(armor), _equipmentLayout(), _death(0)
 {
 	if (names != 0)
 	{
@@ -71,10 +74,6 @@ Soldier::Soldier(RuleSoldier *rules, Armor *armor, const std::vector<SoldierName
 			_look = (SoldierLook)RNG::generate(0,3);
 		}
 	}
-	if (id != 0)
-	{
-		_id = id;
-	}
 }
 
 /**
@@ -93,8 +92,9 @@ Soldier::~Soldier()
  * Loads the soldier from a YAML file.
  * @param node YAML node.
  * @param rule Game ruleset.
+ * @param save Pointer to savegame.
  */
-void Soldier::load(const YAML::Node &node, const Ruleset *rule)
+void Soldier::load(const YAML::Node& node, const Ruleset *rule, SavedGame *save)
 {
 	_id = node["id"].as<int>(_id);
 	_name = Language::utf8ToWstr(node["name"].as<std::string>());
@@ -106,7 +106,12 @@ void Soldier::load(const YAML::Node &node, const Ruleset *rule)
 	_missions = node["missions"].as<int>(_missions);
 	_kills = node["kills"].as<int>(_kills);
 	_recovery = node["recovery"].as<int>(_recovery);
-	_armor = rule->getArmor(node["armor"].as<std::string>());
+	Armor *armor = rule->getArmor(node["armor"].as<std::string>());
+	if (armor == 0)
+	{
+		armor = rule->getArmor("STR_NONE_UC");
+	}
+	_armor = armor;
 	_psiTraining = node["psiTraining"].as<bool>(_psiTraining);
 	_improvement = node["improvement"].as<int>(_improvement);
 	if (const YAML::Node &layout = node["equipmentLayout"])
@@ -119,6 +124,7 @@ void Soldier::load(const YAML::Node &node, const Ruleset *rule)
 		_death = new SoldierDeath();
 		_death->load(node["death"]);
 	}
+	calcStatString(rule->getStatStrings(), (Options::psiStrengthEval && save->isResearched(rule->getPsiRequirements())));
 }
 
 /**
@@ -160,12 +166,22 @@ YAML::Node Soldier::save() const
 }
 
 /**
- * Returns the soldier's full name.
+ * Returns the soldier's full name (and, optionally, statString).
  * @return Soldier name.
  */
-std::wstring Soldier::getName() const
+std::wstring Soldier::getName(bool statstring, unsigned int maxLength) const
 {
-	return _name;
+	if (statstring && _statString != L"" && _missions >= 1) {
+		if (_name.length() + _statString.length() > maxLength) {
+			return _name.substr(0, maxLength - _statString.length()) + L"/" + _statString;
+		}
+		else {
+			return _name + L"/" + _statString;
+		}
+	}
+	else {
+		return _name;
+	}
 }
 
 /**
@@ -544,6 +560,14 @@ void Soldier::die(SoldierDeath *death)
 		delete *i;
 	}
 	_equipmentLayout.clear();
+}
+
+/**
+ * Calculates the soldier's statString
+ */
+void Soldier::calcStatString(const std::vector<StatString *> &statStrings, bool psiStrengthEval)
+{
+	_statString = StatString::calcStatString(_currentStats, statStrings, psiStrengthEval);
 }
 
 }

@@ -71,7 +71,8 @@ ManufactureStartState::ManufactureStartState(Game * game, Base * base, RuleManuf
 
 	_btnStart = new TextButton (button_width, button_height, width - button_width - button_x_border, start_y + height - button_height - button_y_border);
 
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(6)), Palette::backPos, 16);
+	// Set palette
+	setPalette("PAL_BASESCAPE", 6);
 
 	add(_window);
 	add(_txtTitle);
@@ -112,7 +113,7 @@ ManufactureStartState::ManufactureStartState(Game * game, Base * base, RuleManuf
 	_btnCancel->setColor(Palette::blockOffset(13)+10);
 	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->onMouseClick((ActionHandler)&ManufactureStartState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&ManufactureStartState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&ManufactureStartState::btnCancelClick, Options::keyCancel);
 
 	const std::map<std::string, int> & requiredItems (_item->getRequiredItems());
 	int availableWorkSpace = _base->getFreeWorkshops();
@@ -135,6 +136,7 @@ ManufactureStartState::ManufactureStartState(Game * game, Base * base, RuleManuf
 	_lstRequiredItems->setColumns(3, 12 * button_x_border, 8 * button_x_border, 8 * button_x_border);
 	_lstRequiredItems->setBackground(_window);
 	_lstRequiredItems->setColor(Palette::blockOffset(13));
+	_lstRequiredItems->setArrowColor(Palette::blockOffset(15)+1);
 
 	ItemContainer * itemContainer (base->getItems());
 	int row = 0;
@@ -142,7 +144,7 @@ ManufactureStartState::ManufactureStartState(Game * game, Base * base, RuleManuf
 		iter != requiredItems.end ();
 		++iter)
 	{
-		std::wstringstream s1, s2;
+		std::wostringstream s1, s2;
 		s1 << iter->second;
 		s2 << itemContainer->getItem(iter->first);
 		productionPossible &= (itemContainer->getItem(iter->first) >= iter->second);
@@ -160,7 +162,7 @@ ManufactureStartState::ManufactureStartState(Game * game, Base * base, RuleManuf
 	_btnStart->setColor(Palette::blockOffset(13)+10);
 	_btnStart->setText(tr("STR_START_PRODUCTION"));
 	_btnStart->onMouseClick((ActionHandler)&ManufactureStartState::btnStartClick);
-	_btnStart->onKeyboardPress((ActionHandler)&ManufactureStartState::btnStartClick, (SDL_Keycode)Options::getInt("keyOk"));
+	_btnStart->onKeyboardPress((ActionHandler)&ManufactureStartState::btnStartClick, Options::keyOk);
 	_btnStart->setVisible(productionPossible);
 }
 

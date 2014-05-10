@@ -19,8 +19,8 @@
 #include "TransferItemsState.h"
 #include <sstream>
 #include <climits>
+#include <cfloat>
 #include <cmath>
-#include "../aresame.h"
 #include "../Engine/Action.h"
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
@@ -41,10 +41,10 @@
 #include "../Savegame/CraftWeapon.h"
 #include "../Ruleset/RuleCraftWeapon.h"
 #include "../Engine/Timer.h"
-#include "../Savegame/Transfer.h"
 #include "../Menu/ErrorMessageState.h"
 #include "TransferConfirmState.h"
 #include "../Engine/Options.h"
+#include "../aresame.h"
 
 namespace OpenXcom
 {
@@ -55,13 +55,8 @@ namespace OpenXcom
  * @param baseFrom Pointer to the source base.
  * @param baseTo Pointer to the destination base.
  */
-TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo) : State(game), _baseFrom(baseFrom), _baseTo(baseTo), _baseQty(), _transferQty(), _soldiers(), _crafts(), _items(), _sel(0), _total(0), _pQty(0), _cQty(0), _aQty(0), _iQty(0.0f), _hasSci(0), _hasEng(0), _distance(0.0), _itemOffset(0)
+TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo) : State(game), _baseFrom(baseFrom), _baseTo(baseTo), _baseQty(), _transferQty(), _soldiers(), _crafts(), _items(), _sel(0), _itemOffset(0), _total(0), _pQty(0), _cQty(0), _aQty(0), _iQty(0.0), _hasSci(0), _hasEng(0), _distance(0.0)
 {
-	_changeValueByMouseWheel = Options::getInt("changeValueByMouseWheel");
-	_allowChangeListValuesByMouseWheel = (Options::getBool("allowChangeListValuesByMouseWheel") && _changeValueByMouseWheel);
-	_containmentLimit = Options::getBool("alienContainmentLimitEnforced");
-	_canTransferCraftsWhileAirborne = Options::getBool("canTransferCraftsWhileAirborne");
-
 	// Create objects
 	_window = new Window(this, 320, 200, 0, 0);
 	_btnOk = new TextButton(148, 16, 8, 176);
@@ -74,7 +69,7 @@ TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo)
 	_lstItems = new TextList(287, 120, 8, 44);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(0)), Palette::backPos, 16);
+	setPalette("PAL_BASESCAPE", 0);
 
 	add(_window);
 	add(_btnOk);
@@ -95,12 +90,12 @@ TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo)
 	_btnOk->setColor(Palette::blockOffset(15)+6);
 	_btnOk->setText(tr("STR_TRANSFER"));
 	_btnOk->onMouseClick((ActionHandler)&TransferItemsState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&TransferItemsState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
+	_btnOk->onKeyboardPress((ActionHandler)&TransferItemsState::btnOkClick, Options::keyOk);
 
 	_btnCancel->setColor(Palette::blockOffset(15)+6);
 	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler)&TransferItemsState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&TransferItemsState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&TransferItemsState::btnCancelClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(13)+10);
 	_txtTitle->setBig();
@@ -128,7 +123,6 @@ TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo)
 	_lstItems->setSelectable(true);
 	_lstItems->setBackground(_window);
 	_lstItems->setMargin(2);
-	_lstItems->setAllowScrollOnArrowButtons(!_allowChangeListValuesByMouseWheel);
 	_lstItems->onLeftArrowPress((ActionHandler)&TransferItemsState::lstItemsLeftArrowPress);
 	_lstItems->onLeftArrowRelease((ActionHandler)&TransferItemsState::lstItemsLeftArrowRelease);
 	_lstItems->onLeftArrowClick((ActionHandler)&TransferItemsState::lstItemsLeftArrowClick);
@@ -150,7 +144,7 @@ TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo)
 	}
 	for (std::vector<Craft*>::iterator i = _baseFrom->getCrafts()->begin(); i != _baseFrom->getCrafts()->end(); ++i)
 	{
-		if ((*i)->getStatus() != "STR_OUT" || (_canTransferCraftsWhileAirborne && (*i)->getFuel() >= (*i)->getFuelLimit(_baseTo)))
+		if ((*i)->getStatus() != "STR_OUT" || (Options::canTransferCraftsWhileAirborne && (*i)->getFuel() >= (*i)->getFuelLimit(_baseTo)))
 		{
 			_baseQty.push_back(1);
 			_transferQty.push_back(0);
@@ -164,7 +158,7 @@ TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo)
 		_baseQty.push_back(_baseFrom->getAvailableScientists());
 		_transferQty.push_back(0);
 		_hasSci = 1;
-		std::wstringstream ss, ss2;
+		std::wostringstream ss, ss2;
 		ss << _baseQty.back();
 		ss2 << _baseTo->getAvailableScientists();
 		_lstItems->addRow(4, tr("STR_SCIENTIST").c_str(), ss.str().c_str(), L"0", ss2.str().c_str());
@@ -175,7 +169,7 @@ TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo)
 		_baseQty.push_back(_baseFrom->getAvailableEngineers());
 		_transferQty.push_back(0);
 		_hasEng = 1;
-		std::wstringstream ss, ss2;
+		std::wostringstream ss, ss2;
 		ss << _baseQty.back();
 		ss2 << _baseTo->getAvailableEngineers();
 		_lstItems->addRow(4, tr("STR_ENGINEER").c_str(), ss.str().c_str(), L"0", ss2.str().c_str());
@@ -191,7 +185,7 @@ TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo)
 			_transferQty.push_back(0);
 			_items.push_back(*i);
 			RuleItem *rule = _game->getRuleset()->getItem(*i);
-			std::wstringstream ss, ss2;
+			std::wostringstream ss, ss2;
 			ss << qty;
 			ss2 << _baseTo->getItems()->getItem(*i);
 			std::wstring item = tr(*i);
@@ -225,14 +219,6 @@ TransferItemsState::~TransferItemsState()
 }
 
 /**
- * Resets the palette since it's bound to change on other screens.
- */
-void TransferItemsState::init()
-{
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(0)), Palette::backPos, 16);
-}
-
-/**
  * Runs the arrow timers.
  */
 void TransferItemsState::think()
@@ -259,7 +245,7 @@ void TransferItemsState::completeTransfer()
 {
 	int time = (int)floor(6 + _distance / 10.0);
 	_game->getSavedGame()->setFunds(_game->getSavedGame()->getFunds() - _total);
-	for (unsigned int i = 0; i < _transferQty.size(); ++i)
+	for (size_t i = 0; i < _transferQty.size(); ++i)
 	{
 		if (_transferQty[i] > 0)
 		{
@@ -476,14 +462,13 @@ void TransferItemsState::lstItemsMousePress(Action *action)
 	{
 		_timerInc->stop();
 		_timerDec->stop();
-		if (_allowChangeListValuesByMouseWheel
-			&& action->getAbsoluteXMouse() >= _lstItems->getArrowsLeftEdge()
-			&& action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
+		if (action->getAbsoluteXMouse() >= _lstItems->getArrowsLeftEdge() &&
+			action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
 		{
 			if (ev.wheel.y < 0)
-				increaseByValue(_changeValueByMouseWheel);
+				increaseByValue(Options::changeValueByMouseWheel);
 			else
-				decreaseByValue(_changeValueByMouseWheel);
+				decreaseByValue(Options::changeValueByMouseWheel);
 		}
 	}
 }
@@ -563,7 +548,7 @@ void TransferItemsState::increaseByValue(int change)
 		&& _pQty + 1 > _baseTo->getAvailableQuarters() - _baseTo->getUsedQuarters())
 	{
 		_timerInc->stop();
-		_game->pushState(new ErrorMessageState(_game, "STR_NO_FREE_ACCOMODATION", Palette::blockOffset(15)+1, "BACK13.SCR", 0));
+		_game->pushState(new ErrorMessageState(_game, "STR_NO_FREE_ACCOMODATION", _palette, Palette::blockOffset(15)+1, "BACK13.SCR", 0));
 		return;
 	}
 	if (TRANSFER_CRAFT == selType )
@@ -572,28 +557,34 @@ void TransferItemsState::increaseByValue(int change)
 		if (_cQty + 1 > _baseTo->getAvailableHangars() - _baseTo->getUsedHangars())
 		{
 			_timerInc->stop();
-			_game->pushState(new ErrorMessageState(_game, "STR_NO_FREE_HANGARS_FOR_TRANSFER", Palette::blockOffset(15)+1, "BACK13.SCR", 0));
+			_game->pushState(new ErrorMessageState(_game, "STR_NO_FREE_HANGARS_FOR_TRANSFER", _palette, Palette::blockOffset(15)+1, "BACK13.SCR", 0));
 			return;
 		}
 		if (_pQty + craft->getNumSoldiers() > _baseTo->getAvailableQuarters() - _baseTo->getUsedQuarters())
 		{
 			_timerInc->stop();
-			_game->pushState(new ErrorMessageState(_game, "STR_NO_FREE_ACCOMODATION_CREW", Palette::blockOffset(15)+1, "BACK13.SCR", 0));
+			_game->pushState(new ErrorMessageState(_game, "STR_NO_FREE_ACCOMODATION_CREW", _palette, Palette::blockOffset(15)+1, "BACK13.SCR", 0));
+			return;
+		}
+		if (Options::storageLimitsEnforced && _baseTo->storesOverfull(_iQty + craft->getItems()->getTotalSize(_game->getRuleset())))
+		{
+			_timerInc->stop();
+			_game->pushState(new ErrorMessageState(_game, "STR_NOT_ENOUGH_STORE_SPACE_FOR_CRAFT", _palette, Palette::blockOffset(15)+1, "BACK13.SCR", 0));
 			return;
 		}
 	}
 	if (TRANSFER_ITEM == selType && !selItem->getAlien()
-		&& (_iQty + selItem->getSize()) > (_baseTo->getAvailableStores() - _baseTo->getUsedStores()))
+		&& _baseTo->storesOverfull(selItem->getSize() + _iQty))
 	{
 		_timerInc->stop();
-		_game->pushState(new ErrorMessageState(_game, "STR_NOT_ENOUGH_STORE_SPACE", Palette::blockOffset(15)+1, "BACK13.SCR", 0));
+		_game->pushState(new ErrorMessageState(_game, "STR_NOT_ENOUGH_STORE_SPACE", _palette, Palette::blockOffset(15)+1, "BACK13.SCR", 0));
 		return;
 	}
 	if (TRANSFER_ITEM == selType && selItem->getAlien()
-		&& _containmentLimit * _aQty + 1 > _baseTo->getAvailableContainment() - _containmentLimit * _baseTo->getUsedContainment())
+		&& Options::storageLimitsEnforced * _aQty + 1 > _baseTo->getAvailableContainment() - Options::storageLimitsEnforced * _baseTo->getUsedContainment())
 	{
 		_timerInc->stop();
-		_game->pushState(new ErrorMessageState(_game, "STR_NO_ALIEN_CONTAINMENT_FOR_TRANSFER", Palette::blockOffset(15)+1, "BACK13.SCR", 0));
+		_game->pushState(new ErrorMessageState(_game, "STR_NO_ALIEN_CONTAINMENT_FOR_TRANSFER", _palette, Palette::blockOffset(15)+1, "BACK13.SCR", 0));
 		return;
 	}
 
@@ -613,25 +604,23 @@ void TransferItemsState::increaseByValue(int change)
 		Craft *craft = _crafts[_sel - _soldiers.size()];
 		_cQty++;
 		_pQty += craft->getNumSoldiers();
+		_iQty += craft->getItems()->getTotalSize(_game->getRuleset());
 		_baseQty[_sel]--;
 		_transferQty[_sel]++;
-		if (!_canTransferCraftsWhileAirborne || craft->getStatus() != "STR_OUT") _total += getCost();
+		if (!Options::canTransferCraftsWhileAirborne || craft->getStatus() != "STR_OUT") _total += getCost();
 	}
 	// Item count
 	else if (TRANSFER_ITEM == selType && !selItem->getAlien() )
 	{
-		float storesNeededPerItem = _game->getRuleset()->getItem(_items[getItemIndex(_sel)])->getSize();
-		float freeStores = (float)(_baseTo->getAvailableStores() - _baseTo->getUsedStores()) - _iQty;
-		int freeStoresForItem;
-		if ( AreSame(storesNeededPerItem, 0.f) ) { 
-			freeStoresForItem = INT_MAX;
-		}
-		else
+		double storesNeededPerItem = _game->getRuleset()->getItem(_items[getItemIndex(_sel)])->getSize();
+		double freeStores = _baseTo->getAvailableStores() - _baseTo->getUsedStores() - _iQty;
+		double freeStoresForItem = DBL_MAX;
+		if (!AreSame(storesNeededPerItem, 0.0))
 		{
-			freeStoresForItem = floor(freeStores / storesNeededPerItem);
+			freeStoresForItem = (freeStores + 0.05) / storesNeededPerItem;
 		}
-		change = std::min(std::min(freeStoresForItem, getQuantity() - _transferQty[_sel]), change);
-		_iQty += ((float)(change)) * storesNeededPerItem;
+		change = std::min(std::min((int)freeStoresForItem, getQuantity() - _transferQty[_sel]), change);
+		_iQty += change * storesNeededPerItem;
 		_baseQty[_sel] -= change;
 		_transferQty[_sel] += change;
 		_total += getCost() * change;
@@ -639,7 +628,7 @@ void TransferItemsState::increaseByValue(int change)
 	// Live Aliens count
 	else if (TRANSFER_ITEM == selType && selItem->getAlien() )
 	{
-		int freeContainment = _containmentLimit ? _baseTo->getAvailableContainment() - _baseTo->getUsedContainment() - _aQty : INT_MAX;
+		int freeContainment = Options::storageLimitsEnforced ? _baseTo->getAvailableContainment() - _baseTo->getUsedContainment() - _aQty : INT_MAX;
 		change = std::min(std::min(freeContainment, getQuantity() - _transferQty[_sel]), change);
 		_aQty += change;
 		_baseQty[_sel] -= change;
@@ -680,14 +669,15 @@ void TransferItemsState::decreaseByValue(int change)
 		craft = _crafts[_sel - _soldiers.size()];
 		_cQty--;
 		_pQty -= craft->getNumSoldiers();
+		_iQty -= craft->getItems()->getTotalSize(_game->getRuleset());
 	}
 	// Item count
 	else if (TRANSFER_ITEM == selType)
 	{
 		const RuleItem * selItem = _game->getRuleset()->getItem(_items[getItemIndex(_sel)]);
-		if (!selItem->getAlien() )
+		if (!selItem->getAlien())
 		{
-			_iQty -= selItem->getSize() * ((float)(change));
+			_iQty -= selItem->getSize() * change;
 		}
 		else
 		{
@@ -696,7 +686,7 @@ void TransferItemsState::decreaseByValue(int change)
 	}
 	_baseQty[_sel] += change;
 	_transferQty[_sel] -= change;
-	if (!_canTransferCraftsWhileAirborne || 0 == craft || craft->getStatus() != "STR_OUT")
+	if (!Options::canTransferCraftsWhileAirborne || 0 == craft || craft->getStatus() != "STR_OUT")
 		_total -= getCost() * change;
 	updateItemStrings();
 }
@@ -706,7 +696,7 @@ void TransferItemsState::decreaseByValue(int change)
  */
 void TransferItemsState::updateItemStrings()
 {
-	std::wstringstream ss1, ss2;
+	std::wostringstream ss1, ss2;
 	ss1 << _baseQty[_sel];
 	ss2 << _transferQty[_sel];
 	_lstItems->setCellText(_sel, 1, ss1.str());
@@ -763,9 +753,9 @@ double TransferItemsState::getDistance() const
  * @param selected The selected item.
  * @return The type of the selected item.
  */
-enum TransferType TransferItemsState::getType(unsigned selected) const
+enum TransferType TransferItemsState::getType(size_t selected) const
 {
-	unsigned max = _soldiers.size();
+	size_t max = _soldiers.size();
 
 	if (selected < max)
 		return TRANSFER_SOLDIER;
@@ -784,7 +774,7 @@ enum TransferType TransferItemsState::getType(unsigned selected) const
  * @param selected Currently selected item.
  * @return Index of the selected item.
  */
-int TransferItemsState::getItemIndex(unsigned selected) const
+int TransferItemsState::getItemIndex(size_t selected) const
 {
 	return selected - _soldiers.size() - _crafts.size() - _hasSci - _hasEng;
 }

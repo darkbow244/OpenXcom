@@ -584,7 +584,7 @@ bool Zoom::haveSSE2()
 	int CPUInfo[4];
 	__cpuid(CPUInfo, 1);
 #else
-	return false;
+	unsigned int CPUInfo[4] = {0, 0, 0, 0};
 #endif
 
 	return (CPUInfo[3] & 0x04000000) ? true : false;
@@ -661,7 +661,7 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 	int dgap;
 	static bool proclaimed = false;
 
-	if (Options::getBool("useHQXFilter"))
+	if (Options::useHQXFilter)
 	{
 		static bool initDone = false;
 
@@ -693,7 +693,7 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 
 	}
 
-	if (Options::getBool("useScaleFilter"))
+	if (Options::useScaleFilter)
 	{
 		// check the resolution to see which of scale2x, scale3x, etc. we need
 
@@ -718,7 +718,7 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 	}
 
 	// if we're scaling by a factor of 2 or 4, try to use a more efficient function	
-
+	/*
 	if (src->format->BytesPerPixel == 1 && dst->format->BytesPerPixel == 1)
 	{
 
@@ -764,10 +764,10 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 		if (dst->w == src->w * 4) return zoomSurface4X_XAxis_32bit(src, dst);
 		else if (dst->w == src->w * 2) return zoomSurface2X_XAxis_32bit(src, dst);
 	}
-
+	*/
 	if (!proclaimed)
 	{
-		Log(LOG_INFO) << "Using slower scaling routine. For best results, try a resolution of 640x400 or 1280x800.";
+		Log(LOG_INFO) << "Using software scaling routine. For best results, try an OpenGL filter.";
 		proclaimed = true;
 	}
 	

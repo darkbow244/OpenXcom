@@ -49,7 +49,7 @@ namespace OpenXcom
 		_lstSelection = new TextList(224, 104, 40, 50);
 
 		// Set palette
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
+		setPalette("PAL_GEOSCAPE", 0);
 
 		add(_window);
 		add(_txtTitle);
@@ -69,7 +69,7 @@ namespace OpenXcom
 		_btnOk->setColor(Palette::blockOffset(15)-1);
 		_btnOk->setText(tr("STR_OK"));
 		_btnOk->onMouseClick((ActionHandler)&UfopaediaSelectState::btnOkClick);
-		_btnOk->onKeyboardPress((ActionHandler)&UfopaediaSelectState::btnOkClick,(SDL_Keycode)Options::getInt("keyCancel"));
+		_btnOk->onKeyboardPress((ActionHandler)&UfopaediaSelectState::btnOkClick,Options::keyCancel);
 
 		_lstSelection->setColor(Palette::blockOffset(8)+5);
 		_lstSelection->setArrowColor(Palette::blockOffset(15)-1);
@@ -114,14 +114,6 @@ namespace OpenXcom
 		{
 			_lstSelection->addRow(1, Ufopaedia::buildText(_game, (*it)->title).c_str());
 		}
-	}
-
-	void UfopaediaSelectState::init()
-	{
-		// Set palette
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
-
-		State::init();
 	}
 
 }

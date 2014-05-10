@@ -35,6 +35,7 @@
 #include "../Savegame/Craft.h"
 #include "../Ruleset/RuleCraft.h"
 #include "../Engine/LocalizedText.h"
+#include "SoldierInfoState.h"
 
 namespace OpenXcom
 {
@@ -59,7 +60,7 @@ CraftSoldiersState::CraftSoldiersState(Game *game, Base *base, size_t craft) : S
 	_lstSoldiers = new TextList(288, 128, 8, 40);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(2)), Palette::backPos, 16);
+	setPalette("PAL_BASESCAPE", 2);
 
 	add(_window);
 	add(_btnOk);
@@ -80,7 +81,7 @@ CraftSoldiersState::CraftSoldiersState(Game *game, Base *base, size_t craft) : S
 	_btnOk->setColor(Palette::blockOffset(13)+10);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&CraftSoldiersState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&CraftSoldiersState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&CraftSoldiersState::btnOkClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(15)+6);
 	_txtTitle->setBig();
@@ -113,8 +114,7 @@ CraftSoldiersState::CraftSoldiersState(Game *game, Base *base, size_t craft) : S
 	_lstSoldiers->setMargin(8);
 	_lstSoldiers->onLeftArrowClick((ActionHandler)&CraftSoldiersState::lstItemsLeftArrowClick);
 	_lstSoldiers->onRightArrowClick((ActionHandler)&CraftSoldiersState::lstItemsRightArrowClick);
-	_lstSoldiers->onMouseClick((ActionHandler)&CraftSoldiersState::lstSoldiersClick);
-	populateList();
+	_lstSoldiers->onMouseClick((ActionHandler)&CraftSoldiersState::lstSoldiersClick, 0);
 }
 
 /**
@@ -136,15 +136,16 @@ void CraftSoldiersState::btnOkClick(Action *)
 /**
  * Shows the soldiers in a list.
  */
-void CraftSoldiersState::populateList()
+void CraftSoldiersState::init()
 {
+	State::init();
 	Craft *c = _base->getCrafts()->at(_craft);
 	_lstSoldiers->clearList();
 
 	int row = 0;
 	for (std::vector<Soldier*>::iterator i = _base->getSoldiers()->begin(); i != _base->getSoldiers()->end(); ++i)
 	{
-		_lstSoldiers->addRow(3, (*i)->getName().c_str(), tr((*i)->getRankString()).c_str(), (*i)->getCraftString(_game->getLanguage()).c_str());
+		_lstSoldiers->addRow(3, (*i)->getName(true, 19).c_str(), tr((*i)->getRankString()).c_str(), (*i)->getCraftString(_game->getLanguage()).c_str());
 
 		Uint8 color;
 		if ((*i)->getCraft() == c)
@@ -162,6 +163,7 @@ void CraftSoldiersState::populateList()
 		_lstSoldiers->setRowColor(row, color);
 		row++;
 	}
+	_lstSoldiers->draw();
 }
 
 /**
@@ -197,7 +199,7 @@ void CraftSoldiersState::lstItemsLeftArrowClick(Action *action)
 				_base->getSoldiers()->insert(_base->getSoldiers()->begin(),s);
 			}
 		}
-		populateList();
+		init();
 	}
 }
 
@@ -235,7 +237,7 @@ void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 				_base->getSoldiers()->insert(_base->getSoldiers()->end(),s);
 			}
 		}
-		populateList();
+		init();
 	}
 }
 
@@ -251,29 +253,36 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 		return;
 	}
 	int row = _lstSoldiers->getSelectedRow();
-	Craft *c = _base->getCrafts()->at(_craft);
-	Soldier *s = _base->getSoldiers()->at(_lstSoldiers->getSelectedRow());
-	Uint8 color = Palette::blockOffset(13)+10;
-	if (s->getCraft() == c)
+	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 	{
-		s->setCraft(0);
-		_lstSoldiers->setCellText(row, 2, tr("STR_NONE_UC"));
-		color = Palette::blockOffset(13)+10;
-	}
-	else if (s->getCraft() && s->getCraft()->getStatus() == "STR_OUT")
-	{
-		color = Palette::blockOffset(15)+6;
-	}
-	else if (c->getSpaceAvailable() > 0 && s->getWoundRecovery() == 0)
-	{
-		s->setCraft(c);
-		_lstSoldiers->setCellText(row, 2, c->getName(_game->getLanguage()));
-		color = Palette::blockOffset(13);
-	}
-	_lstSoldiers->setRowColor(row, color);
+		Craft *c = _base->getCrafts()->at(_craft);
+		Soldier *s = _base->getSoldiers()->at(_lstSoldiers->getSelectedRow());
+		Uint8 color = Palette::blockOffset(13)+10;
+		if (s->getCraft() == c)
+		{
+			s->setCraft(0);
+			_lstSoldiers->setCellText(row, 2, tr("STR_NONE_UC"));
+			color = Palette::blockOffset(13)+10;
+		}
+		else if (s->getCraft() && s->getCraft()->getStatus() == "STR_OUT")
+		{
+			color = Palette::blockOffset(15)+6;
+		}
+		else if (c->getSpaceAvailable() > 0 && s->getWoundRecovery() == 0)
+		{
+			s->setCraft(c);
+			_lstSoldiers->setCellText(row, 2, c->getName(_game->getLanguage()));
+			color = Palette::blockOffset(13);
+		}
+		_lstSoldiers->setRowColor(row, color);
 
-	_txtAvailable->setText(tr("STR_SPACE_AVAILABLE").arg(c->getSpaceAvailable()));
-	_txtUsed->setText(tr("STR_SPACE_USED").arg(c->getSpaceUsed()));
+		_txtAvailable->setText(tr("STR_SPACE_AVAILABLE").arg(c->getSpaceAvailable()));
+		_txtUsed->setText(tr("STR_SPACE_USED").arg(c->getSpaceUsed()));
+	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	{
+		_game->pushState(new SoldierInfoState(_game, _base, row));
+	}
 }
 
 }

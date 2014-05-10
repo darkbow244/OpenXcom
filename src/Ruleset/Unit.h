@@ -53,7 +53,7 @@ private:
 	std::string _armor;
 	int _standHeight, _kneelHeight, _floatHeight;
 	int _value, _deathSound, _aggroSound, _moveSound;
-	int _intelligence, _aggression;
+	int _intelligence, _aggression, _energyRecovery;
 	SpecialAbility _specab;
 	std::string _spawnUnit;
 	bool _livingWeapon;
@@ -63,7 +63,7 @@ public:
 	/// Cleans up the unit ruleset.
 	~Unit();
 	/// Loads the unit data from YAML.
-	void load(const YAML::Node& node);
+	void load(const YAML::Node& node, int modIndex);
 	/// Gets the unit's type.
 	std::string getType() const;
 	/// Gets the unit's stats.
@@ -98,6 +98,7 @@ public:
 	int getAggroSound() const;
 	/// Checks if this unit has a built in weapon.
 	bool isLivingWeapon() const;
+	int getEnergyRecovery() const;
 };
 
 }

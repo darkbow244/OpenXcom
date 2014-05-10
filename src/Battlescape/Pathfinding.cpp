@@ -22,12 +22,12 @@
 #include "PathfindingOpenSet.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Savegame/Tile.h"
-#include "../Ruleset/MapData.h"
 #include "../Ruleset/Armor.h"
 #include "../Ruleset/Ruleset.h"
 #include "../Savegame/BattleUnit.h"
 #include "../Savegame/BattleItem.h"
 #include "../Engine/Game.h"
+#include "../Engine/Options.h"
 #include "../Battlescape/TileEngine.h"
 #include "../Battlescape/BattlescapeGame.h"
 #include "../Battlescape/BattlescapeState.h"
@@ -85,7 +85,7 @@ void Pathfinding::calculate(BattleUnit *unit, Position endPosition, BattleUnit *
 	// i'm DONE with these out of bounds errors.
 	if (endPosition.x > _save->getMapSizeX() - unit->getArmor()->getSize() || endPosition.y > _save->getMapSizeY() - unit->getArmor()->getSize() || endPosition.x < 0 || endPosition.y < 0) return;
 
-	bool sneak = _save->getSneakySetting() && unit->getFaction() == FACTION_HOSTILE;
+	bool sneak = Options::sneakyAI && unit->getFaction() == FACTION_HOSTILE;
 
 	Position startPosition = unit->getPosition();
 	_movementType = unit->getArmor()->getMovementType();
@@ -144,7 +144,7 @@ void Pathfinding::calculate(BattleUnit *unit, Position endPosition, BattleUnit *
 		}
 	}
 	// Strafing move allowed only to adjacent squares on same z. "Same z" rule mainly to simplify walking render.
-	_strafeMove = _save->getStrafeSetting() && (SDL_GetModState() & KMOD_CTRL) != 0 && (startPosition.z == endPosition.z) &&
+	_strafeMove = Options::strafe && (SDL_GetModState() & KMOD_CTRL) != 0 && (startPosition.z == endPosition.z) &&
 							(abs(startPosition.x - endPosition.x) <= 1) && (abs(startPosition.y - endPosition.y) <= 1);
 
 	// look for a possible fast and accurate bresenham path and skip A*
@@ -416,7 +416,7 @@ int Pathfinding::getTUCost(const Position &startPosition, int direction, Positio
 
 			// Strafing costs +1 for forwards-ish or sidewards, propose +2 for backwards-ish directions
 			// Maybe if flying then it makes no difference?
-			if (_save->getStrafeSetting() && _strafeMove) {
+			if (Options::strafe && _strafeMove) {
 				if (size) {
 					// 4-tile units not supported.
 					// Turn off strafe move and continue
@@ -583,6 +583,8 @@ bool Pathfinding::isBlocked(Tile *tile, const int part, BattleUnit *missileTarge
 			if (unit == _unit || unit == missileTarget || unit->isOut()) return false;
 			if (_unit && _unit->getFaction() == FACTION_PLAYER && unit->getVisible()) return true;		// player know all visible units
 			if (_unit && _unit->getFaction() == unit->getFaction()) return true;
+			if (_unit && _unit->getFaction() == FACTION_HOSTILE && 
+				std::find(_unit->getUnitsSpottedThisTurn().begin(), _unit->getUnitsSpottedThisTurn().end(), unit) != _unit->getUnitsSpottedThisTurn().end()) return true;
 		}
 		else if (tile->hasNoFloor(0) && _movementType != MT_FLY) // this whole section is devoted to making large units not take part in any kind of falling behaviour
 		{
@@ -844,7 +846,7 @@ bool Pathfinding::previewPath(bool bRemove)
 		_save->getBattleGame()->setTUReserved(BA_AUTOSHOT, false);
 	}
 	_modifierUsed = (SDL_GetModState() & KMOD_CTRL) != 0;
-	bool running = _save->getStrafeSetting() && _modifierUsed && _unit->getArmor()->getSize() == 1 && _path.size() > 1;
+	bool running = Options::strafe && _modifierUsed && _unit->getArmor()->getSize() == 1 && _path.size() > 1;
 	for (std::vector<int>::reverse_iterator i = _path.rbegin(); i != _path.rend(); ++i)
 	{
 		int dir = *i;
@@ -853,10 +855,9 @@ bool Pathfinding::previewPath(bool bRemove)
 		{
 			tu *= 0.75;
 		}
-		energy -= tu / 2;
-		if (dir >= Pathfinding::DIR_UP)
+		if (dir < Pathfinding::DIR_UP)
 		{
-			energy = 0;
+			energy -= tu / 2;
 		}
 
 		tus -= tu;
@@ -1051,7 +1052,7 @@ bool Pathfinding::bresenhamPath(const Position& origin, const Position& target, 
 std::vector<int> Pathfinding::findReachable(BattleUnit *unit, int tuMax)
 {
 	const Position &start = unit->getPosition();
-
+	int energyMax = unit->getEnergy();
 	for (std::vector<PathfindingNode>::iterator it = _nodes.begin(); it != _nodes.end(); ++it)
 	{
 		it->reset();
@@ -1073,7 +1074,8 @@ std::vector<int> Pathfinding::findReachable(BattleUnit *unit, int tuMax)
 			int tuCost = getTUCost(currentPos, direction, &nextPos, unit, 0, false);
 			if (tuCost == 255) // Skip unreachable / blocked
 				continue;
-			if (currentNode->getTUCost(false) + tuCost > tuMax) // Run out of TUs
+			if (currentNode->getTUCost(false) + tuCost > tuMax || 
+				(currentNode->getTUCost(false) + tuCost) / 2 > energyMax) // Run out of TUs/Energy
 				continue;
 			PathfindingNode *nextNode = getNode(nextPos);
 			if (nextNode->isChecked()) // Our algorithm means this node is already at minimum cost.
@@ -1141,5 +1143,23 @@ void Pathfinding::setUnit(BattleUnit* unit)
 bool Pathfinding::isModifierUsed() const
 {
 	return _modifierUsed;
+}
+
+/**
+ * Gets a reference to the current path.
+ * @return the actual path.
+ */
+const std::vector<int> &Pathfinding::getPath()
+{
+	return _path;
+}
+
+/**
+ * Makes a copy of the current path.
+ * @return a copy of the path.
+ */
+std::vector<int> Pathfinding::copyPath() const
+{
+	return _path;
 }
 }

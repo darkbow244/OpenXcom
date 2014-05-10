@@ -232,7 +232,7 @@ bool TileEngine::calculateFOV(BattleUnit *unit)
 	int direction;
 	bool swap;
 	std::vector<Position> _trajectory;
-	if (_save->getStrafeSetting() && (unit->getTurretType() > -1)) {
+	if (Options::strafe && (unit->getTurretType() > -1)) {
 		direction = unit->getTurretDirection();
 	}
 	else
@@ -287,7 +287,7 @@ bool TileEngine::calculateFOV(BattleUnit *unit)
 								visibleUnit->getTile()->setVisible(+1);
 								visibleUnit->setVisible(true);
 							}
-							if ((visibleUnit->getFaction() == FACTION_HOSTILE && unit->getFaction() != FACTION_HOSTILE)
+							if ((visibleUnit->getFaction() == FACTION_HOSTILE && unit->getFaction() == FACTION_PLAYER)
 								|| (visibleUnit->getFaction() != FACTION_HOSTILE && unit->getFaction() == FACTION_HOSTILE))
 							{
 								unit->addToVisibleUnits(visibleUnit);
@@ -295,7 +295,7 @@ bool TileEngine::calculateFOV(BattleUnit *unit)
 
 								if (unit->getFaction() == FACTION_HOSTILE && visibleUnit->getFaction() != FACTION_HOSTILE)
 								{
-									visibleUnit->setTurnsExposed(0);
+									visibleUnit->setTurnsSinceSpotted(0);
 								}
 							}
 						}
@@ -312,9 +312,9 @@ bool TileEngine::calculateFOV(BattleUnit *unit)
 									Position poso = pos + Position(xo,yo,0);
 									_trajectory.clear();
 									int tst = calculateLine(poso, test, true, &_trajectory, unit, false);
-									unsigned int tsize = _trajectory.size();
+									size_t tsize = _trajectory.size();
 									if (tst>127) --tsize; //last tile is blocked thus must be cropped
-									for (unsigned int i = 0; i < tsize; i++)
+									for (size_t i = 0; i < tsize; i++)
 									{
 										Position posi = _trajectory.at(i); 
 										//mark every tile of line as visible (as in original)
@@ -423,7 +423,7 @@ bool TileEngine::visible(BattleUnit *currentUnit, Tile *tile)
 		calculateLine(originVoxel, scanVoxel, true, &_trajectory, currentUnit);
 		Tile *t = _save->getTile(currentUnit->getPosition());
 		int visibleDistance = _trajectory.size();
-		for (unsigned int i = 0; i < _trajectory.size(); i++)
+		for (size_t i = 0; i < _trajectory.size(); i++)
 		{
 			if (t != _save->getTile(Position(_trajectory.at(i).x/16,_trajectory.at(i).y/16, _trajectory.at(i).z/24)))
 			{
@@ -552,11 +552,12 @@ bool TileEngine::canTargetUnit(Position *originVoxel, Tile *tile, Position *scan
 
 	int unitRadius = potentialUnit->getLoftemps(); //width == loft in default loftemps set
 	int targetSize = potentialUnit->getArmor()->getSize() - 1;
+	int xOffset = potentialUnit->getPosition().x - tile->getPosition().x;
+	int yOffset = potentialUnit->getPosition().y - tile->getPosition().y;
 	if (targetSize > 0)
 	{
 		unitRadius = 3;
 	}
-
 	// vector manipulation to make scan work in view-space
 	Position relPos = targetVoxel - *originVoxel;
 	float normal = unitRadius/sqrt((float)(relPos.x*relPos.x + relPos.y*relPos.y));
@@ -598,8 +599,8 @@ bool TileEngine::canTargetUnit(Position *originVoxel, Tile *tile, Position *scan
 					for (int y = 0; y <= targetSize; ++y)
 					{
 						//voxel of hit must be inside of scanned box
-						if (_trajectory.at(0).x/16 == (scanVoxel->x/16) + x &&
-							_trajectory.at(0).y/16 == (scanVoxel->y/16) + y &&
+						if (_trajectory.at(0).x/16 == (scanVoxel->x/16) + x + xOffset &&
+							_trajectory.at(0).y/16 == (scanVoxel->y/16) + y + yOffset &&
 							_trajectory.at(0).z >= targetMinHeight &&
 							_trajectory.at(0).z <= targetMaxHeight)
 						{
@@ -1023,8 +1024,10 @@ BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType ty
 	}
 	else if (part == V_UNIT)
 	{
-		// power 0 - 200%
-		const int rndPower = RNG::generate(0, power*2); // RNG::boxMuller(power, power/3)
+		int dmgRng = (type == DT_HE || Options::TFTDDamage) ? 50 : 100;
+		int min = power * (100 - dmgRng) / 100;
+		int max = power * (100 + dmgRng) / 100;
+		const int rndPower = RNG::generate(min, max);
 		int verticaloffset = 0;
 		if (!bu)
 		{
@@ -1045,9 +1048,15 @@ BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType ty
 			const int sz = bu->getArmor()->getSize() * 8;
 			const Position target = bu->getPosition() * Position(16,16,24) + Position(sz,sz, bu->getFloatHeight() - tile->getTerrainLevel());
 			const Position relative = (center - target) - Position(0,0,verticaloffset);
+			const int wounds = bu->getFatalWounds();
 
 			adjustedDamage = bu->damage(relative, rndPower, type);
 
+			// if it's going to bleed to death and it's not a player, give credit for the kill.
+			if (unit && bu->getFaction() != FACTION_PLAYER && wounds < bu->getFatalWounds())
+			{
+				bu->killedBy(unit->getFaction());
+			}
 			const int bravery = (110 - bu->getStats()->bravery) / 10;
 			const int modifier = bu->getFaction() == FACTION_PLAYER ? _save->getMoraleModifier() : 100;
 			const int morale_loss = 100 * (adjustedDamage * bravery / 10) / modifier;
@@ -1063,7 +1072,12 @@ BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType ty
 				}
 			}
 
-			if (bu->getOriginalFaction() == FACTION_HOSTILE && unit->getOriginalFaction() == FACTION_PLAYER && type != DT_NONE)
+			if (bu->getOriginalFaction() == FACTION_HOSTILE &&
+				unit &&
+				unit->getOriginalFaction() == FACTION_PLAYER &&
+				type != DT_NONE &&
+				_save->getBattleGame()->getCurrentAction()->type != BA_HIT &&
+				_save->getBattleGame()->getCurrentAction()->type != BA_STUN)
 			{
 				unit->addFiringExp();
 			}
@@ -1102,7 +1116,7 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
 		power /= 2;
 	}
 
-	int exHeight = std::max(0, std::min(3, Options::getInt("battleExplosionHeight")));
+	int exHeight = std::max(0, std::min(3, Options::battleExplosionHeight));
 	int vertdec = 1000; //default flat explosion
 
 	switch (exHeight)
@@ -1174,44 +1188,53 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
 					ret = tilesAffected.insert(dest); // check if we had this tile already
 					if (ret.second)
 					{
+						int dmgRng = (type == DT_HE || Options::TFTDDamage) ? 50 : 100;
+						int min = power_ * (100 - dmgRng) / 100;
+						int max = power_ * (100 + dmgRng) / 100;
+						BattleUnit *bu = dest->getUnit();
+						int wounds = 0;
+						if (bu && unit)
+						{
+							wounds = bu->getFatalWounds();
+						}
 						switch (type)
 						{
 						case DT_STUN:
 							// power 0 - 200%
-							if (dest->getUnit())
+							if (bu)
 							{
 								if (distance(dest->getPosition(), Position(centerX, centerY, centerZ)) < 2)
 								{
-									dest->getUnit()->damage(Position(0, 0, 0), RNG::generate(0, power_*2), type);
+									bu->damage(Position(0, 0, 0), RNG::generate(min, max), type);
 								}
 								else
 								{
-									dest->getUnit()->damage(Position(centerX, centerY, centerZ) - dest->getPosition(), RNG::generate(0, power_*2), type);
+									bu->damage(Position(centerX, centerY, centerZ) - dest->getPosition(), RNG::generate(min, max), type);
 								}
 							}
 							for (std::vector<BattleItem*>::iterator it = dest->getInventory()->begin(); it != dest->getInventory()->end(); ++it)
 							{
 								if ((*it)->getUnit())
 								{
-									(*it)->getUnit()->damage(Position(0, 0, 0), RNG::generate(0, power_ *2), type);
+									(*it)->getUnit()->damage(Position(0, 0, 0), RNG::generate(min, max), type);
 								}
 							}
 							break;
 						case DT_HE:
 							{
 								// power 50 - 150%
-								if (dest->getUnit())
+								if (bu)
 								{
 									if (distance(dest->getPosition(), Position(centerX, centerY, centerZ)) < 2)
 									{
 										// ground zero effect is in effect
-										dest->getUnit()->damage(Position(0, 0, 0), (int)(RNG::generate(power_/2.0, power_*1.5)), type);
+										bu->damage(Position(0, 0, 0), (int)(RNG::generate(min, max)), type);
 									}
 									else
 									{
 										// directional damage relative to explosion position.
 										// units above the explosion will be hit in the legs, units lateral to or below will be hit in the torso
-										dest->getUnit()->damage(Position(centerX, centerY, centerZ + 5) - dest->getPosition(), (int)(RNG::generate(power_/2.0, power_*1.5)), type);
+										bu->damage(Position(centerX, centerY, centerZ + 5) - dest->getPosition(), (int)(RNG::generate(min, max)), type);
 									}
 								}
 								bool done = false;
@@ -1254,16 +1277,16 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
 									dest->setFire(dest->getFuel() + 1);
 									dest->setSmoke(std::max(1, std::min(15 - (dest->getFlammability() / 10), 12)));
 								}
-								if (dest->getUnit())
+								if (bu)
 								{
-									float resistance = dest->getUnit()->getArmor()->getDamageModifier(DT_IN);
+									float resistance = bu->getArmor()->getDamageModifier(DT_IN);
 									if (resistance > 0.0)
 									{
-										dest->getUnit()->damage(Position(0, 0, 12-dest->getTerrainLevel()), RNG::generate(5, 10), DT_IN, true);
+										bu->damage(Position(0, 0, 12-dest->getTerrainLevel()), RNG::generate(5, 10), DT_IN, true);
 										int burnTime = RNG::generate(0, int(5 * resistance));
-										if (dest->getUnit()->getFire() < burnTime)
+										if (bu->getFire() < burnTime)
 										{
-											dest->getUnit()->setFire(burnTime); // catch fire and burn
+											bu->setFire(burnTime); // catch fire and burn
 										}
 									}
 								}
@@ -1273,9 +1296,14 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
 							break;
 						}
 
-						if (unit && dest->getUnit() && dest->getUnit()->getFaction() != unit->getFaction())
+						if (unit && bu && bu->getFaction() != unit->getFaction())
 						{
 							unit->addFiringExp();
+							// if it's going to bleed to death and it's not a player, give credit for the kill.
+							if (wounds < bu->getFatalWounds() && bu->getFaction() != FACTION_PLAYER)
+							{
+								bu->killedBy(unit->getFaction());
+							}
 						}
 
 					}
@@ -1360,7 +1388,7 @@ bool TileEngine::detonate(Tile* tile)
 							}
 						}
 
-						if (_save->getMissionType() == "STR_BASE_DEFENSE" && i == 6 && tile->getMapData(MapData::O_OBJECT) && tile->getMapData(V_OBJECT)->isBaseModule())
+						if (_save->getMissionType() == "STR_BASE_DEFENSE" && i == 6 && tile->getMapData(MapData::O_OBJECT) && tile->getMapData(MapData::O_OBJECT)->isBaseModule())
 						{
 							_save->getModuleMap()[tile->getPosition().x/10][tile->getPosition().y/10].second--;
 						}
@@ -1375,7 +1403,7 @@ bool TileEngine::detonate(Tile* tile)
 						}
 					}
 				}
-				if (2 * flam < remainingPower)
+				if (i > 3 && 2 * flam < remainingPower && (tile->getMapData(MapData::O_FLOOR) || tile->getMapData(MapData::O_OBJECT)))
 				{
 					tile->setFire(fuel);
 					tile->setSmoke(std::max(1, std::min(15 - (flam / 10), 12)));
@@ -1607,7 +1635,7 @@ int TileEngine::horizontalBlockage(Tile *startTile, Tile *endTile, ItemDamageTyp
 		break;
 	}
 
-    block += blockage(startTile,MapData::O_OBJECT, type, direction);
+    block += blockage(startTile,MapData::O_OBJECT, type, direction, true);
 	if (type != DT_NONE)
 	{
 		direction += 4;
@@ -1639,7 +1667,7 @@ int TileEngine::horizontalBlockage(Tile *startTile, Tile *endTile, ItemDamageTyp
  * @param direction Direction the power travels.
  * @return Amount of blockage.
  */
-int TileEngine::blockage(Tile *tile, const int part, ItemDamageType type, int direction)
+int TileEngine::blockage(Tile *tile, const int part, ItemDamageType type, int direction, bool checkingFromOrigin)
 {
 	int blockage = 0;
 
@@ -1651,6 +1679,13 @@ int TileEngine::blockage(Tile *tile, const int part, ItemDamageType type, int di
 		if (direction != -1)
 		{
 			wall = tile->getMapData(MapData::O_OBJECT)->getBigWall();
+
+			if (checkingFromOrigin &&
+				(wall == Pathfinding::BIGWALLNESW ||
+				wall == Pathfinding::BIGWALLNWSE))
+			{
+				check = false;
+			}
 			switch (direction)
 			{
 			case 0: // north
@@ -2390,7 +2425,7 @@ bool TileEngine::psiAttack(BattleAction *action)
 			victim->allowReselect();
 			victim->abortTurn(); // resets unit status to STANDING
 			// if all units from either faction are mind controlled - auto-end the mission.
-			if (_save->getSide() == FACTION_PLAYER && Options::getBool("battleAutoEnd") && Options::getBool("allowPsionicCapture"))
+			if (_save->getSide() == FACTION_PLAYER && Options::battleAutoEnd && Options::allowPsionicCapture)
 			{
 				int liveAliens = 0;
 				int liveSoldiers = 0;
@@ -2398,6 +2433,7 @@ bool TileEngine::psiAttack(BattleAction *action)
 				if (liveAliens == 0 || liveSoldiers == 0)
 				{
 					_save->setSelectedUnit(0);
+					_save->getBattleGame()->cancelCurrentAction(true);
 					_save->getBattleGame()->requestEndTurn();
 				}
 			}

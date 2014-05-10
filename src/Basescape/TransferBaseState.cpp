@@ -53,7 +53,7 @@ TransferBaseState::TransferBaseState(Game *game, Base *base) : State(game), _bas
 	_lstBases = new TextList(248, 64, 28, 80);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(4)), Palette::backPos, 16);
+	setPalette("PAL_BASESCAPE", 4);
 
 	add(_window);
 	add(_btnCancel);
@@ -72,7 +72,7 @@ TransferBaseState::TransferBaseState(Game *game, Base *base) : State(game), _bas
 	_btnCancel->setColor(Palette::blockOffset(13)+5);
 	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler)&TransferBaseState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&TransferBaseState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&TransferBaseState::btnCancelClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(13)+5);
 	_txtTitle->setBig();

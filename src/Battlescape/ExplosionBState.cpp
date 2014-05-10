@@ -33,6 +33,7 @@
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Sound.h"
 #include "../Ruleset/RuleItem.h"
+#include "../Ruleset/Ruleset.h"
 #include "../Ruleset/Armor.h"
 #include "../Engine/RNG.h"
 
@@ -48,7 +49,7 @@ namespace OpenXcom
  * @param tile Tile the explosion is on.
  * @param lowerWeapon Whether the unit causing this explosion should now lower their weapon.
  */
-ExplosionBState::ExplosionBState(BattlescapeGame *parent, Position center, BattleItem *item, BattleUnit *unit, Tile *tile, bool lowerWeapon) : BattleState(parent), _unit(unit), _center(center), _item(item), _tile(tile), _power(0), _areaOfEffect(false), _lowerWeapon(lowerWeapon)
+ExplosionBState::ExplosionBState(BattlescapeGame *parent, Position center, BattleItem *item, BattleUnit *unit, Tile *tile, bool lowerWeapon) : BattleState(parent), _unit(unit), _center(center), _item(item), _tile(tile), _power(0), _areaOfEffect(false), _lowerWeapon(lowerWeapon), _pistolWhip(false)
 {
 
 }
@@ -71,12 +72,30 @@ void ExplosionBState::init()
 	if (_item)
 	{
 		_power = _item->getRules()->getPower();
-		_areaOfEffect = _item->getRules()->getBattleType() != BT_MELEE && 
-						_item->getRules()->getExplosionRadius() != 0;
+		_pistolWhip = (_item->getRules()->getBattleType() != BT_MELEE &&
+			_parent->getCurrentAction()->type == BA_HIT);
+		if (_pistolWhip)
+		{
+			_power = _item->getRules()->getMeleePower();
+		}
+		// since melee aliens don't use a conventional weapon type, we use their strength instead.
+		if (_item->getRules()->isStrengthApplied())
+		{
+			_power += _unit->getStats()->strength;
+		}
+
+		_areaOfEffect = _item->getRules()->getBattleType() != BT_MELEE &&
+						_item->getRules()->getExplosionRadius() != 0 &&
+						!_pistolWhip;
 	}
 	else if (_tile)
 	{
 		_power = _tile->getExplosive();
+		_areaOfEffect = true;
+	}
+	else if (_unit && _unit->getSpecialAbility() == SPECAB_EXPLODEONDEATH)
+	{
+		_power = _parent->getRuleset()->getItem(_unit->getArmor()->getCorpseGeoscape())->getPower();
 		_areaOfEffect = true;
 	}
 	else
@@ -91,7 +110,7 @@ void ExplosionBState::init()
 		if (_power)
 		{
 			int frame = 0;
-			int counter = (_power/5) / 5;
+			int counter = std::max(1, (_power/5) / 5);
 			for (int i = 0; i < _power/5; i++)
 			{
 				int X = RNG::generate(-_power/2,_power/2);
@@ -106,10 +125,10 @@ void ExplosionBState::init()
 					--frame;
 				}
 			}
-			_parent->setStateInterval(BattlescapeState::DEFAULT_ANIM_SPEED);
+			_parent->setStateInterval(BattlescapeState::DEFAULT_ANIM_SPEED/2);
 			// explosion sound
 			if (_power <= 80)
-				_parent->getResourcePack()->getSound("BATTLE.CAT", 12)->play();
+				_parent->getResourcePack()->getSound("BATTLE.CAT", 2)->play();
 			else
 				_parent->getResourcePack()->getSound("BATTLE.CAT", 5)->play();
 
@@ -124,12 +143,27 @@ void ExplosionBState::init()
 	// create a bullet hit
 	{
 		_parent->setStateInterval(std::max(1, ((BattlescapeState::DEFAULT_ANIM_SPEED/2) - (10 * _item->getRules()->getExplosionSpeed()))));
-		bool hit = (_item->getRules()->getBattleType() == BT_MELEE || _item->getRules()->getBattleType() == BT_PSIAMP);
-		Explosion *explosion = new Explosion(_center, _item->getRules()->getHitAnimation(), false, hit);
+		bool hit = _pistolWhip || _item->getRules()->getBattleType() == BT_MELEE || _item->getRules()->getBattleType() == BT_PSIAMP;
+		int anim = _item->getRules()->getHitAnimation();
+		int sound = _item->getRules()->getHitSound();
+		if (hit)
+		{
+			anim = _item->getRules()->getMeleeAnimation();
+		}
+		if (sound != -1)
+		{
+			// bullet hit sound
+			_parent->getResourcePack()->getSound("BATTLE.CAT", sound)->play();
+		}
+		Explosion *explosion = new Explosion(_center, anim, false, hit);
 		_parent->getMap()->getExplosions()->insert(explosion);
-		// bullet hit sound
-		_parent->getResourcePack()->getSound("BATTLE.CAT", _item->getRules()->getHitSound())->play();
-		_parent->getMap()->getCamera()->centerOnPosition(t->getPosition(), false);
+		_parent->getMap()->getCamera()->setViewLevel(_center.z / 24);
+
+		BattleUnit *target = _parent->getSave()->getTile(_action.target)->getUnit();
+		if (hit && _parent->getSave()->getSide() == FACTION_HOSTILE && target && target->getFaction() == FACTION_PLAYER)
+		{
+			_parent->getMap()->getCamera()->centerOnPosition(t->getPosition(), false);
+		}
 	}
 }
 
@@ -168,6 +202,31 @@ void ExplosionBState::explode()
 {
 	bool terrainExplosion = false;
 	SavedBattleGame *save = _parent->getSave();
+	// last minute adjustment: determine if we actually 
+	if (_parent->getCurrentAction()->type == BA_HIT || _parent->getCurrentAction()->type == BA_STUN)
+	{
+		save->getBattleGame()->getCurrentAction()->type = BA_NONE;
+		BattleUnit *targetUnit = save->getTile(_center / Position(16, 16, 24))->getUnit();
+		if (_unit && !_unit->isOut())
+		{
+			_unit->aim(false);
+		}
+		if (!RNG::percent(_unit->getFiringAccuracy(BA_HIT, _item)))
+		{
+			_parent->getMap()->cacheUnits();
+			_parent->popState();
+			return;
+		}
+		else if (targetUnit && targetUnit->getOriginalFaction() == FACTION_HOSTILE &&
+				_unit->getOriginalFaction() == FACTION_PLAYER)
+		{
+			_unit->addMeleeExp();
+		}
+		if (_item->getRules()->getMeleeHitSound() != -1)
+		{
+			_parent->getResourcePack()->getSound("BATTLE.CAT", _item->getRules()->getMeleeHitSound())->play();
+		}
+	}
 	// after the animation is done, the real explosion/hit takes place
 	if (_item)
 	{
@@ -182,7 +241,12 @@ void ExplosionBState::explode()
 		}
 		else
 		{
-			BattleUnit *victim = save->getTileEngine()->hit(_center, _power, _item->getRules()->getDamageType(), _unit);
+			ItemDamageType type = _item->getRules()->getDamageType();
+			if (_pistolWhip)
+			{
+				type = DT_STUN;
+			}
+			BattleUnit *victim = save->getTileEngine()->hit(_center, _power, type, _unit);
 			// check if this unit turns others into zombies
 			if (!_item->getRules()->getZombieUnit().empty()
 				&& victim
@@ -203,8 +267,13 @@ void ExplosionBState::explode()
 	}
 	if (!_tile && !_item)
 	{
+		int radius = 6;
 		// explosion not caused by terrain or an item, must be by a unit (cyberdisc)
-		save->getTileEngine()->explode(_center, _power, DT_HE, 6);
+		if (_unit && _unit->getSpecialAbility() == SPECAB_EXPLODEONDEATH)
+		{
+			radius = _parent->getRuleset()->getItem(_unit->getArmor()->getCorpseGeoscape())->getExplosionRadius();
+		}
+		save->getTileEngine()->explode(_center, _power, DT_HE, radius);
 		terrainExplosion = true;
 	}
 

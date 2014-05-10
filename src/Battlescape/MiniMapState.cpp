@@ -46,7 +46,11 @@ MiniMapState::MiniMapState (Game * game, Camera * camera, SavedBattleGame * batt
 	InteractiveSurface * btnLvlUp = new InteractiveSurface(18, 20, 24, 62);
 	InteractiveSurface * btnLvlDwn = new InteractiveSurface(18, 20, 24, 88);
 	InteractiveSurface * btnOk = new InteractiveSurface(32, 32, 275, 145);
-	_txtLevel = new Text (20, 25, 281, 75);
+	_txtLevel = new Text(20, 25, 281, 75);
+	
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
+
 	add(_surface);
 	add(_miniMapView);
 	add(btnLvlUp);
@@ -56,7 +60,7 @@ MiniMapState::MiniMapState (Game * game, Camera * camera, SavedBattleGame * batt
 
 	centerAllSurfaces();
 
-	if (Screen::getDY() > 50)
+	if (_game->getScreen()->getDY() > 50)
 	{
 		_screen = false;
 		SDL_Rect current;
@@ -71,12 +75,12 @@ MiniMapState::MiniMapState (Game * game, Camera * camera, SavedBattleGame * batt
 	btnLvlUp->onMouseClick((ActionHandler)&MiniMapState::btnLevelUpClick);
 	btnLvlDwn->onMouseClick((ActionHandler)&MiniMapState::btnLevelDownClick);
 	btnOk->onMouseClick((ActionHandler)&MiniMapState::btnOkClick);
-	btnOk->onKeyboardPress((ActionHandler)&MiniMapState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
-	btnOk->onKeyboardPress((ActionHandler)&MiniMapState::btnOkClick, (SDL_Keycode)Options::getInt("keyBattleMap"));
+	btnOk->onKeyboardPress((ActionHandler)&MiniMapState::btnOkClick, Options::keyCancel);
+	btnOk->onKeyboardPress((ActionHandler)&MiniMapState::btnOkClick, Options::keyBattleMap);
 	_txtLevel->setBig();
 	_txtLevel->setColor(Palette::blockOffset(4));
 	_txtLevel->setHighContrast(true);
-	std::wstringstream s;
+	std::wostringstream s;
 	s << camera->getViewLevel();
 	_txtLevel->setText(s.str());
 	_timerAnimate = new Timer(125);
@@ -128,7 +132,7 @@ void MiniMapState::btnOkClick(Action *)
  */
 void MiniMapState::btnLevelUpClick(Action *)
 {
-	std::wstringstream s;
+	std::wostringstream s;
 	s << _miniMapView->up();
 	_txtLevel->setText(s.str());
 }
@@ -139,7 +143,7 @@ void MiniMapState::btnLevelUpClick(Action *)
  */
 void MiniMapState::btnLevelDownClick(Action *)
 {
-	std::wstringstream s;
+	std::wostringstream s;
 	s << _miniMapView->down ();
 	_txtLevel->setText(s.str());
 }

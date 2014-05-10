@@ -20,7 +20,7 @@
 #define OPENXCOM_GEOSCAPESTATE_H
 
 #include "../Engine/State.h"
-#include <vector>
+#include <list>
 
 namespace OpenXcom
 {
@@ -51,12 +51,11 @@ private:
 	InteractiveSurface *_btnRotateLeft, *_btnRotateRight, *_btnRotateUp, *_btnRotateDown, *_btnZoomIn, *_btnZoomOut;
 	Text *_txtFunds, *_txtHour, *_txtHourSep, *_txtMin, *_txtMinSep, *_txtSec, *_txtWeekday, *_txtDay, *_txtMonth, *_txtYear;
 	Timer *_timer, *_zoomInEffectTimer, *_zoomOutEffectTimer, *_dogfightStartTimer;
-	bool _pause, _music, _zoomInEffectDone, _zoomOutEffectDone, _battleMusic;
+	bool _pause, _zoomInEffectDone, _zoomOutEffectDone;
 	Text *_txtDebug;
-	std::vector<State*> _popups;
-	std::vector<DogfightState*> _dogfights, _dogfightsToBeStarted;
+	std::list<State*> _popups;
+	std::list<DogfightState*> _dogfights, _dogfightsToBeStarted;
 	size_t _minimizedDogfights;
-	bool _showFundsOnGeoscape;  // this is a cache for Options::getBool("showFundsOnGeoscape")
 public:
 	/// Creates the Geoscape state.
 	GeoscapeState(Game *game);
@@ -86,8 +85,6 @@ public:
 	void time1Month();
 	/// Resets the timer to minimum speed.
 	void timerReset();
-	/// Stop the music!
-	void musicStop(bool pause = false);
 	/// Displays a popup window.
 	void popup(State *state);
 	/// Gets the Geoscape globe.
@@ -144,17 +141,19 @@ public:
 	void startDogfight();
 	/// Get first free dogfight slot.
 	int getFirstFreeDogfightSlot();
-	/// Create the starting missions.
-	void createStartingMissions() { determineAlienMissions(true); }
 	/// Handler for clicking the timer button.
 	void btnTimerClick(Action *action);
 	/// Process a terror site
 	bool processTerrorSite(TerrorSite *ts) const;
 	/// Handles base defense
 	void handleBaseDefense(Base *base, Ufo *ufo);
+	/// Update the resolution settings, we just resized the window.
+	void resize(int &dX, int &dY);
 private:
 	/// Handle alien mission generation.
 	void determineAlienMissions(bool atGameStart = false);
+	/// Handle Terror mission generation.
+	void setupTerrorMission();
 };
 
 }

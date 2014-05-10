@@ -43,6 +43,9 @@ InfoboxOKState::InfoboxOKState(Game *game, const std::wstring &msg) : State(game
 	_btnOk = new TextButton(120, 18, 100, 112);
 	_txtTitle = new Text(255, 61, 33, 51);
 
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
+
 	add(_frame);
 	add(_btnOk);
 	add(_txtTitle);
@@ -58,8 +61,8 @@ InfoboxOKState::InfoboxOKState(Game *game, const std::wstring &msg) : State(game
 	_btnOk->setColor(Palette::blockOffset(1)-1);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&InfoboxOKState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&InfoboxOKState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
-	_btnOk->onKeyboardPress((ActionHandler)&InfoboxOKState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&InfoboxOKState::btnOkClick, Options::keyOk);
+	_btnOk->onKeyboardPress((ActionHandler)&InfoboxOKState::btnOkClick, Options::keyCancel);
 	_btnOk->setHighContrast(true);
 
 	_txtTitle->setColor(Palette::blockOffset(1)-1);

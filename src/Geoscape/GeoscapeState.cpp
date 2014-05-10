@@ -21,6 +21,10 @@
 #include <cmath>
 #include <sstream>
 #include <iomanip>
+#include <ctime>
+#include <algorithm>
+#include <functional>
+#include <assert.h>
 #include "../Engine/RNG.h"
 #include "../Engine/Game.h"
 #include "../Engine/Action.h"
@@ -50,9 +54,12 @@
 #include "../Savegame/Waypoint.h"
 #include "../Savegame/Transfer.h"
 #include "../Savegame/Soldier.h"
+#include "../Savegame/SoldierDeath.h"
 #include "../Menu/PauseState.h"
 #include "InterceptState.h"
 #include "../Basescape/BasescapeState.h"
+#include "../Basescape/SellState.h"
+#include "../Menu/ErrorMessageState.h"
 #include "GraphsState.h"
 #include "FundingState.h"
 #include "MonthlyReportState.h"
@@ -97,12 +104,9 @@
 #include "BaseDefenseState.h"
 #include "BaseDestroyedState.h"
 #include "DefeatState.h"
-#include <ctime>
-#include <algorithm>
-#include <functional>
-#include <assert.h>
-#include "../Menu/SaveState.h"
-#include "../Menu/LoadState.h"
+#include "../Menu/LoadGameState.h"
+#include "../Menu/SaveGameState.h"
+#include "../Menu/ListSaveState.h"
 
 namespace OpenXcom
 {
@@ -111,12 +115,10 @@ namespace OpenXcom
  * Initializes all the elements in the Geoscape screen.
  * @param game Pointer to the core game.
  */
-GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(false), _zoomInEffectDone(false), _zoomOutEffectDone(false), _battleMusic(false), _popups(), _dogfights(), _dogfightsToBeStarted(), _minimizedDogfights(0)
+GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _zoomInEffectDone(false), _zoomOutEffectDone(false), _popups(), _dogfights(), _dogfightsToBeStarted(), _minimizedDogfights(0)
 {
-	int screenWidth = Options::getInt("baseXResolution");
-	int screenHeight = Options::getInt("baseYResolution");
-
-	_showFundsOnGeoscape = Options::getBool("showFundsOnGeoscape");
+	int screenWidth = Options::baseXGeoscape;
+	int screenHeight = Options::baseYGeoscape;
 
 	// Create objects
 	_bg = new Surface(320, 200, screenWidth-320, screenHeight/2-100);
@@ -152,28 +154,19 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	_txtDay = new Text(29, 8, screenWidth-61, screenHeight/2-6);
 	_txtMonth = new Text(29, 8, screenWidth-32, screenHeight/2-6);
 	_txtYear = new Text(59, 8, screenWidth-61, screenHeight/2+1);
-	if (_showFundsOnGeoscape)
-	{
-		_txtFunds = new Text(59, 8, screenWidth-61, screenHeight/2-27);
-		_txtHour->setY(_txtHour->getY()+6);
-		_txtHourSep->setY(_txtHourSep->getY()+6);
-		_txtMin->setY(_txtMin->getY()+6);
-		_txtMinSep->setY(_txtMinSep->getY()+6);
-		_txtMinSep->setX(_txtMinSep->getX()-10);
-		_txtSec->setX(_txtSec->getX()-10);
-	}
+	_txtFunds = new Text(59, 8, screenWidth-61, screenHeight/2-27);
 
 	_timeSpeed = _btn5Secs;
-	_timer = new Timer(100);
+	_timer = new Timer(Options::geoClockSpeed);
 
 	_zoomInEffectTimer = new Timer(50);
 	_zoomOutEffectTimer = new Timer(50);
-	_dogfightStartTimer = new Timer(250);
+	_dogfightStartTimer = new Timer(50);
 
 	_txtDebug = new Text(200, 18, 0, 0);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
+	setPalette("PAL_GEOSCAPE");
 
 	// Fix system colors
 	_game->getCursor()->setColor(Palette::blockOffset(15)+12);
@@ -203,7 +196,7 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	add(_btnZoomIn);
 	add(_btnZoomOut);
 
-	if (_showFundsOnGeoscape) add(_txtFunds);
+	add(_txtFunds);
 	add(_txtHour);
 	add(_txtHourSep);
 	add(_txtMin);
@@ -224,42 +217,42 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	_btnIntercept->setTextColor(Palette::blockOffset(15)+5);
 	_btnIntercept->setText(tr("STR_INTERCEPT"));
 	_btnIntercept->onMouseClick((ActionHandler)&GeoscapeState::btnInterceptClick);
-	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnInterceptClick, (SDL_Keycode)Options::getInt("keyGeoIntercept"));
+	_btnIntercept->onKeyboardPress((ActionHandler)&GeoscapeState::btnInterceptClick, Options::keyGeoIntercept);
 
 	_btnBases->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btnBases->setColor(Palette::blockOffset(15)+6);
 	_btnBases->setTextColor(Palette::blockOffset(15)+5);
 	_btnBases->setText(tr("STR_BASES"));
 	_btnBases->onMouseClick((ActionHandler)&GeoscapeState::btnBasesClick);
-	_btnBases->onKeyboardPress((ActionHandler)&GeoscapeState::btnBasesClick, (SDL_Keycode)Options::getInt("keyGeoBases"));
+	_btnBases->onKeyboardPress((ActionHandler)&GeoscapeState::btnBasesClick, Options::keyGeoBases);
 
 	_btnGraphs->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btnGraphs->setColor(Palette::blockOffset(15)+6);
 	_btnGraphs->setTextColor(Palette::blockOffset(15)+5);
 	_btnGraphs->setText(tr("STR_GRAPHS"));
 	_btnGraphs->onMouseClick((ActionHandler)&GeoscapeState::btnGraphsClick);
-	_btnGraphs->onKeyboardPress((ActionHandler)&GeoscapeState::btnGraphsClick, (SDL_Keycode)Options::getInt("keyGeoGraphs"));
+	_btnGraphs->onKeyboardPress((ActionHandler)&GeoscapeState::btnGraphsClick, Options::keyGeoGraphs);
 
 	_btnUfopaedia->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btnUfopaedia->setColor(Palette::blockOffset(15)+6);
 	_btnUfopaedia->setTextColor(Palette::blockOffset(15)+5);
 	_btnUfopaedia->setText(tr("STR_UFOPAEDIA_UC"));
 	_btnUfopaedia->onMouseClick((ActionHandler)&GeoscapeState::btnUfopaediaClick);
-	_btnUfopaedia->onKeyboardPress((ActionHandler)&GeoscapeState::btnUfopaediaClick, (SDL_Keycode)Options::getInt("keyGeoUfopedia"));
+	_btnUfopaedia->onKeyboardPress((ActionHandler)&GeoscapeState::btnUfopaediaClick, Options::keyGeoUfopedia);
 
 	_btnOptions->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btnOptions->setColor(Palette::blockOffset(15)+6);
 	_btnOptions->setTextColor(Palette::blockOffset(15)+5);
 	_btnOptions->setText(tr("STR_OPTIONS_UC"));
 	_btnOptions->onMouseClick((ActionHandler)&GeoscapeState::btnOptionsClick);
-	_btnOptions->onKeyboardPress((ActionHandler)&GeoscapeState::btnOptionsClick, (SDL_Keycode)Options::getInt("keyGeoOptions"));
+	_btnOptions->onKeyboardPress((ActionHandler)&GeoscapeState::btnOptionsClick, Options::keyGeoOptions);
 
 	_btnFunding->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btnFunding->setColor(Palette::blockOffset(15)+6);
 	_btnFunding->setTextColor(Palette::blockOffset(15)+5);
 	_btnFunding->setText(tr("STR_FUNDING_UC"));
 	_btnFunding->onMouseClick((ActionHandler)&GeoscapeState::btnFundingClick);
-	_btnFunding->onKeyboardPress((ActionHandler)&GeoscapeState::btnFundingClick, (SDL_Keycode)Options::getInt("keyGeoFunding"));
+	_btnFunding->onKeyboardPress((ActionHandler)&GeoscapeState::btnFundingClick, Options::keyGeoFunding);
 
 	_btn5Secs->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btn5Secs->setBig();
@@ -267,7 +260,7 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	_btn5Secs->setTextColor(Palette::blockOffset(15)+5);
 	_btn5Secs->setText(tr("STR_5_SECONDS"));
 	_btn5Secs->setGroup(&_timeSpeed);
-	_btn5Secs->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, (SDL_Keycode)Options::getInt("keyGeoSpeed1"));
+	_btn5Secs->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, Options::keyGeoSpeed1);
 
 	_btn1Min->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btn1Min->setBig();
@@ -275,7 +268,7 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	_btn1Min->setTextColor(Palette::blockOffset(15)+5);
 	_btn1Min->setText(tr("STR_1_MINUTE"));
 	_btn1Min->setGroup(&_timeSpeed);
-	_btn1Min->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, (SDL_Keycode)Options::getInt("keyGeoSpeed2"));
+	_btn1Min->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, Options::keyGeoSpeed2);
 
 	_btn5Mins->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btn5Mins->setBig();
@@ -283,7 +276,7 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	_btn5Mins->setTextColor(Palette::blockOffset(15)+5);
 	_btn5Mins->setText(tr("STR_5_MINUTES"));
 	_btn5Mins->setGroup(&_timeSpeed);
-	_btn5Mins->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, (SDL_Keycode)Options::getInt("keyGeoSpeed3"));
+	_btn5Mins->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, Options::keyGeoSpeed3);
 
 	_btn30Mins->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btn30Mins->setBig();
@@ -291,7 +284,7 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	_btn30Mins->setTextColor(Palette::blockOffset(15)+5);
 	_btn30Mins->setText(tr("STR_30_MINUTES"));
 	_btn30Mins->setGroup(&_timeSpeed);
-	_btn30Mins->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, (SDL_Keycode)Options::getInt("keyGeoSpeed4"));
+	_btn30Mins->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, Options::keyGeoSpeed4);
 
 	_btn1Hour->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btn1Hour->setBig();
@@ -299,7 +292,7 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	_btn1Hour->setTextColor(Palette::blockOffset(15)+5);
 	_btn1Hour->setText(tr("STR_1_HOUR"));
 	_btn1Hour->setGroup(&_timeSpeed);
-	_btn1Hour->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, (SDL_Keycode)Options::getInt("keyGeoSpeed5"));
+	_btn1Hour->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, Options::keyGeoSpeed5);
 
 	_btn1Day->initText(_game->getResourcePack()->getFont("FONT_GEO_BIG"), _game->getResourcePack()->getFont("FONT_GEO_SMALL"), _game->getLanguage());
 	_btn1Day->setBig();
@@ -307,84 +300,84 @@ GeoscapeState::GeoscapeState(Game *game) : State(game), _pause(false), _music(fa
 	_btn1Day->setTextColor(Palette::blockOffset(15)+5);
 	_btn1Day->setText(tr("STR_1_DAY"));
 	_btn1Day->setGroup(&_timeSpeed);
-	_btn1Day->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, (SDL_Keycode)Options::getInt("keyGeoSpeed6"));
+	_btn1Day->onKeyboardPress((ActionHandler)&GeoscapeState::btnTimerClick, Options::keyGeoSpeed6);
 
 	_btnRotateLeft->onMousePress((ActionHandler)&GeoscapeState::btnRotateLeftPress);
 	_btnRotateLeft->onMouseRelease((ActionHandler)&GeoscapeState::btnRotateLeftRelease);
-	_btnRotateLeft->onKeyboardPress((ActionHandler)&GeoscapeState::btnRotateLeftPress, (SDL_Keycode)Options::getInt("keyGeoLeft"));
-	_btnRotateLeft->onKeyboardRelease((ActionHandler)&GeoscapeState::btnRotateLeftRelease, (SDL_Keycode)Options::getInt("keyGeoLeft"));
+	_btnRotateLeft->onKeyboardPress((ActionHandler)&GeoscapeState::btnRotateLeftPress, Options::keyGeoLeft);
+	_btnRotateLeft->onKeyboardRelease((ActionHandler)&GeoscapeState::btnRotateLeftRelease, Options::keyGeoLeft);
 
 	_btnRotateRight->onMousePress((ActionHandler)&GeoscapeState::btnRotateRightPress);
 	_btnRotateRight->onMouseRelease((ActionHandler)&GeoscapeState::btnRotateRightRelease);
-	_btnRotateRight->onKeyboardPress((ActionHandler)&GeoscapeState::btnRotateRightPress, (SDL_Keycode)Options::getInt("keyGeoRight"));
-	_btnRotateRight->onKeyboardRelease((ActionHandler)&GeoscapeState::btnRotateRightRelease, (SDL_Keycode)Options::getInt("keyGeoRight"));
+	_btnRotateRight->onKeyboardPress((ActionHandler)&GeoscapeState::btnRotateRightPress, Options::keyGeoRight);
+	_btnRotateRight->onKeyboardRelease((ActionHandler)&GeoscapeState::btnRotateRightRelease, Options::keyGeoRight);
 
 	_btnRotateUp->onMousePress((ActionHandler)&GeoscapeState::btnRotateUpPress);
 	_btnRotateUp->onMouseRelease((ActionHandler)&GeoscapeState::btnRotateUpRelease);
-	_btnRotateUp->onKeyboardPress((ActionHandler)&GeoscapeState::btnRotateUpPress, (SDL_Keycode)Options::getInt("keyGeoUp"));
-	_btnRotateUp->onKeyboardRelease((ActionHandler)&GeoscapeState::btnRotateUpRelease, (SDL_Keycode)Options::getInt("keyGeoUp"));
+	_btnRotateUp->onKeyboardPress((ActionHandler)&GeoscapeState::btnRotateUpPress, Options::keyGeoUp);
+	_btnRotateUp->onKeyboardRelease((ActionHandler)&GeoscapeState::btnRotateUpRelease, Options::keyGeoUp);
 
 	_btnRotateDown->onMousePress((ActionHandler)&GeoscapeState::btnRotateDownPress);
 	_btnRotateDown->onMouseRelease((ActionHandler)&GeoscapeState::btnRotateDownRelease);
-	_btnRotateDown->onKeyboardPress((ActionHandler)&GeoscapeState::btnRotateDownPress, (SDL_Keycode)Options::getInt("keyGeoDown"));
-	_btnRotateDown->onKeyboardRelease((ActionHandler)&GeoscapeState::btnRotateDownRelease, (SDL_Keycode)Options::getInt("keyGeoDown"));
+	_btnRotateDown->onKeyboardPress((ActionHandler)&GeoscapeState::btnRotateDownPress, Options::keyGeoDown);
+	_btnRotateDown->onKeyboardRelease((ActionHandler)&GeoscapeState::btnRotateDownRelease, Options::keyGeoDown);
 
 	_btnZoomIn->onMouseClick((ActionHandler)&GeoscapeState::btnZoomInLeftClick, SDL_BUTTON_LEFT);
 	_btnZoomIn->onMouseClick((ActionHandler)&GeoscapeState::btnZoomInRightClick, SDL_BUTTON_RIGHT);
-	_btnZoomIn->onKeyboardPress((ActionHandler)&GeoscapeState::btnZoomInLeftClick, (SDL_Keycode)Options::getInt("keyGeoZoomIn"));
+	_btnZoomIn->onKeyboardPress((ActionHandler)&GeoscapeState::btnZoomInLeftClick, Options::keyGeoZoomIn);
 
 	_btnZoomOut->onMouseClick((ActionHandler)&GeoscapeState::btnZoomOutLeftClick, SDL_BUTTON_LEFT);
 	_btnZoomOut->onMouseClick((ActionHandler)&GeoscapeState::btnZoomOutRightClick, SDL_BUTTON_RIGHT);
-	_btnZoomOut->onKeyboardPress((ActionHandler)&GeoscapeState::btnZoomOutLeftClick, (SDL_Keycode)Options::getInt("keyGeoZoomOut"));
+	_btnZoomOut->onKeyboardPress((ActionHandler)&GeoscapeState::btnZoomOutLeftClick, Options::keyGeoZoomOut);
 	
-	// dirty hacks to get the rotate buttons to work in "classic" style
-	_btnRotateLeft->setListButton();
-	_btnRotateRight->setListButton();
-	_btnRotateUp->setListButton();
-	_btnRotateDown->setListButton();
+	_txtFunds->setColor(Palette::blockOffset(15)+4);
+	_txtFunds->setAlign(ALIGN_CENTER);
+	_txtFunds->setVisible(Options::showFundsOnGeoscape);
 
-	if (_showFundsOnGeoscape)
-	{
-		_txtFunds->setSmall();
-		_txtFunds->setColor(Palette::blockOffset(15)+4);
-		_txtFunds->setAlign(ALIGN_CENTER);
-	}
-
-	if (_showFundsOnGeoscape) _txtHour->setSmall(); else _txtHour->setBig();
+	_txtHour->setBig();
 	_txtHour->setColor(Palette::blockOffset(15)+4);
 	_txtHour->setAlign(ALIGN_RIGHT);
 
-	if (_showFundsOnGeoscape) _txtHourSep->setSmall(); else _txtHourSep->setBig();
+	_txtHourSep->setBig();
 	_txtHourSep->setColor(Palette::blockOffset(15)+4);
 	_txtHourSep->setText(L":");
 
-	if (_showFundsOnGeoscape) _txtMin->setSmall(); else _txtMin->setBig();
+	_txtMin->setBig();
 	_txtMin->setColor(Palette::blockOffset(15)+4);
 
-	if (_showFundsOnGeoscape) _txtMinSep->setSmall(); else _txtMinSep->setBig();
+	_txtMinSep->setBig();
 	_txtMinSep->setColor(Palette::blockOffset(15)+4);
 	_txtMinSep->setText(L":");
 
-	_txtSec->setSmall();
 	_txtSec->setColor(Palette::blockOffset(15)+4);
 
-	_txtWeekday->setSmall();
 	_txtWeekday->setColor(Palette::blockOffset(15)+4);
 	_txtWeekday->setAlign(ALIGN_CENTER);
 
-	_txtDay->setSmall();
 	_txtDay->setColor(Palette::blockOffset(15)+4);
 	_txtDay->setAlign(ALIGN_CENTER);
 
-	_txtMonth->setSmall();
 	_txtMonth->setColor(Palette::blockOffset(15)+4);
 	_txtMonth->setAlign(ALIGN_CENTER);
 
-	_txtYear->setSmall();
 	_txtYear->setColor(Palette::blockOffset(15)+4);
 	_txtYear->setAlign(ALIGN_CENTER);
 
 	_txtDebug->setColor(Palette::blockOffset(15)+4);
+	
+	if (Options::showFundsOnGeoscape)
+	{
+		_txtHour->setY(_txtHour->getY()+6);
+		_txtHour->setSmall();
+		_txtHourSep->setY(_txtHourSep->getY()+6);
+		_txtHourSep->setSmall();
+		_txtMin->setY(_txtMin->getY()+6);
+		_txtMin->setSmall();
+		_txtMinSep->setX(_txtMinSep->getX()-10);
+		_txtMinSep->setY(_txtMinSep->getY()+6);
+		_txtMinSep->setSmall();
+		_txtSec->setX(_txtSec->getX()-10);
+	}
 
 	_timer->onTimer((StateHandler)&GeoscapeState::timeAdvance);
 	_timer->start();
@@ -405,6 +398,18 @@ GeoscapeState::~GeoscapeState()
 	delete _zoomInEffectTimer;
 	delete _zoomOutEffectTimer;
 	delete _dogfightStartTimer;
+	
+	std::list<DogfightState*>::iterator it = _dogfights.begin();
+	for(; it != _dogfights.end();)
+	{
+		delete *it;
+		it = _dogfights.erase(it);
+	}
+	for(it = _dogfightsToBeStarted.begin(); it != _dogfightsToBeStarted.end();)
+	{
+		delete *it;
+		it = _dogfightsToBeStarted.erase(it);
+	}
 }
 
 /**
@@ -413,7 +418,7 @@ GeoscapeState::~GeoscapeState()
 void GeoscapeState::blit()
 {
 	State::blit();
-	for(std::vector<DogfightState*>::iterator it = _dogfights.begin(); it != _dogfights.end(); ++it)
+	for(std::list<DogfightState*>::iterator it = _dogfights.begin(); it != _dogfights.end(); ++it)
 	{
 		(*it)->blit();
 	}
@@ -432,7 +437,7 @@ void GeoscapeState::handle(Action *action)
 	if (action->getDetails()->type == SDL_KEYDOWN)
 	{
 		// "ctrl-d" - enable debug mode
-		if (Options::getBool("debug") && action->getDetails()->key.keysym.sym == SDLK_d && (SDL_GetModState() & KMOD_CTRL) != 0)
+		if (Options::debug && action->getDetails()->key.keysym.sym == SDLK_d && (SDL_GetModState() & KMOD_CTRL) != 0)
 		{
 			_game->getSavedGame()->setDebugMode();
 			if (_game->getSavedGame()->getDebugMode())
@@ -445,14 +450,21 @@ void GeoscapeState::handle(Action *action)
 			}
 		}
 		// quick save and quick load
-		else if (action->getDetails()->key.keysym.sym == Options::getInt("keyQuickSave") && Options::getInt("autosave") == 1)
-			_game->pushState(new SaveState(_game, OPT_GEOSCAPE, true));
-		else if (action->getDetails()->key.keysym.sym == Options::getInt("keyQuickLoad") && Options::getInt("autosave") == 1)
-			_game->pushState(new LoadState(_game, OPT_GEOSCAPE, true));
+		else if (!_game->getSavedGame()->isIronman())
+		{
+			if (action->getDetails()->key.keysym.sym == Options::keyQuickSave)
+			{
+				_game->pushState(new SaveGameState(_game, OPT_GEOSCAPE, SAVE_QUICK));
+			}
+			else if (action->getDetails()->key.keysym.sym == Options::keyQuickLoad)
+			{
+				_game->pushState(new LoadGameState(_game, OPT_GEOSCAPE, SAVE_QUICK));
+			}
+		}
 	}
-	if(!_dogfights.empty())
+	if (!_dogfights.empty())
 	{
-		for(std::vector<DogfightState*>::iterator it = _dogfights.begin(); it != _dogfights.end(); ++it)
+		for(std::list<DogfightState*>::iterator it = _dogfights.begin(); it != _dogfights.end(); ++it)
 		{
 			(*it)->handle(action);
 		}
@@ -466,29 +478,32 @@ void GeoscapeState::handle(Action *action)
  */
 void GeoscapeState::init()
 {
-	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
-
+	State::init();
 	timeDisplay();
 
 	_globe->onMouseClick((ActionHandler)&GeoscapeState::globeClick);
 	_globe->onMouseOver(0);
 	_globe->rotateStop();
-	_globe->focus();
+	_globe->setFocus(true);
 	_globe->draw();
 
+	// Pop up save screen if it's a new ironman game
+	if (_game->getSavedGame()->isIronman() && _game->getSavedGame()->getName().empty())
+	{
+		popup(new ListSaveState(_game, OPT_GEOSCAPE));
+	}
+
 	// Set music if it's not already playing
-	if (!_music && !_battleMusic)
+	if (_dogfights.empty() && !_dogfightStartTimer->isRunning())
 	{
 		if (_game->getSavedGame()->getMonthsPassed() == -1)
 		{
-			_game->getResourcePack()->getMusic("GMGEO1")->play();
+			_game->getResourcePack()->playMusic("GMGEO1");
 		}
 		else
 		{
-			_game->getResourcePack()->getRandomMusic("GMGEO")->play();
+			_game->getResourcePack()->playMusic("GMGEO", true);
 		}
-		_music = true;
 	}
 	_globe->unsetNewBaseHover();
 }
@@ -508,31 +523,27 @@ void GeoscapeState::think()
 	{
 		_game->getSavedGame()->addMonth();
 		determineAlienMissions(true);
+		setupTerrorMission();
 		_game->getSavedGame()->setFunds(_game->getSavedGame()->getFunds() - (_game->getSavedGame()->getBaseMaintenance() - _game->getSavedGame()->getBases()->front()->getPersonnelMaintenance()));
 	}
-	if(_popups.empty() && _dogfights.empty() && (!_zoomInEffectTimer->isRunning() || _zoomInEffectDone) && (!_zoomOutEffectTimer->isRunning() || _zoomOutEffectDone))
+	if (_popups.empty() && _dogfights.empty() && (!_zoomInEffectTimer->isRunning() || _zoomInEffectDone) && (!_zoomOutEffectTimer->isRunning() || _zoomOutEffectDone))
 	{
 		// Handle timers
 		_timer->think(this, 0);
 	}
 	else
 	{
-		if(!_dogfights.empty() || _minimizedDogfights != 0)
+		if (!_dogfights.empty() || _minimizedDogfights != 0)
 		{
 			handleDogfights();
 		}
-		if(!_popups.empty())
+		if (!_popups.empty())
 		{
 			// Handle popups
 			_globe->rotateStop();
-			_game->pushState(*_popups.begin());
+			_game->pushState(_popups.front());
 			_popups.erase(_popups.begin());
 		}
-	}
-	if (_battleMusic && _dogfights.empty() && !_dogfightStartTimer->isRunning())
-	{
-		_battleMusic = false;
-		musicStop();
 	}
 }
 
@@ -542,24 +553,24 @@ void GeoscapeState::think()
  */
 void GeoscapeState::timeDisplay()
 {
-	if (_showFundsOnGeoscape)
+	if (Options::showFundsOnGeoscape)
 	{
 		_txtFunds->setText(Text::formatFunding(_game->getSavedGame()->getFunds()));
 	}
 
-	std::wstringstream ss;
+	std::wostringstream ss;
 	ss << std::setfill(L'0') << std::setw(2) << _game->getSavedGame()->getTime()->getSecond();
 	_txtSec->setText(ss.str());
 
-	std::wstringstream ss2;
+	std::wostringstream ss2;
 	ss2 << std::setfill(L'0') << std::setw(2) << _game->getSavedGame()->getTime()->getMinute();
 	_txtMin->setText(ss2.str());
 
-	std::wstringstream ss3;
+	std::wostringstream ss3;
 	ss3 << _game->getSavedGame()->getTime()->getHour();
 	_txtHour->setText(ss3.str());
 
-	std::wstringstream ss4;
+	std::wostringstream ss4;
 	ss4 << _game->getSavedGame()->getTime()->getDayString(_game->getLanguage());
 	_txtDay->setText(ss4.str());
 
@@ -567,7 +578,7 @@ void GeoscapeState::timeDisplay()
 
 	_txtMonth->setText(tr(_game->getSavedGame()->getTime()->getMonthString()));
 
-	std::wstringstream ss5;
+	std::wostringstream ss5;
 	ss5 << _game->getSavedGame()->getTime()->getYear();
 	_txtYear->setText(ss5.str());
 }
@@ -661,7 +672,7 @@ void GeoscapeState::time5Seconds()
 				(*i)->think();
 				if ((*i)->reachedDestination())
 				{
-					unsigned terrorSiteCount = _game->getSavedGame()->getTerrorSites()->size();
+					size_t terrorSiteCount = _game->getSavedGame()->getTerrorSites()->size();
 					AlienMission *mission = (*i)->getMission();
 					bool detected = (*i)->getDetected();
 					mission->ufoReachedWaypoint(**i, *_game, *_globe);
@@ -749,7 +760,25 @@ void GeoscapeState::time5Seconds()
 						break;
 					}
 				}
-
+				// if a transport craft has been shot down, kill all the soldiers on board.
+				if ((*j)->getRules()->getSoldiers() > 0)
+				{
+					for (std::vector<Soldier*>::iterator k = (*i)->getSoldiers()->begin(); k != (*i)->getSoldiers()->end();)
+					{
+						if ((*k)->getCraft() == (*j))
+						{
+							SoldierDeath *death = new SoldierDeath();
+							death->setTime(*_game->getSavedGame()->getTime());
+							(*k)->die(death);
+							_game->getSavedGame()->getDeadSoldiers()->push_back((*k));
+							k = (*i)->getSoldiers()->erase(k);
+						}
+						else
+						{
+							++k;
+						}
+					}
+				}
 				delete *j;
 				j = (*i)->getCrafts()->erase(j);
 				continue;
@@ -811,12 +840,7 @@ void GeoscapeState::time5Seconds()
 								startDogfight();
 								_dogfightStartTimer->start();
 							}
-							if(!_battleMusic)
-							{
-								// Set music
-								_game->getResourcePack()->getMusic("GMINTER")->play();
-								_battleMusic = true;
-							}
+							_game->getResourcePack()->playMusic("GMINTER");
 						}
 						break;
 					case Ufo::LANDED:
@@ -830,7 +854,7 @@ void GeoscapeState::time5Seconds()
 								int texture, shade;
 								_globe->getPolygonTextureAndShade(u->getLongitude(), u->getLatitude(), &texture, &shade);
 								timerReset();
-								popup(new ConfirmLandingState(_game, *j, texture, shade, this));
+								popup(new ConfirmLandingState(_game, *j, texture, shade));
 							}
 						}
 						else if (u->getStatus() != Ufo::LANDED)
@@ -853,7 +877,7 @@ void GeoscapeState::time5Seconds()
 						int texture, shade;
 						_globe->getPolygonTextureAndShade(t->getLongitude(), t->getLatitude(), &texture, &shade);
 						timerReset();
-						popup(new ConfirmLandingState(_game, *j, texture, shade, this));
+						popup(new ConfirmLandingState(_game, *j, texture, shade));
 					}
 					else
 					{
@@ -869,7 +893,7 @@ void GeoscapeState::time5Seconds()
 							int texture, shade;
 							_globe->getPolygonTextureAndShade(b->getLongitude(), b->getLatitude(), &texture, &shade);
 							timerReset();
-							popup(new ConfirmLandingState(_game, *j, texture, shade, this));
+							popup(new ConfirmLandingState(_game, *j, texture, shade));
 						}
 						else
 						{
@@ -890,7 +914,7 @@ void GeoscapeState::time5Seconds()
 			if(!(*i)->getFollowers()->empty())
 			{
 				// Remove all dogfights with this UFO.
-				for(std::vector<DogfightState*>::iterator d = _dogfights.begin(); d != _dogfights.end();)
+				for(std::list<DogfightState*>::iterator d = _dogfights.begin(); d != _dogfights.end();)
 				{
 					if((*d)->getUfo() == (*i))
 					{
@@ -949,7 +973,7 @@ private:
  */
 bool DetectXCOMBase::operator()(const Ufo *ufo) const
 {
-	if ((ufo->getMissionType() != "STR_ALIEN_RETALIATION" && !Options::getBool("aggressiveRetaliation")) || // only UFOs on retaliation missions actively scan for bases
+	if ((ufo->getMissionType() != "STR_ALIEN_RETALIATION" && !Options::aggressiveRetaliation) || // only UFOs on retaliation missions actively scan for bases
 		ufo->getTrajectory().getID() == "__RETALIATION_ASSAULT_RUN" || 	                                    // UFOs attacking a base don't detect!
 		ufo->isCrashed() ||                                                                                 // Crashed UFOs don't detect!
 		_base.getDistance(ufo) >= 80 * (1 / 60.0) * (M_PI / 180.0))                                         // UFOs have a detection range of 80 XCOM units.
@@ -1009,7 +1033,7 @@ void GeoscapeState::time10Minutes()
 		}
 	}
 	int diff = (int)(_game->getSavedGame()->getDifficulty());
-	if (Options::getBool("aggressiveRetaliation"))
+	if (Options::aggressiveRetaliation)
 	{
 		// Detect as many bases as possible.
 		for (std::vector<Base*>::iterator iBase = _game->getSavedGame()->getBases()->begin(); iBase != _game->getSavedGame()->getBases()->end(); ++iBase)
@@ -1078,15 +1102,14 @@ bool GeoscapeState::processTerrorSite(TerrorSite *ts) const
 	Region *region = _game->getSavedGame()->locateRegion(*ts);
 	if (region)
 	{
-		//TODO: This should come from mission rules!
-		region->addActivityAlien(1000);
+		region->addActivityAlien(_game->getRuleset()->getAlienMission("STR_ALIEN_TERROR")->getPoints() * 100);
 		//kids, tell your folks... don't ignore terror sites.
 	}
 	for (std::vector<Country*>::iterator k = _game->getSavedGame()->getCountries()->begin(); k != _game->getSavedGame()->getCountries()->end(); ++k)
 	{
 		if ((*k)->getRules()->insideCountry(ts->getLongitude(), ts->getLatitude()))
 		{
-			(*k)->addActivityAlien(1000);
+			(*k)->addActivityAlien(_game->getRuleset()->getAlienMission("STR_ALIEN_TERROR")->getPoints() * 100);
 			break;
 		}
 	}
@@ -1362,6 +1385,13 @@ void GeoscapeState::time1Hour()
 				popup(new ProductionCompleteState(_game, (*i),  tr(j->first->getRules()->getName()), this, j->second));
 			}
 		}
+
+		if (Options::storageLimitsEnforced && (*i)->storesOverfull())
+		{
+			_game->pushState(new SellState(_game, (*i)));
+			setPalette("PAL_BASESCAPE", 1);
+			_game->pushState(new ErrorMessageState(_game, tr("STR_STORAGE_EXCEEDED").arg((*i)->getName()).c_str(), _palette, Palette::blockOffset(15)+1, "BACK13.SCR", 6));
+		}
 	}
 }
 
@@ -1437,7 +1467,7 @@ void GeoscapeState::time1Day()
 			RuleResearch * bonus = 0;
 			const RuleResearch * research = (*iter)->getRules ();
 			// If "researched" the live alien, his body sent to the stores.
-			if (Options::getBool("researchedItemsWillSpent") && research->needItem() && _game->getRuleset()->getUnit(research->getName()))
+			if (Options::spendResearchedItems && research->needItem() && _game->getRuleset()->getUnit(research->getName()))
 			{
 				(*i)->getItems()->addItem(
 					_game->getRuleset()->getArmor(
@@ -1542,7 +1572,7 @@ void GeoscapeState::time1Day()
 			}
 		}
 		// Handle psionic training
-		if ((*i)->getAvailablePsiLabs() > 0 && Options::getBool("anytimePsiTraining"))
+		if ((*i)->getAvailablePsiLabs() > 0 && Options::anytimePsiTraining)
 		{
 			for(std::vector<Soldier*>::const_iterator s = (*i)->getSoldiers()->begin(); s != (*i)->getSoldiers()->end(); ++s)
 				(*s)->trainPsi1Day();
@@ -1573,9 +1603,19 @@ void GeoscapeState::time1Day()
 	std::for_each(_game->getSavedGame()->getAlienBases()->begin(), _game->getSavedGame()->getAlienBases()->end(),
 		      GenerateSupplyMission(*_game->getRuleset(), *_game->getSavedGame()));
 
-	// Autosave
-	if (Options::getInt("autosave") >= 2)
-		_game->pushState(new SaveState(_game, OPT_GEOSCAPE, false));
+	// Autosave every 10 days
+	int day = _game->getSavedGame()->getTime()->getDay();
+	if (day == 1 || day % 10 == 0)
+	{
+		if (_game->getSavedGame()->isIronman())
+		{
+			_game->pushState(new SaveGameState(_game, OPT_GEOSCAPE, SAVE_IRONMAN));
+		}
+		else if (Options::autosave)
+		{
+			_game->pushState(new SaveGameState(_game, OPT_GEOSCAPE, SAVE_AUTO_GEOSCAPE));
+		}
+	}
 }
 
 /**
@@ -1593,6 +1633,9 @@ void GeoscapeState::time1Month()
 	determineAlienMissions();
 	if (monthsPassed > 5)
 		determineAlienMissions();
+
+	setupTerrorMission();
+
 	if (monthsPassed >= 14 - (int)(_game->getSavedGame()->getDifficulty())
 		|| _game->getSavedGame()->isResearched("STR_THE_MARTIAN_SOLUTION"))
 	{
@@ -1617,7 +1660,7 @@ void GeoscapeState::time1Month()
 						mission->setRegion((*i)->getRules()->getType(), *_game->getRuleset());
 						int race = RNG::generate(0, _game->getRuleset()->getAlienRacesList().size()-2); // -2 to avoid "MIXED" race
 						mission->setRace(_game->getRuleset()->getAlienRacesList().at(race));
-						mission->start();
+						mission->start(150);
 						_game->getSavedGame()->getAlienMissions().push_back(mission);
 						newRetaliation = false;
 					}
@@ -1625,7 +1668,7 @@ void GeoscapeState::time1Month()
 				}
 			}
 		}
-		if ((*b)->getAvailablePsiLabs() > 0 && !Options::getBool("anytimePsiTraining"))
+		if ((*b)->getAvailablePsiLabs() > 0 && !Options::anytimePsiTraining)
 		{
 			psi = true;
 			for(std::vector<Soldier*>::const_iterator s = (*b)->getSoldiers()->begin(); s != (*b)->getSoldiers()->end(); ++s)
@@ -1668,18 +1711,6 @@ void GeoscapeState::timerReset()
 	ev.button.button = SDL_BUTTON_LEFT;
 	Action act(&ev, _game->getScreen()->getXScale(), _game->getScreen()->getYScale(), _game->getScreen()->getCursorTopBlackBand(), _game->getScreen()->getCursorLeftBlackBand());
 	_btn5Secs->mousePress(&act, this);
-}
-
-/**
- * Stops the Geoscape music for when another
- * music is gonna take place, so it resumes
- * when we go back to the Geoscape.
- * @param pause True if we want to resume
- * from the same spot we left off.
- */
-void GeoscapeState::musicStop(bool)
-{
-	_music = false;
 }
 
 /**
@@ -1729,7 +1760,7 @@ void GeoscapeState::globeClick(Action *action)
 		double lon, lat;
 		_globe->cartToPolar(mouseX, mouseY, &lon, &lat);
 		double lonDeg = lon / M_PI * 180, latDeg = lat / M_PI * 180;
-		std::wstringstream ss;
+		std::wostringstream ss;
 		ss << "rad: " << lon << " , " << lat << std::endl;
 		ss << "deg: " << lonDeg << " , " << latDeg << std::endl;
 		_txtDebug->setText(ss.str());
@@ -1754,7 +1785,7 @@ void GeoscapeState::btnBasesClick(Action *)
 	timerReset();
 	if (!_game->getSavedGame()->getBases()->empty())
 	{
-		_game->pushState(new BasescapeState(_game, _game->getSavedGame()->getBases()->front(), _globe));
+		_game->pushState(new BasescapeState(_game, _game->getSavedGame()->getSelectedBase(), _globe));
 	}
 	else
 	{
@@ -1946,7 +1977,7 @@ void GeoscapeState::handleDogfights()
 	}
 	// Handle dogfights logic.
 	_minimizedDogfights = 0;
-	std::vector<DogfightState*>::iterator d = _dogfights.begin();
+	std::list<DogfightState*>::iterator d = _dogfights.begin();
 	while(d != _dogfights.end())
 	{
 		if((*d)->isMinimized())
@@ -1981,7 +2012,7 @@ void GeoscapeState::handleDogfights()
 int GeoscapeState::minimizedDogfightsCount()
 {
 	int minimizedDogfights = 0;
-	for(std::vector<DogfightState*>::iterator d = _dogfights.begin(); d != _dogfights.end(); ++d)
+	for(std::list<DogfightState*>::iterator d = _dogfights.begin(); d != _dogfights.end(); ++d)
 	{
 		if((*d)->isMinimized())
 		{
@@ -2008,7 +2039,6 @@ void GeoscapeState::startDogfight()
 		_dogfightStartTimer->stop();
 		_zoomInEffectTimer->stop();
 		timerReset();
-		musicStop();
 		while(!_dogfightsToBeStarted.empty())
 		{
 			_dogfights.push_back(_dogfightsToBeStarted.back());
@@ -2017,7 +2047,7 @@ void GeoscapeState::startDogfight()
 			_dogfights.back()->setInterceptionsCount(_dogfights.size() + _dogfightsToBeStarted.size());
 		}
 		// Set correct number of interceptions for every dogfight.
-		for(std::vector<DogfightState*>::iterator d = _dogfights.begin(); d != _dogfights.end(); ++d)
+		for(std::list<DogfightState*>::iterator d = _dogfights.begin(); d != _dogfights.end(); ++d)
 		{
 			(*d)->setInterceptionsCount(_dogfights.size());
 		}
@@ -2030,7 +2060,7 @@ void GeoscapeState::startDogfight()
 int GeoscapeState::getFirstFreeDogfightSlot()
 {
 	int slotNo = 1;
-	for(std::vector<DogfightState*>::iterator d = _dogfights.begin(); d != _dogfights.end(); ++d)
+	for(std::list<DogfightState*>::iterator d = _dogfights.begin(); d != _dogfights.end(); ++d)
 	{
 		if((*d)->getInterceptionNumber() == slotNo)
 		{
@@ -2059,8 +2089,8 @@ void GeoscapeState::handleBaseDefense(Base *base, Ufo *ufo)
 		bgen.setBase(base);
 		bgen.setAlienRace(ufo->getAlienRace());
 		bgen.run();
-		musicStop();
-		popup(new BriefingState(_game, 0, base));
+		_pause = true;
+		_game->pushState(new BriefingState(_game, 0, base));
 	}
 	else
 	{
@@ -2076,28 +2106,6 @@ void GeoscapeState::handleBaseDefense(Base *base, Ufo *ufo)
  */
 void GeoscapeState::determineAlienMissions(bool atGameStart)
 {
-	//
-	// One terror mission per month
-	//
-
-	//Determine a random region with at least one city.
-	RuleRegion* region = 0;
-	std::vector<std::string> regions = _game->getRuleset()->getRegionsList();
-	do
-	{
-		region = _game->getRuleset()->getRegion(regions[RNG::generate(0, regions.size()-1)]);
-	}
-	while (region->getCities()->empty());
-	// Choose race for terror mission.
-	const RuleAlienMission &terrorRules = *_game->getRuleset()->getAlienMission("STR_ALIEN_TERROR");
-	const std::string &terrorRace = terrorRules.generateRace(_game->getSavedGame()->getMonthsPassed());
-	AlienMission *terrorMission = new AlienMission(terrorRules);
-	terrorMission->setId(_game->getSavedGame()->getId("ALIEN_MISSIONS"));
-	terrorMission->setRegion(region->getType(), *_game->getRuleset());
-	terrorMission->setRace(terrorRace);
-	terrorMission->start();
-	_game->getSavedGame()->getAlienMissions().push_back(terrorMission);
-
 	if (!atGameStart)
 	{
 		//
@@ -2127,18 +2135,48 @@ void GeoscapeState::determineAlienMissions(bool atGameStart)
 		std::string targetRegion =
 		_game->getSavedGame()->locateRegion(*_game->getSavedGame()->getBases()->front())->getRules()->getType();
 		// Choose race for this mission.
-		const RuleAlienMission &missionRules = *_game->getRuleset()->getAlienMission("STR_ALIEN_RESEARCH");
+		std::string research = _game->getRuleset()->getAlienMissionList().front();
+		const RuleAlienMission &missionRules = *_game->getRuleset()->getAlienMission(research);
 		AlienMission *otherMission = new AlienMission(missionRules);
 		otherMission->setId(_game->getSavedGame()->getId("ALIEN_MISSIONS"));
 		otherMission->setRegion(targetRegion, *_game->getRuleset());
-		otherMission->setRace("STR_SECTOID");
+		std::string sectoid = missionRules.getTopRace(_game->getSavedGame()->getMonthsPassed());
+		otherMission->setRace(sectoid);
 		otherMission->start(150);
 		_game->getSavedGame()->getAlienMissions().push_back(otherMission);
 		// Make sure this combination never comes up again.
-		strategy.removeMission(targetRegion, "STR_ALIEN_RESEARCH");
+		strategy.removeMission(targetRegion, research);
 	}
 }
 
+void GeoscapeState::setupTerrorMission()
+{
+	//Determine a random region with at least one city and no currently running terror mission.
+	RuleRegion* region = 0;
+	int counter = 0;
+	std::vector<std::string> regions = _game->getRuleset()->getRegionsList();
+	do
+	{
+		// we try 40 times to pick a valid zone for a terror mission
+		if (counter == 40) return;
+		region = _game->getRuleset()->getRegion(regions[RNG::generate(0, regions.size()-1)]);
+		counter++;
+	}
+	while (region->getCities()->empty() && !_game->getSavedGame()->getAlienMission(region->getType(), "STR_ALIEN_TERROR"));
+	// Choose race for terror mission.
+	const RuleAlienMission &terrorRules = *_game->getRuleset()->getAlienMission("STR_ALIEN_TERROR");
+	const std::string &terrorRace = terrorRules.generateRace(_game->getSavedGame()->getMonthsPassed());
+	AlienMission *terrorMission = new AlienMission(terrorRules);
+	terrorMission->setId(_game->getSavedGame()->getId("ALIEN_MISSIONS"));
+	terrorMission->setRegion(region->getType(), *_game->getRuleset());
+	terrorMission->setRace(terrorRace);
+	terrorMission->start(150);
+	_game->getSavedGame()->getAlienMissions().push_back(terrorMission);
+}
+/**
+ * Handler for clicking on a timer button.
+ * @param action pointer to the mouse action.
+ */
 void GeoscapeState::btnTimerClick(Action *action)
 {
 	SDL_Event ev;
@@ -2146,6 +2184,50 @@ void GeoscapeState::btnTimerClick(Action *action)
 	ev.button.button = SDL_BUTTON_LEFT;
 	Action a = Action(&ev, 0.0, 0.0, 0, 0);
 	action->getSender()->mousePress(&a, this);
+}
+
+/**
+ * Updates the scale.
+ * @param dX delta of X;
+ * @param dY delta of Y;
+ */
+void GeoscapeState::resize(int &dX, int &dY)
+{
+	if (_game->getSavedGame()->getSavedBattle())
+		return;
+	dX = Options::baseXResolution;
+	dY = Options::baseYResolution;
+	int divisor = 1;
+	switch (Options::geoscapeScale)
+	{
+	case SCALE_SCREEN_DIV_3:
+		divisor = 3;
+		break;
+	case SCALE_SCREEN_DIV_2:
+		divisor = 2;
+		break;
+	case SCALE_SCREEN:
+		break;
+	default:
+		return;
+	}
+	
+	Options::baseXResolution = std::max(Screen::ORIGINAL_WIDTH, Options::displayWidth / divisor);
+	Options::baseYResolution = std::max(Screen::ORIGINAL_HEIGHT, Options::displayHeight / divisor);
+
+	dX = Options::baseXResolution - dX;
+	dY = Options::baseYResolution - dY;
+
+	_globe->resize();
+
+	for (std::vector<Surface*>::const_iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
+	{
+		if (*i != _globe)
+		{
+			(*i)->setX((*i)->getX() + dX);
+			(*i)->setY((*i)->getY() + dY/2);
+		}
+	}
 }
 
 }

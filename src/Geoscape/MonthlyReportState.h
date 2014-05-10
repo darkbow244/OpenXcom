@@ -37,7 +37,7 @@ class Globe;
 class MonthlyReportState : public State
 {
 private:
-	TextButton *_btnOk;
+	TextButton *_btnOk, *_btnBigOk;
 	Window *_window;
 	Text *_txtTitle, *_txtMonth, *_txtRating, *_txtChange, *_txtDesc, *_txtFailure;
 	bool _psi, _gameOver;
@@ -51,10 +51,9 @@ public:
 	MonthlyReportState(Game *game, bool psi, Globe *globe);
 	/// Cleans up the Monthly Report state.
 	~MonthlyReportState();
-	/// Updates the palette.
-	void init();
 	/// Handler for clicking the OK button.
 	void btnOkClick(Action *action);
+	/// Calculate monthly scores.
 	void calculateChanges();
 };
 

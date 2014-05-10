@@ -51,15 +51,15 @@ SoldierMemorialState::SoldierMemorialState(Game *game) : State(game)
 	_txtTitle = new Text(310, 17, 5, 8);
 	_txtName = new Text(114, 9, 16, 36);
 	_txtRank = new Text(102, 9, 130, 36);
-	_txtDate = new Text(90, 9, 214, 36);
+	_txtDate = new Text(90, 9, 218, 36);
 	_txtRecruited = new Text(150, 9, 16, 24);
 	_txtLost = new Text(150, 9, 160, 24);
 	_lstSoldiers = new TextList(288, 120, 8, 44);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(7)), Palette::backPos, 16);
+	setPalette("PAL_BASESCAPE", 7);
 
-	_game->getResourcePack()->getMusic("GMLOSE")->play();
+	_game->getResourcePack()->playMusic("GMLOSE");
 
 	add(_window);
 	add(_btnOk);
@@ -80,7 +80,7 @@ SoldierMemorialState::SoldierMemorialState(Game *game) : State(game)
 	_btnOk->setColor(Palette::blockOffset(13)+10);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&SoldierMemorialState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&SoldierMemorialState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&SoldierMemorialState::btnOkClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(13)+10);
 	_txtTitle->setBig();
@@ -123,7 +123,7 @@ SoldierMemorialState::SoldierMemorialState(Game *game) : State(game)
 	{
 		SoldierDeath *death = (*i)->getDeath();
 
-		std::wstringstream saveDay, saveMonth, saveYear;
+		std::wostringstream saveDay, saveMonth, saveYear;
 		saveDay << death->getTime()->getDayString(_game->getLanguage());
 		saveMonth << tr(death->getTime()->getMonthString());
 		saveYear << death->getTime()->getYear();
@@ -146,7 +146,7 @@ SoldierMemorialState::~SoldierMemorialState()
 void SoldierMemorialState::btnOkClick(Action *)
 {
 	_game->popState();
-	_game->getResourcePack()->getRandomMusic("GMGEO")->play();
+	_game->getResourcePack()->playMusic("GMGEO", true);
 }
 
 /**
@@ -155,7 +155,7 @@ void SoldierMemorialState::btnOkClick(Action *)
  */
 void SoldierMemorialState::lstSoldiersClick(Action *)
 {
-	//_game->pushState(new SoldierInfoState(_game, _base, _lstSoldiers->getSelectedRow()));
+	_game->pushState(new SoldierInfoState(_game, 0, _lstSoldiers->getSelectedRow()));
 }
 
 }

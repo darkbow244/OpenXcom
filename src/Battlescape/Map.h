@@ -20,6 +20,8 @@
 #define OPENXCOM_MAP_H
 
 #include "../Engine/InteractiveSurface.h"
+#include "../Engine/Options.h"
+#include "Position.h"
 #include <set>
 #include <vector>
 
@@ -29,7 +31,6 @@ namespace OpenXcom
 class ResourcePack;
 class SavedBattleGame;
 class Surface;
-class Position;
 class BattleUnit;
 class Projectile;
 class Explosion;
@@ -39,14 +40,13 @@ class Timer;
 class Text;
 
 enum CursorType { CT_NONE, CT_NORMAL, CT_AIM, CT_PSI, CT_WAYPOINT, CT_THROW };
-
 /**
  * Interactive map of the battlescape.
  */
 class Map : public InteractiveSurface
 {
 private:
-	static const int SCROLL_INTERVAL = 20;
+	static const int SCROLL_INTERVAL = 15;
 	static const int BULLET_SPRITES = 35;
 	Timer *_scrollMouseTimer, *_scrollKeyTimer;
 	Game *_game;
@@ -62,19 +62,19 @@ private:
 	Projectile *_projectile;
 	bool _projectileInFOV;
 	std::set<Explosion *> _explosions;
-	bool _explosionInFOV;
-	bool _launch;
+	bool _explosionInFOV, _launch;
 	BattlescapeMessage *_message;
 	Camera *_camera;
 	int _visibleMapHeight;
 	std::vector<Position> _waypoints;
-	bool _unitDying;
-	int _previewSetting;
+	bool _unitDying, _smoothCamera, _smoothingEngaged;
+	PathPreview _previewSetting;
 	Text *_txtAccuracy;
 
 	void drawTerrain(Surface *surface);
 	int getTerrainLevel(Position pos, int size);
 public:
+	static const int ICON_HEIGHT = 56;
 	/// Creates a new map at the specified position and size.
 	Map(Game *game, int width, int height, int x, int y, int visibleMapHeight);
 	/// Cleans up the map.
@@ -133,6 +133,10 @@ public:
 	void setUnitDying(bool flag);
 	/// Refreshes the battlescape selector after scrolling.
 	void refreshSelectorPosition();
+	/// Special handling for updating map height.
+	void setHeight(int height);
+	/// Special handling for updating map width.
+	void setWidth(int width);
 };
 
 }

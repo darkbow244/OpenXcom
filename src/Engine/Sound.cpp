@@ -79,9 +79,20 @@ void Sound::load(const void *data, unsigned int size)
  */
 void Sound::play(int channel) const
 {
-	if (!Options::getBool("mute") && _sound != 0 && Mix_PlayChannel(channel, _sound, 0) == -1)
+	if (!Options::mute && _sound != 0 && Mix_PlayChannel(channel, _sound, 0) == -1)
 	{
 		Log(LOG_WARNING) << Mix_GetError();
+	}
+}
+
+/**
+ * Stops all sounds playing.
+ */
+void Sound::stop()
+{
+	if (!Options::mute)
+	{
+		Mix_HaltChannel(-1);
 	}
 }
 

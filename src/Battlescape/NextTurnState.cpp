@@ -28,9 +28,11 @@
 #include "../Interface/Text.h"
 #include "../Engine/Action.h"
 #include "../Savegame/SavedBattleGame.h"
+#include "../Savegame/SavedGame.h"
 #include "DebriefingState.h"
 #include "../Interface/Cursor.h"
 #include "BattlescapeState.h"
+#include "../Menu/SaveGameState.h"
 
 namespace OpenXcom
 {
@@ -49,6 +51,9 @@ NextTurnState::NextTurnState(Game *game, SavedBattleGame *battleGame, Battlescap
 	_txtTurn = new Text(320, 17, 0, 92);
 	_txtSide = new Text(320, 17, 0, 108);
 	_txtMessage = new Text(320, 17, 0, 132);
+
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
 
 	add(_window);
 	add(_txtTitle);
@@ -89,7 +94,7 @@ NextTurnState::NextTurnState(Game *game, SavedBattleGame *battleGame, Battlescap
 
 	_state->clearMouseScrollingState();
 
-	if (Options::getBool("skipNextTurnScreen"))
+	if (Options::skipNextTurnScreen)
 	{
 		_timer = new Timer(NEXT_TURN_DELAY);
 		_timer->onTimer((StateHandler)&NextTurnState::close);
@@ -147,6 +152,18 @@ void NextTurnState::close()
 	else
 	{
 		_state->btnCenterClick(0);
+		// Autosave every 5 turns
+		if (_battleGame->getTurn() % 5 == 0 && _battleGame->getSide() == FACTION_PLAYER)
+		{
+			if (_game->getSavedGame()->isIronman())
+			{
+				_game->pushState(new SaveGameState(_game, OPT_BATTLESCAPE, SAVE_IRONMAN));
+			}
+			else if (Options::autosave)
+			{
+				_game->pushState(new SaveGameState(_game, OPT_BATTLESCAPE, SAVE_AUTO_BATTLESCAPE));
+			}
+		}
 	}
 }
 

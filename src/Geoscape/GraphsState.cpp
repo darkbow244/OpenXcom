@@ -74,7 +74,7 @@ GraphsState::GraphsState(Game *game) : State(game), _butRegionsOffset(0), _butCo
 	_txtYears = new TextList(200, 8, 121, 191);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_2")->getColors());
+	setPalette("PAL_GRAPHS");
 	
 	//add all our elements
 	add(_bg);
@@ -96,7 +96,7 @@ GraphsState::GraphsState(Game *game) : State(game), _butRegionsOffset(0), _butCo
 	}
 
 	//create buttons (sooooo many buttons)
-	unsigned int offset = 0;
+	size_t offset = 0;
 	for (std::vector<Region *>::iterator iter = _game->getSavedGame()->getRegions()->begin(); iter != _game->getSavedGame()->getRegions()->end(); ++iter)
 	{
 		// always save in toggles all the regions
@@ -127,10 +127,10 @@ GraphsState::GraphsState(Game *game) : State(game), _butRegionsOffset(0), _butCo
 		_btnRegionTotal = new ToggleTextButton(80, 11, 0, _regionToggles.size()*11);
 	else
 		_btnRegionTotal = new ToggleTextButton(80, 11, 0, GRAPH_MAX_BUTTONS*11);
-	_regionToggles.push_back(new GraphButInfo(tr("STR_TOTAL_UC"), 22));
+	_regionToggles.push_back(new GraphButInfo(tr("STR_TOTAL_UC"), 18));
 	_btnRegionTotal->onMousePress((ActionHandler)&GraphsState::btnRegionListClick);
 	_btnRegionTotal->setColor(Palette::blockOffset(9)+7);
-	_btnRegionTotal->setInvertColor(22);
+	_btnRegionTotal->setInvertColor(18);
 	_btnRegionTotal->setText(tr("STR_TOTAL_UC"));
 	_alienRegionLines.push_back(new Surface(320,200,0,0));
 	add(_alienRegionLines.at(offset));
@@ -278,12 +278,12 @@ GraphsState::GraphsState(Game *game) : State(game), _butRegionsOffset(0), _butCo
 		if (month > 11)
 		{
 			month = 0;
-			std::wstringstream ss;
+			std::wostringstream ss;
 			ss << _game->getSavedGame()->getTime()->getYear();
 			_txtYears->setCellText(0, iter/2, ss.str());
 			if (iter > 2)
 			{
-				std::wstringstream ss2;
+				std::wostringstream ss2;
 				ss2 << (_game->getSavedGame()->getTime()->getYear()-1);
 				_txtYears->setCellText(0, 0, ss2.str());
 			}
@@ -316,8 +316,8 @@ GraphsState::GraphsState(Game *game) : State(game), _butRegionsOffset(0), _butCo
 	_btnIncome->onMousePress((ActionHandler)&GraphsState::btnIncomeClick);
 	_btnFinance->onMousePress((ActionHandler)&GraphsState::btnFinanceClick);
 	_btnGeoscape->onMousePress((ActionHandler)&GraphsState::btnGeoscapeClick);
-	_btnGeoscape->onKeyboardPress((ActionHandler)&GraphsState::btnGeoscapeClick, (SDL_Keycode)Options::getInt("keyCancel"));
-	_btnGeoscape->onKeyboardPress((ActionHandler)&GraphsState::btnGeoscapeClick, (SDL_Keycode)Options::getInt("keyGeoGraphs"));
+	_btnGeoscape->onKeyboardPress((ActionHandler)&GraphsState::btnGeoscapeClick, Options::keyCancel);
+	_btnGeoscape->onKeyboardPress((ActionHandler)&GraphsState::btnGeoscapeClick, Options::keyGeoGraphs);
 
 	centerAllSurfaces();
 }
@@ -664,7 +664,7 @@ void GraphsState::drawCountryLines()
 
 			}
 		}
-		if (_countryToggles.back() && total > upperLimit)
+		if (_countryToggles.back()->_pushed && total > upperLimit)
 			upperLimit = total;
 	}
 
@@ -835,7 +835,7 @@ void GraphsState::drawRegionLines()
 				}
 			}
 		}
-		if (_regionToggles.back() && total > upperLimit)
+		if (_regionToggles.back()->_pushed && total > upperLimit)
 				upperLimit = total;
 	}
 
@@ -929,9 +929,9 @@ void GraphsState::drawRegionLines()
 		if (newLineVector.size() > 1)
 		{
 			if (_alien)
-				_alienRegionLines.back()->drawLine(x, y, x+17, newLineVector.at(newLineVector.size()-2), Palette::blockOffset(9));
+				_alienRegionLines.back()->drawLine(x, y, x+17, newLineVector.at(newLineVector.size()-2), Palette::blockOffset(9)-8);
 			else
-				_xcomRegionLines.back()->drawLine(x, y, x+17, newLineVector.at(newLineVector.size()-2), Palette::blockOffset(9));
+				_xcomRegionLines.back()->drawLine(x, y, x+17, newLineVector.at(newLineVector.size()-2), Palette::blockOffset(9)-8);
 		}
 	}
 	if (_alien)
@@ -1120,14 +1120,14 @@ void GraphsState::shiftButtons(Action *action)
 		}
 	}
 }
-void GraphsState::scrollButtons(std::vector<GraphButInfo *> &toggles, std::vector<ToggleTextButton *> &buttons, unsigned int &offset, int step)
+void GraphsState::scrollButtons(std::vector<GraphButInfo *> &toggles, std::vector<ToggleTextButton *> &buttons, size_t &offset, int step)
 {
 	// minus one, 'cause we'll already added the TOTAL button to toggles
 	if( int(step + (int)offset) < 0 || offset + step + GRAPH_MAX_BUTTONS >= toggles.size()-1)
 		return;
 	// set the next offset - cheaper to do it from starters
 	offset+=step;
-	unsigned int i=0;
+	size_t i=0;
 	std::vector<ToggleTextButton *>::iterator iterb=buttons.begin();
 	for(std::vector<GraphButInfo *>::iterator itert=toggles.begin(); itert != toggles.end();++itert,++i)
 		if(i < offset)

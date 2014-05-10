@@ -23,6 +23,8 @@
 namespace OpenXcom
 {
 
+const SDLKey InteractiveSurface::SDLK_ANY = (SDLKey)-1; // using an unused keycode to represent an "any key"
+
 /**
  * Sets up a blank interactive surface with the specified size and position.
  * @param width Width in pixels.
@@ -212,20 +214,23 @@ void InteractiveSurface::handle(Action *action, State *state)
 }
 
 /**
- * Marks ths surface as focused. Surfaces will only receive
+ * Changes the surface's focus. Surfaces will only receive
  * keyboard events if focused.
+ * @param focus Is it focused?
  */
-void InteractiveSurface::focus()
+void InteractiveSurface::setFocus(bool focus)
 {
-	_isFocused = true;
+	_isFocused = focus;
 }
 
 /**
- * Marks ths surface as unfocused.
+ * Returns the surface's focus. Surfaces will only receive
+ * keyboard events if focused.
+ * @return Is it focused?
  */
-void InteractiveSurface::deFocus()
+bool InteractiveSurface::isFocused() const
 {
-	_isFocused = false;
+	return _isFocused;
 }
 
 /**
@@ -369,7 +374,7 @@ void InteractiveSurface::mouseOut(Action *action, State *state)
  */
 void InteractiveSurface::keyboardPress(Action *action, State *state)
 {
-	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyPress.find((SDL_Keycode)SDLK_UNKNOWN);
+	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyPress.find((SDL_Keycode)SDLK_ANY);
 	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyPress.find(action->getDetails()->key.keysym.sym);
 	if (allHandler != _keyPress.end())
 	{
@@ -394,7 +399,7 @@ void InteractiveSurface::keyboardPress(Action *action, State *state)
  */
 void InteractiveSurface::keyboardRelease(Action *action, State *state)
 {
-	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyRelease.find((SDL_Keycode)SDLK_UNKNOWN);
+	std::map<SDL_Keycode, ActionHandler>::iterator allHandler = _keyRelease.find((SDL_Keycode)SDLK_ANY);
 	std::map<SDL_Keycode, ActionHandler>::iterator oneHandler = _keyRelease.find(action->getDetails()->key.keysym.sym);
 	if (allHandler != _keyRelease.end())
 	{

@@ -51,9 +51,8 @@ namespace OpenXcom
  * @param craft Pointer to the craft to confirm.
  * @param texture Texture of the landing site.
  * @param shade Shade of the landing site.
- * @param state Pointer to Geoscape.
  */
-ConfirmLandingState::ConfirmLandingState(Game *game, Craft *craft, int texture, int shade, GeoscapeState *state) : State(game), _craft(craft), _texture(texture), _shade(shade), _state(state)
+ConfirmLandingState::ConfirmLandingState(Game *game, Craft *craft, int texture, int shade) : State(game), _craft(craft), _texture(texture), _shade(shade)
 {
 	_screen = false;
 
@@ -61,11 +60,11 @@ ConfirmLandingState::ConfirmLandingState(Game *game, Craft *craft, int texture, 
 	_window = new Window(this, 216, 160, 20, 20, POPUP_BOTH);
 	_btnYes = new TextButton(80, 20, 40, 150);
 	_btnNo = new TextButton(80, 20, 136, 150);
-	_txtMessage = new Text(206, 64, 25, 40);
+	_txtMessage = new Text(206, 80, 25, 40);
 	_txtBegin = new Text(206, 17, 25, 130);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(3)), Palette::backPos, 16);
+	setPalette("PAL_GEOSCAPE", 3);
 
 	add(_window);
 	add(_btnYes);
@@ -82,12 +81,12 @@ ConfirmLandingState::ConfirmLandingState(Game *game, Craft *craft, int texture, 
 	_btnYes->setColor(Palette::blockOffset(8)+5);
 	_btnYes->setText(tr("STR_YES"));
 	_btnYes->onMouseClick((ActionHandler)&ConfirmLandingState::btnYesClick);
-	_btnYes->onKeyboardPress((ActionHandler)&ConfirmLandingState::btnYesClick, (SDL_Keycode)Options::getInt("keyOk"));
+	_btnYes->onKeyboardPress((ActionHandler)&ConfirmLandingState::btnYesClick, Options::keyOk);
 
 	_btnNo->setColor(Palette::blockOffset(8)+5);
 	_btnNo->setText(tr("STR_NO"));
 	_btnNo->onMouseClick((ActionHandler)&ConfirmLandingState::btnNoClick);
-	_btnNo->onKeyboardPress((ActionHandler)&ConfirmLandingState::btnNoClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnNo->onKeyboardPress((ActionHandler)&ConfirmLandingState::btnNoClick, Options::keyCancel);
 
 	_txtMessage->setColor(Palette::blockOffset(8)+10);
 	_txtMessage->setSecondaryColor(Palette::blockOffset(8)+5);
@@ -117,6 +116,7 @@ ConfirmLandingState::~ConfirmLandingState()
  */
 void ConfirmLandingState::init()
 {
+	State::init();
 	Base* b = dynamic_cast<Base*>(_craft->getDestination());
 	if (b == _craft->getBase())
 		_game->popState();
@@ -129,7 +129,6 @@ void ConfirmLandingState::init()
 void ConfirmLandingState::btnYesClick(Action *)
 {
 	_game->popState();
-	_state->musicStop();
 	Ufo* u = dynamic_cast<Ufo*>(_craft->getDestination());
 	TerrorSite* t = dynamic_cast<TerrorSite*>(_craft->getDestination());
 	AlienBase* b = dynamic_cast<AlienBase*>(_craft->getDestination());

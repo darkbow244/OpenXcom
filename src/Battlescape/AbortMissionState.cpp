@@ -53,6 +53,9 @@ AbortMissionState::AbortMissionState(Game *game, SavedBattleGame *battleGame, Ba
 	_btnOk = new TextButton(120, 16, 16, 110);
 	_btnCancel = new TextButton(120, 16, 184, 110);
 
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
+
 	add(_window);
 	add(_txtInExit);
 	add(_txtOutsideExit);
@@ -113,14 +116,14 @@ AbortMissionState::AbortMissionState(Game *game, SavedBattleGame *battleGame, Ba
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->setHighContrast(true);
 	_btnOk->onMouseClick((ActionHandler)&AbortMissionState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&AbortMissionState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
+	_btnOk->onKeyboardPress((ActionHandler)&AbortMissionState::btnOkClick, Options::keyOk);
 
 	_btnCancel->setColor(Palette::blockOffset(0)-1);
 	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->setHighContrast(true);
 	_btnCancel->onMouseClick((ActionHandler)&AbortMissionState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&AbortMissionState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
-	_btnCancel->onKeyboardPress((ActionHandler)&AbortMissionState::btnCancelClick, (SDL_Keycode)Options::getInt("keyBattleAbort"));
+	_btnCancel->onKeyboardPress((ActionHandler)&AbortMissionState::btnCancelClick, Options::keyCancel);
+	_btnCancel->onKeyboardPress((ActionHandler)&AbortMissionState::btnCancelClick, Options::keyBattleAbort);
 }
 
 /**
