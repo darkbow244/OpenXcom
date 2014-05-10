@@ -275,8 +275,9 @@ SDL_Color *Screen::getPalette() const
  */
 int Screen::getWidth() const
 {
-	//return _screen->w;
-	return ORIGINAL_WIDTH;
+	int w, h;
+	SDL_GetWindowSize(_window, &w, &h);
+	return w;
 }
 
 /**
@@ -285,8 +286,9 @@ int Screen::getWidth() const
  */
 int Screen::getHeight() const
 {
-	//return _screen->h;
-	return ORIGINAL_HEIGHT;
+	int w, h;
+	SDL_GetWindowSize(_window, &w, &h);
+	return h;
 }
 
 /**
@@ -324,7 +326,7 @@ void Screen::resetDisplay(bool resetVideo)
 		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
 				SDL_TEXTUREACCESS_STREAMING, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-		SDL_RenderSetLogicalSize(_renderer, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
+		SDL_RenderSetLogicalSize(_renderer, width, height);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
 	}
 	else
