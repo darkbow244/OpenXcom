@@ -96,7 +96,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 	}
 
 	// trap the mouse inside the window
-	SDL_WM_GrabInput(Options::captureMouse);
+	//SDL_WM_GrabInput(Options::captureMouse);
 	
 	// Set the window icon
 #ifdef _WIN32

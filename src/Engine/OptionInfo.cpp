@@ -51,20 +51,6 @@ OptionInfo::OptionInfo(const std::string &id, int *option, int def, const std::s
 }
 
 /**
- * Creates info for a keyboard shortcut option.
- * @param id String ID used in serializing.
- * @param option Pointer to the option.
- * @param def Default option value.
- * @param desc Language ID for the option description (if any).
- * @param cat Language ID for the option category (if any).
- */
-OptionInfo::OptionInfo(const std::string &id, SDL_Keycode *option, SDL_Keycode def, const std::string &desc, const std::string &cat) : _id(id), _desc(desc), _cat(cat), _type(OPTION_KEY)
-{
-	_ref.k = option;
-	_def.k = def;
-}
-
-/**
  * Creates info for a string option.
  * @param id String ID used in serializing.
  * @param option Pointer to the option.
@@ -269,6 +255,24 @@ std::string *OptionInfo::asString() const
 		throw Exception(_id + " is not a string!");
 	}
 	return _ref.s;
+}
+
+/**
+ * Creates info for a keyboard shortcut option.
+ * @param id String ID used in serializing.
+ * @param option Pointer to the option.
+ * @param def Default option value.
+ * @param desc Language ID for the option description (if any).
+ * @param cat Language ID for the option category (if any).
+ */
+KeyOptionInfo::KeyOptionInfo(const std::string &id, SDL_Keycode *option, SDL_Keycode def, const std::string &desc, const std::string &cat)
+{
+	_id(id);
+	_desc(desc);
+	_cat(cat);
+	_type(OPTION_KEY);
+	_ref.k = option;
+	_def.k = def;
 }
 
 }

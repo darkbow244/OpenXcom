@@ -36,7 +36,7 @@ enum OptionType { OPTION_BOOL, OPTION_INT, OPTION_STRING, OPTION_KEY };
  */
 class OptionInfo
 {
-private:
+protected:
 	std::string _id, _desc, _cat;
 	OptionType _type;
 	union { bool *b; int *i; std::string *s; SDL_Keycode *k; } _ref;
@@ -46,8 +46,6 @@ public:
 	OptionInfo(const std::string &id, bool *option, bool def, const std::string &desc = "", const std::string &cat = "");
 	/// Creates a int option.
 	OptionInfo(const std::string &id, int *option, int def, const std::string &desc = "", const std::string &cat = "");
-	/// Creates a key option.
-	OptionInfo(const std::string &id, SDL_Keycode *option, SDL_Keycode def, const std::string &desc = "", const std::string &cat = "");
 	/// Creates a string option.
 	OptionInfo(const std::string &id, std::string *option, const char *def, const std::string &desc = "", const std::string &cat = "");
 	/// Gets a bool option pointer.
@@ -72,6 +70,12 @@ public:
 	std::string description() const;
 	/// Gets the option category.
 	std::string category() const;
+};
+
+class KeyOptionInfo : public OptionInfo
+{
+	/// Creates a key option.
+	KeyOptionInfo(const std::string &id, SDL_Keycode *option, SDL_Keycode def, const std::string &desc = "", const std::string &cat = "");
 };
 
 }
