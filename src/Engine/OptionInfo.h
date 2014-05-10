@@ -74,6 +74,7 @@ public:
 
 class KeyOptionInfo : public OptionInfo
 {
+public:
 	/// Creates a key option.
 	KeyOptionInfo(const std::string &id, SDL_Keycode *option, SDL_Keycode def, const std::string &desc = "", const std::string &cat = "");
 };
