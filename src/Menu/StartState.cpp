@@ -72,12 +72,15 @@ StartState::StartState(Game *game) : State(game)
 	bnw[0].r = 0;
 	bnw[0].g = 0;
 	bnw[0].b = 0;
+	bnw[0].a = 255;
 	bnw[1].r = 255;
 	bnw[1].g = 255;
 	bnw[1].b = 255;
+	bnw[1].a = 255;
 	bnw[2].r = 255;
 	bnw[2].g = 255;
 	bnw[2].b = 0;
+	bnw[2].a = 255;
 
 	setPalette(bnw, 0, 3);
 
