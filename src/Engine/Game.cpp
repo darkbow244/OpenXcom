@@ -114,7 +114,8 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 	SDL_Surface *icon = IMG_Load(CrossPlatform::getDataFile("openxcom.png").c_str());
 	if (icon != 0)
 	{
-		SDL_WM_SetIcon(icon, NULL);
+		/* FIXME: replace this */
+		//SDL_WM_SetIcon(icon, NULL);
 		SDL_FreeSurface(icon);
 	}
 #endif
