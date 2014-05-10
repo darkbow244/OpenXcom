@@ -1736,7 +1736,7 @@ void Globe::mouseOver(Action *action, State *state)
 
 			// Set the mouse cursor back
 			SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-			SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
+			//SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 			SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
 			// Check the threshold
