@@ -23,7 +23,7 @@
 namespace OpenXcom
 {
 
-const SDLKey InteractiveSurface::SDLK_ANY = (SDLKey)-1; // using an unused keycode to represent an "any key"
+const SDL_Keycode InteractiveSurface::SDLK_ANY = (SDL_Keycode)-1; // using an unused keycode to represent an "any key"
 
 /**
  * Sets up a blank interactive surface with the specified size and position.

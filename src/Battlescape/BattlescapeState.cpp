@@ -400,7 +400,7 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	_btnStats->onKeyboardPress((ActionHandler)&BattlescapeState::btnReloadClick, Options::keyBattleReload);
 	_btnStats->onKeyboardPress((ActionHandler)&BattlescapeState::btnPersonalLightingClick, Options::keyBattlePersonalLighting);
 
-	SDLKey buttons[] = {Options::keyBattleCenterEnemy1,
+	SDL_Keycode buttons[] = {Options::keyBattleCenterEnemy1,
 						Options::keyBattleCenterEnemy2,
 						Options::keyBattleCenterEnemy3,
 						Options::keyBattleCenterEnemy4,

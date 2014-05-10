@@ -161,7 +161,7 @@ void OptionsControlsState::addControls(const std::vector<OptionInfo> &keys)
 		_lstControls->addRow(2, name.c_str(), key.c_str());
 =======
 		std::wstring name = tr(i->description());
-		SDLKey *key = i->asKey();
+		SDL_Keycode *key = i->asKey();
 		std::wstring keyName = Language::utf8ToWstr(ucWords(SDL_GetKeyName(*key)));
 		if (*key == SDLK_UNKNOWN)
 			keyName = L"";
