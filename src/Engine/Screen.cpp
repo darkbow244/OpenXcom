@@ -299,6 +299,9 @@ void Screen::resetDisplay(bool resetVideo)
 {
 	int width = Options::displayWidth;
 	int height = Options::displayHeight;
+#ifdef __linux__
+	Uint32 oldFlags = _flags;
+#endif
 	makeVideoFlags();
 
 	if (!_surface || (_surface && 
