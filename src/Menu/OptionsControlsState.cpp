@@ -152,21 +152,12 @@ void OptionsControlsState::addControls(const std::vector<OptionInfo> &keys)
 {
 	for (std::vector<OptionInfo>::const_iterator i = keys.begin(); i != keys.end(); ++i)
 	{
-<<<<<<< HEAD
-		keys[i].key = (SDL_Keycode)Options::getInt(keys[i].option);
-		std::wstring name = tr(keys[i].name);
-		std::wstring key = Language::utf8ToWstr(ucWords(SDL_GetKeyName(keys[i].key)));
-		if (keys[i].key == SDLK_UNKNOWN)
-			key = L"";
-		_lstControls->addRow(2, name.c_str(), key.c_str());
-=======
 		std::wstring name = tr(i->description());
 		SDL_Keycode *key = i->asKey();
 		std::wstring keyName = Language::utf8ToWstr(ucWords(SDL_GetKeyName(*key)));
 		if (*key == SDLK_UNKNOWN)
 			keyName = L"";
 		_lstControls->addRow(2, name.c_str(), keyName.c_str());
->>>>>>> master
 	}
 }
 
