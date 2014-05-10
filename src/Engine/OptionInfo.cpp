@@ -22,6 +22,11 @@
 namespace OpenXcom
 {
 
+OptionInfo::OptionInfo()
+{
+	//do nothing
+}
+
 /**
  * Creates info for a boolean option.
  * @param id String ID used in serializing.
@@ -267,10 +272,10 @@ std::string *OptionInfo::asString() const
  */
 KeyOptionInfo::KeyOptionInfo(const std::string &id, SDL_Keycode *option, SDL_Keycode def, const std::string &desc, const std::string &cat)
 {
-	_id(id);
-	_desc(desc);
-	_cat(cat);
-	_type(OPTION_KEY);
+	_id = id;
+	_desc = desc;
+	_cat = cat;
+	_type = OPTION_KEY;
 	_ref.k = option;
 	_def.k = def;
 }

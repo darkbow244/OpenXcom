@@ -37,6 +37,9 @@ enum OptionType { OPTION_BOOL, OPTION_INT, OPTION_STRING, OPTION_KEY };
 class OptionInfo
 {
 protected:
+	/// Default ctor, so we can easily inherit
+	OptionInfo();
+
 	std::string _id, _desc, _cat;
 	OptionType _type;
 	union { bool *b; int *i; std::string *s; SDL_Keycode *k; } _ref;
