@@ -95,7 +95,8 @@ StartState::StartState(Game *game) : State(game)
  */
 StartState::~StartState()
 {
-	SDL_KillThread(_thread);
+	int status;
+	SDL_WaitThread(_thread, &status);
 }
 
 /**
@@ -109,7 +110,7 @@ void StartState::init()
 	Music::stop();
 
 	// Load the game data in a separate thread
-	_thread = SDL_CreateThread(load, (void*)_game);
+	_thread = SDL_CreateThread(load, "load_data", (void*)_game);
 	if (_thread == 0)
 	{
 		// If we can't create the thread, just load it as usual
