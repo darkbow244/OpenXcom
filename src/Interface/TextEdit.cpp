@@ -70,26 +70,7 @@ void TextEdit::handle(Action *action, State *state)
 		(action->getAbsoluteXMouse() < getX() || action->getAbsoluteXMouse() >= getX() + getWidth() ||
 		 action->getAbsoluteYMouse() < getY() || action->getAbsoluteYMouse() >= getY() + getHeight()))
 	{
-<<<<<<< HEAD
-		/* TODO: have a look a this */
-		//SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-		_caretPos = _value.length();
-		_blink = true;
-		_timer->start();
-#ifdef __ANDROID__
-		// Show virtual keyboard
-		SDL_Rect r;
-		r.x = getX();
-		r.y = getY();
-		r.w = getWidth();
-		r.h = getHeight();
-		SDL_SetTextInputRect(&r);
-		SDL_StartTextInput();
-#endif
-		_redraw = true;
-=======
 		setFocus(false);
->>>>>>> master
 	}
 }
 
@@ -101,17 +82,6 @@ void TextEdit::handle(Action *action, State *state)
  */
 void TextEdit::setFocus(bool focus, bool modal)
 {
-<<<<<<< HEAD
-	InteractiveSurface::deFocus();
-	_blink = false;
-	_redraw = true;
-	_timer->stop();
-	/* TODO: have a look a this */
-	//SDL_EnableKeyRepeat(0, SDL_DEFAULT_REPEAT_INTERVAL);
-#ifdef __ANDROID__
-	SDL_StopTextInput();
-#endif
-=======
 	_modal = modal;
 	if (focus != _isFocused)
 	{
@@ -119,23 +89,37 @@ void TextEdit::setFocus(bool focus, bool modal)
 		InteractiveSurface::setFocus(focus);
 		if (_isFocused)
 		{
-			SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+			/* FIXME: have a look a this */
+			//SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 			_caretPos = _value.length();
 			_blink = true;
 			_timer->start();
 			if (_modal)
 				_state->setModal(this);
+#ifdef __ANDROID__
+			// Show virtual keyboard
+			SDL_Rect r;
+			r.x = getX();
+			r.y = getY();
+			r.w = getWidth();
+			r.h = getHeight();
+			SDL_SetTextInputRect(&r);
+			SDL_StartTextInput();
+#endif
 		}
 		else
 		{
 			_blink = false;
 			_timer->stop();
-			SDL_EnableKeyRepeat(0, SDL_DEFAULT_REPEAT_INTERVAL);
+			/* FIXME: have a look a this */
+			//SDL_EnableKeyRepeat(0, SDL_DEFAULT_REPEAT_INTERVAL);
 			if (_modal)
 				_state->setModal(0);
+#ifdef __ANDROID__
+			SDL_StopTextInput();
+#endif
 		}
 	}
->>>>>>> master
 }
 
 /**
@@ -527,14 +511,6 @@ void TextEdit::keyboardPress(Action *action, State *state)
 	InteractiveSurface::keyboardPress(action, state);
 }
 
-<<<<<<< HEAD
-void TextEdit::textInput(Action *action, State *state)
-{
-	std::string text(action->getDetails()->text.text);
-	_value += Language::utf8ToWstr(text);
-	_caretPos = _value.length();
-	_redraw = true;
-=======
 /**
  * Sets a function to be called every time the text changes.
  * @param handler Action handler.
@@ -542,7 +518,14 @@ void TextEdit::textInput(Action *action, State *state)
 void TextEdit::onChange(ActionHandler handler)
 {
 	_change = handler;
->>>>>>> master
+}
+
+void TextEdit::textInput(Action *action, State *state)
+{
+	std::string text(action->getDetails()->text.text);
+	_value += Language::utf8ToWstr(text);
+	_caretPos = _value.length();
+	_redraw = true;
 }
 
 }
