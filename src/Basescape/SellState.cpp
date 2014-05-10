@@ -471,10 +471,6 @@ void SellState::lstItemsMousePress(Action *action)
 		{
 			changeByValue(Options::changeValueByMouseWheel,
 				   	ev.wheel.y < 0 ? 1 : -1);
-			if (ev.wheel.y < 0)
-				increaseByValue(_changeValueByMouseWheel);
-			else
-				decreaseByValue(_changeValueByMouseWheel);
 		}
 	}
 }
