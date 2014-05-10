@@ -19,6 +19,7 @@
 #ifndef OPENXCOM_OPTIONSVIDEOSTATE_H
 #define OPENXCOM_OPTIONSVIDEOSTATE_H
 
+#include <vector>
 #include "../Engine/State.h"
 #include "OptionsBaseState.h"
 #include <SDL.h>
@@ -54,8 +55,8 @@ private:
 	Text *_txtOptions;
 	ToggleTextButton *_btnLetterbox, *_btnLockMouse;
 
-	SDL_Rect** _res;
-	int _resAmount, _resCurrent;
+	std::vector<SDL_DisplayMode> _res;
+	int _resCurrent;
 	std::vector<std::string> _langs, _filters;
 
 	void updateDisplayResolution();

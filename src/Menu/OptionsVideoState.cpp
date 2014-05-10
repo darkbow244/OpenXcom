@@ -78,10 +78,15 @@ OptionsVideoState::OptionsVideoState(Game *game, OptionsOrigin origin) : Options
 	_btnLetterbox = new ToggleTextButton(100, 16, 210, 92);
 	_btnLockMouse = new ToggleTextButton(100, 16, 210, 110);
 
+	/* TODO: add current mode */
 	/* Get available fullscreen modes */
-	_res = SDL_ListModes(NULL, SDL_FULLSCREEN);
-	if (_res > (SDL_Rect**)0)
+	_res.resize(SDL_GetNumDisplayModes(0));
+	for (int i = 0; i < _res.size(); ++i)
+		SDL_GetDisplayMode(0, i, &_res[i]);
+	_resCurrent = -1;
+	if (_res.size() != 0)
 	{
+#if 0
 		int i;
 		_resCurrent = -1;
 		for (i = 0; _res[i]; ++i)
@@ -92,12 +97,11 @@ OptionsVideoState::OptionsVideoState(Game *game, OptionsOrigin origin) : Options
 				_resCurrent = i;
 			}
 		}
-		_resAmount = i;
+		_res.size() = i;
+#endif
 	}
 	else
 	{
-		_resCurrent = -1;
-		_resAmount = 0;
 		_btnDisplayResolutionDown->setVisible(false);
 		_btnDisplayResolutionUp->setVisible(false);
 		Log(LOG_WARNING) << "Couldn't get display resolutions";
@@ -335,11 +339,11 @@ OptionsVideoState::~OptionsVideoState()
  */
 void OptionsVideoState::btnDisplayResolutionUpClick(Action *)
 {
-	if (_resAmount == 0)
+	if (_res.size() == 0)
 		return;
 	if (_resCurrent <= 0)
 	{
-		_resCurrent = _resAmount-1;
+		_resCurrent = _res.size()-1;
 	}
 	else
 	{
@@ -355,9 +359,9 @@ void OptionsVideoState::btnDisplayResolutionUpClick(Action *)
  */
 void OptionsVideoState::btnDisplayResolutionDownClick(Action *)
 {
-	if (_resAmount == 0)
+	if (_res.size() == 0)
 		return;
-	if (_resCurrent >= _resAmount-1)
+	if (_resCurrent >= _res.size()-1)
 	{
 		_resCurrent = 0;
 	}
@@ -375,13 +379,13 @@ void OptionsVideoState::btnDisplayResolutionDownClick(Action *)
 void OptionsVideoState::updateDisplayResolution()
 {	
 	std::wostringstream ssW, ssH;
-	ssW << (int)_res[_resCurrent]->w;
-	ssH << (int)_res[_resCurrent]->h;
+	ssW << _res[_resCurrent].w;
+	ssH << _res[_resCurrent].h;
 	_txtDisplayWidth->setText(ssW.str());
 	_txtDisplayHeight->setText(ssH.str());
 	
-	Options::newDisplayWidth = _res[_resCurrent]->w;
-	Options::newDisplayHeight = _res[_resCurrent]->h;
+	Options::newDisplayWidth = _res[_resCurrent].w;
+	Options::newDisplayHeight = _res[_resCurrent].h;
 }
 
 /**
