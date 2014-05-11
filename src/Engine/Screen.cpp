@@ -320,16 +320,16 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		/* FIXME: leak? */
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 		if (SDL_CreateWindowAndRenderer(width, height, _flags, &_window,
 					&_renderer) != 0)
 		{
 			Log(LOG_ERROR) << SDL_GetError();
 			throw Exception(SDL_GetError());
 		}
+		SDL_RenderSetLogicalSize(_renderer, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
 		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
 				SDL_TEXTUREACCESS_STREAMING, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-		SDL_RenderSetLogicalSize(_renderer, width, height);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
 	}
 	else
@@ -342,12 +342,14 @@ void Screen::resetDisplay(bool resetVideo)
 	Options::displayHeight = getHeight();
 	//_scaleX = getWidth() / (double)_baseWidth;
 	//_scaleY = getHeight() / (double)_baseHeight;
-	_scaleX = getWidth() / (double)ORIGINAL_WIDTH;
-	_scaleY = getHeight() / (double)ORIGINAL_HEIGHT;
+	_scaleX = 1;
+	_scaleY = 1;
+#if 0
 	_clear.x = 0;
 	_clear.y = 0;
 	_clear.w = getWidth();
 	_clear.h = getHeight();
+#endif
 
 	bool cursorInBlackBands;
 	if (!Options::keepAspectRatio)
