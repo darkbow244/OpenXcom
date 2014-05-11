@@ -31,6 +31,7 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
 	$(wildcard $(LOCAL_PATH)/../../../src/Basescape/*.cpp) \
 	$(wildcard $(LOCAL_PATH)/../../../src/Battlescape/*.cpp) \
 	$(wildcard $(LOCAL_PATH)/../../../src/Engine/*.cpp) \
+	$(wildcard $(LOCAL_PATH)/../../../src/Engine/Adlib/*.cpp) \
 	$(wildcard $(LOCAL_PATH)/../../../src/Engine/Scalers/*.cpp) \
 	$(wildcard $(LOCAL_PATH)/../../../src/Geoscape/*.cpp) \
 	$(wildcard $(LOCAL_PATH)/../../../src/Interface/*.cpp) \
