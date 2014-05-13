@@ -209,9 +209,11 @@ void Game::run()
 #ifdef __ANDROID__
 				case SDL_APP_WILLENTERBACKGROUND:
 					Mix_PauseMusic();
+					Music::pause();
 					break;
 				case SDL_APP_WILLENTERFOREGROUND:
 					Mix_ResumeMusic();
+					Music::resume();
 					break;
 #endif
 #if 0
