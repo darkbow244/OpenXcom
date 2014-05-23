@@ -20,7 +20,7 @@
 #include "Globe.h"
 #include <cmath>
 #include <fstream>
-#include "../aresame.h"
+#include "../fmath.h"
 #include "../Engine/Action.h"
 #include "../Engine/SurfaceSet.h"
 #include "../Engine/Timer.h"
@@ -270,7 +270,7 @@ Globe::Globe(Game *game, int cenX, int cenY, int width, int height, int x, int y
 	_blinkTimer = new Timer(100);
 	_blinkTimer->onTimer((SurfaceHandler)&Globe::blink);
 	_blinkTimer->start();
-	_rotTimer = new Timer(Options::geoScrollSpeed);
+	_rotTimer = new Timer(10);
 	_rotTimer->onTimer((SurfaceHandler)&Globe::rotate);
 
 	// Globe markers
@@ -595,7 +595,7 @@ void Globe::loadDat(const std::string &filename, std::list<Polygon*> *polygons)
  */
 void Globe::rotateLeft()
 {
-	_rotLon = -ROTATE_LONGITUDE / (_zoom+1);
+	_rotLon = -ROTATE_LONGITUDE;
 	if (!_rotTimer->isRunning()) _rotTimer->start();
 }
 
@@ -604,7 +604,7 @@ void Globe::rotateLeft()
  */
 void Globe::rotateRight()
 {
-	_rotLon = ROTATE_LONGITUDE/ (_zoom+1);
+	_rotLon = ROTATE_LONGITUDE;
 	if (!_rotTimer->isRunning()) _rotTimer->start();
 }
 
@@ -613,7 +613,7 @@ void Globe::rotateRight()
  */
 void Globe::rotateUp()
 {
-	_rotLat = -ROTATE_LATITUDE / (_zoom+1);
+	_rotLat = -ROTATE_LATITUDE;
 	if (!_rotTimer->isRunning()) _rotTimer->start();
 }
 
@@ -622,7 +622,7 @@ void Globe::rotateUp()
  */
 void Globe::rotateDown()
 {
-	_rotLat = ROTATE_LATITUDE / (_zoom+1);
+	_rotLat = ROTATE_LATITUDE;
 	if (!_rotTimer->isRunning()) _rotTimer->start();
 }
 
@@ -669,7 +669,7 @@ void Globe::zoomIn()
 	{
 		_zoom++;
 		_game->getSavedGame()->setGlobeZoom(_zoom);
-		cachePolygons();
+		invalidate();
 	}
 }
 
@@ -682,7 +682,7 @@ void Globe::zoomOut()
 	{
 		_zoom--;
 		_game->getSavedGame()->setGlobeZoom(_zoom);
-		cachePolygons();
+		invalidate();
 	}
 }
 
@@ -693,7 +693,7 @@ void Globe::zoomMin()
 {
 	_zoom = 0;
 	_game->getSavedGame()->setGlobeZoom(_zoom);
-	cachePolygons();
+	invalidate();
 }
 
 /**
@@ -703,7 +703,7 @@ void Globe::zoomMax()
 {
 	_zoom = _radius.size() - 1;
 	_game->getSavedGame()->setGlobeZoom(_zoom);
-	cachePolygons();
+	invalidate();
 }
 
 /**
@@ -718,7 +718,7 @@ void Globe::center(double lon, double lat)
 	_cenLat = lat;
 	_game->getSavedGame()->setGlobeLongitude(_cenLon);
 	_game->getSavedGame()->setGlobeLatitude(_cenLat);
-	cachePolygons();
+	invalidate();
 }
 
 /**
@@ -855,7 +855,6 @@ std::vector<Target*> Globe::getTargets(int x, int y, bool craft) const
 void Globe::cachePolygons()
 {
 	cache(_game->getResourcePack()->getPolygons(), &_cacheLand);
-	_redraw = true;
 }
 
 /**
@@ -966,11 +965,11 @@ void Globe::blink()
  */
 void Globe::rotate()
 {
-	_cenLon += _rotLon;
-	_cenLat += _rotLat;
+	_cenLon += _rotLon * ((110 - Options::geoScrollSpeed) / 100.0) / (_zoom+1);
+	_cenLat += _rotLat * ((110 - Options::geoScrollSpeed) / 100.0) / (_zoom+1);
 	_game->getSavedGame()->setGlobeLongitude(_cenLon);
 	_game->getSavedGame()->setGlobeLatitude(_cenLat);
-	cachePolygons();
+	invalidate();
 }
 
 /**
@@ -978,6 +977,10 @@ void Globe::rotate()
  */
 void Globe::draw()
 {
+	if (_redraw)
+	{
+		cachePolygons();
+	}
 	Surface::draw();
 	drawOcean();
 	drawLand();
@@ -1394,7 +1397,7 @@ void Globe::drawDetail()
 		delete label;
 	}
 
-	// Draw the city markers
+	// Draw the city and base markers
 	if (_zoom >= 3)
 	{
 		Text *label = new Text(80, 9, 0, 0);
@@ -1425,6 +1428,18 @@ void Globe::drawDetail()
 				label->setText(_game->getLanguage()->getString((*j)->getName()));
 				label->blit(_countries);
 			}
+		}
+		// Draw bases names
+		for (std::vector<Base*>::iterator j = _game->getSavedGame()->getBases()->begin(); j != _game->getSavedGame()->getBases()->end(); ++j)
+		{
+			if (pointBack((*j)->getLongitude(), (*j)->getLatitude()))
+				continue;
+			polarToCart((*j)->getLongitude(), (*j)->getLatitude(), &x, &y);
+			label->setX(x - 40);
+			label->setY(y + 2);
+			label->setColor(Palette::blockOffset(8)+5);
+			label->setText((*j)->getName());
+			label->blit(_countries);
 		}
 
 		delete label;
@@ -1752,17 +1767,17 @@ void Globe::mouseOver(Action *action, State *state)
 				_mouseMovedOverThreshold = ((std::abs(_totalMouseMoveX) > Options::dragScrollPixelTolerance) || (std::abs(_totalMouseMoveY) > Options::dragScrollPixelTolerance));
 
 			// Scrolling
-			if (Options::dragScrollInvert)
-			{
-				double newLon = -action->getDetails()->motion.xrel * ROTATE_LONGITUDE/(_zoom+1)/2;
-				double newLat = -action->getDetails()->motion.yrel * ROTATE_LATITUDE/(_zoom+1)/2;
-				center(_cenLon + newLon, _cenLat + newLat);
-			}
-			else
+			if (Options::geoDragScrollInvert)
 			{
 				double newLon = ((double)_totalMouseMoveX / action->getXScale()) * ROTATE_LONGITUDE/(_zoom+1)/2;
 				double newLat = ((double)_totalMouseMoveY / action->getYScale()) * ROTATE_LATITUDE/(_zoom+1)/2;
-				center(_lonBeforeMouseScrolling + newLon, _latBeforeMouseScrolling + newLat);
+				center(_lonBeforeMouseScrolling + newLon / (Options::geoScrollSpeed / 10), _latBeforeMouseScrolling + newLat / (Options::geoScrollSpeed / 10));
+			}
+			else
+			{
+				double newLon = -action->getDetails()->motion.xrel * ROTATE_LONGITUDE/(_zoom+1)/2;
+				double newLat = -action->getDetails()->motion.yrel * ROTATE_LATITUDE/(_zoom+1)/2;
+				center(_cenLon + newLon / (Options::geoScrollSpeed / 10), _cenLat + newLat / (Options::geoScrollSpeed / 10));
 			}
 
 			// We don't want to look the mouse-cursor jumping :)
@@ -1982,7 +1997,7 @@ void Globe::resize()
 	_cenX = width / 2;
 	_cenY = height / 2;
 	setupRadii(width, height);
-	cachePolygons();
+	invalidate();
 }
 
 /*

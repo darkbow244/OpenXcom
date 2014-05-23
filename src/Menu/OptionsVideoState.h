@@ -60,7 +60,6 @@ private:
 	std::vector<std::string> _langs, _filters;
 
 	void updateDisplayResolution();
-	void updateGameResolution();
 public:
 	/// Creates the Options state.
 	OptionsVideoState(Game *game, OptionsOrigin origin);
@@ -90,6 +89,8 @@ public:
 	void updateGeoscapeScale(Action *);
 	/// Update the resolution settings, we just resized the window.
 	void resize(int &, int &);
+	/// Handles keypresses.
+	void handle(Action *action);
 };
 
 }

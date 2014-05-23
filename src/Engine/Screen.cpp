@@ -319,6 +319,7 @@ void Screen::resetDisplay(bool resetVideo)
 	if (resetVideo)
 	{
 		/* FIXME: leak? */
+			SDL_EnableUNICODE(1);
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 		if (SDL_CreateWindowAndRenderer(width, height, _flags, &_window,

@@ -22,6 +22,7 @@
 #include <windows.h>
 #include <SDL_syswm.h>
 #endif
+#include <cmath>
 #include <sstream>
 #include <SDL_mixer.h>
 #include <SDL_image.h>
@@ -48,6 +49,8 @@
 
 namespace OpenXcom
 {
+
+const double Game::VOLUME_GRADIENT = 10.0;
 
 /**
  * Starts up SDL with all the subsystems and SDL_mixer for audio processing,
@@ -272,17 +275,26 @@ void Game::run()
 					_cursor->handle(&action);
 					_fpsCounter->handle(&action);
 					_states.back()->handle(&action);
-					if (action.getDetails()->type == SDL_KEYDOWN && Options::debug)
+					if (action.getDetails()->type == SDL_KEYDOWN)
 					{
-						if (action.getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
+						// "ctrl-g" grab input
+						if (action.getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
 						{
-							setState(new TestState(this));
+							Options::captureMouse = (SDL_GrabMode)(!Options::captureMouse);
+							SDL_WM_GrabInput(Options::captureMouse);
 						}
-						// "ctrl-u" debug UI
-						else if (action.getDetails()->key.keysym.sym == SDLK_u && (SDL_GetModState() & KMOD_CTRL) != 0)
+						else if (Options::debug)
 						{
-							Options::debugUi = !Options::debugUi;
-							_states.back()->redrawText();
+							if (action.getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
+							{
+								setState(new TestState(this));
+							}
+							// "ctrl-u" debug UI
+							else if (action.getDetails()->key.keysym.sym == SDLK_u && (SDL_GetModState() & KMOD_CTRL) != 0)
+							{
+								Options::debugUi = !Options::debugUi;
+								_states.back()->redrawText();
+							}
 						}
 					}
 					break;
@@ -389,21 +401,27 @@ void Game::setVolume(int sound, int music, int ui)
 	{
 		if (sound >= 0)
 		{
+			sound = volumeExponent(sound) * (double)SDL_MIX_MAXVOLUME;
 			Mix_Volume(-1, sound);
 		}
 		if (music >= 0)
 		{
+			music = volumeExponent(music) * (double)SDL_MIX_MAXVOLUME;
 			Mix_VolumeMusic(music);
-			func_set_music_volume(music);
 		}
 		if (ui >= 0)
 		{
+			ui = volumeExponent(ui) * (double)SDL_MIX_MAXVOLUME;
 			Mix_Volume(0, ui);
 			Mix_Volume(1, ui);
 		}
 	}
 }
 
+float Game::volumeExponent(int volume)
+{
+	return (exp(log(Game::VOLUME_GRADIENT + 1.0) * volume / (double)SDL_MIX_MAXVOLUME) -1.0 ) / Game::VOLUME_GRADIENT;
+}
 /**
  * Returns the display screen used by the game.
  * @return Pointer to the screen.
@@ -693,7 +711,7 @@ void Game::initAudio()
 		Mix_AllocateChannels(16);
 		// Set up UI channels
 		Mix_ReserveChannels(2);
-		Mix_GroupChannels(0, 1, 0);
+		Mix_GroupChannels(1, 2, 0);
 		Log(LOG_INFO) << "SDL_mixer initialized successfully.";
 		setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	}

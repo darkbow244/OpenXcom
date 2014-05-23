@@ -97,7 +97,7 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 
 	int screenWidth = Options::baseXResolution;
 	int screenHeight = Options::baseYResolution;
-	int iconsWidth = 320;
+	int iconsWidth = Map::ICON_WIDTH;
 	int iconsHeight = Map::ICON_HEIGHT;
 	_mouseOverIcons = false;
 	// Create buttonbar - this should be on the centerbottom of the screen
@@ -616,7 +616,7 @@ void BattlescapeState::mapOver(Action *action)
 			_mouseMovedOverThreshold = ((std::abs(_totalMouseMoveX) > Options::dragScrollPixelTolerance) || (std::abs(_totalMouseMoveY) > Options::dragScrollPixelTolerance));
 
 		// Scrolling
-		if (Options::dragScrollInvert)
+		if (Options::battleDragScrollInvert)
 		{
 			_map->getCamera()->scrollXY(
 				-action->getDetails()->motion.xrel,
@@ -624,10 +624,9 @@ void BattlescapeState::mapOver(Action *action)
 		}
 		else
 		{
-			_map->getCamera()->setMapOffset(_mapOffsetBeforeMouseScrolling);
 			_map->getCamera()->scrollXY(
-				(int)((double)_totalMouseMoveX / action->getXScale()),
-				(int)((double)_totalMouseMoveY / action->getYScale()), false);
+				action->getDetails()->motion.xrel,
+				action->getDetails()->motion.yrel, false);
 		}
 
 		// We don't want to look the mouse-cursor jumping :)
@@ -1510,8 +1509,8 @@ inline void BattlescapeState::handle(Action *action)
 					_save->setDebugMode();
 					debug(L"Debug Mode");
 				}
-				// "ctrl-l" - reset tile visibility
-				else if (_save->getDebugMode() && action->getDetails()->key.keysym.sym == SDLK_l && (SDL_GetModState() & KMOD_CTRL) != 0)
+				// "ctrl-v" - reset tile visibility
+				else if (_save->getDebugMode() && action->getDetails()->key.keysym.sym == SDLK_v && (SDL_GetModState() & KMOD_CTRL) != 0)
 				{
 					debug(L"Resetting tile visibility");
 					_save->resetTiles();
