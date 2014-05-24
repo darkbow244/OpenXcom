@@ -100,6 +100,9 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	int iconsWidth = Map::ICON_WIDTH;
 	int iconsHeight = Map::ICON_HEIGHT;
 	_mouseOverIcons = false;
+	// Why not try and reset the display?
+	_game->getScreen()->resetDisplay();
+
 	// Create buttonbar - this should be on the centerbottom of the screen
 	_icons = new InteractiveSurface(iconsWidth, iconsHeight, screenWidth/2 - iconsWidth/2, screenHeight - iconsHeight);
 

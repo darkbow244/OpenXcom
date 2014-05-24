@@ -171,7 +171,7 @@ void BriefingState::btnOkClick(Action *)
 	_game->popState();
 	Options::baseXResolution = Options::baseXBattlescape;
 	Options::baseYResolution = Options::baseYBattlescape;
-	_game->getScreen()->resetDisplay(false);
+	_game->getScreen()->resetDisplay();
 	BattlescapeState *bs = new BattlescapeState(_game);
 	int liveAliens = 0, liveSoldiers = 0;
 	bs->getBattleGame()->tallyUnits(liveAliens, liveSoldiers, false);

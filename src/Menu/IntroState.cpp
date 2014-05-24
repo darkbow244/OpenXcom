@@ -53,6 +53,9 @@ IntroState::IntroState(Game *game, bool wasLetterBoxed) : State(game), _wasLette
  */
 IntroState::~IntroState()
 {
+	/* I guess it's not a good idea to reset screen in the destructor,
+	but who cares.*/
+//	_game->getScreen()->resetDisplay();
 }
 
 
