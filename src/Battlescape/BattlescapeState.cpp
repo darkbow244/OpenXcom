@@ -663,11 +663,21 @@ void BattlescapeState::mapPress(Action *action)
 
 #ifdef __ANDROID__
 	Position pos;
-	_map->getSelectorPosition(&pos);
-	if (pos == _save->getSelectedUnit()->getPosition())
+	/* Avoid null pointer dereference */
+	BattleUnit *selectedUnit = _save->getSelectedUnit();
+	if (selectedUnit != NULL)
 	{
-		_swipeFromSoldier = true;
+		_map->getSelectorPosition(&pos);
+		if (pos == selectedUnit->getPosition())
+		{
+			_swipeFromSoldier = true;
+		}
+		else
+		{
+			_swipeFromSoldier = false;
+		}
 	}
+	/* Avoid null pointer in the mapRelease function */
 	else
 	{
 		_swipeFromSoldier = false;
