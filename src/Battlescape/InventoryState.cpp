@@ -28,6 +28,7 @@
 #include "../Engine/Action.h"
 #include "../Engine/InteractiveSurface.h"
 #include "../Engine/SurfaceSet.h"
+#include "../Engine/Screen.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/Tile.h"
 #include "../Savegame/SavedBattleGame.h"
@@ -61,6 +62,11 @@ InventoryState::InventoryState(Game *game, bool tu, BattlescapeState *parent) : 
 {
 	_battleGame = _game->getSavedGame()->getSavedBattle();
 
+#ifdef __ANDROID__
+	Options::baseXResolution = 320;
+	Options::baseYResolution = 200;
+	_game->getScreen()->resetDisplay(false);
+#endif
 	// Create objects
 	_bg = new Surface(320, 200, 0, 0);
 	_soldier = new Surface(320, 200, 0, 0);
@@ -175,7 +181,11 @@ InventoryState::InventoryState(Game *game, bool tu, BattlescapeState *parent) : 
  */
 InventoryState::~InventoryState()
 {
-
+#ifdef __ANDROID__
+	Options::baseXResolution = Options::baseXBattlescape;
+	Options::baseYResolution = Options::baseYBattlescape;
+	_game->getScreen()->resetDisplay(false);
+#endif
 }
 
 /**
