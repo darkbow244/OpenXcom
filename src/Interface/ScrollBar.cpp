@@ -201,13 +201,13 @@ void ScrollBar::mousePress(Action *action, State *state)
 			_offset = -_thumbRect.h / 2;
 		}
 		_pressed = true;		
+	}
 	else if (ev.type == SDL_MOUSEWHEEL)
 	{
 		if (ev.wheel.y < 0)
 			_list->scrollUp(false);
 		else
 			_list->scrollDown(false);
-	}
 	}
 }
 
