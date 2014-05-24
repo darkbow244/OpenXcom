@@ -47,7 +47,9 @@ LOCAL_LDLIBS := -lGLESv1_CM -lGLESv2 -llog
 
 # yaml-cpp
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(YAMLCPP_PATH)/include \
-					$(LOCAL_PATH)/$(BOOST_PATH)/include
+					$(LOCAL_PATH)/$(BOOST_PATH)/include/boost-1_53
+LOCAL_CPP_INCLUDES += $(LOCAL_PATH)/$(BOOST_PATH)/include/boost-1_53
+
 LOCAL_SRC_FILES += \
 	$(subst $(LOCAL_PATH)/,, \
 	$(wildcard $(LOCAL_PATH)/$(YAMLCPP_PATH)/src/*.cpp))

@@ -114,8 +114,9 @@ void Screen::makeVideoFlags()
  * Initializes a new display screen for the game to render contents to.
  * The screen is set up based on the current options.
  */
-Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0)
+Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL)
 {
+	// The default values for _window and _renderer are set to NULL so that we can check if there's a window already
 	resetDisplay();	
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }
@@ -303,6 +304,10 @@ void Screen::resetDisplay(bool resetVideo)
 	Uint32 oldFlags = _flags;
 #endif
 	makeVideoFlags();
+	// A kludge to make video resolution changing work
+	resetVideo = true;
+
+	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
 
 	if (!_surface || (_surface && 
 		(_surface->getSurface()->format->BitsPerPixel != _bpp || 
@@ -311,7 +316,8 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		if (_surface) delete _surface;
 		//_surface = new Surface(_baseWidth, _baseHeight, 0, 0, Screen::isHQXEnabled() ? 32 : 8); // only HQX needs 32bpp for this surface; the OpenGL class has its own 32bpp buffer
-		_surface = new Surface(ORIGINAL_WIDTH, ORIGINAL_HEIGHT, 0, 0, 32);
+		/* So why exactly does the new surface have fixed size? */
+		_surface = new Surface(_baseWidth, _baseHeight, 0, 0, 32);
 		if (_surface->getSurface()->format->BitsPerPixel == 8) _surface->setPalette(deferredPalette);
 	}
 	SDL_SetColorKey(_surface->getSurface(), 0, 0); // turn off color key! 
@@ -319,18 +325,48 @@ void Screen::resetDisplay(bool resetVideo)
 	if (resetVideo)
 	{
 		/* FIXME: leak? */
-			SDL_EnableUNICODE(1);
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-		if (SDL_CreateWindowAndRenderer(width, height, _flags, &_window,
-					&_renderer) != 0)
+		/* Now, we only need to create a window AND a renderer when we have none*/
+		if (_window == NULL)
 		{
+			Log(LOG_INFO) << "Attempting to create a new window since we have none yet";
+			_window = SDL_CreateWindow("OpenXcom",
+						   SDL_WINDOWPOS_UNDEFINED,
+						   SDL_WINDOWPOS_UNDEFINED,
+						   width, height, _flags);
+			/* In case something went horribly wrong */
+			if (_window == NULL)
+			{
+				Log(LOG_ERROR) << SDL_GetError();
+				throw Exception(SDL_GetError());
+			}
+			Log(LOG_INFO) << "Created a window, size is: " << width << "x" << height;
+		}
+		/* We should have a window to render to, so we just need a new renderer */
+		if (_renderer != NULL)
+		{
+			Log(LOG_INFO) << "Destroying current renderer...";
+			SDL_DestroyRenderer(_renderer);
+			/*Can't check for errors, I guess*/
+			Log(LOG_INFO) << "OK, renderer destroyed";
+		}
+		/* By this point we have a window and no renderer, so it's time to make one! */
+		_renderer = SDL_CreateRenderer(_window, -1,
+					       SDL_RENDERER_ACCELERATED);
+		if (_renderer == NULL)
+		{
+			/* Looks like it's not our day. */
 			Log(LOG_ERROR) << SDL_GetError();
 			throw Exception(SDL_GetError());
 		}
-		SDL_RenderSetLogicalSize(_renderer, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
+		/* I don't trust this next part anyway */
+		//SDL_RenderSetLogicalSize(_renderer, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
+		Log(LOG_INFO) << "Setting renderer logical size to " << _baseWidth << "x" << _baseHeight;
+		SDL_RenderSetLogicalSize(_renderer, _baseWidth, _baseHeight);
+		Log(LOG_INFO) << "Setting main texture size to " << _baseWidth << "x" << _baseHeight;
 		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
-				SDL_TEXTUREACCESS_STREAMING, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
+				SDL_TEXTUREACCESS_STREAMING, _baseWidth, _baseHeight);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
 	}
 	else
@@ -345,7 +381,7 @@ void Screen::resetDisplay(bool resetVideo)
 	//_scaleY = getHeight() / (double)_baseHeight;
 	_scaleX = 1;
 	_scaleY = 1;
-#if 0
+#if 1
 	_clear.x = 0;
 	_clear.y = 0;
 	_clear.w = getWidth();

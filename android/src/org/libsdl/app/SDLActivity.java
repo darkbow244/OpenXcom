@@ -48,8 +48,8 @@ public class SDLActivity extends Activity {
     static {
         System.loadLibrary("SDL2");
         System.loadLibrary("SDL2_image");
-        System.loadLibrary("mikmod");
-        System.loadLibrary("smpeg2");
+        //System.loadLibrary("mikmod");
+        //System.loadLibrary("smpeg2");
         System.loadLibrary("SDL2_mixer");
         System.loadLibrary("SDL_gfx");
         //System.loadLibrary("SDL2_net");

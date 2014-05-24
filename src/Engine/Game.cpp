@@ -278,12 +278,14 @@ void Game::run()
 					if (action.getDetails()->type == SDL_KEYDOWN)
 					{
 						// "ctrl-g" grab input
-						if (action.getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
+						// (Since we're on Android, we're having no ctrl-g
+
+						/* if (action.getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
 						{
 							Options::captureMouse = (SDL_GrabMode)(!Options::captureMouse);
 							SDL_WM_GrabInput(Options::captureMouse);
 						}
-						else if (Options::debug)
+						else */ if (Options::debug)
 						{
 							if (action.getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
 							{
