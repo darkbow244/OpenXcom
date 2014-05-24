@@ -201,6 +201,7 @@ void CraftSoldiersState::lstItemsLeftArrowClick(Action *action)
 		}
 		init();
 	}
+#ifndef __ANDROID__
 	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
 	{
 		_lstSoldiers->scrollUp(false, true);
@@ -209,6 +210,7 @@ void CraftSoldiersState::lstItemsLeftArrowClick(Action *action)
 	{
 		_lstSoldiers->scrollDown(false, true);
 	}
+#endif
 }
 
 /**
@@ -247,6 +249,7 @@ void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 		}
 		init();
 	}
+#ifndef __ANDROID__
 	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
 	{
 		_lstSoldiers->scrollUp(false, true);
@@ -255,6 +258,7 @@ void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 	{
 		_lstSoldiers->scrollDown(false, true);
 	}
+#endif
 }
 
 /**
