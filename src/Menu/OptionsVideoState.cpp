@@ -533,8 +533,9 @@ void OptionsVideoState::btnLetterboxClick(Action *)
  */
 void OptionsVideoState::btnLockMouseClick(Action *)
 {
+	// Whoops. Does nothing.
 	//Options::captureMouse = (SDL_GrabMode)_btnLockMouse->getPressed();
-	SDL_WM_GrabInput(Options::captureMouse);
+	//SDL_WM_GrabInput(Options::captureMouse);
 }
 
 /**
@@ -578,9 +579,12 @@ void OptionsVideoState::resize(int &dX, int &dY)
 void OptionsVideoState::handle(Action *action)
 {
 	State::handle(action);
+	// Android things.
+	/*
 	if (action->getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
 	{
 		_btnLockMouse->setPressed(Options::captureMouse == SDL_GRAB_ON);
 	}
+	*/
 }
 }
