@@ -172,8 +172,8 @@ void CraftSoldiersState::init()
  */
 void CraftSoldiersState::lstItemsLeftArrowClick(Action *action)
 {
-	if (SDL_BUTTON_LEFT == action->getDetails()->button.button
-	|| SDL_BUTTON_RIGHT == action->getDetails()->button.button)
+	if (action->getDetails()->button.button == SDL_BUTTON_LEFT
+	|| action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		int row = _lstSoldiers->getSelectedRow();
 		if (row > 0 )
@@ -201,6 +201,14 @@ void CraftSoldiersState::lstItemsLeftArrowClick(Action *action)
 		}
 		init();
 	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+	{
+		_lstSoldiers->scrollUp(false, true);
+	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+	{
+		_lstSoldiers->scrollDown(false, true);
+	}
 }
 
 /**
@@ -209,8 +217,8 @@ void CraftSoldiersState::lstItemsLeftArrowClick(Action *action)
  */
 void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 {
-	if (SDL_BUTTON_LEFT == action->getDetails()->button.button
-	|| SDL_BUTTON_RIGHT == action->getDetails()->button.button)
+	if (action->getDetails()->button.button == SDL_BUTTON_LEFT
+	|| action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		int row = _lstSoldiers->getSelectedRow();
 		size_t numSoldiers = _base->getSoldiers()->size();
@@ -238,6 +246,14 @@ void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 			}
 		}
 		init();
+	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+	{
+		_lstSoldiers->scrollUp(false, true);
+	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+	{
+		_lstSoldiers->scrollDown(false, true);
 	}
 }
 

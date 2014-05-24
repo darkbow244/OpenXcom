@@ -89,11 +89,12 @@ void Camera::mousePress(Action *action, State *)
 {
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL)
-	{
+		{
 		if (ev.wheel.y < 0)
 			up();
 		else
 			down();
+		}
 	}
 	else if (action->getDetails()->button.button == SDL_BUTTON_LEFT && Options::battleEdgeScroll == SCROLL_TRIGGER)
 	{

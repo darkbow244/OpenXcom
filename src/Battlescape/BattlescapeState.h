@@ -218,7 +218,10 @@ public:
 	void txtTooltipOut(Action *action);
 	/// Update the resolution settings, we just resized the window.
 	void resize(int &dX, int &dY);
+	
 	bool hasScrolled() const;
+	/// Move the mouse back to where it started after we finish drag scrolling.
+	void stopScrolling(Action *action);
 };
 
 }
