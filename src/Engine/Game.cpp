@@ -210,12 +210,13 @@ void Game::run()
 					quit();
 					break;
 #ifdef __ANDROID__
+				/* Don't pause/resume twice, let Music handle the music */
 				case SDL_APP_WILLENTERBACKGROUND:
-					Mix_PauseMusic();
+					//Mix_PauseMusic();
 					Music::pause();
 					break;
 				case SDL_APP_WILLENTERFOREGROUND:
-					Mix_ResumeMusic();
+					//Mix_ResumeMusic();
 					Music::resume();
 					break;
 #endif
