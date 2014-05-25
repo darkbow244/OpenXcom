@@ -590,6 +590,13 @@ void BattlescapeState::think()
  */
 void BattlescapeState::mapOver(Action *action)
 {
+#ifdef __ANDROID__
+	/* Ignore dragging if we're just turning our unit */
+	if (_swipeFromSoldier)
+	{
+		return;
+	}
+#endif
 	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
 	{
 		// The following is the workaround for a rare problem where sometimes
@@ -612,8 +619,11 @@ void BattlescapeState::mapOver(Action *action)
 
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-		assert (0 && "FIXME");
-		//SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
+		//assert (0 && "FIXME");
+#ifndef __ANDROID__
+		/* We should use SDL2 function, but since we don't have any mouse, I can't see the point. */
+		SDL_WarpMouse(_game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - Map::ICON_HEIGHT / 2);
+#endif
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
 		// Check the threshold
