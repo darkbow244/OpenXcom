@@ -66,12 +66,13 @@ InventoryState::InventoryState(Game *game, bool tu, BattlescapeState *parent) : 
 	_game->getScreen()->resetDisplay(false);
 
 	_battleGame = _game->getSavedGame()->getSavedBattle();
-
+/*
 #ifdef __ANDROID__
 	Options::baseXResolution = 320;
 	Options::baseYResolution = 200;
 	_game->getScreen()->resetDisplay(false);
 #endif
+*/
 	// Create objects
 	_bg = new Surface(320, 200, 0, 0);
 	_soldier = new Surface(320, 200, 0, 0);
