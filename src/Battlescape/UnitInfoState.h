@@ -47,7 +47,9 @@ private:
 	bool _fromInventory, _mindProbe;
 
 	Surface *_bg;
-	Text *_txtName;
+	/* Change the name to a button, will help get out of the screen. */
+	//Text *_txtName;
+	TextButton *_txtName;
 
 	Text *_txtTimeUnits, *_txtEnergy, *_txtHealth, *_txtFatalWounds, *_txtBravery, *_txtMorale, *_txtReactions, *_txtFiring, *_txtThrowing, *_txtMelee, *_txtStrength;
 	Text *_txtPsiStrength,  *_txtPsiSkill;
@@ -69,6 +71,8 @@ public:
 	void init();
 	/// Handler for clicking the button.
 	void handle(Action *action);
+	/// Handler for clicking the name text button
+	void txtNameClick(Action *action);
 	/// Handler for clicking the Previous button.
 	void btnPrevClick(Action *action);
 	/// Handler for clicking the Next button.
