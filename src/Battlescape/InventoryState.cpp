@@ -187,11 +187,13 @@ InventoryState::InventoryState(Game *game, bool tu, BattlescapeState *parent) : 
  */
 InventoryState::~InventoryState()
 {
+/*
 #ifdef __ANDROID__
 	Options::baseXResolution = Options::baseXBattlescape;
 	Options::baseYResolution = Options::baseYBattlescape;
 	_game->getScreen()->resetDisplay(false);
 #endif
+*/
 }
 
 /**
