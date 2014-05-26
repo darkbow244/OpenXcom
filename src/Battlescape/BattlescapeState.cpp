@@ -103,6 +103,11 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	// Why not try and reset the display?
 	_game->getScreen()->resetDisplay(false);
 
+#ifdef __ANDROID__
+	_mouseXScale = Options::baseXResolution / (float) Screen::ORIGINAL_WIDTH;
+	_mouseYScale = Options::baseYResolution / (float) Screen::ORIGINAL_HEIGHT;
+#endif
+
 	// Create buttonbar - this should be on the centerbottom of the screen
 	_icons = new InteractiveSurface(iconsWidth, iconsHeight, screenWidth/2 - iconsWidth/2, screenHeight - iconsHeight);
 
@@ -637,15 +642,27 @@ void BattlescapeState::mapOver(Action *action)
 		// Scrolling
 		if (Options::battleDragScrollInvert)
 		{
+#ifdef __ANDROID__
+			_map->getCamera()->scrollXY(
+				-int(_mouseXScale * action->getDetails()->motion.xrel),
+				-int(_mouseYScale * action->getDetails()->motion.yrel), false);
+#else
 			_map->getCamera()->scrollXY(
 				-action->getDetails()->motion.xrel,
 				-action->getDetails()->motion.yrel, false);
+#endif
 		}
 		else
 		{
+#ifdef __ANDROID__
+			_map->getCamera()->scrollXY(
+				int(_mouseXScale * action->getDetails()->motion.xrel),
+				int(_mouseYScale * action->getDetails()->motion.yrel), false);
+#else
 			_map->getCamera()->scrollXY(
 				action->getDetails()->motion.xrel,
 				action->getDetails()->motion.yrel, false);
+#endif
 		}
 
 		// We don't want to look the mouse-cursor jumping :)
@@ -819,7 +836,8 @@ void BattlescapeState::fingerMotion(Action *action)
 	//click in android
 	if (_swipeFromSoldier)
 		return;
-
+	// Let's just use the default scroller instead
+#if 0
 	_scrollAccumX += action->getDetails()->tfinger.dx *
 		Options::baseXResolution;
 	_scrollAccumY += action->getDetails()->tfinger.dy *
@@ -841,6 +859,7 @@ void BattlescapeState::fingerMotion(Action *action)
 		_map->getCamera()->scrollXY(scrollIncX, scrollIncY, false);
 		_hasScrolled = true;
 	}
+#endif
 }
 
 #ifdef __ANDROID__

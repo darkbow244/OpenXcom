@@ -86,6 +86,10 @@ private:
 	void handleItemClick(BattleItem *item);
 	/// Shifts the red colors of the visible unit buttons backgrounds.
 	void blinkVisibleUnitButtons();
+#ifdef __ANDROID__
+	// Scalers for touchscreen
+	float _mouseXScale, _mouseYScale;
+#endif
 public:
 	/// Selects the next soldier.
 	void selectNextPlayerUnit(bool checkReselect = false, bool setReselect = false, bool checkInventory = false);
