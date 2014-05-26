@@ -77,13 +77,13 @@ struct GlobeStaticData
 	
 	/**
 	 * Function returning normal vector of sphere surface
-     * @param ox x cord of sphere center
-     * @param oy y cord of sphere center
-     * @param r radius of sphere
-     * @param x cord of point where we getting this vector
-     * @param y cord of point where we getting this vector
-     * @return normal vector of sphere surface 
-     */
+	 * @param ox x cord of sphere center
+	 * @param oy y cord of sphere center
+	 * @param r radius of sphere
+	 * @param x cord of point where we getting this vector
+	 * @param y cord of point where we getting this vector
+	 * @return normal vector of sphere surface 
+	 */
 	inline Cord circle_norm(double ox, double oy, double r, double x, double y)
 	{
 		const double limit = r*r;
@@ -476,7 +476,7 @@ bool Globe::pointBack(double lon, double lat) const
 {
 	double c = cos(_cenLat) * cos(lat) * cos(lon - _cenLon) + sin(_cenLat) * sin(lat);
 
-	return c < 0.0;
+	return c < 0;
 }
 
 
@@ -875,18 +875,12 @@ void Globe::cache(std::list<Polygon*> *polygons, std::list<Polygon*> *cache)
 	for (std::list<Polygon*>::iterator i = polygons->begin(); i != polygons->end(); ++i)
 	{
 		// Is quad on the back face?
-		float closest = 0.0;
-		float z;
-		float furthest = 0.0;
+		bool backFace = true;
 		for (int j = 0; j < (*i)->getPoints(); ++j)
 		{
-			z = cos(_cenLat) * cos((*i)->getLatitude(j)) * cos((*i)->getLongitude(j) - _cenLon) + sin(_cenLat) * sin((*i)->getLatitude(j));
-			if (z > closest)
-				closest = z;
-			else if (z < furthest)
-				furthest = z;
+			backFace = backFace && pointBack((*i)->getLongitude(j), (*i)->getLatitude(j));
 		}
-		if (-furthest > closest)
+		if (backFace)
 			continue;
 
 		Polygon* p = new Polygon(**i);
@@ -1125,19 +1119,19 @@ void Globe::XuLine(Surface* surface, Surface* src, double x1, double y1, double 
 	}
 
 	if (y2<y1) { 
-    SY=-1;
+	SY=-1;
   } else if ( AreSame(deltay, 0.0) ) {
-    SY=0;
+	SY=0;
   } else {
-    SY=1;
+	SY=1;
   }
 
 	if (x2<x1) {
-    SX=-1;
+	SX=-1;
   } else if ( AreSame(deltax, 0.0) ) {
-    SX=0;
+	SX=0;
   } else {
-    SX=1;
+	SX=1;
   }
 
 	x0=x1;  y0=y1;
@@ -1763,7 +1757,7 @@ void Globe::mouseOver(Action *action, State *state)
 
 			// Set the mouse cursor back
 			SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-			SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
+			//SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 			SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
 			// Check the threshold
@@ -1847,14 +1841,14 @@ void Globe::mouseRelease(Action *action, State *state)
  * @param state State that the action handlers belong to.
  */
 void Globe::mouseClick(Action *action, State *state)
-{	
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+{
+	const SDL_Event &ev(*action->getDetails());
+	if (ev.type == SDL_MOUSEWHEEL)
 	{
-		zoomIn();
-	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN)
-	{
-		zoomOut();
+		if (ev.wheel.y < 0)
+			zoomIn();
+		else
+			zoomOut();
 	}
 
 	double lon, lat;

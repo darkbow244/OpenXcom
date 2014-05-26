@@ -2227,12 +2227,9 @@ void BattlescapeState::stopScrolling(Action *action)
 /* But but but... we're on Android! */
 #ifndef __ANDROID__
 	SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
-<<<<<<< HEAD
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 #endif
-=======
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getHeight(), _map->getWidth());
->>>>>>> parent of faec333... fix some geo drag scroll stuff
 }
 
 }
