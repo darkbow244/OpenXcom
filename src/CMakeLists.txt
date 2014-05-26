@@ -216,6 +216,7 @@ set ( engine_src
   Engine/Surface.h
   Engine/Font.cpp
   Engine/Font.h
+  Engine/DosFont.h
   Engine/Options.cpp
   Engine/Options.h
   Engine/OptionInfo.cpp

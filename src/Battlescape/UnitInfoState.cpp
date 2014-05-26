@@ -51,17 +51,17 @@ namespace OpenXcom
  */
 UnitInfoState::UnitInfoState(Game *game, BattleUnit *unit, BattlescapeState *parent, bool fromInventory, bool mindProbe) : State(game), _unit(unit), _parent(parent), _fromInventory(fromInventory), _mindProbe(mindProbe)
 {
-	Options::baseXResolution = Screen::ORIGINAL_WIDTH;
-	Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
-	_game->getScreen()->resetDisplay(false);
-
+	if (Options::maximizeInfoScreens)
+	{
+		Options::baseXResolution = Screen::ORIGINAL_WIDTH;
+		Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
+		_game->getScreen()->resetDisplay(false);
+	}
 	_battleGame = _game->getSavedGame()->getSavedBattle();
 
 	// Create objects
 	_bg = new Surface(320, 200, 0, 0);
-	// Create button instead of just text
-	//_txtName = new Text(288, 17, 16, 4);
-	_txtName = new TextButton(288, 17, 16, 2);
+	_txtName = new Text(288, 17, 16, 4);
 
 	int yPos = 38;
 	int step = 9;
@@ -250,8 +250,7 @@ UnitInfoState::UnitInfoState(Game *game, BattleUnit *unit, BattlescapeState *par
 	// Set up objects
 	_game->getResourcePack()->getSurface("UNIBORD.PCK")->blit(_bg);
 
-	// Text on buttons is already center-aligned
-	//_txtName->setAlign(ALIGN_CENTER);
+	_txtName->setAlign(ALIGN_CENTER);
 	_txtName->setBig();
 	_txtName->setColor(Palette::blockOffset(4));
 	_txtName->setHighContrast(true);
@@ -436,9 +435,6 @@ UnitInfoState::UnitInfoState(Game *game, BattleUnit *unit, BattlescapeState *par
 
 	_barUnderArmor->setColor(Palette::blockOffset(5));
 	_barUnderArmor->setScale(1.0);
-
-	// Close the screen on button press
-	_txtName->onMouseClick((ActionHandler)&UnitInfoState::txtNameClick);
 
 	if (!_mindProbe)
 	{
@@ -653,46 +649,8 @@ void UnitInfoState::handle(Action *action)
 		{
 			exit();
 		}
-#ifdef __ANDROID__
-		else if (action->getDetails()->key.keysym.scancode == SDL_SCANCODE_AC_BACK)
-		{
-			_game->popState();
-		}
-#endif
 	}
 }
-
-/**
- * Closes the window on clicking the name
- * @param action Pointer to an action
-*/
-void UnitInfoState::txtNameClick(Action *)
-{
-/* Redundant since Warboy made a much better thing */
-/*
-	// try to use the same trick as described below
-	if (_parent)
-	{
-		Screen::updateScale(Options::battlescapeScale, Options::battlescapeScale,
-				    Options::baseXResolution, Options::baseYResolution, true);
-		_game->getScreen()->resetDisplay(false);
-		//Options::baseXResolution = Options::baseXBattlescape;
-		//Options::baseYResolution = Options::baseYBattlescape;
-	}
-	else
-	{
-		Screen::updateScale(Options::geoscapeScale, Options::geoscapeScale,
-				    Options::baseXResolution, Options::baseYResolution, true);
-		_game->getScreen()->resetDisplay(false);
-		//Options::baseXResolution = Options::baseXGeoscape;
-		//Options::baseYResolution = Options::baseYGeoscape;
-	}
-//	_game->getScreen()->resetDisplay(false);
-	_game->popState();
-*/
-	exit();
-}
-
 
 /**
 * Selects the previous unit.
@@ -746,7 +704,7 @@ void UnitInfoState::btnNextClick(Action *)
 
 void UnitInfoState::exit()
 {
-	if (!_fromInventory)
+	if (!_fromInventory && Options::maximizeInfoScreens)
 	{
 		Screen::updateScale(Options::battlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, true);
 		_game->getScreen()->resetDisplay(false);

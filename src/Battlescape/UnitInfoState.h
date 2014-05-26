@@ -47,9 +47,7 @@ private:
 	bool _fromInventory, _mindProbe;
 
 	Surface *_bg;
-	/* Change the name to a button, will help get out of the screen. */
-	//Text *_txtName;
-	TextButton *_txtName;
+	Text *_txtName;
 
 	Text *_txtTimeUnits, *_txtEnergy, *_txtHealth, *_txtFatalWounds, *_txtBravery, *_txtMorale, *_txtReactions, *_txtFiring, *_txtThrowing, *_txtMelee, *_txtStrength;
 	Text *_txtPsiStrength,  *_txtPsiSkill;

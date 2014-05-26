@@ -2227,7 +2227,7 @@ void BattlescapeState::stopScrolling(Action *action)
 /* But but but... we're on Android! */
 #ifndef __ANDROID__
 	SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
-	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getHeight(), _map->getWidth());
+	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 #endif
 }
 
