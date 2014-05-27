@@ -91,7 +91,7 @@ ScannerState::~ScannerState()
 void ScannerState::handle(Action *action)
 {
 	State::handle(action);
-	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN /*&& action->getDetails()->button.button == SDL_BUTTON_RIGHT*/)
+	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN && action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		if (Options::maximizeInfoScreens)
 		{
