@@ -152,8 +152,11 @@ ListGamesState::ListGamesState(Game *game, OptionsOrigin origin, int firstValidR
 	_lstSaves->setMargin(8);
 	_lstSaves->onMouseOver((ActionHandler)&ListGamesState::lstSavesMouseOver);
 	_lstSaves->onMouseOut((ActionHandler)&ListGamesState::lstSavesMouseOut);
+#ifdef __ANDROID__
+	_lstSaves->onMouseClick((ActionHandler)&ListGamesState::lstSavesPress);
+#else
 	_lstSaves->onMousePress((ActionHandler)&ListGamesState::lstSavesPress);
-
+#endif
 	_txtDetails->setColor(Palette::blockOffset(15)-1);
 	_txtDetails->setSecondaryColor(Palette::blockOffset(8)+10);
 	_txtDetails->setWordWrap(true);
