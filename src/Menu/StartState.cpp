@@ -58,7 +58,7 @@ StartState::StartState(Game *game) : State(game)
 	//updateScale() uses newDisplayWidth/Height and needs to be set ahead of time
 	Options::newDisplayWidth = Options::displayWidth;
 	Options::newDisplayHeight = Options::displayHeight;
-#ifndef __ANDROID__
+#ifdef __ANDROID__
 	Options::baseXResolution = Screen::ORIGINAL_WIDTH;
 	Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
 #else
