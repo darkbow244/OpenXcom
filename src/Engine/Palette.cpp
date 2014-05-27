@@ -75,6 +75,7 @@ void Palette::loadDat(const std::string &filename, int ncolors, int offset)
 		_colors[i].b = value[2] * 4;
 		_colors[i].a = 255;
 	}
+	_colors[0].a = 0;
 
 	palFile.close();
 }

@@ -58,9 +58,13 @@ StartState::StartState(Game *game) : State(game)
 	//updateScale() uses newDisplayWidth/Height and needs to be set ahead of time
 	Options::newDisplayWidth = Options::displayWidth;
 	Options::newDisplayHeight = Options::displayHeight;
-
+#ifndef __ANDROID__
+	Options::baseXResolution = Screen::ORIGINAL_WIDTH;
+	Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
+#else
 	Options::baseXResolution = Options::displayWidth;
 	Options::baseYResolution = Options::displayHeight;
+#endif
 	_game->getScreen()->resetDisplay(false);
 
 	// Create objects
@@ -74,13 +78,29 @@ StartState::StartState(Game *game) : State(game)
 	_text = new Text(Options::baseXResolution, Options::baseYResolution, 0, 0);
 	_cursor = new Text(_font->getWidth(), _font->getHeight(), 0, 0);
 	_timer = new Timer(150);
-/*
+
+#ifdef __ANDROID__
+	/* Accomodate for android weirdness */
+	SDL_Color bnw[3] = {{0}};
+
 	bnw[0].a = 255;
 	bnw[1].a = 255;
 	bnw[2].a = 255;
-*/
-	setPalette(_font->getSurface()->getPalette(), 0, 2);
+	bnw[0].r = 0;
+	bnw[0].g = 0;
+	bnw[0].b = 0;
+	bnw[1].r = 255;
+	bnw[1].g = 255;
+	bnw[1].b = 255;
+	bnw[2].r = 185;
+	bnw[2].g = 185;
+	bnw[2].b = 185;
 
+	setPalette(bnw, 0, 3);
+
+#else
+	setPalette(_font->getSurface()->getPalette(), 0, 2);
+#endif
 	add(_text);
 	add(_cursor);
 
