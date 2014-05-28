@@ -264,7 +264,8 @@ void CraftSoldiersState::moveSoldierDown(Action *action, int row, bool max)
 #ifndef __ANDROID__
 		if (row != _lstSoldiers->getVisibleRows() - 1 + _lstSoldiers->getScroll())
 		{
-			SDL_WarpMouse(action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
+			assert (0 && "FIXME");
+			//SDL_WarpMouse(action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
 		}
 		else
 		{
@@ -325,30 +326,31 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
  */
 void CraftSoldiersState::lstSoldiersMousePress(Action *action)
 {
-#ifndef __ANDROID__
 	if (Options::changeValueByMouseWheel == 0)
 		return;
 	int row = _lstSoldiers->getSelectedRow();
 	size_t numSoldiers = _base->getSoldiers()->size();
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP &&
-		row > 0)
+	const SDL_Event &ev(*action->getDetails());
+	if (ev.type == SDL_MOUSEWHEEL)
 	{
-		if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
-			action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
+		if (ev.wheel.y < 0 && row > 0)
 		{
-			moveSoldierUp(action, row);
+			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
+				action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
+			{
+				moveSoldierUp(action, row);
+			}
+		}
+		else if (ev.wheel.y > 0 && 0 < numSoldiers &&
+			   	INT_MAX >= numSoldiers && row < (int)numSoldiers - 1)
+		{
+			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
+				action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
+			{
+				moveSoldierDown(action, row);
+			}
 		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN &&
-			 0 < numSoldiers && INT_MAX >= numSoldiers && row < (int)numSoldiers - 1)
-	{
-		if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
-			action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
-		{
-			moveSoldierDown(action, row);
-		}
-	}
-#endif
 }
 
 }

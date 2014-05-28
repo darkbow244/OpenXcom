@@ -620,10 +620,7 @@ void BattlescapeState::mapOver(Action *action)
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 		//assert (0 && "FIXME");
-#ifndef __ANDROID__
-		/* We should use SDL2 function, but since we don't have any mouse, I can't see the point. */
-		SDL_WarpMouse(_game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - Map::ICON_HEIGHT / 2);
-#endif
+		//SDL_WarpMouse(_game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - Map::ICON_HEIGHT / 2);
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
 		// Check the threshold
@@ -2224,11 +2221,9 @@ bool BattlescapeState::hasScrolled() const
  */
 void BattlescapeState::stopScrolling(Action *action)
 {
-/* But but but... we're on Android! */
-#ifndef __ANDROID__
-	SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
+	/* FIXME */
+	//SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getHeight(), _map->getWidth());
-#endif
 }
 
 }
