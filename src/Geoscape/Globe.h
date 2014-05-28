@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2013 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -214,6 +214,8 @@ public:
 	void resize();
 	/// Set up the radius of earth and stuff.
 	void setupRadii(int width, int height);
+	/// Move the mouse back to where it started after we finish drag scrolling.
+	void stopScrolling(Action *action);
 };
 
 }
