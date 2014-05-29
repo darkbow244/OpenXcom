@@ -115,6 +115,9 @@ void Screen::makeVideoFlags()
  * The screen is set up based on the current options.
  */
 Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL)
+#ifdef __ANDROID
+	, _prevWidth(0), _prevHeight(0);
+#endif
 {
 	// The default values for _window and _renderer are set to NULL so that we can check if there's a window already
 	resetDisplay();	
@@ -305,7 +308,7 @@ void Screen::resetDisplay(bool resetVideo)
 #endif
 	makeVideoFlags();
 	// A kludge to make video resolution changing work
-	resetVideo = true;
+	resetVideo = (_prevWidth != _baseWidth) || (_prevHeight != _baseHeight);
 
 	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
 
@@ -368,6 +371,9 @@ void Screen::resetDisplay(bool resetVideo)
 		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
 				SDL_TEXTUREACCESS_STREAMING, _baseWidth, _baseHeight);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
+		/* Save new baseWidth and baseHeight */
+		_prevWidth = _baseWidth;
+		_prevHeight = _baseHeight;
 	}
 	else
 	{

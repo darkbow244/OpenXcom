@@ -57,6 +57,9 @@ private:
 	/// Sets the _flags and _bpp variables based on game options; needed in more than one place now
 	void makeVideoFlags();
 	SDL_Texture *_texture;
+#ifdef __ANDROID__
+	int _prevWidth, _prevHeight;
+#endif
 public:
 	static const int ORIGINAL_WIDTH;
 	static const int ORIGINAL_HEIGHT;
