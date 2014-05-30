@@ -424,44 +424,6 @@ void BaseInfoState::edtBaseChange(Action *action)
 	_base->setName(_edtBase->getText());
 }
 
-
-/**
- *  * Selects a new base to display.
- *   * @param action Pointer to an action.
- *    */
-void BaseInfoState::handleKeyPress(Action *action)
-{
-        if (action->getDetails()->type == SDL_KEYDOWN)
-	{
-		// SDL2 uses SDL_Keycode struct
-		SDL_Keycode baseKeys[] = {Options::keyBaseSelect1,
-				Options::keyBaseSelect2,
-				Options::keyBaseSelect3,
-				Options::keyBaseSelect4,
-				Options::keyBaseSelect5,
-				Options::keyBaseSelect6,
-				Options::keyBaseSelect7,
-				Options::keyBaseSelect8};
-		int base = -1;
-		int key = action->getDetails()->key.keysym.sym;
-		for (size_t i = 0; i < MiniBaseView::MAX_BASES; ++i)
-		{
-			if (key == baseKeys[i])
-			{
-				base = i;
-				break;
-			}
-		}
-		if (base > -1 && base < _game->getSavedGame()->getBases()->size())
-		{
-			_mini->setSelectedBase(base);
-			_base = _game->getSavedGame()->getBases()->at(base);
-			_state->setBase(_base);
-			init();
-		}
-	}
-}
-
 /**
  * Selects a new base to display.
  * @param action Pointer to an action.
@@ -475,6 +437,41 @@ void BaseInfoState::miniClick(Action *)
 		_base = _game->getSavedGame()->getBases()->at(base);
 		_state->setBase(_base);
 		init();
+	}
+}
+
+/**
+ * Selects a new base to display.
+ * @param action Pointer to an action.
+ */
+void BaseInfoState::handleKeyPress(Action *action)
+{
+	if (action->getDetails()->type == SDL_KEYDOWN)
+	{
+		// SDL2 uses SDL_Keycode struct
+		SDL_Keycode baseKeys[] = {Options::keyBaseSelect1,
+			                 Options::keyBaseSelect2,
+			                 Options::keyBaseSelect3,
+			                 Options::keyBaseSelect4,
+			                 Options::keyBaseSelect5,
+			                 Options::keyBaseSelect6,
+			                 Options::keyBaseSelect7,
+			                 Options::keyBaseSelect8};
+		int base = -1;
+		int key = action->getDetails()->key.keysym.sym;
+		for (size_t i = 0; i < MiniBaseView::MAX_BASES; ++i)
+		{
+			if (key == baseKeys[i])
+			{
+				base = i;
+				break;
+			}
+		}
+		if (base > -1 && base < _game->getSavedGame()->getBases()->size())
+		{
+			_base = _game->getSavedGame()->getBases()->at(base);
+			init();
+		}
 	}
 }
 

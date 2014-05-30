@@ -321,6 +321,7 @@ void StartState::animate()
 /**
  * Adds a line of text to the terminal and moves
  * the cursor appropriately.
+ * @param str Text line to add.
  */
 void StartState::addLine(const std::wstring &str)
 {
@@ -335,6 +336,7 @@ void StartState::addLine(const std::wstring &str)
 /**
  * Loads game data and updates status accordingly.
  * @param game_ptr Pointer to the game.
+ * @return Thread status, 0 = ok
  */
 int StartState::load(void *game_ptr)
 {

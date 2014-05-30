@@ -639,8 +639,9 @@ void Game::setMouseActive(bool active)
 }
 
 /**
- * @brief Returns whether current state is *state
+ * Returns whether current state is *state
  * @param state The state to test against the stack state
+ * @return Is state the current state?
  */
 bool Game::isState(State *state) const
 {
@@ -648,6 +649,7 @@ bool Game::isState(State *state) const
 }
 
 /**
+ * Checks if the game is currently quitting.
  * @return whether the game is shutting down or not.
  */
 bool Game::isQuitting() const
