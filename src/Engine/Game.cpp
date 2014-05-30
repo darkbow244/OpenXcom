@@ -342,6 +342,7 @@ void Game::run()
 			_screen->flip();
 		}
 
+#if 0		/* uh... why do we have the same thing over again? */
 		// Initialize active state
 		if (!_init)
 		{
@@ -361,12 +362,20 @@ void Game::run()
 			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 			_states.back()->handle(&action);
 		}
+#endif
 
 		// Save on CPU
 		switch (runningState)
 		{
-			case RUNNING: 
-				SDL_Delay(1); //Save CPU from going 100%
+			case RUNNING:
+				if (_timeUntilNextFrame > 0)
+				{
+					SDL_Delay(_timeUntilNextFrame); //Save CPU from going 100%
+				}
+				else
+				{
+					SDL_Delay(1);
+				}
 				break;
 			case SLOWED: case PAUSED:
 				SDL_Delay(100); break; //More slowing down.
