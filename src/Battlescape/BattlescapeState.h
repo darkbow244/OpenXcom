@@ -80,6 +80,7 @@ private:
 	bool _mouseOverIcons;
 	std::string _currentTooltip;
 	float _scrollAccumX, _scrollAccumY;
+	Position _cursorPosition;
 	bool _hasScrolled;
 	bool _swipeFromSoldier;
 	/// Popups a context sensitive list of actions the user can choose from.
