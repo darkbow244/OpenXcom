@@ -128,6 +128,8 @@ public:
 	void btnZoomOutLeftClick(Action *action);
 	/// Handler for right-clicking the Zoom Out icon.
 	void btnZoomOutRightClick(Action *action);
+	/// Handler for pinch-zooming the globe
+	void globePinch(Action *action);
 	/// Blit method - renders the state and dogfights.
 	void blit();
 	/// Globe zoom in effect for dogfights.
