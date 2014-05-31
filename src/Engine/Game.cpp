@@ -267,9 +267,63 @@ void Game::run()
 					runningState = RUNNING;
 					// Go on, feed the event to others
 #ifdef __ANDROID__
+					// ...or not
+					break;
+#endif
+#ifdef __ANDROID__
 				case SDL_FINGERMOTION:
+				case SDL_MULTIGESTURE:
 #endif
 				default:
+#ifdef __ANDROID__
+
+					SDL_Event fakeEvent;
+					fakeEvent.type = SDL_FIRSTEVENT; /* Initialize as null-event */
+					if ((_event.type == SDL_FINGERMOTION) ||
+					    (_event.type == SDL_FINGERDOWN) ||
+					    (_event.type == SDL_FINGERUP))
+					{
+						if(_event.tfinger.fingerId == 0)
+						{
+						/* We use fakeEvent to fake the motion of the first finger */
+							if(_event.type == SDL_FINGERMOTION)
+							{
+							/* This one has to be passed unchanged AND as a touch finger event. Woosh.*/
+								fakeEvent.type = SDL_MOUSEMOTION;
+								fakeEvent.motion.x = _event.tfinger.x * Options::baseXResolution;
+								fakeEvent.motion.y = _event.tfinger.y * Options::baseYResolution;
+								fakeEvent.motion.xrel = _event.tfinger.dx * Options::baseXResolution;
+								fakeEvent.motion.yrel = _event.tfinger.dy * Options::baseYResolution;
+								fakeEvent.motion.state = SDL_BUTTON(1);	
+								//Log(LOG_INFO) << "Created a MouseMotion event at " << fakeEvent.motion.x << ", " << fakeEvent.motion.y;
+							}
+							else
+							{
+								fakeEvent.button.x = _event.tfinger.x * Options::baseXResolution;
+								fakeEvent.button.y = _event.tfinger.y * Options::baseYResolution;
+								fakeEvent.button.button = SDL_BUTTON_LEFT;
+								//Log(LOG_INFO) << "Created a MouseButton event at " << fakeEvent.button.x << ", " << fakeEvent.button.y;
+								if (_event.type == SDL_FINGERDOWN)
+								{
+									fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+								}
+								else
+								{
+								fakeEvent.type = SDL_MOUSEBUTTONUP;
+								}
+							}
+						}
+						
+					}
+					if (fakeEvent.type != SDL_FIRSTEVENT)
+					{
+						Action fakeAction = Action(&fakeEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+						_screen->handle(&fakeAction);
+						_cursor->handle(&fakeAction);
+						_fpsCounter->handle(&fakeAction);
+						_states.back()->handle(&fakeAction);
+					}
+#endif
 					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 					_screen->handle(&action);
 					_cursor->handle(&action);
