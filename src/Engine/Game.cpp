@@ -268,6 +268,7 @@ void Game::run()
 					// Go on, feed the event to others
 #ifdef __ANDROID__
 					// ...or not
+					Log(LOG_INFO) << "Mouse event caught; mouse position: " << _event.motion.x << ", " << _event.motion.y;
 					break;
 #endif
 #ifdef __ANDROID__
@@ -278,6 +279,16 @@ void Game::run()
 #ifdef __ANDROID__
 
 					SDL_Event fakeEvent;
+					SDL_Rect viewport;
+					int offsetX, offsetY;
+					double scale = _screen->getScale(); // We're preserving the aspect rate
+					
+					//Log(LOG_DEBUG) << "Scale is " << scale;
+					
+					SDL_RenderGetViewport(_screen->getRenderer(), &viewport);
+					offsetX = viewport.x;
+					offsetY = viewport.y;
+					//Log(LOG_INFO) << "Current viewport: top point at " << viewport.x << ", " << viewport.y << "; size: " << viewport.w << ", " << viewport.h;
 					fakeEvent.type = SDL_FIRSTEVENT; /* Initialize as null-event */
 					if ((_event.type == SDL_FINGERMOTION) ||
 					    (_event.type == SDL_FINGERDOWN) ||
@@ -290,18 +301,27 @@ void Game::run()
 							{
 							/* This one has to be passed unchanged AND as a touch finger event. Woosh.*/
 								fakeEvent.type = SDL_MOUSEMOTION;
-								fakeEvent.motion.x = _event.tfinger.x * Options::baseXResolution;
-								fakeEvent.motion.y = _event.tfinger.y * Options::baseYResolution;
-								fakeEvent.motion.xrel = _event.tfinger.dx * Options::baseXResolution;
-								fakeEvent.motion.yrel = _event.tfinger.dy * Options::baseYResolution;
+								/* SDL_GetMouseState(&fakeEvent.motion.x,
+										  &fakeEvent.motion.y);
+								SDL_GetRelativeMouseState(&fakeEvent.motion.xrel,
+											  &fakeEvent.motion.yrel); */
+								fakeEvent.motion.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
+								fakeEvent.motion.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
+								fakeEvent.motion.xrel = _event.tfinger.dx * Options::displayWidth / scale;
+								fakeEvent.motion.yrel = _event.tfinger.dy * Options::displayHeight / scale;
+								
 								fakeEvent.motion.state = SDL_BUTTON(1);	
 								//Log(LOG_INFO) << "Created a MouseMotion event at " << fakeEvent.motion.x << ", " << fakeEvent.motion.y;
+								//Log(LOG_INFO) << "FUCKING WORK NOW please with relative things at " << fakeEvent.motion.xrel << ", " << fakeEvent.motion.yrel;
 							}
 							else
 							{
-								fakeEvent.button.x = _event.tfinger.x * Options::baseXResolution;
-								fakeEvent.button.y = _event.tfinger.y * Options::baseYResolution;
+								
+								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
+								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
 								fakeEvent.button.button = SDL_BUTTON_LEFT;
+								/*SDL_GetMouseState(&fakeEvent.button.x,
+										  &fakeEvent.button.y);*/
 								//Log(LOG_INFO) << "Created a MouseButton event at " << fakeEvent.button.x << ", " << fakeEvent.button.y;
 								if (_event.type == SDL_FINGERDOWN)
 								{
@@ -309,7 +329,7 @@ void Game::run()
 								}
 								else
 								{
-								fakeEvent.type = SDL_MOUSEBUTTONUP;
+									fakeEvent.type = SDL_MOUSEBUTTONUP;
 								}
 							}
 						}

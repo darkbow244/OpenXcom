@@ -388,6 +388,7 @@ void Screen::resetDisplay(bool resetVideo)
 	//_scaleY = getHeight() / (double)_baseHeight;
 	_scaleX = 1;
 	_scaleY = 1;
+	_scale = std::min(getWidth() / (double) _baseWidth, getHeight() / (double) _baseHeight);
 #if 1
 	_clear.x = 0;
 	_clear.y = 0;
@@ -497,6 +498,11 @@ double Screen::getXScale() const
 double Screen::getYScale() const
 {
 	return _scaleY;
+}
+
+double Screen::getScale() const
+{
+	return _scale;
 }
 
 /**
@@ -659,6 +665,11 @@ void Screen::updateScale(int &type, int selection, int &width, int &height, bool
 		Options::baseXResolution = width;
 		Options::baseYResolution = height;
 	}
+}
+
+SDL_Renderer * Screen::getRenderer() const
+{
+	return _renderer;
 }
 
 }
