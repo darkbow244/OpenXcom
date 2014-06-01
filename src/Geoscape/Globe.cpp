@@ -1439,7 +1439,7 @@ void Globe::drawDetail()
 		return;
 
 	// Draw the country borders
-	if ((_zoom >= 1) || Options::alwaysShowGlobeLabels)
+	if (_zoom >= 1) 
 	{
 		// Lock the surface
 		_countries->lock();
@@ -1466,7 +1466,7 @@ void Globe::drawDetail()
 	}
 
 	// Draw the country names
-	if ((_zoom >= 2) || Options::alwaysShowGlobeLabels)
+	if (_zoom >= 2)
 	{
 		Text *label = new Text(100, 9, 0, 0);
 		label->setPalette(getPalette());
@@ -1494,7 +1494,7 @@ void Globe::drawDetail()
 	}
 
 	// Draw the city and base markers
-	if ((_zoom >= 3) || Options::alwaysShowGlobeLabels)
+	if (_zoom >= 3)
 	{
 		Text *label = new Text(80, 9, 0, 0);
 		label->setPalette(getPalette());
