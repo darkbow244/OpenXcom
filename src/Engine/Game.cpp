@@ -268,7 +268,6 @@ void Game::run()
 					// Go on, feed the event to others
 #ifdef __ANDROID__
 					// ...or not
-					Log(LOG_INFO) << "Mouse event caught; mouse position: " << _event.motion.x << ", " << _event.motion.y;
 					break;
 #endif
 #ifdef __ANDROID__
