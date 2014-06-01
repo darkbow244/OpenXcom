@@ -60,6 +60,10 @@
 #include "../Interface/Cursor.h"
 #include "../Engine/Screen.h"
 
+#ifdef __ANDROID__
+#include <limits>
+#endif
+
 #if 0
 #include "../Engine/Logger.h"
 #endif
@@ -459,8 +463,8 @@ void Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 	double rho = sqrt((double)(x*x + y*y));
 	if (rho > _radius)
 	{
-		*lat = nan("");
-		*lon = nan("");
+		*lat = std::numeric_limits<double>::quiet_NaN();
+		*lon = std::numeric_limits<double>::quiet_NaN();
 		return;
 	}
 	double c = asin(rho / _radius);
@@ -1435,7 +1439,7 @@ void Globe::drawDetail()
 		return;
 
 	// Draw the country borders
-	if (_zoom >= 1)
+	if ((_zoom >= 1) || Options::alwaysShowGlobeLabels)
 	{
 		// Lock the surface
 		_countries->lock();
@@ -1462,7 +1466,7 @@ void Globe::drawDetail()
 	}
 
 	// Draw the country names
-	if (_zoom >= 2)
+	if ((_zoom >= 2) || Options::alwaysShowGlobeLabels)
 	{
 		Text *label = new Text(100, 9, 0, 0);
 		label->setPalette(getPalette());
@@ -1490,7 +1494,7 @@ void Globe::drawDetail()
 	}
 
 	// Draw the city and base markers
-	if (_zoom >= 3)
+	if ((_zoom >= 3) || Options::alwaysShowGlobeLabels)
 	{
 		Text *label = new Text(80, 9, 0, 0);
 		label->setPalette(getPalette());
