@@ -456,8 +456,13 @@ void Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 	// Orthographic projection
 	x -= _cenX;
 	y -= _cenY;
-
 	double rho = sqrt((double)(x*x + y*y));
+	if (rho > _radius)
+	{
+		*lat = nan("");
+		*lon = nan("");
+		return;
+	}
 	double c = asin(rho / _radius);
 	if ( AreSame(rho, 0.0) )
 	{
