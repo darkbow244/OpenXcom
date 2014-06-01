@@ -122,8 +122,8 @@ Game::~Game()
 	delete _cursor;
 	delete _lang;
 	delete _res;
-	delete _rules;
 	delete _save;
+	delete _rules;
 	delete _screen;
 	delete _fpsCounter;
 
