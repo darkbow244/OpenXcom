@@ -862,11 +862,21 @@ std::pair<std::wstring, std::wstring> timeToString(time_t time)
 	GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, localDate, 25);
 	GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, localTime, 25);
 #endif*/
-
 	struct tm *timeinfo = localtime(&(time));
+#ifdef __ANDROID__
+	/* oh android, why do you have to be so broken...*/
+	char cLocalDate[25], cLocalTime[25];
+	strftime(cLocalDate, 25, "%Y-%m-%d", timeinfo);
+	strftime(cLocalTime, 25, "%H:%M", timeinfo);
+	for(int i=0; i < 25; ++i)
+	{
+		localDate[i] = cLocalDate[i];
+		localTime[i] = cLocalTime[i];
+	}
+#else
 	wcsftime(localDate, 25, L"%Y-%m-%d", timeinfo);
 	wcsftime(localTime, 25, L"%H:%M", timeinfo);
-
+#endif
 	return std::make_pair(localDate, localTime);
 }
 
