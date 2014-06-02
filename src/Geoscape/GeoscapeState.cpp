@@ -438,13 +438,11 @@ GeoscapeState::~GeoscapeState()
 void GeoscapeState::blit()
 {
 	State::blit();
-#ifndef __ANDROID__ /* this one causes crashes, probably */
-/*
-	_game->getScreen()->getSurface()->drawLine(_btnTop->getX() - 1, 0, _btnTop->getX() - 1, _game->getScreen()->getSurface()->getHeight(), 15);
-	_game->getScreen()->getSurface()->drawLine(_btnTop->getX(), _sidebar->getY() - 1, _game->getScreen()->getSurface()->getWidth(), _sidebar->getY() - 1, 15);
-	_game->getScreen()->getSurface()->drawLine(_btnBottom->getX(), _btnBottom->getY() - 1, _game->getScreen()->getSurface()->getWidth(), _btnBottom->getY() - 1, 15);
-*/
-#endif
+
+	_game->getScreen()->getSurface()->drawLine(_btnTop->getX() - 1, 0, _btnTop->getX() - 1, _game->getScreen()->getSurface()->getHeight(), 0);
+	_game->getScreen()->getSurface()->drawLine(_btnTop->getX(), _sidebar->getY() - 1, _game->getScreen()->getSurface()->getWidth(), _sidebar->getY() - 1, 0);
+	_game->getScreen()->getSurface()->drawLine(_btnBottom->getX(), _btnBottom->getY() - 1, _game->getScreen()->getSurface()->getWidth(), _btnBottom->getY() - 1, 0);
+
 	for(std::list<DogfightState*>::iterator it = _dogfights.begin(); it != _dogfights.end(); ++it)
 	{
 		(*it)->blit();
