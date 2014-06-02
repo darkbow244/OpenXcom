@@ -533,9 +533,9 @@ void OptionsVideoState::btnLetterboxClick(Action *)
  */
 void OptionsVideoState::btnLockMouseClick(Action *)
 {
-	// Whoops. Does nothing.
-	//Options::captureMouse = (SDL_GrabMode)_btnLockMouse->getPressed();
-	//SDL_WM_GrabInput(Options::captureMouse);
+	// Don't do that! Breaks stuff hard.
+	Options::captureMouse = _btnLockMouse->getPressed();
+	//SDL_SetRelativeMouseMode((Options::captureMouse)?SDL_TRUE:SDL_FALSE); //because a typecast is not enough
 }
 
 /**

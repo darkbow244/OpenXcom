@@ -220,7 +220,7 @@ void OptionsBaseState::btnOkClick(Action *)
 	Options::switchDisplay();
 	Options::save();
 	_game->loadLanguage(Options::language);
-	//SDL_WM_GrabInput(Options::captureMouse);
+	//SDL_SetRelativeMouseMode((Options::captureMouse)?SDL_TRUE:SDL_FALSE); //Breaks stuff. Hard.
 	_game->getScreen()->resetDisplay();
 	_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	if (Options::reload && _origin == OPT_MENU)

@@ -310,7 +310,7 @@ void Screen::resetDisplay(bool resetVideo)
 #endif
 	makeVideoFlags();
 	// A kludge to make video resolution changing work
-	resetVideo = (_prevWidth != _baseWidth) || (_prevHeight != _baseHeight);
+	resetVideo = ( (_prevWidth != _baseWidth) || (_prevHeight != _baseHeight) ) || resetVideo;
 
 	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
 
@@ -347,6 +347,12 @@ void Screen::resetDisplay(bool resetVideo)
 				throw Exception(SDL_GetError());
 			}
 			Log(LOG_INFO) << "Created a window, size is: " << width << "x" << height;
+		}
+		else
+		{
+#ifndef __ANDROID__
+			SDL_SetWindowSize(_window, width, height);
+#endif
 		}
 
 		/* By this point we have a window and no renderer, so it's time to make one! */
