@@ -114,7 +114,8 @@ void Screen::makeVideoFlags()
  * Initializes a new display screen for the game to render contents to.
  * The screen is set up based on the current options.
  */
-Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL)
+Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL), _texture(NULL)
+	, _prevWidth(0), _prevHeight(0)
 {
 	// The default values for _window and _renderer are set to NULL so that we can check if there's a window already
 	resetDisplay();	
@@ -191,6 +192,7 @@ void Screen::handle(Action *action)
  */
 void Screen::flip()
 {
+	/* fuck it, let's do it the hard way */
 	SDL_UpdateTexture(_texture, NULL, _surface->getSurface()->pixels,
 			_surface->getSurface()->pitch);
 	SDL_RenderClear(_renderer);
@@ -203,7 +205,9 @@ void Screen::flip()
  */
 void Screen::clear()
 {
+	
 	_surface->clear();
+
 #if 0
 	if (_screen->flags & SDL_SWSURFACE) memset(_screen->pixels, 0, _screen->h*_screen->pitch);
 	else SDL_FillRect(_screen, &_clear, 0);
@@ -295,6 +299,7 @@ int Screen::getHeight() const
 /**
  * Resets the screen surfaces based on the current display options,
  * as they don't automatically take effect.
+ * @param resetVideo Reset display surface.
  */
 void Screen::resetDisplay(bool resetVideo)
 {
@@ -305,7 +310,7 @@ void Screen::resetDisplay(bool resetVideo)
 #endif
 	makeVideoFlags();
 	// A kludge to make video resolution changing work
-	resetVideo = true;
+	resetVideo = (_prevWidth != _baseWidth) || (_prevHeight != _baseHeight);
 
 	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
 
@@ -343,31 +348,34 @@ void Screen::resetDisplay(bool resetVideo)
 			}
 			Log(LOG_INFO) << "Created a window, size is: " << width << "x" << height;
 		}
-		/* We should have a window to render to, so we just need a new renderer */
-		if (_renderer != NULL)
-		{
-			Log(LOG_INFO) << "Destroying current renderer...";
-			SDL_DestroyRenderer(_renderer);
-			/*Can't check for errors, I guess*/
-			Log(LOG_INFO) << "OK, renderer destroyed";
-		}
+
 		/* By this point we have a window and no renderer, so it's time to make one! */
-		_renderer = SDL_CreateRenderer(_window, -1,
-					       SDL_RENDERER_ACCELERATED);
-		if (_renderer == NULL)
+		if (!_renderer)
 		{
-			/* Looks like it's not our day. */
-			Log(LOG_ERROR) << SDL_GetError();
-			throw Exception(SDL_GetError());
+			if ((_renderer = SDL_CreateRenderer(_window, -1,
+					       SDL_RENDERER_ACCELERATED)) == NULL)
+			{
+				/* Looks like it's not our day. */
+				Log(LOG_ERROR) << SDL_GetError();
+				throw Exception(SDL_GetError());
+			}
 		}
 		/* I don't trust this next part anyway */
-		//SDL_RenderSetLogicalSize(_renderer, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
 		Log(LOG_INFO) << "Setting renderer logical size to " << _baseWidth << "x" << _baseHeight;
 		SDL_RenderSetLogicalSize(_renderer, _baseWidth, _baseHeight);
+		if (_texture != NULL)
+		{
+			SDL_DestroyTexture(_texture);
+			_texture = NULL;
+		}
 		Log(LOG_INFO) << "Setting main texture size to " << _baseWidth << "x" << _baseHeight;
 		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
 				SDL_TEXTUREACCESS_STREAMING, _baseWidth, _baseHeight);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
+		
+		/* Save new baseWidth and baseHeight */
+		_prevWidth = _baseWidth;
+		_prevHeight = _baseHeight;
 	}
 	else
 	{
@@ -381,11 +389,14 @@ void Screen::resetDisplay(bool resetVideo)
 	//_scaleY = getHeight() / (double)_baseHeight;
 	_scaleX = 1;
 	_scaleY = 1;
+	_scale = std::min(getWidth() / (double) _baseWidth, getHeight() / (double) _baseHeight);
 #if 1
 	_clear.x = 0;
 	_clear.y = 0;
-	_clear.w = getWidth();
-	_clear.h = getHeight();
+	/* _clear.w = getWidth();
+	_clear.h = getHeight(); */
+	_clear.w = _baseWidth;
+	_clear.h = _baseHeight;
 #endif
 
 	bool cursorInBlackBands;
@@ -408,7 +419,7 @@ void Screen::resetDisplay(bool resetVideo)
 
 	if (_scaleX > _scaleY && Options::keepAspectRatio)
 	{
-		int targetWidth = floor(_scaleY * (double)_baseWidth);
+		int targetWidth = (int)floor(_scaleY * (double)_baseWidth);
 		_topBlackBand = _bottomBlackBand = 0;
 		_leftBlackBand = (getWidth() - targetWidth) / 2;
 		if (_leftBlackBand < 0)
@@ -430,7 +441,7 @@ void Screen::resetDisplay(bool resetVideo)
 	}
 	else if (_scaleY > _scaleX && Options::keepAspectRatio)
 	{
-		int targetHeight = floor(_scaleX * (double)_baseHeight);
+		int targetHeight = (int)floor(_scaleX * (double)_baseHeight);
 		_topBlackBand = (getHeight() - targetHeight) / 2;
 		if (_topBlackBand < 0)
 		{
@@ -492,6 +503,11 @@ double Screen::getYScale() const
 	return _scaleY;
 }
 
+double Screen::getScale() const
+{
+	return _scale;
+}
+
 /**
  * Returns the screen's top black forbidden to cursor band's height.
  * @return Height in pixel.
@@ -549,8 +565,10 @@ void Screen::screenshot(const std::string &filename) const
 }
 
 
-/** Check whether useHQXFilter is set in Options and a compatible resolution
- *  has been selected.
+/** 
+ * Check whether useHQXFilter is set in Options and a compatible resolution
+ * has been selected.
+ * @return if it is enabled.
  */
 bool Screen::isHQXEnabled()
 {
@@ -571,7 +589,7 @@ bool Screen::isHQXEnabled()
 }
 
 /**
- * Check if openGl is enabled.
+ * Check if OpenGL is enabled.
  * @return if it is enabled.
  */
 bool Screen::isOpenGLEnabled()
@@ -650,6 +668,11 @@ void Screen::updateScale(int &type, int selection, int &width, int &height, bool
 		Options::baseXResolution = width;
 		Options::baseYResolution = height;
 	}
+}
+
+SDL_Renderer * Screen::getRenderer() const
+{
+	return _renderer;
 }
 
 }

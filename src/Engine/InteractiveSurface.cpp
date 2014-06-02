@@ -32,7 +32,7 @@ const SDL_Keycode InteractiveSurface::SDLK_ANY = (SDL_Keycode)-1; // using an un
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _isHovered(false), _isFocused(true), _listButton(false)
+InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _multiGesture(0), _isHovered(false), _isFocused(true), _listButton(false)
 {
 }
 
@@ -197,6 +197,10 @@ void InteractiveSurface::handle(Action *action, State *state)
 	else if (action->getDetails()->type == SDL_FINGERMOTION)
 	{
 		fingerMotion(action, state);
+	}
+	else if (action->getDetails()->type == SDL_MULTIGESTURE) 
+	{
+		multiGesture(action, state);
 	}
 
 	if (_isFocused)
@@ -426,6 +430,14 @@ void InteractiveSurface::fingerMotion(Action *action, State *state)
 	}
 }
 
+void InteractiveSurface::multiGesture(Action *action, State *state)
+{
+	if (_multiGesture != 0)
+	{
+		(state->*_multiGesture)(action);
+	}
+}
+
 void InteractiveSurface::textInput(Action *action, State *state)
 {
 	//TODO: do nothing?
@@ -546,6 +558,11 @@ void InteractiveSurface::onKeyboardRelease(ActionHandler handler, SDL_Keycode ke
 void InteractiveSurface::onFingerMotion(ActionHandler handler)
 {
 	_fingerMotion = handler;
+}
+
+void InteractiveSurface::onMultiGesture(ActionHandler handler)
+{
+	_multiGesture = handler;
 }
 
 /**

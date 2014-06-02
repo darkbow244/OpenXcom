@@ -99,6 +99,8 @@ Base::~Base()
  * Loads the base from a YAML file.
  * @param node YAML node.
  * @param save Pointer to saved game.
+ * @param newGame Is this the first base of a new game?
+ * @param newBattleGame Is this the base of a skirmish game?
  */
 void Base::load(const YAML::Node &node, SavedGame *save, bool newGame, bool newBattleGame)
 {
@@ -590,6 +592,7 @@ double Base::getUsedStores()
  * A positive offset simulates adding items to the stores, whereas a negative offset
  * can be used to check whether sufficient items have been removed to stop the stores overflowing.
  * @param offset Adjusts the used capacity.
+ * @return True if the base's stores are over their limit.
  */
 bool Base::storesOverfull(double offset)
 {
@@ -1020,6 +1023,7 @@ const std::vector<Production *> & Base::getProductions () const
  * Returns whether or not this base
  * is equipped with hyper-wave
  * detection facilities.
+ * @return True if the base has hyper-wave detection.
  */
 bool Base::getHyperDetection() const
 {
@@ -1207,12 +1211,13 @@ bool isCompleted::operator()(const BaseFacility *facility) const
 /**
  * Calculate the detection chance of this base.
  * Big bases without mindshields are easier to detect.
+ * @param difficulty The savegame difficulty.
  * @return The detection chance.
  */
-unsigned Base::getDetectionChance(int difficulty) const
+size_t Base::getDetectionChance(int difficulty) const
 {
-	unsigned mindShields = std::count_if(_facilities.begin(), _facilities.end(), isMindShield());
-	unsigned completedFacilities = std::count_if(_facilities.begin(), _facilities.end(), isCompleted());
+	size_t mindShields = std::count_if(_facilities.begin(), _facilities.end(), isMindShield());
+	size_t completedFacilities = std::count_if(_facilities.begin(), _facilities.end(), isCompleted());
 	return ((completedFacilities / 6 + 15) / (mindShields + 1)) * (int)(1 + difficulty / 2);
 }
 

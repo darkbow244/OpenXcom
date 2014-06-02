@@ -498,7 +498,7 @@ void Pathfinding::directionToVector(const int direction, Position *vector)
 /**
  * Converts direction to a vector. Direction starts north = 0 and goes clockwise.
  * @param vector Pointer to a position (which acts as a vector).
- * @return Direction
+ * @param dir Resulting direction.
  */
 void Pathfinding::vectorToDirection(const Position &vector, int &dir)
 {
@@ -886,6 +886,7 @@ bool Pathfinding::previewPath(bool bRemove)
 			for (int y = size; y >= 0; y--)
 			{
 				Tile *tile = _save->getTile(pos + Position(x,y,0));
+				Tile *tileAbove = _save->getTile(pos + Position(x,y,1));
 				if (!bRemove)
 				{
 					if (i == _path.rend() - 1)
@@ -897,7 +898,11 @@ bool Pathfinding::previewPath(bool bRemove)
 						int nextDir = *(i + 1);
 						tile->setPreview(nextDir);
 					}
-						tile->setTUMarker(tus);
+					tile->setTUMarker(tus);
+					if (tileAbove && tileAbove->getPreview() == 0 && tu == 0 && _movementType != MT_FLY) //unit fell down, retroactively make the tile above's direction marker to DOWN
+					{
+						tileAbove->setPreview(DIR_DOWN);
+					}
 				}
 				else
 				{

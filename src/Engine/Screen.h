@@ -44,7 +44,7 @@ private:
 	SDL_Renderer *_renderer;
 	int _bpp;
 	int _baseWidth, _baseHeight;
-	double _scaleX, _scaleY;
+	double _scaleX, _scaleY, _scale;
 	int _topBlackBand, _bottomBlackBand, _leftBlackBand, _rightBlackBand, _cursorTopBlackBand, _cursorLeftBlackBand;
 	Uint32 _flags;
 	int _zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy);
@@ -57,9 +57,14 @@ private:
 	/// Sets the _flags and _bpp variables based on game options; needed in more than one place now
 	void makeVideoFlags();
 	SDL_Texture *_texture;
+#ifdef __ANDROID__
+	int _prevWidth, _prevHeight;
+#endif
 public:
 	static const int ORIGINAL_WIDTH;
 	static const int ORIGINAL_HEIGHT;
+	
+	SDL_Renderer * getRenderer() const;
 
 	/// Creates a new display screen.
 	Screen();
@@ -101,6 +106,10 @@ public:
 	static bool isOpenGLEnabled();
 	/// update the game scale as required.
 	static void updateScale(int &type, int selection, int &x, int &y, bool change);
+#ifdef __ANDROID__
+	/// Get the scale for action() scaling
+	double getScale() const;
+#endif
 };
 
 }

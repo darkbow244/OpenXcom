@@ -60,6 +60,10 @@
 #include "../Interface/Cursor.h"
 #include "../Engine/Screen.h"
 
+#ifdef __ANDROID__
+#include <limits>
+#endif
+
 #if 0
 #include "../Engine/Logger.h"
 #endif
@@ -456,8 +460,13 @@ void Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 	// Orthographic projection
 	x -= _cenX;
 	y -= _cenY;
-
 	double rho = sqrt((double)(x*x + y*y));
+	if (rho > _radius)
+	{
+		*lat = std::numeric_limits<double>::quiet_NaN();
+		*lon = std::numeric_limits<double>::quiet_NaN();
+		return;
+	}
 	double c = asin(rho / _radius);
 	if ( AreSame(rho, 0.0) )
 	{
@@ -1430,7 +1439,7 @@ void Globe::drawDetail()
 		return;
 
 	// Draw the country borders
-	if (_zoom >= 1)
+	if (_zoom >= 1) 
 	{
 		// Lock the surface
 		_countries->lock();

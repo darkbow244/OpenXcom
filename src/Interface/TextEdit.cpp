@@ -35,6 +35,9 @@ namespace OpenXcom
  * @param y Y position in pixels.
  */
 TextEdit::TextEdit(State *state, int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _value(L""), _blink(true), _modal(true), _ascii(L'A'), _caretPos(0), _numerical(false), _change(0), _state(state)
+#ifdef __ANDROID__
+	, _isKeyboardActive(false)
+#endif
 {
 	_isFocused = false;
 	_text = new Text(width, height, 0, 0);
@@ -98,13 +101,14 @@ void TextEdit::setFocus(bool focus, bool modal)
 				_state->setModal(this);
 #ifdef __ANDROID__
 			// Show virtual keyboard
-			SDL_Rect r;
+			/* SDL_Rect r;
 			r.x = getX();
 			r.y = getY();
 			r.w = getWidth();
 			r.h = getHeight();
 			SDL_SetTextInputRect(&r);
-			SDL_StartTextInput();
+			SDL_StartTextInput(); */
+			_startTextInput();
 #endif
 		}
 		else
@@ -116,11 +120,44 @@ void TextEdit::setFocus(bool focus, bool modal)
 			if (_modal)
 				_state->setModal(0);
 #ifdef __ANDROID__
-			SDL_StopTextInput();
+			/* SDL_StopTextInput(); */
+			_stopTextInput();
 #endif
 		}
 	}
 }
+
+#ifdef __ANDROID__
+/**
+ * Shows keyboard on devices without physical keyboard
+ */
+void TextEdit::_startTextInput()
+{
+	if (!SDL_IsScreenKeyboardShown(NULL))
+	{
+		SDL_Rect r;
+		r.x = getX();
+		r.y = getY();
+		r.w = getWidth();
+		r.h = getHeight();
+		SDL_SetTextInputRect(&r);
+		SDL_StartTextInput();
+		_isKeyboardActive = true;
+	}
+}
+/**
+ * Hides keyboard after text is entered
+ */
+
+void TextEdit::_stopTextInput()
+{
+	if (_isKeyboardActive)
+	{
+		SDL_StopTextInput();
+		_isKeyboardActive = false;
+	}
+}
+#endif
 
 /**
  * Changes the text edit to use the big-size font.
@@ -384,6 +421,10 @@ void TextEdit::mousePress(Action *action, State *state)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 	{
+#ifdef __ANDROID__
+	/* Show keyboard */
+	_startTextInput();
+#endif
 		if (!_isFocused)
 		{
 			setFocus(true);

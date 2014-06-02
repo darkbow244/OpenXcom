@@ -83,6 +83,7 @@
 #include "../Engine/CrossPlatform.h"
 #include "../Menu/LoadGameState.h"
 #include "../Menu/SaveGameState.h"
+#include "../fmath.h"
 
 namespace OpenXcom
 {
@@ -645,26 +646,41 @@ void BattlescapeState::mapOver(Action *action)
 				-int(_mouseYScale * action->getDetails()->motion.yrel), false);
 #else
 			_map->getCamera()->scrollXY(
-				-action->getDetails()->motion.xrel,
-				-action->getDetails()->motion.yrel, false);
+				-action->getDetails()->motion.xrel / action->getXScale(),
+				-action->getDetails()->motion.yrel / action->getYScale(), false);
 #endif
+			action->getDetails()->motion.x = _xBeforeMouseScrolling;
+			action->getDetails()->motion.y = _yBeforeMouseScrolling;
+			_map->setCursorType(CT_NONE);
 		}
 		else
 		{
+			Position delta = _map->getCamera()->getMapOffset();
 #ifdef __ANDROID__
 			_map->getCamera()->scrollXY(
 				int(_mouseXScale * action->getDetails()->motion.xrel),
 				int(_mouseYScale * action->getDetails()->motion.yrel), false);
 #else
 			_map->getCamera()->scrollXY(
-				action->getDetails()->motion.xrel,
-				action->getDetails()->motion.yrel, false);
+				action->getDetails()->motion.xrel / action->getXScale(),
+				action->getDetails()->motion.yrel / action->getYScale(), false);
+			delta = _map->getCamera()->getMapOffset() - delta;
+			int barWidth = _game->getScreen()->getCursorLeftBlackBand();
+			int barHeight = _game->getScreen()->getCursorTopBlackBand();
+			int cursorX = _cursorPosition.x + Round(delta.x * action->getXScale());
+			int cursorY = _cursorPosition.y + Round(delta.y * action->getYScale());
+			_cursorPosition.x = std::min(_game->getScreen()->getWidth() - barWidth - (int)(Round(action->getXScale())), std::max(barWidth, cursorX));
+			_cursorPosition.y = std::min(_game->getScreen()->getHeight() - barHeight - (int)(Round(action->getYScale())), std::max(barHeight, cursorY));
 #endif
+			action->getDetails()->motion.x = _cursorPosition.x;
+			action->getDetails()->motion.y = _cursorPosition.y;
 		}
 
 		// We don't want to look the mouse-cursor jumping :)
+#if 0
 		action->getDetails()->motion.x = _xBeforeMouseScrolling;
 		action->getDetails()->motion.y = _yBeforeMouseScrolling;
+#endif
 		_game->getCursor()->handle(action);
 	}
 }
@@ -687,6 +703,16 @@ void BattlescapeState::mapPress(Action *action)
 		_isMouseScrolled = false;
 		SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
 		_mapOffsetBeforeMouseScrolling = _map->getCamera()->getMapOffset();
+#ifndef __ANDROID___
+		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
+		/* Yes, I'm being very cautious about these changes */
+		{
+			_cursorPosition.x = action->getDetails()->motion.x;
+			_cursorPosition.y = action->getDetails()->motion.y;
+			// the Z is irrelevant to our mouse position, but we can use it as a boolean to check if the position is set or not
+			_cursorPosition.z = 1;
+		}
+#endif
 		_totalMouseMoveX = 0; _totalMouseMoveY = 0;
 		_mouseMovedOverThreshold = false;
 		_mouseScrollingStartTime = SDL_GetTicks();
@@ -1545,9 +1571,17 @@ inline void BattlescapeState::handle(Action *action)
 	if (_game->getCursor()->getVisible() || action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		State::handle(action);
+#ifndef __ANDROID__
+		if (_isMouseScrolling && !Options::battleDragScrollInvert)
+#else
 		if (_isMouseScrolling)
+#endif
 		{
+#ifndef __ANDROID__
+			_map->setSelectorPosition((_cursorPosition.x - _game->getScreen()->getCursorLeftBlackBand()) / action->getXScale(), (_cursorPosition.y - _game->getScreen()->getCursorTopBlackBand()) / action->getYScale());
+#else
 			_map->setSelectorPosition(_xBeforeMouseScrolling / action->getXScale(), _yBeforeMouseScrolling / action->getYScale());
+#endif
 		}
 
 		if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
@@ -2066,16 +2100,18 @@ BattlescapeGame *BattlescapeState::getBattleGame()
 
 /**
  * Handler for the mouse moving over the icons, disabling the tile selection cube.
+ * @param action Pointer to an action.
  */
-void BattlescapeState::mouseInIcons(Action * /* action */)
+void BattlescapeState::mouseInIcons(Action *)
 {
 	_mouseOverIcons = true;
 }
 
 /**
  * Handler for the mouse going out of the icons, enabling the tile selection cube.
+ * @param action Pointer to an action.
  */
-void BattlescapeState::mouseOutIcons(Action * /* action */)
+void BattlescapeState::mouseOutIcons(Action *)
 {
 	_mouseOverIcons = false;
 }
@@ -2096,6 +2132,7 @@ bool BattlescapeState::getMouseOverIcons() const
  * The save button is an exception as we want to still be able to save if something
  * goes wrong during the alien turn, and submit the save file for dissection.
  * @param allowSaving True, if the help button was clicked.
+ * @return True if the player can still press buttons.
  */
 bool BattlescapeState::allowButtons(bool allowSaving) const
 {
@@ -2241,9 +2278,23 @@ bool BattlescapeState::hasScrolled() const
 void BattlescapeState::stopScrolling(Action *action)
 {
 	/* FIXME */
-	//SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
+	SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+	if (Options::battleDragScrollInvert)
+	{
+		SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
+		_battleGame->setupCursor();
+	}
+	else
+	{
+		SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
+		action->setMouseAction(_cursorPosition.x/action->getXScale(), _cursorPosition.y/action->getYScale(), _game->getScreen()->getSurface()->getX(), _game->getScreen()->getSurface()->getY());
+		_map->setSelectorPosition(_cursorPosition.x / action->getXScale(), _cursorPosition.y / action->getYScale());
+	}
+	// reset our "mouse position stored" flag
+	_cursorPosition.z = 0;
+
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
-	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getHeight(), _map->getWidth());
 }
 
 }

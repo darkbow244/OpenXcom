@@ -17,15 +17,9 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Game.h"
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <SDL_syswm.h>
-#endif
 #include <cmath>
 #include <sstream>
 #include <SDL_mixer.h>
-#include <SDL_image.h>
 #include "Adlib/adlplayer.h"
 #include "State.h"
 #include "Screen.h"
@@ -45,7 +39,6 @@
 #include "Options.h"
 #include "CrossPlatform.h"
 #include "../Menu/TestState.h"
-#include "../Menu/OptionsBaseState.h"
 
 namespace OpenXcom
 {
@@ -57,7 +50,7 @@ const double Game::VOLUME_GRADIENT = 10.0;
  * creates the display screen and sets up the cursor.
  * @param title Title of the game window.
  */
-Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states(), _deleted(), _res(0), _save(0), _rules(0), _quit(false), _init(false), _mouseActive(true)
+Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states(), _deleted(), _res(0), _save(0), _rules(0), _quit(false), _init(false), _mouseActive(true), _timeUntilNextFrame(0)
 {
 	Options::reload = false;
 	Options::mute = false;
@@ -85,26 +78,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 	//SDL_WM_GrabInput(Options::captureMouse);
 	
 	// Set the window icon
-#ifdef _WIN32
-	HINSTANCE handle = GetModuleHandle(NULL);
-	HICON icon = LoadIcon(handle, MAKEINTRESOURCE(103));
-
-	SDL_SysWMinfo wminfo;
-	SDL_VERSION(&wminfo.version)
-	if (SDL_GetWMInfo(&wminfo))
-	{
-		HWND hwnd = wminfo.window;
-		SetClassLongPtr(hwnd, GCLP_HICON, (LONG_PTR)icon);
-	}
-#else
-	SDL_Surface *icon = IMG_Load(CrossPlatform::getDataFile("openxcom.png").c_str());
-	if (icon != 0)
-	{
-		/* FIXME: replace this */
-		//SDL_WM_SetIcon(icon, NULL);
-		SDL_FreeSurface(icon);
-	}
-#endif
+	CrossPlatform::setWindowIcon(103, "openxcom.png");
 
 	// Set the window caption
 	/* SDL_WM_SetCaption(title.c_str(), 0); FIXME */
@@ -127,7 +101,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 	// Create blank language
 	_lang = new Language();
 
-	_framestarttime = 0;
+	_timeOfLastFrame = 0;
 }
 
 /**
@@ -148,8 +122,8 @@ Game::~Game()
 	delete _cursor;
 	delete _lang;
 	delete _res;
-	delete _rules;
 	delete _save;
+	delete _rules;
 	delete _screen;
 	delete _fpsCounter;
 
@@ -268,9 +242,82 @@ void Game::run()
 					runningState = RUNNING;
 					// Go on, feed the event to others
 #ifdef __ANDROID__
+					// ...or not
+					break;
+#endif
+#ifdef __ANDROID__
 				case SDL_FINGERMOTION:
+				case SDL_MULTIGESTURE:
 #endif
 				default:
+#ifdef __ANDROID__
+
+					SDL_Event fakeEvent;
+					SDL_Rect viewport;
+					int offsetX, offsetY;
+					double scale = _screen->getScale(); // We're preserving the aspect rate
+					
+					//Log(LOG_DEBUG) << "Scale is " << scale;
+					
+					SDL_RenderGetViewport(_screen->getRenderer(), &viewport);
+					offsetX = viewport.x;
+					offsetY = viewport.y;
+					//Log(LOG_INFO) << "Current viewport: top point at " << viewport.x << ", " << viewport.y << "; size: " << viewport.w << ", " << viewport.h;
+					fakeEvent.type = SDL_FIRSTEVENT; /* Initialize as null-event */
+					if ((_event.type == SDL_FINGERMOTION) ||
+					    (_event.type == SDL_FINGERDOWN) ||
+					    (_event.type == SDL_FINGERUP))
+					{
+						if(_event.tfinger.fingerId == 0)
+						{
+						/* We use fakeEvent to fake the motion of the first finger */
+							if(_event.type == SDL_FINGERMOTION)
+							{
+							/* This one has to be passed unchanged AND as a touch finger event. Woosh.*/
+								fakeEvent.type = SDL_MOUSEMOTION;
+								/* SDL_GetMouseState(&fakeEvent.motion.x,
+										  &fakeEvent.motion.y);
+								SDL_GetRelativeMouseState(&fakeEvent.motion.xrel,
+											  &fakeEvent.motion.yrel); */
+								fakeEvent.motion.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
+								fakeEvent.motion.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
+								fakeEvent.motion.xrel = _event.tfinger.dx * Options::displayWidth / scale;
+								fakeEvent.motion.yrel = _event.tfinger.dy * Options::displayHeight / scale;
+								
+								fakeEvent.motion.state = SDL_BUTTON(1);	
+								//Log(LOG_INFO) << "Created a MouseMotion event at " << fakeEvent.motion.x << ", " << fakeEvent.motion.y;
+								//Log(LOG_INFO) << "FUCKING WORK NOW please with relative things at " << fakeEvent.motion.xrel << ", " << fakeEvent.motion.yrel;
+							}
+							else
+							{
+								
+								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
+								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
+								fakeEvent.button.button = SDL_BUTTON_LEFT;
+								/*SDL_GetMouseState(&fakeEvent.button.x,
+										  &fakeEvent.button.y);*/
+								//Log(LOG_INFO) << "Created a MouseButton event at " << fakeEvent.button.x << ", " << fakeEvent.button.y;
+								if (_event.type == SDL_FINGERDOWN)
+								{
+									fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+								}
+								else
+								{
+									fakeEvent.type = SDL_MOUSEBUTTONUP;
+								}
+							}
+						}
+						
+					}
+					if (fakeEvent.type != SDL_FIRSTEVENT)
+					{
+						Action fakeAction = Action(&fakeEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+						_screen->handle(&fakeAction);
+						_cursor->handle(&fakeAction);
+						_fpsCounter->handle(&fakeAction);
+						_states.back()->handle(&fakeAction);
+					}
+#endif
 					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 					_screen->handle(&action);
 					_cursor->handle(&action);
@@ -303,16 +350,28 @@ void Game::run()
 					break;
 			}
 		}
-
+		
 		// Process rendering
 		if (runningState != PAUSED)
 		{
 			// Process logic
-			_fpsCounter->think();
 			_states.back()->think();
-
-			if (_init)
+			_fpsCounter->think();
+			if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
 			{
+				// Update our FPS delay time based on the time of the last draw.
+				_timeUntilNextFrame = (1000.0f / Options::FPS) - (SDL_GetTicks() - _timeOfLastFrame);
+			}
+			else
+			{
+				_timeUntilNextFrame = 0;
+			}
+
+			if (_init && _timeUntilNextFrame <= 0)
+			{
+				// make a note of when this frame update occured.
+				_timeOfLastFrame = SDL_GetTicks();
+				_fpsCounter->addFrame();
 				_screen->clear();
 				std::list<State*>::iterator i = _states.end();
 				do
@@ -327,10 +386,11 @@ void Game::run()
 				}
 				_fpsCounter->blit(_screen->getSurface());
 				_cursor->blit(_screen->getSurface());
+				_screen->flip();
 			}
-			_screen->flip();
-		}		
+		}
 
+#if 0		/* uh... why do we have the same thing over again? */
 		// Initialize active state
 		if (!_init)
 		{
@@ -350,23 +410,19 @@ void Game::run()
 			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 			_states.back()->handle(&action);
 		}
+#endif
 
 		// Save on CPU
 		switch (runningState)
 		{
-			case RUNNING: 
-				if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
+			case RUNNING:
+				if (_timeUntilNextFrame > 0)
 				{
-					_delaytime = (1000.0f / Options::FPS) - (SDL_GetTicks() - _framestarttime);
-					if (_delaytime > 0)
-					{
-						SDL_Delay((Uint32)_delaytime);
-					}
-					_framestarttime = SDL_GetTicks();
+					SDL_Delay(_timeUntilNextFrame); //Save CPU from going 100%
 				}
 				else
 				{
-					SDL_Delay(1); //Save CPU from going 100%
+					SDL_Delay(1);
 				}
 				break;
 			case SLOWED: case PAUSED:
@@ -415,13 +471,13 @@ void Game::setVolume(int sound, int music, int ui)
 		if (ui >= 0)
 		{
 			ui = volumeExponent(ui) * (double)SDL_MIX_MAXVOLUME;
-			Mix_Volume(0, ui);
 			Mix_Volume(1, ui);
+			Mix_Volume(2, ui);
 		}
 	}
 }
 
-float Game::volumeExponent(int volume)
+double Game::volumeExponent(int volume)
 {
 	return (exp(log(Game::VOLUME_GRADIENT + 1.0) * volume / (double)SDL_MIX_MAXVOLUME) -1.0 ) / Game::VOLUME_GRADIENT;
 }
@@ -631,8 +687,9 @@ void Game::setMouseActive(bool active)
 }
 
 /**
- * @brief Returns whether current state is *state
+ * Returns whether current state is *state
  * @param state The state to test against the stack state
+ * @return Is state the current state?
  */
 bool Game::isState(State *state) const
 {
@@ -640,6 +697,7 @@ bool Game::isState(State *state) const
 }
 
 /**
+ * Checks if the game is currently quitting.
  * @return whether the game is shutting down or not.
  */
 bool Game::isQuitting() const
@@ -713,7 +771,7 @@ void Game::initAudio()
 	{
 		Mix_AllocateChannels(16);
 		// Set up UI channels
-		Mix_ReserveChannels(2);
+		Mix_ReserveChannels(3);
 		Mix_GroupChannels(1, 2, 0);
 		Log(LOG_INFO) << "SDL_mixer initialized successfully.";
 		setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);

@@ -535,7 +535,7 @@ void ProjectileFlyBState::think()
 								if (_projectileImpact != V_OUTOFBOUNDS)
 								{
 									Explosion *explosion = new Explosion(proj->getPosition(1), _ammo->getRules()->getHitAnimation(), false, false);
-									_parent->getMap()->getExplosions()->insert(explosion);
+									_parent->getMap()->getExplosions()->push_back(explosion);
 									_parent->getSave()->getTileEngine()->hit(proj->getPosition(1), _ammo->getRules()->getPower(), _ammo->getRules()->getDamageType(), 0);
 								}
 								++i;
@@ -594,6 +594,9 @@ void ProjectileFlyBState::cancel()
 
 /**
  * Validates the throwing range.
+ * @param action Pointer to throw action.
+ * @param origin Position to throw from.
+ * @param target Tile to throw to.
  * @return True when the range is valid.
  */
 bool ProjectileFlyBState::validThrowRange(BattleAction *action, Position origin, Tile *target)

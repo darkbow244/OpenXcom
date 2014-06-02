@@ -438,6 +438,11 @@ GeoscapeState::~GeoscapeState()
 void GeoscapeState::blit()
 {
 	State::blit();
+#ifndef __ANDROID__ /* this one causes crashes, probably */
+	_game->getScreen()->getSurface()->drawLine(_btnTop->getX() - 1, 0, _btnTop->getX() - 1, _game->getScreen()->getSurface()->getHeight(), 15);
+	_game->getScreen()->getSurface()->drawLine(_btnTop->getX(), _sidebar->getY() - 1, _game->getScreen()->getSurface()->getWidth(), _sidebar->getY() - 1, 15);
+	_game->getScreen()->getSurface()->drawLine(_btnBottom->getX(), _btnBottom->getY() - 1, _game->getScreen()->getSurface()->getWidth(), _btnBottom->getY() - 1, 15);
+#endif
 	for(std::list<DogfightState*>::iterator it = _dogfights.begin(); it != _dogfights.end(); ++it)
 	{
 		(*it)->blit();
@@ -502,6 +507,7 @@ void GeoscapeState::init()
 	timeDisplay();
 
 	_globe->onMouseClick((ActionHandler)&GeoscapeState::globeClick);
+	_globe->onMultiGesture((ActionHandler)&GeoscapeState::globePinch);
 	_globe->onMouseOver(0);
 	_globe->rotateStop();
 	_globe->setFocus(true);
@@ -1094,7 +1100,7 @@ public:
 	/// Store the parameters.
 	/**
 	 * @param game The game engine.
-	 * @param game The globe object.
+	 * @param globe The globe object.
 	 */
 	callThink(Game &game, const Globe &globe) : _game(game), _globe(globe) { /* Empty by design. */ }
 	/// Call AlienMission::think() with stored parameters.
@@ -1106,6 +1112,8 @@ private:
 
 /** @brief Process a TerrorSite.
  * This function object will count down towards expiring a TerrorSite, and handle expired TerrorSites.
+ * @param ts Pointer to terror site.
+ * @return Has terror site expired?
  */
 bool GeoscapeState::processTerrorSite(TerrorSite *ts) const
 {
@@ -1514,9 +1522,9 @@ void GeoscapeState::time1Day()
 						possibilities.push_back(*f);
 					}
 				}
-				if (possibilities.size() !=0)
+				if (possibilities.size() != 0)
 				{
-					int pick = RNG::generate(0, possibilities.size()-1);
+					size_t pick = RNG::generate(0, possibilities.size()-1);
 					std::string sel = possibilities.at(pick);
 					bonus = _game->getRuleset()->getResearch(sel);
 					_game->getSavedGame()->addFinishedResearch(bonus, _game->getRuleset ());
@@ -1690,7 +1698,7 @@ void GeoscapeState::time1Month()
 								i = races.erase(i);
 							}
 						}
-						int race = RNG::generate(0, races.size()-1);
+						size_t race = RNG::generate(0, races.size()-1);
 						mission->setRace(races[race]);
 						mission->start(150);
 						_game->getSavedGame()->getAlienMissions().push_back(mission);
@@ -1995,6 +2003,27 @@ void GeoscapeState::zoomOutEffect()
 }
 
 /**
+ * Pinch-to-zoom the globe
+ */
+void GeoscapeState::globePinch(Action *action)
+{
+	double pinchVal = action->getDetails()->mgesture.dDist;
+	const double distThreshold = 0.01;
+	if (fabs(pinchVal) > distThreshold)
+	{
+		  if(pinchVal > 0)
+		  {
+			_globe->zoomIn();
+		  }
+		  else
+		  {
+			_globe->zoomOut();
+		  }
+	}
+  
+}
+
+/**
  * Dogfight logic. Moved here to have the code clean.
  */
 void GeoscapeState::handleDogfights()
@@ -2092,6 +2121,7 @@ void GeoscapeState::startDogfight()
 
 /**
  * Returns the first free dogfight slot.
+ * @return free slot
  */
 int GeoscapeState::getFirstFreeDogfightSlot()
 {
