@@ -1843,7 +1843,7 @@ void Globe::mouseOver(Action *action, State *state)
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 #ifndef __ANDROID__
-		SDL_WarpMouse((_game->getScreen()->getWidth() - 100) / 2 , _game->getScreen()->getHeight() / 2);
+		SDL_WarpMouseInWindow(NULL, (_game->getScreen()->getWidth() - 100) / 2 , _game->getScreen()->getHeight() / 2);
 #endif
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
@@ -1955,16 +1955,18 @@ void Globe::mouseRelease(Action *action, State *state)
  */
 void Globe::mouseClick(Action *action, State *state)
 {
-#ifndef __ANDROID__
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+	SDL_Event *ev = action->getDetails();
+	if (ev->type == SDL_MOUSEWHEEL)
 	{
-		zoomIn();
+		if (ev->wheel.y > 0)
+		{
+			zoomIn();
+		}
+		else
+		{
+			zoomOut();
+		}
 	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN)
-	{
-		zoomOut();
-	}
-#endif
 
 	double lon, lat;
 	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
@@ -2156,7 +2158,7 @@ void Globe::setupRadii(int width, int height)
 void Globe::stopScrolling(Action *action)
 {
 #ifndef __ANDROID__
-	SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
+	SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
 #else
 	//Log(LOG_INFO) << "Globe.cpp: stopScrolling(): setting mouse to " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;
