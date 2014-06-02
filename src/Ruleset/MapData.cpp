@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -201,6 +201,15 @@ void MapData::setBlockValue(int lightBlock, int visionBlock, int HEBlock, int sm
 	_block[3] = smokeBlock==1?256:0;
 	_block[4] = fireBlock;
 	_block[5] = gasBlock;
+}
+
+/**
+ * Sets the amount of HE blockage.
+ * @param HEBlock The high explosive blockage.
+ */
+void MapData::setHEBlock(int HEBlock)
+{
+	_block[2] = HEBlock;
 }
 
 /**

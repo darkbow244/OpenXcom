@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -92,7 +92,7 @@ Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) 
 	_save = _game->getSavedGame()->getSavedBattle();
 	_message = new BattlescapeMessage(320, (visibleMapHeight < 200)? visibleMapHeight : 200, 0, 0);
 	_message->setX(_game->getScreen()->getDX());
-	_message->setY(_game->getScreen()->getDY());
+	_message->setY((visibleMapHeight - _message->getHeight()) / 2);
 	_camera = new Camera(_spriteWidth, _spriteHeight, _save->getMapSizeX(), _save->getMapSizeY(), _save->getMapSizeZ(), this, visibleMapHeight);
 	_scrollMouseTimer = new Timer(SCROLL_INTERVAL);
 	_scrollMouseTimer->onTimer((SurfaceHandler)&Map::scrollMouse);
@@ -1531,7 +1531,8 @@ void Map::setHeight(int height)
 {
 	Surface::setHeight(height);
 	_visibleMapHeight = height - ICON_HEIGHT;
-	_message->setY(height/2 - _message->getHeight()/2);
+	_message->setHeight((_visibleMapHeight < 200)? _visibleMapHeight : 200);
+	_message->setY((_visibleMapHeight - _message->getHeight()) / 2);
 }
 /*
  * Special handling for setting the width of the map viewport.
@@ -1539,7 +1540,8 @@ void Map::setHeight(int height)
  */
 void Map::setWidth(int width)
 {
+	int dX = width - getWidth();
 	Surface::setWidth(width);
-	_message->setX(width/2 - _message->getWidth()/2);
+	_message->setX(_message->getX() + dX / 2);
 }
 }

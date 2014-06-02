@@ -20,6 +20,7 @@
 #include "Globe.h"
 #include <cmath>
 #include <fstream>
+#include <algorithm>
 #include "../fmath.h"
 #include "../Engine/Action.h"
 #include "../Engine/SurfaceSet.h"
@@ -57,6 +58,12 @@
 #include "../Ruleset/RuleCraft.h"
 #include "../Ruleset/Ruleset.h"
 #include "../Interface/Cursor.h"
+#include "../Engine/Screen.h"
+
+#if 0
+#include "../Engine/Logger.h"
+#endif
+
 
 namespace OpenXcom
 {
@@ -77,13 +84,13 @@ struct GlobeStaticData
 	
 	/**
 	 * Function returning normal vector of sphere surface
-	 * @param ox x cord of sphere center
-	 * @param oy y cord of sphere center
-	 * @param r radius of sphere
-	 * @param x cord of point where we getting this vector
-	 * @param y cord of point where we getting this vector
-	 * @return normal vector of sphere surface 
-	 */
+     * @param ox x cord of sphere center
+     * @param oy y cord of sphere center
+     * @param r radius of sphere
+     * @param x cord of point where we getting this vector
+     * @param y cord of point where we getting this vector
+     * @return normal vector of sphere surface 
+     */
 	inline Cord circle_norm(double ox, double oy, double r, double x, double y)
 	{
 		const double limit = r*r;
@@ -257,7 +264,12 @@ Globe::Globe(Game *game, int cenX, int cenY, int width, int height, int x, int y
 	_rotLon(0.0), _rotLat(0.0),
 	_hoverLon(0.0), _hoverLat(0.0),
 	_cenX(cenX), _cenY(cenY), _game(game),
-	_blink(true), _hover(false), _cacheLand()
+	_blink(true), _hover(false), _cacheLand(),
+	_isMouseScrolling(false), _isMouseScrolled(false),
+	_xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0),
+	_lonBeforeMouseScrolling(0.0), _latBeforeMouseScrolling(0.0),
+	_mouseScrollingStartTime(0), _totalMouseMoveX(0),
+	_totalMouseMoveY(0), _mouseMovedOverThreshold(false)
 {
 	_texture = new SurfaceSet(*_game->getResourcePack()->getSurfaceSet("TEXTURE.DAT"));
 
@@ -367,6 +379,7 @@ Globe::Globe(Game *game, int cenX, int cenY, int width, int height, int x, int y
 	_cenLon = _game->getSavedGame()->getGlobeLongitude();
 	_cenLat = _game->getSavedGame()->getGlobeLatitude();
 	_zoom = _game->getSavedGame()->getGlobeZoom();
+	_zoomOld = _zoom;
 	
 	setupRadii(width, height);
 
@@ -418,15 +431,15 @@ Globe::~Globe()
 void Globe::polarToCart(double lon, double lat, Sint16 *x, Sint16 *y) const
 {
 	// Orthographic projection
-	*x = _cenX + (Sint16)floor(_radius[_zoom] * cos(lat) * sin(lon - _cenLon));
-	*y = _cenY + (Sint16)floor(_radius[_zoom] * (cos(_cenLat) * sin(lat) - sin(_cenLat) * cos(lat) * cos(lon - _cenLon)));
+	*x = _cenX + (Sint16)floor(_radius * cos(lat) * sin(lon - _cenLon));
+	*y = _cenY + (Sint16)floor(_radius * (cos(_cenLat) * sin(lat) - sin(_cenLat) * cos(lat) * cos(lon - _cenLon)));
 }
 
 void Globe::polarToCart(double lon, double lat, double *x, double *y) const
 {
 	// Orthographic projection
-	*x = _cenX + _radius[_zoom] * cos(lat) * sin(lon - _cenLon);
-	*y = _cenY + _radius[_zoom] * (cos(_cenLat) * sin(lat) - sin(_cenLat) * cos(lat) * cos(lon - _cenLon));
+	*x = _cenX + _radius * cos(lat) * sin(lon - _cenLon);
+	*y = _cenY + _radius * (cos(_cenLat) * sin(lat) - sin(_cenLat) * cos(lat) * cos(lon - _cenLon));
 }
 
 
@@ -445,7 +458,7 @@ void Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 	y -= _cenY;
 
 	double rho = sqrt((double)(x*x + y*y));
-	double c = asin(rho / _radius[_zoom]);
+	double c = asin(rho / _radius);
 	if ( AreSame(rho, 0.0) )
 	{
 		*lat = _cenLat;
@@ -661,15 +674,25 @@ void Globe::rotateStopLat()
 }
 
 /**
+ * Changes the current globe zoom factor.
+ * @param zoom New zoom.
+ */
+void Globe::setZoom(size_t zoom)
+{
+	_zoom = std::min(std::max(zoom, (size_t)0u), _zoomRadius.size() - 1);
+	_radius = _zoomRadius[_zoom];
+	_game->getSavedGame()->setGlobeZoom(_zoom);
+	invalidate();
+}
+
+/**
  * Increases the zoom level on the globe.
  */
 void Globe::zoomIn()
 {
-	if (_zoom < _radius.size() - 1)
+	if (_zoom < _zoomRadius.size() - 1)
 	{
-		_zoom++;
-		_game->getSavedGame()->setGlobeZoom(_zoom);
-		invalidate();
+		setZoom(_zoom + 1);
 	}
 }
 
@@ -680,9 +703,7 @@ void Globe::zoomOut()
 {
 	if (_zoom > 0)
 	{
-		_zoom--;
-		_game->getSavedGame()->setGlobeZoom(_zoom);
-		invalidate();
+		setZoom(_zoom - 1);
 	}
 }
 
@@ -691,9 +712,10 @@ void Globe::zoomOut()
  */
 void Globe::zoomMin()
 {
-	_zoom = 0;
-	_game->getSavedGame()->setGlobeZoom(_zoom);
-	invalidate();
+	if (_zoom > 0)
+	{
+		setZoom(0);
+	}
 }
 
 /**
@@ -701,9 +723,68 @@ void Globe::zoomMin()
  */
 void Globe::zoomMax()
 {
-	_zoom = _radius.size() - 1;
-	_game->getSavedGame()->setGlobeZoom(_zoom);
-	invalidate();
+	if (_zoom < _zoomRadius.size() - 1)
+	{
+		setZoom(_zoomRadius.size() - 1);
+	}
+}
+
+/**
+ * Stores the zoom used before a dogfight.
+ */
+void Globe::saveZoomDogfight()
+{
+	_zoomOld = _zoom;
+}
+
+/**
+ * Zooms the globe smoothly into dogfight level.
+ * @return Is the globe already zoomed in?
+ */
+bool Globe::zoomDogfightIn()
+{
+	if (_zoom < DOGFIGHT_ZOOM)
+	{
+		double radiusNow = _radius;
+		if (radiusNow + _radiusStep >= _zoomRadius[DOGFIGHT_ZOOM])
+		{
+			setZoom(DOGFIGHT_ZOOM);
+		}
+		else
+		{
+			if (radiusNow + _radiusStep >= _zoomRadius[_zoom + 1])
+				_zoom++;
+			setZoom(_zoom);
+			_radius = radiusNow + _radiusStep;
+		}
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Zooms the globe smoothly out of dogfight level.
+ * @return Is the globe already zoomed out?
+ */
+bool Globe::zoomDogfightOut()
+{
+	if (_zoom > _zoomOld)
+	{
+		double radiusNow = _radius;
+		if (radiusNow - _radiusStep <= _zoomRadius[_zoomOld])
+		{
+			setZoom(_zoomOld);
+		}
+		else
+		{
+			if (radiusNow - _radiusStep <= _zoomRadius[_zoom - 1])
+				_zoom--;
+			setZoom(_zoom);
+			_radius = radiusNow - _radiusStep;
+		}
+		return false;
+	}
+	return true;
 }
 
 /**
@@ -875,9 +956,9 @@ void Globe::cache(std::list<Polygon*> *polygons, std::list<Polygon*> *cache)
 	for (std::list<Polygon*>::iterator i = polygons->begin(); i != polygons->end(); ++i)
 	{
 		// Is quad on the back face?
-		float closest = 0.0;
-		float z;
-		float furthest = 0.0;
+		double closest = 0.0;
+		double z;
+		double furthest = 0.0;
 		for (int j = 0; j < (*i)->getPoints(); ++j)
 		{
 			z = cos(_cenLat) * cos((*i)->getLatitude(j)) * cos((*i)->getLongitude(j) - _cenLon) + sin(_cenLat) * sin((*i)->getLatitude(j));
@@ -1004,7 +1085,7 @@ void Globe::draw()
 void Globe::drawOcean()
 {
 	lock();
-	drawCircle(_cenX+1, _cenY, _radius[_zoom]+20, Palette::blockOffset(12)+0);
+	drawCircle(_cenX+1, _cenY, _radius+20, Palette::blockOffset(12)+0);
 //	ShaderDraw<Ocean>(ShaderSurface(this));
 	unlock();
 }
@@ -1037,7 +1118,7 @@ void Globe::drawLand()
 
 /**
  * Get position of sun from point on globe
- * @param lon lontidue of position
+ * @param lon longitude of position
  * @param lat latitude of position 
  * @return position of sun
  */
@@ -1125,19 +1206,19 @@ void Globe::XuLine(Surface* surface, Surface* src, double x1, double y1, double 
 	}
 
 	if (y2<y1) { 
-	SY=-1;
+    SY=-1;
   } else if ( AreSame(deltay, 0.0) ) {
-	SY=0;
+    SY=0;
   } else {
-	SY=1;
+    SY=1;
   }
 
 	if (x2<x1) {
-	SX=-1;
+    SX=-1;
   } else if ( AreSame(deltax, 0.0) ) {
-	SX=0;
+    SX=0;
   } else {
-	SX=1;
+    SX=1;
   }
 
 	x0=x1;  y0=y1;
@@ -1739,58 +1820,73 @@ void Globe::mouseOver(Action *action, State *state)
 	double lon, lat;
 	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 
+	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
+	{
+		// The following is the workaround for a rare problem where sometimes
+		// the mouse-release event is missed for any reason.
+		// (checking: is the dragScroll-mouse-button still pressed?)
+		// However if the SDL is also missed the release event, then it is to no avail :(
+		if (0 == (SDL_GetMouseState(0, 0)&SDL_BUTTON(Options::geoDragScrollButton)))
+		{ // so we missed again the mouse-release :(
+			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
+			if ((!_mouseMovedOverThreshold) && (SDL_GetTicks() - _mouseScrollingStartTime <= (Options::dragScrollTimeTolerance)))
+			{
+				center(_lonBeforeMouseScrolling, _latBeforeMouseScrolling);
+			}
+			_isMouseScrolled = _isMouseScrolling = false;
+			stopScrolling(action);
+			return;
+		}
+
+		_isMouseScrolled = true;
+
+		// Set the mouse cursor back
+		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+#ifndef __ANDROID__
+		SDL_WarpMouse((_game->getScreen()->getWidth() - 100) / 2 , _game->getScreen()->getHeight() / 2);
+#endif
+		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+
+		// Check the threshold
+		_totalMouseMoveX += action->getDetails()->motion.xrel;
+		_totalMouseMoveY += action->getDetails()->motion.yrel;
+
+		if (!_mouseMovedOverThreshold)
+			_mouseMovedOverThreshold = ((std::abs(_totalMouseMoveX) > Options::dragScrollPixelTolerance) || (std::abs(_totalMouseMoveY) > Options::dragScrollPixelTolerance));
+
+		// Scrolling
+		if (Options::geoDragScrollInvert)
+		{
+			double newLon = ((double)_totalMouseMoveX / action->getXScale()) * ROTATE_LONGITUDE/(_zoom+1)/2;
+			double newLat = ((double)_totalMouseMoveY / action->getYScale()) * ROTATE_LATITUDE/(_zoom+1)/2;
+			center(_lonBeforeMouseScrolling + newLon / (Options::geoScrollSpeed / 10), _latBeforeMouseScrolling + newLat / (Options::geoScrollSpeed / 10));
+		}
+		else
+		{
+			double newLon = -action->getDetails()->motion.xrel * ROTATE_LONGITUDE/(_zoom+1)/2;
+			double newLat = -action->getDetails()->motion.yrel * ROTATE_LATITUDE/(_zoom+1)/2;
+			center(_cenLon + newLon / (Options::geoScrollSpeed / 10), _cenLat + newLat / (Options::geoScrollSpeed / 10));
+		}
+
+		// We don't want to look the mouse-cursor jumping :)
+		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+		action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
+		_game->getCursor()->handle(action);
+	}
+
+	if (_isMouseScrolling &&
+		(action->getDetails()->motion.x != _xBeforeMouseScrolling ||
+		action->getDetails()->motion.y != _yBeforeMouseScrolling))
+	{
+#ifdef __ANDROID__
+		//Log(LOG_INFO) << "Globe.cpp: mouseOver(): setting mouse to " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;
+#endif
+		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+		action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
+	}
 	// Check for errors
 	if (lat == lat && lon == lon)
 	{
-		if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
-		{
-			// The following is the workaround for a rare problem where sometimes
-			// the mouse-release event is missed for any reason.
-			// (checking: is the dragScroll-mouse-button still pressed?)
-			// However if the SDL is also missed the release event, then it is to no avail :(
-			if (0 == (SDL_GetMouseState(0, 0)&SDL_BUTTON(Options::geoDragScrollButton)))
-			{ // so we missed again the mouse-release :(
-				// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
-				if ((!_mouseMovedOverThreshold) && (SDL_GetTicks() - _mouseScrollingStartTime <= (Options::dragScrollTimeTolerance)))
-				{
-					center(_lonBeforeMouseScrolling, _latBeforeMouseScrolling);
-				}
-				_isMouseScrolled = _isMouseScrolling = false;
-				return;
-			}
-
-			_isMouseScrolled = true;
-
-			// Set the mouse cursor back
-			SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-			//SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
-			SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
-
-			// Check the threshold
-			_totalMouseMoveX += action->getDetails()->motion.xrel;
-			_totalMouseMoveY += action->getDetails()->motion.yrel;
-			if (!_mouseMovedOverThreshold)
-				_mouseMovedOverThreshold = ((std::abs(_totalMouseMoveX) > Options::dragScrollPixelTolerance) || (std::abs(_totalMouseMoveY) > Options::dragScrollPixelTolerance));
-
-			// Scrolling
-			if (Options::geoDragScrollInvert)
-			{
-				double newLon = ((double)_totalMouseMoveX / action->getXScale()) * ROTATE_LONGITUDE/(_zoom+1)/2;
-				double newLat = ((double)_totalMouseMoveY / action->getYScale()) * ROTATE_LATITUDE/(_zoom+1)/2;
-				center(_lonBeforeMouseScrolling + newLon / (Options::geoScrollSpeed / 10), _latBeforeMouseScrolling + newLat / (Options::geoScrollSpeed / 10));
-			}
-			else
-			{
-				double newLon = -action->getDetails()->motion.xrel * ROTATE_LONGITUDE/(_zoom+1)/2;
-				double newLat = -action->getDetails()->motion.yrel * ROTATE_LATITUDE/(_zoom+1)/2;
-				center(_cenLon + newLon / (Options::geoScrollSpeed / 10), _cenLat + newLat / (Options::geoScrollSpeed / 10));
-			}
-
-			// We don't want to look the mouse-cursor jumping :)
-			action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
-			_game->getCursor()->handle(action);
-		}
-
 		InteractiveSurface::mouseOver(action, state);
 	}
 }
@@ -1805,20 +1901,28 @@ void Globe::mousePress(Action *action, State *state)
 	double lon, lat;
 	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 
+	if (action->getDetails()->button.button == Options::geoDragScrollButton)
+	{
+		_isMouseScrolling = true;
+		_isMouseScrolled = false;
+		//SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
+#ifdef __ANDROID__
+		//Log(LOG_DEBUG) << "Globe.cpp: mousePress: got coordinates: " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;
+		/* FIXME: This is not the correct solution to our globe problems. */
+		//_xBeforeMouseScrolling *= ( Options::baseXResolution / (float) Options::displayWidth);
+		//_yBeforeMouseScrolling *= ( Options::baseYResolution / (float) Options::displayHeight);
+#endif
+		_xBeforeMouseScrolling = action->getAbsoluteXMouse();
+		_yBeforeMouseScrolling = action->getAbsoluteYMouse();
+		_lonBeforeMouseScrolling = _cenLon;
+		_latBeforeMouseScrolling = _cenLat;
+		_totalMouseMoveX = 0; _totalMouseMoveY = 0;
+		_mouseMovedOverThreshold = false;
+		_mouseScrollingStartTime = SDL_GetTicks();
+	}
 	// Check for errors
 	if (lat == lat && lon == lon)
 	{
-		if (action->getDetails()->button.button == Options::geoDragScrollButton)
-		{
-			_isMouseScrolling = true;
-			_isMouseScrolled = false;
-			SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
-			_lonBeforeMouseScrolling = _cenLon;
-			_latBeforeMouseScrolling = _cenLat;
-			_totalMouseMoveX = 0; _totalMouseMoveY = 0;
-			_mouseMovedOverThreshold = false;
-			_mouseScrollingStartTime = SDL_GetTicks();
-		}
 		InteractiveSurface::mousePress(action, state);
 	}
 }
@@ -1832,7 +1936,10 @@ void Globe::mouseRelease(Action *action, State *state)
 {
 	double lon, lat;
 	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
-
+	if (action->getDetails()->button.button == Options::geoDragScrollButton)
+	{
+		stopScrolling(action);
+	}
 	// Check for errors
 	if (lat == lat && lon == lon)
 	{
@@ -1848,53 +1955,65 @@ void Globe::mouseRelease(Action *action, State *state)
  */
 void Globe::mouseClick(Action *action, State *state)
 {
-	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL)
+#ifndef __ANDROID__
+	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
 	{
-		if (ev.wheel.y < 0)
-			zoomIn();
-		else
-			zoomOut();
+		zoomIn();
 	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN)
+	{
+		zoomOut();
+	}
+#endif
 
 	double lon, lat;
 	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 	
-	// Check for errors
-	if (lat == lat && lon == lon)
+	// The following is the workaround for a rare problem where sometimes
+	// the mouse-release event is missed for any reason.
+	// However if the SDL is also missed the release event, then it is to no avail :(
+	// (this part handles the release if it is missed and now an other button is used)
+	if (_isMouseScrolling)
 	{
-		// The following is the workaround for a rare problem where sometimes
-		// the mouse-release event is missed for any reason.
-		// However if the SDL is also missed the release event, then it is to no avail :(
-		// (this part handles the release if it is missed and now an other button is used)
-		if (_isMouseScrolling)
-		{
-			if (action->getDetails()->button.button != Options::geoDragScrollButton
-				&& 0 == (SDL_GetMouseState(0, 0)&SDL_BUTTON(Options::geoDragScrollButton)))
-			{ // so we missed again the mouse-release :(
-				// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
-				if ((!_mouseMovedOverThreshold) && (SDL_GetTicks() - _mouseScrollingStartTime <= (Options::dragScrollTimeTolerance)))
-				{
-					center(_lonBeforeMouseScrolling, _latBeforeMouseScrolling);
-				}
-				_isMouseScrolled = _isMouseScrolling = false;
-			}
-		}
-
-		// DragScroll-Button release: release mouse-scroll-mode
-		if (_isMouseScrolling)
-		{
-			// While scrolling, other buttons are ineffective
-			if (action->getDetails()->button.button == Options::geoDragScrollButton) _isMouseScrolling = false; else return;
+		if (action->getDetails()->button.button != Options::geoDragScrollButton
+			&& 0 == (SDL_GetMouseState(0, 0)&SDL_BUTTON(Options::geoDragScrollButton)))
+		{ // so we missed again the mouse-release :(
 			// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
 			if ((!_mouseMovedOverThreshold) && (SDL_GetTicks() - _mouseScrollingStartTime <= (Options::dragScrollTimeTolerance)))
 			{
-				_isMouseScrolled = false;
 				center(_lonBeforeMouseScrolling, _latBeforeMouseScrolling);
 			}
-			if (_isMouseScrolled) return;
+			_isMouseScrolled = _isMouseScrolling = false;
+			stopScrolling(action);
 		}
+	}
 
+	// DragScroll-Button release: release mouse-scroll-mode
+	if (_isMouseScrolling)
+	{
+		// While scrolling, other buttons are ineffective
+		if (action->getDetails()->button.button == Options::geoDragScrollButton)
+		{
+			_isMouseScrolling = false;
+			stopScrolling(action);
+		}
+		else
+		{
+			return;
+		}
+		// Check if we have to revoke the scrolling, because it was too short in time, so it was a click
+		if ((!_mouseMovedOverThreshold) && (SDL_GetTicks() - _mouseScrollingStartTime <= (Options::dragScrollTimeTolerance)))
+		{
+			_isMouseScrolled = false;
+			stopScrolling(action);
+			center(_lonBeforeMouseScrolling, _latBeforeMouseScrolling);
+		}
+		if (_isMouseScrolled) return;
+	}
+
+	// Check for errors
+	if (lat == lat && lon == lon)
+	{
 		InteractiveSurface::mouseClick(action, state);
 		if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 		{
@@ -1960,18 +2079,9 @@ void Globe::getPolygonTextureAndShade(double lon, double lat, int *texture, int 
  * Checks if the globe is zoomed in to it's maximum.
  * @return Returns true if globe is at max zoom, otherwise returns false.
  */
-bool Globe::isZoomedInToMax() const
+size_t Globe::getZoom() const
 {
-	return (_zoom == _radius.size() - 1);
-}
-
-/**
- * Checks if the globe is zoomed out to it's maximum.
- * @return Returns true if globe is at max zoom, otherwise returns false.
- */
-bool Globe::isZoomedOutToMax() const
-{
-	return (_zoom == 0);
+	return _zoom;
 }
 
 /*
@@ -2013,27 +2123,46 @@ void Globe::resize()
  */
 void Globe::setupRadii(int width, int height)
 {
-	_radius.clear();
+	_zoomRadius.clear();
 
-	_radius.push_back(0.45*height);
-	_radius.push_back(0.60*height);
-	_radius.push_back(0.90*height);
-	_radius.push_back(1.40*height);
-	_radius.push_back(2.25*height);
-	_radius.push_back(3.60*height);
+	_zoomRadius.push_back(0.45*height);
+	_zoomRadius.push_back(0.60*height);
+	_zoomRadius.push_back(0.90*height);
+	_zoomRadius.push_back(1.40*height);
+	_zoomRadius.push_back(2.25*height);
+	_zoomRadius.push_back(3.60*height);
 
-	_earthData.resize(_radius.size());
+	_radius = _zoomRadius[_zoom];
+	_radiusStep = (_zoomRadius[DOGFIGHT_ZOOM] - _zoomRadius[0]) / 10.0;
+
+	_earthData.resize(_zoomRadius.size());
 	//filling normal field for each radius
 
-	for(size_t r = 0; r<_radius.size(); ++r)
+	for(size_t r = 0; r<_zoomRadius.size(); ++r)
 	{
 		_earthData[r].resize(width * height);
 		for(int j=0; j<height; ++j)
 			for(int i=0; i<width; ++i)
 			{
-				_earthData[r][width*j + i] = static_data.circle_norm(width/2, height/2, _radius[r], i+.5, j+.5);
+				_earthData[r][width*j + i] = static_data.circle_norm(width/2, height/2, _zoomRadius[r], i+.5, j+.5);
 			}
 	}
 }
 
+/**
+ * Move the mouse back to where it started after we finish drag scrolling.
+ * @param action Pointer to an action.
+ */
+void Globe::stopScrolling(Action *action)
+{
+#ifndef __ANDROID__
+	SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
+	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+#else
+	//Log(LOG_INFO) << "Globe.cpp: stopScrolling(): setting mouse to " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;
+	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
+	/* action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
+	_game->getCursor()->handle(action); */
+#endif
+}
 }

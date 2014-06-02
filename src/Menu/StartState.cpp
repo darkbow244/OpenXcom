@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,6 +17,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "StartState.h"
+#include "../version.h"
 #include "../Engine/Logger.h"
 #include "../Engine/Game.h"
 #include "../Engine/Screen.h"
@@ -28,9 +29,12 @@
 #include "../Engine/Palette.h"
 #include "../Engine/Sound.h"
 #include "../Engine/Music.h"
+#include "../Engine/Font.h"
+#include "../Engine/Timer.h"
 #include "../Ruleset/Ruleset.h"
 #include "../Interface/FpsCounter.h"
 #include "../Interface/Cursor.h"
+#include "../Interface/Text.h"
 #include "../Resource/XcomResourcePack.h"
 #include "MainMenuState.h"
 #include "IntroState.h"
@@ -49,45 +53,82 @@ std::string StartState::error;
  * Initializes all the elements in the Loading screen.
  * @param game Pointer to the core game.
  */
-StartState::StartState(Game *game) : State(game)
+StartState::StartState(Game *game) : State(game), _anim(0)
 {
-	// Create objects
-	int dx = (Options::baseXResolution - 320) / 2;
-	int dy = (Options::baseYResolution - 200) / 2;
+	//updateScale() uses newDisplayWidth/Height and needs to be set ahead of time
 	Options::newDisplayWidth = Options::displayWidth;
 	Options::newDisplayHeight = Options::displayHeight;
+#ifdef __ANDROID__
+	Options::baseXResolution = Screen::ORIGINAL_WIDTH;
+	Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
+#else
+	Options::baseXResolution = Options::displayWidth;
+	Options::baseYResolution = Options::displayHeight;
+#endif
+	_game->getScreen()->resetDisplay(false);
 
+	// Create objects
 	_thread = 0;
 	loading = LOADING_STARTED;
 	error = "";
 
-	_surface = new Surface(320, 200, dx, dy);
+	_font = new Font();
+	_font->loadTerminal();
 
-	// Set palette (set to {0} here to ensure all fields are initialized)
-	SDL_Color bnw[3] = { {0} };
+	_text = new Text(Options::baseXResolution, Options::baseYResolution, 0, 0);
+	_cursor = new Text(_font->getWidth(), _font->getHeight(), 0, 0);
+	_timer = new Timer(150);
 
+#ifdef __ANDROID__
+	/* Accomodate for android weirdness */
+	SDL_Color bnw[3] = {{0}};
+
+	bnw[0].a = 255;
+	bnw[1].a = 255;
+	bnw[2].a = 255;
 	bnw[0].r = 0;
 	bnw[0].g = 0;
 	bnw[0].b = 0;
-	bnw[0].a = 255;
 	bnw[1].r = 255;
 	bnw[1].g = 255;
 	bnw[1].b = 255;
-	bnw[1].a = 255;
-	bnw[2].r = 255;
-	bnw[2].g = 255;
-	bnw[2].b = 0;
-	bnw[2].a = 255;
+	bnw[2].r = 185;
+	bnw[2].g = 185;
+	bnw[2].b = 185;
 
 	setPalette(bnw, 0, 3);
 
-	add(_surface);
+#else
+	setPalette(_font->getSurface()->getPalette(), 0, 2);
+#endif
+	add(_text);
+	add(_cursor);
 
 	// Set up objects
-	_surface->drawString(120, 96, "Loading...", 1);
+	_text->initText(_font, _font, 0);
+	_text->setColor(0);
+	_text->setWordWrap(true);
 
+	_cursor->initText(_font, _font, 0);
+	_cursor->setColor(0);
+	_cursor->setText(L"_");
+
+	_timer->onTimer((StateHandler)&StartState::animate);
+	_timer->start();
+
+	// Hide UI
 	_game->getCursor()->setVisible(false);
 	_game->getFpsCounter()->setVisible(false);
+
+	if (Options::reload)
+	{
+		addLine(L"Restarting...");
+		addLine(L"");
+	}
+	else
+	{
+		addLine(L"C:\\GAMES\\OPENXCOM>openxcom");
+	}
 }
 
 /**
@@ -100,6 +141,8 @@ StartState::~StartState()
 		int status;
 		SDL_WaitThread(_thread, &status);
 	}
+	delete _font;
+	delete _timer;
 }
 
 /**
@@ -134,19 +177,18 @@ void StartState::init()
 void StartState::think()
 {
 	State::think();
+	_timer->think(this, 0);
 
 	switch (loading)
 	{
 	case LOADING_FAILED:
 		flash();
-		_surface->clear();
-		_surface->drawString(1, 9, "ERROR:", 2);
-		_surface->drawString(1, 17, error.c_str(), 2);
-		_surface->drawString(1, 49, "Make sure you installed OpenXcom", 1);
-		_surface->drawString(1, 57, "correctly.", 1);
-		_surface->drawString(1, 73, "Check the requirements and", 1);
-		_surface->drawString(1, 81, "documentation for more details.", 1);
-		_surface->drawString(75, 183, "Press any key to quit", 1);
+		addLine(L"");
+		addLine(L"ERROR: " + Language::utf8ToWstr(error));
+		addLine(L"Make sure you installed OpenXcom correctly.");
+		addLine(L"Check the wiki documentation for more details.");
+		addLine(L"");
+		addLine(L"Press any key to continue.");
 		loading = LOADING_DONE;
 		break;
 	case LOADING_SUCCESSFUL:
@@ -156,6 +198,8 @@ void StartState::think()
 		{
 			bool letterbox = Options::keepAspectRatio;
 			Options::keepAspectRatio = true;
+			Options::baseXResolution = Screen::ORIGINAL_WIDTH;
+			Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
 			_game->getScreen()->resetDisplay(false);
 			_game->setState(new IntroState(_game, letterbox));
 		}
@@ -221,6 +265,74 @@ void StartState::flash()
 }
 
 /**
+ * Blinks the cursor and spreads out terminal output.
+ */
+void StartState::animate()
+{
+	_cursor->setVisible(!_cursor->getVisible());
+	_anim++;
+
+	if (loading == LOADING_STARTED)
+	{
+		std::wostringstream ss;
+		ss << L"Loading OpenXcom " << Language::utf8ToWstr(OPENXCOM_VERSION_SHORT) << Language::utf8ToWstr(OPENXCOM_VERSION_GIT) << "...";
+		if (Options::reload)
+		{
+			if (_anim == 2)
+				addLine(ss.str());
+		}
+		else
+		{
+			switch (_anim)
+			{
+			case 1:
+				addLine(L"DOS/4GW Protected Mode Run-time  Version 1.9");
+				addLine(L"Copyright (c) Rational Systems, Inc. 1990-1993");
+				break;
+			case 6:
+				addLine(L"");
+				addLine(L"OpenXcom initialisation");
+				break;
+			case 7:
+				addLine(L"");
+				if (Options::mute)
+				{
+					addLine(L"No Sound Detected");
+				}
+				else
+				{
+					addLine(L"SoundBlaster Sound Effects");
+					if (Options::preferredMusic == MUSIC_MIDI)
+						addLine(L"General MIDI Music");
+					else
+						addLine(L"SoundBlaster Music");
+					addLine(L"Base Port 220  Irq 7  Dma 1");
+				}
+				addLine(L"");
+				break;
+			case 9:
+				addLine(ss.str());
+				break;
+			}
+		}
+	}
+}
+
+/**
+ * Adds a line of text to the terminal and moves
+ * the cursor appropriately.
+ */
+void StartState::addLine(const std::wstring &str)
+{
+	_output << L"\n" << str;
+	_text->setText(_output.str());
+	int y = _text->getTextHeight() - _font->getHeight();
+	int x = _text->getTextWidth(y / _font->getHeight());
+	_cursor->setX(x);
+	_cursor->setY(y);
+}
+
+/**
  * Loads game data and updates status accordingly.
  * @param game_ptr Pointer to the game.
  */
@@ -241,6 +353,12 @@ int StartState::load(void *game_ptr)
 		loading = LOADING_SUCCESSFUL;
 	}
 	catch (Exception &e)
+	{
+		error = e.what();
+		Log(LOG_ERROR) << error;
+		loading = LOADING_FAILED;
+	}
+	catch (YAML::Exception &e)
 	{
 		error = e.what();
 		Log(LOG_ERROR) << error;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -47,9 +47,8 @@ private:
 	bool _fromInventory, _mindProbe;
 
 	Surface *_bg;
-	/* Change the name to a button, will help get out of the screen. */
-	//Text *_txtName;
-	TextButton *_txtName;
+	InteractiveSurface *_exit;
+	Text *_txtName;
 
 	Text *_txtTimeUnits, *_txtEnergy, *_txtHealth, *_txtFatalWounds, *_txtBravery, *_txtMorale, *_txtReactions, *_txtFiring, *_txtThrowing, *_txtMelee, *_txtStrength;
 	Text *_txtPsiStrength,  *_txtPsiSkill;
@@ -77,8 +76,8 @@ public:
 	void btnPrevClick(Action *action);
 	/// Handler for clicking the Next button.
 	void btnNextClick(Action *action);
-	/// exit the state.
-	void exit();
+	/// Handler for exiting the state.
+	void exitClick(Action *action);
 };
 
 }
