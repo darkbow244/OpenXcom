@@ -301,7 +301,7 @@ void MiniMapView::mouseOver(Action *action, State *state)
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 		assert (0 && "FIXME");
-		//SDL_WarpMouse(_xBeforeMouseScrolling, _yBeforeMouseScrolling);
+		SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
 		// Check the threshold

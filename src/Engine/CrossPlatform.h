@@ -82,7 +82,7 @@ namespace CrossPlatform
 	/// Gets the DOS-style executable path.
 	std::string getDosPath();
 	/// Sets the window icon.
-	void setWindowIcon(int winResource, const std::string &unixPath);
+	void setWindowIcon(int winResource, const std::string &unixPath, SDL_Window *winPtr);
 }
 
 }

@@ -976,7 +976,7 @@ std::string getDosPath()
 #endif
 }
 
-void setWindowIcon(int winResource, const std::string &unixPath)
+void setWindowIcon(int winResource, const std::string &unixPath, SDL_Window *winPtr)
 {
 #ifdef _WIN32
 	HINSTANCE handle = GetModuleHandle(NULL);
@@ -999,7 +999,7 @@ void setWindowIcon(int winResource, const std::string &unixPath)
 	SDL_Surface *icon = IMG_Load(utf8.c_str());
 	if (icon != 0)
 	{
-		SDL_WM_SetIcon(icon, NULL);
+		SDL_SetWindowIcon(winPtr, icon);
 		SDL_FreeSurface(icon);
 	}
 #endif

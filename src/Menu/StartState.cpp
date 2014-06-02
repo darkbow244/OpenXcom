@@ -80,8 +80,7 @@ StartState::StartState(Game *game) : State(game), _anim(0)
 	_cursor = new Text(_font->getWidth(), _font->getHeight(), 0, 0);
 	_timer = new Timer(150);
 
-#ifdef __ANDROID__
-	/* Accomodate for android weirdness */
+	/* Looks like SDL2 requires a three-color palette  */
 	SDL_Color bnw[3] = {{0}};
 
 	bnw[0].a = 255;
@@ -99,9 +98,6 @@ StartState::StartState(Game *game) : State(game), _anim(0)
 
 	setPalette(bnw, 0, 3);
 
-#else
-	setPalette(_font->getSurface()->getPalette(), 0, 2);
-#endif
 	add(_text);
 	add(_cursor);
 

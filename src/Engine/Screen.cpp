@@ -675,4 +675,9 @@ SDL_Renderer * Screen::getRenderer() const
 	return _renderer;
 }
 
+SDL_Window * Screen::getWindow() const
+{
+	return _window;
+}
+
 }

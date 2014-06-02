@@ -78,13 +78,16 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 	//SDL_WM_GrabInput(Options::captureMouse);
 	
 	// Set the window icon
-	CrossPlatform::setWindowIcon(103, "openxcom.png");
+	//CrossPlatform::setWindowIcon(103, "openxcom.png");
 
 	// Set the window caption
 	/* SDL_WM_SetCaption(title.c_str(), 0); FIXME */
 
 	// Create display
 	_screen = new Screen();
+
+	// Actually, you can create a window icon only after the screen is here
+	CrossPlatform::setWindowIcon(103, "openxcom.png", _screen->getWindow());
 
 	// Create cursor
 	_cursor = new Cursor(9, 13);
