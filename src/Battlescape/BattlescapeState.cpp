@@ -239,7 +239,7 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	_map->init();
 	_map->onMouseOver((ActionHandler)&BattlescapeState::mapOver);
 	_map->onMousePress((ActionHandler)&BattlescapeState::mapPress);
-	/* FIXME: Check what this function actually does */
+	/* On Android, turn the soldier if it was a swipe from him */
 	_map->onMouseRelease((ActionHandler)&BattlescapeState::mapRelease);
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
@@ -810,6 +810,7 @@ void BattlescapeState::mapClick(Action *action)
 	}
 
 	// right-click aborts walking state
+	// Maybe make it any button on Android?
 	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		if (_battleGame->cancelCurrentAction())
@@ -821,13 +822,11 @@ void BattlescapeState::mapClick(Action *action)
 	// don't handle mouseclicks over the buttons (it overlaps with map surface)
 	if (_mouseOverIcons) return;
 
-
 	// don't accept leftclicks if there is no cursor or there is an action busy
 	if (_map->getCursorType() == CT_NONE || _battleGame->isBusy()) return;
 
 	Position pos;
 	_map->getSelectorPosition(&pos);
-
 	if (_save->getDebugMode())
 	{
 		std::wostringstream ss;
@@ -843,6 +842,7 @@ void BattlescapeState::mapClick(Action *action)
 		}
 		else if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 		{
+			Log(LOG_INFO) << " -primary action called";
 			_battleGame->primaryAction(pos);
 		}
 	}
