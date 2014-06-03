@@ -2007,11 +2007,13 @@ void GeoscapeState::zoomOutEffect()
  */
 void GeoscapeState::globePinch(Action *action)
 {
+	static double accumulatedPinch;
 	double pinchVal = action->getDetails()->mgesture.dDist;
-	const double distThreshold = 0.01;
-	if (fabs(pinchVal) > distThreshold)
+	const double distThreshold = 0.03;
+	accumulatedPinch += pinchVal;
+	if (fabs(accumulatedPinch) > distThreshold)
 	{
-		  if(pinchVal > 0)
+		  if(accumulatedPinch > 0)
 		  {
 			_globe->zoomIn();
 		  }
@@ -2019,6 +2021,7 @@ void GeoscapeState::globePinch(Action *action)
 		  {
 			_globe->zoomOut();
 		  }
+		  accumulatedPinch = 0;
 	}
   
 }
