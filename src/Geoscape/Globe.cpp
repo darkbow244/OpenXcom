@@ -1852,7 +1852,8 @@ void Globe::mouseOver(Action *action, State *state)
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 #ifndef __ANDROID__
-		SDL_WarpMouseInWindow(NULL, (_game->getScreen()->getWidth() - 100) / 2 , _game->getScreen()->getHeight() / 2);
+		/* FIXME: Still doesn't work as intended */
+		//SDL_WarpMouseInWindow(NULL, (_game->getScreen()->getWidth() - 100) / 2 , _game->getScreen()->getHeight() / 2);
 #endif
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
@@ -2161,7 +2162,8 @@ void Globe::setupRadii(int width, int height)
 void Globe::stopScrolling(Action *action)
 {
 #ifndef __ANDROID__
-	SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+	/* FIXME: Still doesn't work as intended */
+	//SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
 #else
 	//Log(LOG_INFO) << "Globe.cpp: stopScrolling(): setting mouse to " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;

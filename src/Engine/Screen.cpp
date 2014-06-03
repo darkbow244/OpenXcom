@@ -331,7 +331,11 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		/* FIXME: leak? */
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
+#ifdef __ANDROID__
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#else
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+#endif
 		/* Now, we only need to create a window AND a renderer when we have none*/
 		if (_window == NULL)
 		{

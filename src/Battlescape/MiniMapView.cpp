@@ -309,7 +309,8 @@ void MiniMapView::mouseOver(Action *action, State *state)
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 		assert (0 && "FIXME");
-		SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+		/* FIXME: Mouse warping still doesn't work as intended */
+		//SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
 		// Check the threshold
@@ -406,7 +407,8 @@ void MiniMapView::stopScrolling(Action *action)
 {
 	if (!Options::battleDragScrollInvert)
 	{
-		SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
+		/* FIXME: Mouse warping still doesn't work as intended */
+		//SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
 #ifndef __ANDROID__
 		action->setMouseAction(_cursorPosition.x/action->getXScale(), _cursorPosition.y/action->getYScale(), _game->getScreen()->getSurface()->getX(), _game->getScreen()->getSurface()->getY());
 #else

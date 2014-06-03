@@ -628,7 +628,8 @@ void BattlescapeState::mapOver(Action *action)
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 		//assert (0 && "FIXME");
 #ifndef __ANDROID__
-		SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - Map::ICON_HEIGHT / 2);
+		/* FIXME: Mouse warping still doesn't work as intended */
+		//SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - Map::ICON_HEIGHT / 2);
 #endif
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
@@ -2278,7 +2279,8 @@ void BattlescapeState::stopScrolling(Action *action)
 	if (Options::battleDragScrollInvert)
 	{
 #ifndef __ANDROID__
-		SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+		/* FIXME: Mouse warping still doesn't work as intended */
+		//SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 #endif
 		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 		_battleGame->setupCursor();
@@ -2286,7 +2288,8 @@ void BattlescapeState::stopScrolling(Action *action)
 	else
 	{
 #ifndef __ANDROID__
-		SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
+		/* FIXME: Mouse warping still doesn't work as intended */
+		//SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
 #endif
 		action->setMouseAction(_cursorPosition.x/action->getXScale(), _cursorPosition.y/action->getYScale(), _game->getScreen()->getSurface()->getX(), _game->getScreen()->getSurface()->getY());
 		_map->setSelectorPosition(_cursorPosition.x / action->getXScale(), _cursorPosition.y / action->getYScale());
