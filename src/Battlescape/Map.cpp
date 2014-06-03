@@ -126,7 +126,7 @@ Map::~Map()
 void Map::init()
 {
 	// load the tiny arrow into a surface
-	int f = Palette::blockOffset(1)+1; // yellow
+	int f = Palette::blockOffset(1); // yellow
 	int b = 15; // black
 	int pixels[81] = { 0, 0, b, b, b, b, b, 0, 0,
 					   0, 0, b, f, f, f, b, 0, 0,
@@ -1069,9 +1069,14 @@ void Map::drawTerrain(Surface *surface)
 		{
 			offset.y += 4;
 		}
+		offset.y += 24 - unit->getHeight();
+		if (unit->isKneeled())
+		{
+			offset.y -= 2;
+		}
 		if (this->getCursorType() != CT_NONE)
 		{
-			_arrow->blitNShade(surface, screenPosition.x + offset.x + (_spriteWidth / 2) - (_arrow->getWidth() / 2), screenPosition.y + offset.y - _arrow->getHeight() + 4*sin((_animFrame*2*M_PI)/8), 0);
+			_arrow->blitNShade(surface, screenPosition.x + offset.x + (_spriteWidth / 2) - (_arrow->getWidth() / 2), screenPosition.y + offset.y - _arrow->getHeight() + sin((_animFrame*2*M_PI)/4), 0);
 		}
 	}
 	delete _numWaypid;
