@@ -1915,14 +1915,8 @@ void Globe::mousePress(Action *action, State *state)
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
 		//SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
-#ifdef __ANDROID__
-		//Log(LOG_DEBUG) << "Globe.cpp: mousePress: got coordinates: " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;
-		/* FIXME: This is not the correct solution to our globe problems. */
-		//_xBeforeMouseScrolling *= ( Options::baseXResolution / (float) Options::displayWidth);
-		//_yBeforeMouseScrolling *= ( Options::baseYResolution / (float) Options::displayHeight);
-#endif
-		_xBeforeMouseScrolling = action->getAbsoluteXMouse();
-		_yBeforeMouseScrolling = action->getAbsoluteYMouse();
+		_xBeforeMouseScrolling = action->getDetails()->button.x;
+		_yBeforeMouseScrolling = action->getDetails()->button.y;
 		_lonBeforeMouseScrolling = _cenLon;
 		_latBeforeMouseScrolling = _cenLat;
 		_totalMouseMoveX = 0; _totalMouseMoveY = 0;

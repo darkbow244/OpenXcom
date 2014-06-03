@@ -189,7 +189,9 @@ void MiniMapView::mousePress(Action *action, State *state)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
-		SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
+		//SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
+		_xBeforeMouseScrolling = action->getDetails()->button.x;
+		_yBeforeMouseScrolling = action->getDetails()->button.y;
 		_posBeforeMouseScrolling = _camera->getCenterPosition();
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
 		{

@@ -701,7 +701,9 @@ void BattlescapeState::mapPress(Action *action)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
-		SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
+		//SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
+		_xBeforeMouseScrolling = action->getDetails()->button.x;
+		_yBeforeMouseScrolling = action->getDetails()->button.y;
 		_mapOffsetBeforeMouseScrolling = _map->getCamera()->getMapOffset();
 #ifndef __ANDROID___
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
