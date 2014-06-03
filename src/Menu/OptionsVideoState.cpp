@@ -218,8 +218,8 @@ OptionsVideoState::OptionsVideoState(Game *game, OptionsOrigin origin) : Options
 
 	std::vector<std::wstring> filterNames;
 	filterNames.push_back(tr("STR_DISABLED"));
-	filterNames.push_back(L"Scale");
-	filterNames.push_back(L"HQX");
+	filterNames.push_back(L"Linear");
+	filterNames.push_back(L"Anisotropic (not really working)");
 	_filters.push_back("");
 	_filters.push_back("");
 	_filters.push_back("");
@@ -250,11 +250,11 @@ OptionsVideoState::OptionsVideoState(Game *game, OptionsOrigin origin) : Options
 		}
 #endif
 	}
-	else if (Options::useScaleFilter)
+	else if (Options::useLinearScaler)
 	{
 		selFilter = 1;
 	}
-	else if (Options::useHQXFilter)
+	else if (Options::useAnisotropicScaler)
 	{
 		selFilter = 2;
 	}
@@ -463,23 +463,27 @@ void OptionsVideoState::cbxFilterChange(Action *)
 	{
 	case 0:
 		Options::newOpenGL = false;
-		Options::newScaleFilter = false;
-		Options::newHQXFilter = false;
+		Options::newNearestScaler = true;
+		Options::newLinearScaler = false;
+		Options::newAnisotropicScaler = false;
 		break;
 	case 1:
 		Options::newOpenGL = false;
-		Options::newScaleFilter = true;
-		Options::newHQXFilter = false;
+		Options::newNearestScaler = false;
+		Options::newLinearScaler = true;
+		Options::newAnisotropicScaler = false;
 		break;
 	case 2:
 		Options::newOpenGL = false;
-		Options::newScaleFilter = false;
-		Options::newHQXFilter = true;
+		Options::newNearestScaler = false;
+		Options::newLinearScaler = false;
+		Options::newAnisotropicScaler = true;
 		break;
 	default:
 		Options::newOpenGL = true;
-		Options::newScaleFilter = false;
-		Options::newHQXFilter = false;
+		Options::newNearestScaler = false;
+		Options::newLinearScaler = false;
+		Options::newAnisotropicScaler = false;
 		Options::newOpenGLShader = _filters[_cbxFilter->getSelected()];
 		break;
 	}

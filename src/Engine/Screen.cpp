@@ -331,7 +331,19 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		/* FIXME: leak? */
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+		/* Attempt to set scaling */
+		if (Options::useNearestScaler)
+		{
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+		}
+		else if (Options::useLinearScaler)
+		{
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+		}
+		else if (Options::useAnisotropicScaler)
+		{
+			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+		}
 		/* Now, we only need to create a window AND a renderer when we have none*/
 		if (_window == NULL)
 		{

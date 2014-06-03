@@ -8,6 +8,9 @@ OPT int displayWidth, displayHeight, maxFrameSkip, baseXResolution, baseYResolut
 OPT bool fullscreen, asyncBlit, playIntro, useScaleFilter, useHQXFilter, useOpenGL, checkOpenGLErrors, vSyncForOpenGL, useOpenGLSmoothing,
 	autosave, allowResize, borderless, debug, debugUi, fpsCounter, newSeedOnLoad, keepAspectRatio,
 	cursorInBlackBandsInFullscreen, cursorInBlackBandsInWindow, cursorInBlackBandsInBorderlessWindow, maximizeInfoScreens;
+// SDL2 scalers
+OPT bool useNearestScaler, useLinearScaler, useAnisotropicScaler;
+
 OPT std::string language, useOpenGLShader;
 OPT KeyboardType keyboardMode;
 OPT SaveSort saveOrder;
@@ -40,6 +43,7 @@ OPT SDL_Keycode keyBattleLeft, keyBattleRight, keyBattleUp, keyBattleDown, keyBa
 
 // Flags and other stuff that don't need OptionInfo's.
 OPT bool mute, reload, newOpenGL, newScaleFilter, newHQXFilter;
+OPT bool newNearestScaler, newLinearScaler, newAnisotropicScaler;
 OPT int newDisplayWidth, newDisplayHeight, newBattlescapeScale, newGeoscapeScale;
 OPT std::string newOpenGLShader;
 OPT std::vector<std::string> rulesets, purchaseExclusions, badMods;
