@@ -19,6 +19,7 @@
 #include <cmath>
 #include "../fmath.h"
 #include "MiniMapView.h"
+#include "MiniMapState.h"
 #include "../Savegame/Tile.h"
 #include "Map.h"
 #include "Camera.h"
@@ -255,6 +256,11 @@ void MiniMapView::mouseClick (Action *action, State *state)
 		if (_isMouseScrolled) return;
 	}
 
+	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
+	{
+		((MiniMapState*)(state))->btnOkClick(action);
+	}
+
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 	{
 		int origX = action->getRelativeXMouse() / action->getXScale();
@@ -318,18 +324,18 @@ void MiniMapView::mouseOver(Action *action, State *state)
 
 		if (Options::battleDragScrollInvert)
 		{
-			scrollX = action->getDetails()->motion.xrel / action->getXScale();
-			scrollY = action->getDetails()->motion.yrel / action->getYScale();
+			scrollX = action->getDetails()->motion.xrel;
+			scrollY = action->getDetails()->motion.yrel;
 		}
 		else
 		{
-			scrollX = -action->getDetails()->motion.xrel / action->getXScale();
-			scrollY = -action->getDetails()->motion.yrel / action->getYScale();
+			scrollX = -action->getDetails()->motion.xrel;
+			scrollY = -action->getDetails()->motion.yrel;
 		}
 		_mouseScrollX += scrollX;
 		_mouseScrollY += scrollY;
-		newX = _posBeforeMouseScrolling.x + _mouseScrollX / 4;
-		newY = _posBeforeMouseScrolling.y + _mouseScrollY / 4;
+		newX = _posBeforeMouseScrolling.x + _mouseScrollX / action->getXScale() / 4;
+		newY = _posBeforeMouseScrolling.y + _mouseScrollY / action->getYScale() / 4;
 
 		// Keep the limits...
 		if (newX < -1 || _camera->getMapSizeX() < newX)
@@ -356,12 +362,12 @@ void MiniMapView::mouseOver(Action *action, State *state)
 		else
 		{
 			Position delta(-scrollX, -scrollY, 0);
-			int barWidth = Round(_game->getScreen()->getCursorLeftBlackBand() / action->getXScale());
-			int barHeight = Round(_game->getScreen()->getCursorTopBlackBand() / action->getYScale());
-			int cursorX = Round(_cursorPosition.x / action->getXScale() + delta.x);
-			int cursorY = Round(_cursorPosition.y / action->getYScale() + delta.y);
-			_cursorPosition.x = Round(std::min(getX() + getWidth() + barWidth, std::max(getX() + barWidth, cursorX)) * action->getXScale());
-			_cursorPosition.y = Round(std::min(getY() + getHeight() + barHeight, std::max(getY() + barHeight, cursorY)) * action->getYScale());
+			int barWidth = _game->getScreen()->getCursorLeftBlackBand();
+			int barHeight = _game->getScreen()->getCursorTopBlackBand();
+			int cursorX = _cursorPosition.x + delta.x;
+			int cursorY =_cursorPosition.y + delta.y;
+			_cursorPosition.x = std::min((int)Round((getX() + getWidth()) * action->getXScale()) + barWidth, std::max((int)Round(getX() * action->getXScale()) + barWidth, cursorX));
+			_cursorPosition.y = std::min((int)Round((getY() + getHeight()) * action->getYScale()) + barHeight, std::max((int)Round(getY() * action->getYScale()) + barHeight, cursorY));
 			action->getDetails()->motion.x = _cursorPosition.x;
 			action->getDetails()->motion.y = _cursorPosition.y;
 		}

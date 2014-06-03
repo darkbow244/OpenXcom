@@ -92,7 +92,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _scrollAccumX(0), _scrollAccumY(0), _hasScrolled(false), _swipeFromSoldier(false)
+BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
@@ -102,7 +102,7 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	int iconsHeight = Map::ICON_HEIGHT;
 	_mouseOverIcons = false;
 	// Why not try and reset the display?
-	_game->getScreen()->resetDisplay(false);
+	//_game->getScreen()->resetDisplay(false);
 
 #ifdef __ANDROID__
 	_mouseXScale = Options::baseXResolution / (float) Screen::ORIGINAL_WIDTH;
@@ -239,6 +239,7 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	_map->init();
 	_map->onMouseOver((ActionHandler)&BattlescapeState::mapOver);
 	_map->onMousePress((ActionHandler)&BattlescapeState::mapPress);
+	/* FIXME: Check what this function actually does */
 	_map->onMouseRelease((ActionHandler)&BattlescapeState::mapRelease);
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
@@ -626,7 +627,9 @@ void BattlescapeState::mapOver(Action *action)
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 		//assert (0 && "FIXME");
+#ifndef __ANDROID__
 		SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - Map::ICON_HEIGHT / 2);
+#endif
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 
 		// Check the threshold
@@ -640,15 +643,20 @@ void BattlescapeState::mapOver(Action *action)
 		// Scrolling
 		if (Options::battleDragScrollInvert)
 		{
-#ifdef __ANDROID__
-			_map->getCamera()->scrollXY(
-				-int(_mouseXScale * action->getDetails()->motion.xrel),
-				-int(_mouseYScale * action->getDetails()->motion.yrel), false);
-#else
-			_map->getCamera()->scrollXY(
-				-action->getDetails()->motion.xrel / action->getXScale(),
-				-action->getDetails()->motion.yrel / action->getYScale(), false);
-#endif
+			_map->getCamera()->setMapOffset(_mapOffsetBeforeMouseScrolling);
+			int scrollX = -(int)((double)_totalMouseMoveX / action->getXScale());
+			int scrollY = -(int)((double)_totalMouseMoveY / action->getYScale());
+			Position delta2 = _map->getCamera()->getMapOffset();
+			_map->getCamera()->scrollXY(scrollX, scrollY, true);
+			delta2 = _map->getCamera()->getMapOffset() - delta2;
+
+			// Keep the limits...
+			if (scrollX != delta2.x || scrollY != delta2.y)
+			{
+				_totalMouseMoveX = -(int) (delta2.x * action->getXScale());
+				_totalMouseMoveY = -(int) (delta2.y * action->getYScale());
+			}
+
 			action->getDetails()->motion.x = _xBeforeMouseScrolling;
 			action->getDetails()->motion.y = _yBeforeMouseScrolling;
 			_map->setCursorType(CT_NONE);
@@ -656,31 +664,32 @@ void BattlescapeState::mapOver(Action *action)
 		else
 		{
 			Position delta = _map->getCamera()->getMapOffset();
-#ifdef __ANDROID__
-			_map->getCamera()->scrollXY(
-				int(_mouseXScale * action->getDetails()->motion.xrel),
-				int(_mouseYScale * action->getDetails()->motion.yrel), false);
-#else
-			_map->getCamera()->scrollXY(
-				action->getDetails()->motion.xrel / action->getXScale(),
-				action->getDetails()->motion.yrel / action->getYScale(), false);
+			_map->getCamera()->setMapOffset(_mapOffsetBeforeMouseScrolling);
+			int scrollX = (int)((double)_totalMouseMoveX / action->getXScale());
+			int scrollY = (int)((double)_totalMouseMoveY / action->getYScale());
+			Position delta2 = _map->getCamera()->getMapOffset();
+			_map->getCamera()->scrollXY(scrollX, scrollY, true);
+			delta2 = _map->getCamera()->getMapOffset() - delta2;
 			delta = _map->getCamera()->getMapOffset() - delta;
+
+			// Keep the limits...
+			if (scrollX != delta2.x || scrollY != delta2.y)
+			{
+				_totalMouseMoveX = (int) (delta2.x * action->getXScale());
+				_totalMouseMoveY = (int) (delta2.y * action->getYScale());
+			}
+
 			int barWidth = _game->getScreen()->getCursorLeftBlackBand();
 			int barHeight = _game->getScreen()->getCursorTopBlackBand();
 			int cursorX = _cursorPosition.x + Round(delta.x * action->getXScale());
 			int cursorY = _cursorPosition.y + Round(delta.y * action->getYScale());
 			_cursorPosition.x = std::min(_game->getScreen()->getWidth() - barWidth - (int)(Round(action->getXScale())), std::max(barWidth, cursorX));
 			_cursorPosition.y = std::min(_game->getScreen()->getHeight() - barHeight - (int)(Round(action->getYScale())), std::max(barHeight, cursorY));
-#endif
 			action->getDetails()->motion.x = _cursorPosition.x;
 			action->getDetails()->motion.y = _cursorPosition.y;
 		}
 
 		// We don't want to look the mouse-cursor jumping :)
-#if 0
-		action->getDetails()->motion.x = _xBeforeMouseScrolling;
-		action->getDetails()->motion.y = _yBeforeMouseScrolling;
-#endif
 		_game->getCursor()->handle(action);
 	}
 }
@@ -691,9 +700,6 @@ void BattlescapeState::mapOver(Action *action)
  */
 void BattlescapeState::mapPress(Action *action)
 {
-	_scrollAccumX = 0;
-	_scrollAccumY = 0;
-	_hasScrolled = false;
 	// don't handle mouseclicks over the buttons (it overlaps with map surface)
 	if (_mouseOverIcons) return;
 
@@ -705,16 +711,13 @@ void BattlescapeState::mapPress(Action *action)
 		_xBeforeMouseScrolling = action->getDetails()->button.x;
 		_yBeforeMouseScrolling = action->getDetails()->button.y;
 		_mapOffsetBeforeMouseScrolling = _map->getCamera()->getMapOffset();
-#ifndef __ANDROID___
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
-		/* Yes, I'm being very cautious about these changes */
 		{
 			_cursorPosition.x = action->getDetails()->motion.x;
 			_cursorPosition.y = action->getDetails()->motion.y;
 			// the Z is irrelevant to our mouse position, but we can use it as a boolean to check if the position is set or not
 			_cursorPosition.z = 1;
 		}
-#endif
 		_totalMouseMoveX = 0; _totalMouseMoveY = 0;
 		_mouseMovedOverThreshold = false;
 		_mouseScrollingStartTime = SDL_GetTicks();
@@ -1573,17 +1576,10 @@ inline void BattlescapeState::handle(Action *action)
 	if (_game->getCursor()->getVisible() || action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		State::handle(action);
-#ifndef __ANDROID__
+
 		if (_isMouseScrolling && !Options::battleDragScrollInvert)
-#else
-		if (_isMouseScrolling)
-#endif
 		{
-#ifndef __ANDROID__
 			_map->setSelectorPosition((_cursorPosition.x - _game->getScreen()->getCursorLeftBlackBand()) / action->getXScale(), (_cursorPosition.y - _game->getScreen()->getCursorTopBlackBand()) / action->getYScale());
-#else
-			_map->setSelectorPosition(_xBeforeMouseScrolling / action->getXScale(), _yBeforeMouseScrolling / action->getYScale());
-#endif
 		}
 
 		if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
@@ -2279,24 +2275,24 @@ bool BattlescapeState::hasScrolled() const
  */
 void BattlescapeState::stopScrolling(Action *action)
 {
-	/* FIXME */
-	SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	if (Options::battleDragScrollInvert)
 	{
+#ifndef __ANDROID__
 		SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+#endif
 		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 		_battleGame->setupCursor();
 	}
 	else
 	{
+#ifndef __ANDROID__
 		SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
+#endif
 		action->setMouseAction(_cursorPosition.x/action->getXScale(), _cursorPosition.y/action->getYScale(), _game->getScreen()->getSurface()->getX(), _game->getScreen()->getSurface()->getY());
 		_map->setSelectorPosition(_cursorPosition.x / action->getXScale(), _cursorPosition.y / action->getYScale());
 	}
 	// reset our "mouse position stored" flag
 	_cursorPosition.z = 0;
-
-	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 }
 
 }
