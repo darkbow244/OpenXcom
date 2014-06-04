@@ -47,10 +47,17 @@ BaseNameState::BaseNameState(Game *game, Base *base, Globe *globe, bool first) :
 	_screen = false;
 
 	// Create objects
-	_window = new Window(this, 192, 80, 32, 60, POPUP_BOTH);
-	_btnOk = new TextButton(162, 12, 47, 118);
-	_txtTitle = new Text(182, 17, 37, 70);
-	_edtName = new TextEdit(this, 127, 16, 59, 94);
+#ifdef __ANDROID__
+	int windowTop = 15;
+	int windowLeft = 32;
+#else
+	int windowTop = 60;
+	int windowLeft = 32;
+#endif
+	_window = new Window(this, 192, 80, windowLeft, windowTop, POPUP_BOTH);
+	_btnOk = new TextButton(162, 12, windowLeft + 15, windowTop + 58);
+	_txtTitle = new Text(182, 17, windowLeft + 5, windowTop + 10);
+	_edtName = new TextEdit(this, 127, 16, windowLeft + 27, windowTop + 34);
 
 	// Set palette
 	setPalette("PAL_GEOSCAPE", 0);
