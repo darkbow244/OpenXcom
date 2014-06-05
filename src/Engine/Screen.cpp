@@ -33,6 +33,9 @@
 #include "Timer.h"
 #include <SDL.h>
 
+
+#include "Texture.h"
+
 namespace OpenXcom
 {
 
@@ -115,7 +118,7 @@ void Screen::makeVideoFlags()
  * The screen is set up based on the current options.
  */
 Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL), _texture(NULL)
-	, _prevWidth(0), _prevHeight(0)
+	, _prevWidth(0), _prevHeight(0), _drawOverlays(false)
 {
 	// The default values for _window and _renderer are set to NULL so that we can check if there's a window already
 	resetDisplay();	
@@ -128,6 +131,14 @@ Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _sc
  */
 Screen::~Screen()
 {
+	if (_overlays.size() > 0)
+	{
+		for(std::vector<Texture*>::iterator i = _overlays.begin(); i != _overlays.end(); ++i)
+		{
+			delete *i;
+		}
+	}
+	
 	delete _surface;
 }
 
@@ -197,6 +208,13 @@ void Screen::flip()
 			_surface->getSurface()->pitch);
 	SDL_RenderClear(_renderer);
 	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
+	if(_drawOverlays && (_overlays.size() > 0))
+	{
+		for(std::vector<Texture*>::iterator i = _overlays.begin(); i != _overlays.end(); ++i)
+		{
+			(*i)->draw();
+		}
+	}
 	SDL_RenderPresent(_renderer); //TODO: check error?
 }
 
@@ -696,6 +714,33 @@ SDL_Renderer * Screen::getRenderer() const
 SDL_Window * Screen::getWindow() const
 {
 	return _window;
+}
+
+void Screen::addOverlay(Texture *overlay)
+{
+	_overlays.push_back(overlay);
+}
+
+void Screen::drawOverlays(bool draw)
+{
+	_drawOverlays = draw;
+}
+/**
+ * Removes overlay from the overlay list. Should be called whenever a texture gets destroyed.
+ * @param overlay Pointer to a Texture object containing the overlaying texture.
+ */
+
+void Screen::removeOverlay(Texture *overlay)
+{
+	assert(_overlays.size() != 0);
+	for(std::vector<Texture*>::iterator i = _overlays.begin(); i != _overlays.end(); ++i)
+	{
+		if ((*i) == overlay)
+		{
+			_overlays.erase(i);
+			break;
+		}
+	}
 }
 
 }
