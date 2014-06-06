@@ -41,6 +41,7 @@ class BattleItem;
 class Timer;
 class WarningMessage;
 class BattlescapeGame;
+class Texture;
 
 /**
  * Battlescape screen which shows the tactical battle.
@@ -90,6 +91,7 @@ private:
 #ifdef __ANDROID__
 	// Scalers for touchscreen
 	float _mouseXScale, _mouseYScale;
+	Texture *_overlay;
 #endif
 public:
 	/// Selects the next soldier.

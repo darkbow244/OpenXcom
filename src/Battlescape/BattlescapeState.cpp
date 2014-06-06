@@ -85,6 +85,9 @@
 #include "../Menu/SaveGameState.h"
 #include "../fmath.h"
 
+
+#include "../Engine/Texture.h"
+
 namespace OpenXcom
 {
 
@@ -246,6 +249,18 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	_map->onFingerMotion((ActionHandler)&BattlescapeState::fingerMotion);
 #ifdef __ANDROID__
 	_map->onKeyboardPress((ActionHandler)&BattlescapeState::mapKey, 0);
+#if 0	
+	_overlay = new Texture(_game->getScreen(), 320, 200);
+	std::ostringstream ss;
+	ss.str("");
+	ss << "/sdcard/openxcom/data/Resources/UI/overlay_sample.png";
+	_overlay->loadImage(ss.str());
+	_overlay->setSrcRect(0, 0, 320, 200);
+	_overlay->setDstRect(0, 0, 320, 200);
+	_game->getScreen()->addOverlay(_overlay);
+	_game->getScreen()->drawOverlays(true);
+#endif
+	
 #endif
 
 	// Add in custom reserve buttons
@@ -509,6 +524,9 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
  */
 BattlescapeState::~BattlescapeState()
 {
+#if 0
+	delete _overlay;
+#endif
 	delete _animTimer;
 	delete _gameTimer;
 	delete _battleGame;
@@ -842,7 +860,6 @@ void BattlescapeState::mapClick(Action *action)
 		}
 		else if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 		{
-			Log(LOG_INFO) << " -primary action called";
 			_battleGame->primaryAction(pos);
 		}
 	}
