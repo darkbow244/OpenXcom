@@ -345,7 +345,7 @@ void Screen::resetDisplay(bool resetVideo)
 	}
 	SDL_SetColorKey(_surface->getSurface(), 0, 0); // turn off color key! 
 
-	if (resetVideo || _screen->format->BitsPerPixel != _bpp)
+	if (resetVideo /*|| _screen->format->BitsPerPixel != _bpp */)
 	{
 		/* FIXME: leak? */
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
