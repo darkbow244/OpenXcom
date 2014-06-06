@@ -46,6 +46,9 @@ private:
 	Text *_txtTitle;
 	TextEdit *_edtName;
 	TextButton *_btnOk;
+#ifdef __ANDROID__
+	TextButton *_btnCancel;
+#endif
 	bool _first;
 public:
 	/// Creates the Base Name state.
@@ -56,6 +59,10 @@ public:
 	void btnOkClick(Action *action);
 	/// Handler for changing text on the Name edit.
 	void edtNameChange(Action *action);
+#ifdef __ANDROID__
+	/// Handler for cancel button
+	void btnCancelClick(Action *action);
+#endif
 };
 
 }

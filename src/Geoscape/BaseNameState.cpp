@@ -55,7 +55,19 @@ BaseNameState::BaseNameState(Game *game, Base *base, Globe *globe, bool first) :
 	int windowLeft = 32;
 #endif
 	_window = new Window(this, 192, 80, windowLeft, windowTop, POPUP_BOTH);
+#ifdef __ANDROID__
+	if(_first)
+	{
+		_btnOk = new TextButton(81, 12, windowLeft + 15, windowTop + 58);
+	}
+	else
+	{
+		_btnOk = new TextButton(162, 12, windowLeft + 15, windowTop + 58);
+	}
+	_btnCancel = new TextButton(81, 12, windowLeft + 15 + 81, windowTop + 58);
+#else
 	_btnOk = new TextButton(162, 12, windowLeft + 15, windowTop + 58);
+#endif
 	_txtTitle = new Text(182, 17, windowLeft + 5, windowTop + 10);
 	_edtName = new TextEdit(this, 127, 16, windowLeft + 27, windowTop + 34);
 
@@ -66,7 +78,9 @@ BaseNameState::BaseNameState(Game *game, Base *base, Globe *globe, bool first) :
 	add(_btnOk);
 	add(_txtTitle);
 	add(_edtName);
-
+#ifdef __ANDROID__
+	add(_btnCancel);
+#endif
 	centerAllSurfaces();
 
 	// Set up objects
@@ -78,6 +92,13 @@ BaseNameState::BaseNameState(Game *game, Base *base, Globe *globe, bool first) :
 	_btnOk->onMouseClick((ActionHandler)&BaseNameState::btnOkClick);
 	//_btnOk->onKeyboardPress((ActionHandler)&BaseNameState::btnOkClick, Options::keyOk);
 	_btnOk->onKeyboardPress((ActionHandler)&BaseNameState::btnOkClick, Options::keyCancel);
+#ifdef __ANDROID__
+	_btnCancel->setColor(Palette::blockOffset(8) + 5);
+	_btnCancel->setText(tr("STR_CANCEL_UC"));
+	_btnCancel->onMouseClick((ActionHandler)&BaseNameState::btnCancelClick); /* That _will_ bite me in the ass, won't it? */
+
+	_btnCancel->setVisible(_first);
+#endif
 
 	//something must be in the name before it is acceptable
 	_btnOk->setVisible(false);
@@ -131,6 +152,13 @@ void BaseNameState::btnOkClick(Action *)
 {
 	if (!_edtName->getText().empty())
 	{
+#ifdef __ANDROID__
+		// Hide the keyboard (it won't hide itself)!
+		if (SDL_IsScreenKeyboardShown(NULL))
+		{
+			SDL_StopTextInput();
+		}
+#endif
 		_game->popState();
 		_game->popState();
 		if (!_first || Options::customInitialBase)
@@ -144,4 +172,26 @@ void BaseNameState::btnOkClick(Action *)
 	}
 }
 
+#ifdef __ANDROID__
+/**
+ * Hopefully this will pop enough states to get back to the base placing view
+ */
+void BaseNameState::btnCancelClick(Action *)
+{
+#ifdef __ANDROID__
+	if (SDL_IsScreenKeyboardShown(NULL))
+	{
+		SDL_StopTextInput();
+	}
+#endif
+	_globe->onMouseOver(0);
+	_game->popState();
 }
+
+
+#endif
+
+
+}
+
+
