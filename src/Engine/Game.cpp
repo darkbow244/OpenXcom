@@ -393,40 +393,11 @@ void Game::run()
 			}
 		}
 
-#if 0		/* uh... why do we have the same thing over again? */
-		// Initialize active state
-		if (!_init)
-		{
-			_init = true;
-			_states.back()->init();
-
-			// Unpress buttons
-			_states.back()->resetAll();
-
-			// Refresh mouse position
-			SDL_Event ev;
-			int x, y;
-			SDL_GetMouseState(&x, &y);
-			ev.type = SDL_MOUSEMOTION;
-			ev.motion.x = x;
-			ev.motion.y = y;
-			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-			_states.back()->handle(&action);
-		}
-#endif
-
 		// Save on CPU
 		switch (runningState)
 		{
-			case RUNNING:
-				if (_timeUntilNextFrame > 0)
-				{
-					SDL_Delay(_timeUntilNextFrame); //Save CPU from going 100%
-				}
-				else
-				{
-					SDL_Delay(1);
-				}
+			case RUNNING: 
+				SDL_Delay(1); //Save CPU from going 100%
 				break;
 			case SLOWED: case PAUSED:
 				SDL_Delay(100); break; //More slowing down.
