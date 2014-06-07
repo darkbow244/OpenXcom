@@ -191,10 +191,20 @@ void Game::run()
 				case SDL_APP_WILLENTERBACKGROUND:
 					//Mix_PauseMusic();
 					Music::pause();
+					// Probably won't do a thing, but still
+					runningState = PAUSED;
 					break;
 				case SDL_APP_WILLENTERFOREGROUND:
 					//Mix_ResumeMusic();
+					runningState = RUNNING;
 					Music::resume();
+					break;
+				/* Watch for these messages for debugging purposes */
+				case SDL_APP_LOWMEMORY:
+					Log(LOG_WARNING) << "Warning! We're low on memory! Better make a backup!";
+					break;
+				case SDL_APP_TERMINATING:
+					Log(LOG_WARNING) << "The OS is not happy with us! We're gonna die!";
 					break;
 #endif
 #if 0
