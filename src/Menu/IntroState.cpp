@@ -457,6 +457,20 @@ void IntroState::init()
 		Music::stop();
 #endif
 	}
+	// FIXME: This should go to the Game.cpp probably
+
+#ifdef __ANDROID__
+	// We don't need to process mouse events, so we can probably save some cycles on it
+	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+	SDL_EventState(SDL_MOUSEBUTTONDOWN, SDL_IGNORE);
+	SDL_EventState(SDL_MOUSEBUTTONUP, SDL_IGNORE);
+	SDL_EventState(SDL_MOUSEWHEEL, SDL_IGNORE);
+
+	// We're not really using the Dollar Gesture events either
+	SDL_EventState(SDL_DOLLARGESTURE, SDL_IGNORE);
+	SDL_EventState(SDL_DOLLARRECORD, SDL_IGNORE);
+#endif
+	
 	Screen::updateScale(Options::geoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, true);
 	_game->getScreen()->resetDisplay(false);
 	_game->setState(new MainMenuState(_game));
