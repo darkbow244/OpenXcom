@@ -26,7 +26,8 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include \
 LOCAL_ARM_MODE := arm
 
 # Add your application source files here...
-LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
+# deleted: $(SDL_PATH)/src/main/android/SDL_android_main.c
+LOCAL_SRC_FILES := \
 	$(subst $(LOCAL_PATH)/,, \
 	$(LOCAL_PATH)/../../../src/main.cpp \
 	$(LOCAL_PATH)/../../../src/lodepng.cpp \
@@ -43,9 +44,11 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
 	$(wildcard $(LOCAL_PATH)/../../../src/Savegame/*.cpp) \
 	$(wildcard $(LOCAL_PATH)/../../../src/Ufopaedia/*.cpp))
 
-LOCAL_SHARED_LIBRARIES := SDL2 SDL2_image SDL2_mixer SDL_gfx
+LOCAL_STATIC_LIBRARIES := SDL2_static SDL2_image SDL2_mixer SDL_gfx
 
 LOCAL_LDLIBS := -lGLESv1_CM -lGLESv2 -llog
+
+LOCAL_EXPORT_LDLIBS := -lSDL2
 
 # yaml-cpp
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(YAMLCPP_PATH)/include \
