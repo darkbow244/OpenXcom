@@ -507,7 +507,6 @@ void GeoscapeState::init()
 	timeDisplay();
 
 	_globe->onMouseClick((ActionHandler)&GeoscapeState::globeClick);
-	_globe->onMultiGesture((ActionHandler)&GeoscapeState::globePinch);
 	_globe->onMouseOver(0);
 	_globe->rotateStop();
 	_globe->setFocus(true);
@@ -2000,30 +1999,6 @@ void GeoscapeState::zoomOutEffect()
 		_zoomOutEffectTimer->stop();
 		init();
 	}
-}
-
-/**
- * Pinch-to-zoom the globe
- */
-void GeoscapeState::globePinch(Action *action)
-{
-	static double accumulatedPinch;
-	double pinchVal = action->getDetails()->mgesture.dDist;
-	const double distThreshold = 0.03;
-	accumulatedPinch += pinchVal;
-	if (fabs(accumulatedPinch) > distThreshold)
-	{
-		  if(accumulatedPinch > 0)
-		  {
-			_globe->zoomIn();
-		  }
-		  else
-		  {
-			_globe->zoomOut();
-		  }
-		  accumulatedPinch = 0;
-	}
-  
 }
 
 /**

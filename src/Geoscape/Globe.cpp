@@ -2170,4 +2170,28 @@ void Globe::stopScrolling(Action *action)
 	_game->getCursor()->handle(action); */
 #endif
 }
+
+/**
+ * Pinch-to-zoom the globe
+ */
+void Globe::multiGesture(Action *action, State *state)
+{
+	static double accumulatedPinch;
+	double pinchVal = action->getDetails()->mgesture.dDist;
+	const double distThreshold = 0.03;
+	accumulatedPinch += pinchVal;
+	if (fabs(accumulatedPinch) > distThreshold)
+	{
+		  if(accumulatedPinch > 0)
+		  {
+			zoomIn();
+		  }
+		  else
+		  {
+			zoomOut();
+		  }
+		  accumulatedPinch = 0;
+	}
+}
+
 }
