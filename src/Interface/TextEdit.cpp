@@ -564,10 +564,7 @@ void TextEdit::onChange(ActionHandler handler)
 void TextEdit::textInput(Action *action, State *state)
 {
 	std::string text(action->getDetails()->text.text);
-	std::wstring wstrText = Language::utf8ToWstr(text);
-	if ((int)wstrText[0] == 0x0401) { wstrText[0] = (wchar_t)(0x0CB); }
-	if ((int)wstrText[0] == 0x0451) { wstrText[0] = (wchar_t)(0x0EB); }
-	_value += wstrText;
+	_value += Language::utf8ToWstr(text);
 	_caretPos = _value.length();
 	_redraw = true;
 	if (_change)
