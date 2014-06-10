@@ -44,7 +44,7 @@ private:
 	Uint8 _buttonsPressed;
 protected:
 	std::map<Uint8, ActionHandler> _click, _press, _release;
-	ActionHandler _in, _over, _out, _fingerMotion, _multiGesture;
+	ActionHandler _in, _over, _out, _fingerMotion, _multiGesture, _wheel;
 	std::map<SDL_Keycode, ActionHandler> _keyPress, _keyRelease;
 	bool _isHovered, _isFocused, _listButton;
 
@@ -89,6 +89,10 @@ public:
 	void onFingerMotion(ActionHandler handler);
 	/// Hooks an action handler to multi-finger gesture
 	void onMultiGesture(ActionHandler handler);
+	
+	/// Hooks an action handler to a mousewheel event
+	void onMouseWheel(ActionHandler handler);
+	
 	/// Processes a mouse button press event.
 	virtual void mousePress(Action *action, State *state);
 	/// Processes a mouse button release event.
@@ -109,6 +113,9 @@ public:
 	virtual void fingerMotion(Action *action, State *state);
 	/// Processes a multi-finger gesture event
 	virtual void multiGesture(Action *action, State *state);
+	
+	/// Processes a mousewheel event
+	virtual void mouseWheel(Action *action, State *state);
 
 	virtual void textInput(Action *action, State *state);
 	/// Check this surface to see if it's a textlist button.

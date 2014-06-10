@@ -32,7 +32,7 @@ const SDL_Keycode InteractiveSurface::SDLK_ANY = (SDL_Keycode)-1; // using an un
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _multiGesture(0), _isHovered(false), _isFocused(true), _listButton(false)
+InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _multiGesture(0), _wheel(0), _isHovered(false), _isFocused(true), _listButton(false)
 {
 }
 
@@ -117,6 +117,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 	}
 	else if (action->getDetails()->type == SDL_MOUSEWHEEL)
 	{
+		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
 		action->setMouseAction(action->getDetails()->wheel.x, action->getDetails()->wheel.y, getX(), getY());
 	}
 	else if (action->getDetails()->type == SDL_MOUSEMOTION)
@@ -180,7 +181,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 	}
 	else if (action->getDetails()->type == SDL_MOUSEWHEEL)
 	{
-		mousePress(action, state);
+		mouseWheel(action, state);
 	}
 	else if (action->getDetails()->type == SDL_MOUSEBUTTONUP)
 	{
@@ -438,6 +439,14 @@ void InteractiveSurface::multiGesture(Action *action, State *state)
 	}
 }
 
+void InteractiveSurface::mouseWheel(Action *action, State *state)
+{
+	if (_wheel != 0)
+	{
+		(state->*_wheel)(action);
+	}
+}
+
 void InteractiveSurface::textInput(Action *action, State *state)
 {
 	//TODO: do nothing?
@@ -563,6 +572,11 @@ void InteractiveSurface::onFingerMotion(ActionHandler handler)
 void InteractiveSurface::onMultiGesture(ActionHandler handler)
 {
 	_multiGesture = handler;
+}
+
+void InteractiveSurface::onMouseWheel(ActionHandler handler)
+{
+	_wheel = handler;
 }
 
 /**
