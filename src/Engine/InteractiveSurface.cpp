@@ -20,6 +20,9 @@
 #include "Action.h"
 #include "Options.h"
 
+#include "Game.h"
+#include "Screen.h"
+
 namespace OpenXcom
 {
 
@@ -118,7 +121,15 @@ void InteractiveSurface::handle(Action *action, State *state)
 	else if (action->getDetails()->type == SDL_MOUSEWHEEL)
 	{
 		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
-		action->setMouseAction(action->getDetails()->wheel.x, action->getDetails()->wheel.y, getX(), getY());
+		int mouseX, mouseY;
+		float scaleX, scaleY;
+		SDL_Renderer *r = state->getGame()->getScreen()->getRenderer();
+		SDL_GetMouseState(&mouseX, &mouseY);
+		SDL_RenderGetScale(r, &scaleX, &scaleY);
+		mouseX = mouseX / scaleX;
+		mouseY = mouseY / scaleY;
+		action->setMouseAction(mouseX, mouseY, getX(), getY());
+		//action->setMouseAction(action->getDetails()->wheel.x, action->getDetails()->wheel.y, getX(), getY());
 	}
 	else if (action->getDetails()->type == SDL_MOUSEMOTION)
 	{

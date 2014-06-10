@@ -414,4 +414,12 @@ void State::recenter(int dX, int dY)
 	}
 }
 
+/**
+ * Returns the pointer to the game object
+ */
+Game *State::getGame() const
+{
+	return _game;
+}
+
 }

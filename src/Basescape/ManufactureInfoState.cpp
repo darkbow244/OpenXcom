@@ -89,10 +89,10 @@ void ManufactureInfoState::buildUi()
 	_txtTodo = new Text(40, 16, 272, 83);
 
 	_surfaceEngineers = new InteractiveSurface(160, 150, 0, 25);
-	_surfaceEngineers->onMouseClick((ActionHandler)&ManufactureInfoState::handleWheelEngineer, 0);
+	_surfaceEngineers->onMouseWheel((ActionHandler)&ManufactureInfoState::handleWheelEngineer);
 
 	_surfaceUnits = new InteractiveSurface(160, 150, 160, 25);
-	_surfaceUnits->onMouseClick((ActionHandler)&ManufactureInfoState::handleWheelUnit, 0);
+	_surfaceUnits->onMouseWheel((ActionHandler)&ManufactureInfoState::handleWheelUnit);
 
 	// Set palette
 	setPalette("PAL_BASESCAPE", 6);

@@ -152,7 +152,8 @@ CraftEquipmentState::CraftEquipmentState(Game *game, Base *base, size_t craft) :
 	_lstEquipment->onRightArrowRelease((ActionHandler)&CraftEquipmentState::lstEquipmentRightArrowRelease);
 	_lstEquipment->onRightArrowClick((ActionHandler)&CraftEquipmentState::lstEquipmentRightArrowClick);
 	_lstEquipment->onMousePress((ActionHandler)&CraftEquipmentState::lstEquipmentMousePress);
-
+	_lstEquipment->onMouseWheel((ActionHandler)&CraftEquipmentState::lstEquipmentMouseWheel);
+	
 	int row = 0;
 	const std::vector<std::string> &items = _game->getRuleset()->getItemsList();
 	for (std::vector<std::string>::const_iterator i = items.begin(); i != items.end(); ++i)
@@ -340,10 +341,19 @@ void CraftEquipmentState::lstEquipmentRightArrowClick(Action *action)
 }
 
 /**
- * Handles the mouse-wheels on the arrow-buttons.
+ * does nothing?
  * @param action Pointer to an action.
  */
 void CraftEquipmentState::lstEquipmentMousePress(Action *action)
+{
+
+}
+
+/**
+ * Handles the mouse-wheels on the arrow-buttons.
+ * @param action Pointer to an action.
+ */
+void CraftEquipmentState::lstEquipmentMouseWheel(Action *action)
 {
 	_sel = _lstEquipment->getSelectedRow();
 	const SDL_Event &ev(*action->getDetails());
@@ -361,6 +371,7 @@ void CraftEquipmentState::lstEquipmentMousePress(Action *action)
 		}
 	}
 }
+
 
 /**
  * Updates the displayed quantities of the

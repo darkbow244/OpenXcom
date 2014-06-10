@@ -92,6 +92,8 @@ public:
 	void mousePress(Action *action, State *state);
 	/// Special handling for mouse release.
 	void mouseRelease(Action *action, State *state);
+	/// Special handling for mousewheel events.
+	void mouseWheel(Action *action, State *state);
 	/// Special handling for mouse over
 	void mouseOver(Action *action, State *state);
 	void fingerMotion(Action *action, State *state);

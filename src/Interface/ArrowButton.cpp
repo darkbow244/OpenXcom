@@ -339,16 +339,26 @@ void ArrowButton::mousePress(Action *action, State *state)
 		{
 			_timer->start();
 		}
-		const SDL_Event &ev(*action->getDetails());
-		if (ev.type == SDL_MOUSEWHEEL)
-		{
-			if (ev.wheel.y < 0)
-				_list->scrollUp(false);
-			else
-				_list->scrollDown(false);
-		}
 	}
 }
+/**
+ * Handles the mousewheel scrolling.
+ * @param action Pointer to an action.
+ * @param state State that the action handlers belong to.
+ */
+void ArrowButton::mouseWheel(Action *action, State *state)
+{
+	ImageButton::mouseWheel(action, state);
+	const SDL_Event &ev(*action->getDetails());
+	if (ev.type == SDL_MOUSEWHEEL)
+	{
+		if (ev.wheel.y < 0)
+			_list->scrollUp(false);
+		else
+			_list->scrollDown(false);
+	}
+}
+
 
 /*
  * Stops scrolling the associated list.

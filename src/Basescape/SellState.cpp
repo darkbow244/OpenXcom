@@ -172,6 +172,7 @@ SellState::SellState(Game *game, Base *base, OptionsOrigin origin) : State(game)
 	_lstItems->onRightArrowRelease((ActionHandler)&SellState::lstItemsRightArrowRelease);
 	_lstItems->onRightArrowClick((ActionHandler)&SellState::lstItemsRightArrowClick);
 	_lstItems->onMousePress((ActionHandler)&SellState::lstItemsMousePress);
+	_lstItems->onMouseWheel((ActionHandler)&SellState::lstItemsMouseWheel);
 
 	for (std::vector<Soldier*>::iterator i = _base->getSoldiers()->begin(); i != _base->getSoldiers()->end(); ++i)
 	{
@@ -460,7 +461,12 @@ void SellState::lstItemsRightArrowClick(Action *action)
  */
 void SellState::lstItemsMousePress(Action *action)
 {
-	_sel = _lstItems->getSelectedRow();
+
+}
+
+void SellState::lstItemsMouseWheel(Action *action)
+{
+ 	_sel = _lstItems->getSelectedRow();
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL)
 	{
@@ -472,7 +478,7 @@ void SellState::lstItemsMousePress(Action *action)
 			changeByValue(Options::changeValueByMouseWheel,
 				   	ev.wheel.y < 0 ? 1 : -1);
 		}
-	}
+	} 
 }
 
 /**

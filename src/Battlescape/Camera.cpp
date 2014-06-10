@@ -88,7 +88,22 @@ void Camera::minMaxInt(int *value, const int minValue, const int maxValue) const
 void Camera::mousePress(Action *action, State *)
 {
 	const SDL_Event &ev(*action->getDetails());
-	if (ev.type == SDL_MOUSEWHEEL)
+	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && Options::battleEdgeScroll == SCROLL_TRIGGER)
+	{
+		_scrollTrigger = true;
+		mouseOver(action, 0);
+	}
+}
+
+/**
+ * Handles mousewheel shortcuts.
+ * @param action Pointer to an action.
+ * @param state State that the action handlers belong to.
+ */
+void Camera::mouseWheel(Action *action, State *)
+{
+	const SDL_Event &ev(*action->getDetails());
+ 	if (ev.type == SDL_MOUSEWHEEL)
 	{
 		if (ev.wheel.y < 0)
 		{
@@ -98,11 +113,6 @@ void Camera::mousePress(Action *action, State *)
 		{
 			down();
 		}
-	}
-	else if (action->getDetails()->button.button == SDL_BUTTON_LEFT && Options::battleEdgeScroll == SCROLL_TRIGGER)
-	{
-		_scrollTrigger = true;
-		mouseOver(action, 0);
 	}
 }
 

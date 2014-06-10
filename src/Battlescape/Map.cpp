@@ -1134,6 +1134,17 @@ void Map::mouseRelease(Action *action, State *state)
 }
 
 /**
+ * Handles mousewheel events on the map.
+ * @param action Pointer to an action.
+ * @param state State that the action handlers belong to.
+ */
+void Map::mouseWheel(Action *action, State *state)
+{
+	InteractiveSurface::mouseWheel(action, state);
+	_camera->mouseWheel(action, state);
+}
+
+/**
  * Handles keyboard presses on the map.
  * @param action Pointer to an action.
  * @param state State that the action handlers belong to.

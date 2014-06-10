@@ -65,6 +65,8 @@ public:
 	void lstSoldiersClick(Action *action);
 	/// Handler for pressing-down a mouse-button in the list.
 	void lstSoldiersMousePress(Action *action);
+	/// Handler for mousewheel action.
+	void lstSoldiersMouseWheel(Action *action);
 };
 
 }

@@ -143,6 +143,7 @@ PurchaseState::PurchaseState(Game *game, Base *base) : State(game), _base(base),
 	_lstItems->onRightArrowRelease((ActionHandler)&PurchaseState::lstItemsRightArrowRelease);
 	_lstItems->onRightArrowClick((ActionHandler)&PurchaseState::lstItemsRightArrowClick);
 	_lstItems->onMousePress((ActionHandler)&PurchaseState::lstItemsMousePress);
+	_lstItems->onMouseWheel((ActionHandler)&PurchaseState::lstItemsMouseWheel);
 
 	_qtys.push_back(0);
 	std::wostringstream ss;
@@ -397,6 +398,14 @@ void PurchaseState::lstItemsRightArrowClick(Action *action)
  */
 void PurchaseState::lstItemsMousePress(Action *action)
 {
+
+}
+/**
+ * Handles the mousewheel event on the arrow buttons (hopefully)
+ * @param action Pointer to an action
+ */
+void PurchaseState::lstItemsMouseWheel(Action *action)
+{
 	_sel = _lstItems->getSelectedRow();
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL)
@@ -411,7 +420,7 @@ void PurchaseState::lstItemsMousePress(Action *action)
 			else
 				decreaseByValue(Options::changeValueByMouseWheel);
 		}
-	}
+	}  
 }
 
 /**

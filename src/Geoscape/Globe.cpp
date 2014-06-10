@@ -1958,14 +1958,13 @@ void Globe::mouseRelease(Action *action, State *state)
 }
 
 /**
- * Ignores any mouse clicks that are outside the globe
- * and handles globe rotation and zooming.
+ * Handles globe zooming through mouse wheel
  * @param action Pointer to an action.
  * @param state State that the action handlers belong to.
  */
-void Globe::mouseClick(Action *action, State *state)
+void Globe::mouseWheel(Action *action, State *state)
 {
-	SDL_Event *ev = action->getDetails();
+ 	SDL_Event *ev = action->getDetails();
 	if (ev->type == SDL_MOUSEWHEEL)
 	{
 		if (ev->wheel.y > 0)
@@ -1976,8 +1975,17 @@ void Globe::mouseClick(Action *action, State *state)
 		{
 			zoomOut();
 		}
-	}
+	} 
+}
 
+/**
+ * Ignores any mouse clicks that are outside the globe
+ * and handles globe rotation and zooming.
+ * @param action Pointer to an action.
+ * @param state State that the action handlers belong to.
+ */
+void Globe::mouseClick(Action *action, State *state)
+{
 	double lon, lat;
 	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 	

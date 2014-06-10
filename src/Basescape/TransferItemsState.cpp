@@ -130,6 +130,7 @@ TransferItemsState::TransferItemsState(Game *game, Base *baseFrom, Base *baseTo)
 	_lstItems->onRightArrowRelease((ActionHandler)&TransferItemsState::lstItemsRightArrowRelease);
 	_lstItems->onRightArrowClick((ActionHandler)&TransferItemsState::lstItemsRightArrowClick);
 	_lstItems->onMousePress((ActionHandler)&TransferItemsState::lstItemsMousePress);
+	_lstItems->onMouseWheel((ActionHandler)&TransferItemsState::lstItemsMouseWheel);
 
 	for (std::vector<Soldier*>::iterator i = _baseFrom->getSoldiers()->begin(); i != _baseFrom->getSoldiers()->end(); ++i)
 	{
@@ -451,10 +452,19 @@ void TransferItemsState::lstItemsRightArrowClick(Action *action)
 }
 
 /**
- * Handles the mouse-wheels on the arrow-buttons.
+ * does nothing?
  * @param action Pointer to an action.
  */
 void TransferItemsState::lstItemsMousePress(Action *action)
+{
+
+}
+
+/**
+ * Handles the mouse-wheels on the arrow-buttons.
+ * @param action Pointer to an action.
+ */
+void TransferItemsState::lstItemsMouseWheel(Action *action)
 {
 	_sel = _lstItems->getSelectedRow();
 	const SDL_Event &ev(*action->getDetails());

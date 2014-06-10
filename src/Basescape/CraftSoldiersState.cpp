@@ -37,6 +37,8 @@
 #include "../Engine/LocalizedText.h"
 #include "SoldierInfoState.h"
 
+#include "../Engine/Screen.h"
+
 namespace OpenXcom
 {
 
@@ -114,6 +116,7 @@ CraftSoldiersState::CraftSoldiersState(Game *game, Base *base, size_t craft) : S
 	_lstSoldiers->onRightArrowClick((ActionHandler)&CraftSoldiersState::lstItemsRightArrowClick);
 	_lstSoldiers->onMouseClick((ActionHandler)&CraftSoldiersState::lstSoldiersClick, 0);
 	_lstSoldiers->onMousePress((ActionHandler)&CraftSoldiersState::lstSoldiersMousePress);
+	_lstSoldiers->onMouseWheel((ActionHandler)&CraftSoldiersState::lstSoldiersMouseWheel);
 }
 
 /**
@@ -209,8 +212,11 @@ void CraftSoldiersState::moveSoldierUp(Action *action, int row, bool max)
 		_base->getSoldiers()->at(row - 1) = s;
 		if (row != _lstSoldiers->getScroll())
 		{
-					assert (0 && "FIXME");
-					//SDL_WarpMouse(action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale()));
+			//assert (0 && "FIXME");
+			float scaleX, scaleY;
+			SDL_Renderer *r = _game->getScreen()->getRenderer();
+			SDL_RenderGetScale(r, &scaleX, &scaleY);
+			SDL_WarpMouseInWindow(NULL, scaleX * (action->getLeftBlackBand() + action->getXMouse()), scaleY * (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
 		}
 		else
 		{
@@ -219,8 +225,6 @@ void CraftSoldiersState::moveSoldierUp(Action *action, int row, bool max)
 	}
 	init();
 }
-#ifndef __ANDROID__
-#endif
 
 /**
  * Reorders a soldier down.
@@ -235,7 +239,7 @@ void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 		{
 			moveSoldierDown(action, row);
-					//SDL_WarpMouse(action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
+			//SDL_WarpMouse(action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
 		}
 		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 		{
@@ -266,8 +270,11 @@ void CraftSoldiersState::moveSoldierDown(Action *action, int row, bool max)
 #ifndef __ANDROID__
 		if (row != _lstSoldiers->getVisibleRows() - 1 + _lstSoldiers->getScroll())
 		{
-			assert (0 && "FIXME");
-			//SDL_WarpMouse(action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
+			//assert (0 && "FIXME");
+		  float scaleX, scaleY;
+			SDL_Renderer *r = _game->getScreen()->getRenderer();
+			SDL_RenderGetScale(r, &scaleX, &scaleY);
+			SDL_WarpMouseInWindow(NULL, scaleX * (action->getLeftBlackBand() + action->getXMouse()), scaleY * (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
 		}
 		else
 		{
@@ -323,10 +330,19 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 }
 
 /**
- * Handles the mouse-wheels on the arrow-buttons.
+ * does nothing?
  * @param action Pointer to an action.
  */
 void CraftSoldiersState::lstSoldiersMousePress(Action *action)
+{
+	
+}
+
+/**
+ * Handles the mouse-wheels on the arrow-buttons.
+ * @param action Pointer to an action.
+ */
+void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
 {
 	if (Options::changeValueByMouseWheel == 0)
 		return;
@@ -354,5 +370,6 @@ void CraftSoldiersState::lstSoldiersMousePress(Action *action)
 		}
 	}
 }
+
 
 }

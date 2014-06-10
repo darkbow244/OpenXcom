@@ -990,6 +990,35 @@ void TextList::mousePress(Action *action, State *state)
 	}
 }
 
+/**
+ * Handles mousewheel scrolling
+ */
+void TextList::mouseWheel(Action *action, State *state)
+{
+  	bool allowScroll = true;
+	if (Options::changeValueByMouseWheel != 0)
+	{
+		allowScroll = (action->getAbsoluteXMouse() < _arrowsLeftEdge || action->getAbsoluteXMouse() > _arrowsRightEdge);
+	}
+	if (allowScroll && action->getDetails()->type == SDL_MOUSEWHEEL)
+	{
+		if (action->getDetails()->wheel.y < 0) scrollUp(false);
+		else scrollDown(false);
+	}
+	if (_selectable)
+	{
+		if (_selRow < _rows.size())
+		{
+			InteractiveSurface::mouseWheel(action, state);
+		}
+	}
+	else
+	{
+		InteractiveSurface::mouseWheel(action, state);
+	}
+  
+}
+
 /*
  * Ignores any mouse clicks that aren't on a row.
  * @param action Pointer to an action.

@@ -163,6 +163,7 @@ ManageAlienContainmentState::ManageAlienContainmentState(Game *game, Base *base,
 	_lstAliens->onRightArrowRelease((ActionHandler)&ManageAlienContainmentState::lstItemsRightArrowRelease);
 	_lstAliens->onRightArrowClick((ActionHandler)&ManageAlienContainmentState::lstItemsRightArrowClick);
 	_lstAliens->onMousePress((ActionHandler)&ManageAlienContainmentState::lstItemsMousePress);
+	_lstAliens->onMouseWheel((ActionHandler)&ManageAlienContainmentState::lstItemsMouseWheel);
 
 	const std::vector<std::string> &items = _game->getRuleset()->getItemsList();
 	for (std::vector<std::string>::const_iterator i = items.begin(); i != items.end(); ++i)
@@ -332,10 +333,18 @@ void ManageAlienContainmentState::lstItemsLeftArrowClick(Action *action)
 }
 
 /**
- * Handles the mouse-wheels on the arrow-buttons.
+ * does nothing?
  * @param action Pointer to an action.
  */
 void ManageAlienContainmentState::lstItemsMousePress(Action *action)
+{
+
+}
+/**
+ * Handles the mouse-wheels on the arrow buttons.
+ * @param action Pointer to an action.
+ */
+void ManageAlienContainmentState::lstItemsMouseWheel(Action *action)
 {
 	_sel = _lstAliens->getSelectedRow();
 	const SDL_Event &ev(*action->getDetails());
@@ -351,7 +360,7 @@ void ManageAlienContainmentState::lstItemsMousePress(Action *action)
 			else
 				decreaseByValue(Options::changeValueByMouseWheel);
 		}
-	}
+	}  
 }
 
 /**
