@@ -246,70 +246,68 @@ void Game::run()
 					break;
 #endif
 				case SDL_MOUSEMOTION:
+					// With SDL2 we can have both events from a real mouse
+					// and events from a touch-emulated mouse.
+					// This code should prevent these events from
+					// interfering with each other.
+					if (_event.motion.which == SDL_TOUCH_MOUSEID)
+					{
+						break;
+					}
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
+					if (_event.button.which == SDL_TOUCH_MOUSEID)
+					{
+						break;
+					}
 				case SDL_MOUSEWHEEL:
+					if (_event.wheel.which == SDL_TOUCH_MOUSEID)
+					{
+						break;
+					}
 					// Skip mouse events if they're disabled
 					if (!_mouseActive) continue;
 					// re-gain focus on mouse-over or keypress.
 					runningState = RUNNING;
 					// Go on, feed the event to others
-#ifdef __ANDROID__
-					// ...or not
-					break;
-#endif
-#ifdef __ANDROID__
-				case SDL_FINGERMOTION:
-				case SDL_MULTIGESTURE:
-#endif
-				default:
-#ifdef __ANDROID__
 
+				case SDL_FINGERDOWN:
+				case SDL_FINGERUP:
+				case SDL_FINGERMOTION:
+				{
+					// For now we're translating events from the first finger into mouse events.
+					// FIXME: Note that we're using SDL_FingerID of 0 to specify this "first finger".
+					// This will likely break with things like active styluses.
 					SDL_Event fakeEvent;
 					SDL_Rect viewport;
 					int offsetX, offsetY;
-					double scale = _screen->getScale(); // We're preserving the aspect rate
-					
-					//Log(LOG_DEBUG) << "Scale is " << scale;
+					double scale = _screen->getScale(); // We're preserving the aspect ratio
 					
 					SDL_RenderGetViewport(_screen->getRenderer(), &viewport);
 					offsetX = viewport.x;
 					offsetY = viewport.y;
-					//Log(LOG_INFO) << "Current viewport: top point at " << viewport.x << ", " << viewport.y << "; size: " << viewport.w << ", " << viewport.h;
-					fakeEvent.type = SDL_FIRSTEVENT; /* Initialize as null-event */
+					fakeEvent.type = SDL_FIRSTEVENT; // This one is used internally by SDL, for us it's an empty event we don't handle
 					if ((_event.type == SDL_FINGERMOTION) ||
 					    (_event.type == SDL_FINGERDOWN) ||
 					    (_event.type == SDL_FINGERUP))
 					{
+						// On Android, fingerId of 0 corresponds to the first finger on the screen.
+						// FIXME: This might be platform-dependent!
 						if(_event.tfinger.fingerId == 0)
 						{
-						/* We use fakeEvent to fake the motion of the first finger */
+							// Note that we actually handle fingermotion, so emulating it may cause bugs.
 							if(_event.type == SDL_FINGERMOTION)
 							{
-							/* This one has to be passed unchanged AND as a touch finger event. Woosh.*/
 								fakeEvent.type = SDL_MOUSEMOTION;
-								/* SDL_GetMouseState(&fakeEvent.motion.x,
-										  &fakeEvent.motion.y);
-								SDL_GetRelativeMouseState(&fakeEvent.motion.xrel,
-											  &fakeEvent.motion.yrel); */
 								fakeEvent.motion.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
 								fakeEvent.motion.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
 								fakeEvent.motion.xrel = _event.tfinger.dx * Options::displayWidth / scale;
 								fakeEvent.motion.yrel = _event.tfinger.dy * Options::displayHeight / scale;
 								
-								fakeEvent.motion.state = SDL_BUTTON(1);	
-								//Log(LOG_INFO) << "Created a MouseMotion event at " << fakeEvent.motion.x << ", " << fakeEvent.motion.y;
-								//Log(LOG_INFO) << "FUCKING WORK NOW please with relative things at " << fakeEvent.motion.xrel << ", " << fakeEvent.motion.yrel;
+								fakeEvent.motion.state = SDL_BUTTON(1);		
 							}
 							else
 							{
-								
-								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
-								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
-								fakeEvent.button.button = SDL_BUTTON_LEFT;
-								/*SDL_GetMouseState(&fakeEvent.button.x,
-										  &fakeEvent.button.y);*/
-								//Log(LOG_INFO) << "Created a MouseButton event at " << fakeEvent.button.x << ", " << fakeEvent.button.y;
 								if (_event.type == SDL_FINGERDOWN)
 								{
 									fakeEvent.type = SDL_MOUSEBUTTONDOWN;
@@ -318,10 +316,14 @@ void Game::run()
 								{
 									fakeEvent.type = SDL_MOUSEBUTTONUP;
 								}
+								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
+								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
+								fakeEvent.button.button = SDL_BUTTON_LEFT;
 							}
 						}
 						
 					}
+					// FIXME: An alternative to this code duplication is very welcome.
 					if (fakeEvent.type != SDL_FIRSTEVENT)
 					{
 						Action fakeAction = Action(&fakeEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
@@ -330,7 +332,10 @@ void Game::run()
 						_fpsCounter->handle(&fakeAction);
 						_states.back()->handle(&fakeAction);
 					}
-#endif
+				}
+				case SDL_MULTIGESTURE:
+				default:
+
 					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 					_screen->handle(&action);
 					_cursor->handle(&action);
