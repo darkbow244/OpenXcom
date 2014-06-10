@@ -21,12 +21,15 @@
 
 #include <SDL.h>
 #include <string>
+#include <vector>
 
 namespace OpenXcom
 {
 
 class Surface;
 class Action;
+
+class Texture;
 
 /**
  * A display screen, handles rendering onto the game window.
@@ -58,6 +61,11 @@ private:
 	void makeVideoFlags();
 	SDL_Texture *_texture;
 	int _prevWidth, _prevHeight;
+	
+	/// A list for our (possible) overlays.
+	std::vector<Texture*> _overlays;
+	/// A flag to show whether or not we want to draw our overlays
+	bool _drawOverlays;
 public:
 	static const int ORIGINAL_WIDTH;
 	static const int ORIGINAL_HEIGHT;
@@ -68,7 +76,9 @@ public:
 	Screen();
 	/// Cleans up the display screen.
 	~Screen();
+	/// Get horizontal offset.
 	int getDX();
+	/// Get vertical offset.
 	int getDY();
 	/// Gets the internal buffer.
 	Surface *getSurface();
@@ -106,7 +116,17 @@ public:
 	static void updateScale(int &type, int selection, int &x, int &y, bool change);
 	/// Get the scale for action() scaling (Android specific)
 	double getScale() const;
+	/// Get the pointer for our current window
 	SDL_Window *getWindow() const;
+	
+	/// Add a texture overlay
+	void addOverlay(Texture *overlay);
+	/// Set the overlay drawing flag
+	void drawOverlays(bool draw);
+	/// Removes the overlay from the drawing list
+	void removeOverlay(Texture *overlay);
+	
+	
 };
 
 }

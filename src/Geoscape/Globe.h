@@ -216,6 +216,8 @@ public:
 	void setupRadii(int width, int height);
 	/// Move the mouse back to where it started after we finish drag scrolling.
 	void stopScrolling(Action *action);
+	/// Special handling for multifinger gestures
+	void multiGesture(Action *action, State *state);
 };
 
 }

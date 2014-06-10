@@ -1327,7 +1327,7 @@ void BattlescapeGame::primaryAction(const Position &pos)
 				_currentAction.actor = unit;
 			}
 		}
-		else if (playableUnitSelected() && !_parentState->hasScrolled())
+		else if (playableUnitSelected() /*&& !_parentState->hasScrolled()*/)
 		{
 			bool modifierPressed = (SDL_GetModState() & KMOD_CTRL) != 0;
 			if (bPreviewed &&

@@ -43,12 +43,12 @@ class Base;
 class GeoscapeState : public State
 {
 private:
-	Surface *_bg, *_sidebar;
+	Surface *_bg, *_sideLine, *_sidebar;
 	Globe *_globe;
 	TextButton *_btnIntercept, *_btnBases, *_btnGraphs, *_btnUfopaedia, *_btnOptions, *_btnFunding;
 	TextButton *_timeSpeed;
 	TextButton *_btn5Secs, *_btn1Min, *_btn5Mins, *_btn30Mins, *_btn1Hour, *_btn1Day;
-	TextButton *_btnTop, *_btnBottom;
+	TextButton *_sideTop, *_sideBottom;
 	InteractiveSurface *_btnRotateLeft, *_btnRotateRight, *_btnRotateUp, *_btnRotateDown, *_btnZoomIn, *_btnZoomOut;
 	Text *_txtFunds, *_txtHour, *_txtHourSep, *_txtMin, *_txtMinSep, *_txtSec, *_txtWeekday, *_txtDay, *_txtMonth, *_txtYear;
 	Timer *_gameTimer, *_zoomInEffectTimer, *_zoomOutEffectTimer, *_dogfightStartTimer;
@@ -128,8 +128,6 @@ public:
 	void btnZoomOutLeftClick(Action *action);
 	/// Handler for right-clicking the Zoom Out icon.
 	void btnZoomOutRightClick(Action *action);
-	/// Handler for pinch-zooming the globe
-	void globePinch(Action *action);
 	/// Blit method - renders the state and dogfights.
 	void blit();
 	/// Globe zoom in effect for dogfights.

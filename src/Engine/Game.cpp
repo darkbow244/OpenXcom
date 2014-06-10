@@ -191,10 +191,20 @@ void Game::run()
 				case SDL_APP_WILLENTERBACKGROUND:
 					//Mix_PauseMusic();
 					Music::pause();
+					// Probably won't do a thing, but still
+					runningState = PAUSED;
 					break;
 				case SDL_APP_WILLENTERFOREGROUND:
 					//Mix_ResumeMusic();
+					runningState = RUNNING;
 					Music::resume();
+					break;
+				/* Watch for these messages for debugging purposes */
+				case SDL_APP_LOWMEMORY:
+					Log(LOG_WARNING) << "Warning! We're low on memory! Better make a backup!";
+					break;
+				case SDL_APP_TERMINATING:
+					Log(LOG_WARNING) << "The OS is not happy with us! We're gonna die!";
 					break;
 #endif
 #if 0
@@ -393,40 +403,11 @@ void Game::run()
 			}
 		}
 
-#if 0		/* uh... why do we have the same thing over again? */
-		// Initialize active state
-		if (!_init)
-		{
-			_init = true;
-			_states.back()->init();
-
-			// Unpress buttons
-			_states.back()->resetAll();
-
-			// Refresh mouse position
-			SDL_Event ev;
-			int x, y;
-			SDL_GetMouseState(&x, &y);
-			ev.type = SDL_MOUSEMOTION;
-			ev.motion.x = x;
-			ev.motion.y = y;
-			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-			_states.back()->handle(&action);
-		}
-#endif
-
 		// Save on CPU
 		switch (runningState)
 		{
-			case RUNNING:
-				if (_timeUntilNextFrame > 0)
-				{
-					SDL_Delay(_timeUntilNextFrame); //Save CPU from going 100%
-				}
-				else
-				{
-					SDL_Delay(1);
-				}
+			case RUNNING: 
+				SDL_Delay(1); //Save CPU from going 100%
 				break;
 			case SLOWED: case PAUSED:
 				SDL_Delay(100); break; //More slowing down.

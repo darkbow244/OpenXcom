@@ -567,6 +567,10 @@ void TextEdit::textInput(Action *action, State *state)
 	_value += Language::utf8ToWstr(text);
 	_caretPos = _value.length();
 	_redraw = true;
+	if (_change)
+	{
+		(state->*_change)(action);
+	}
 }
 
 }

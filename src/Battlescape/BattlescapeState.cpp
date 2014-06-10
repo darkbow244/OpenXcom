@@ -85,6 +85,9 @@
 #include "../Menu/SaveGameState.h"
 #include "../fmath.h"
 
+
+#include "../Engine/Texture.h"
+
 namespace OpenXcom
 {
 
@@ -239,13 +242,25 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	_map->init();
 	_map->onMouseOver((ActionHandler)&BattlescapeState::mapOver);
 	_map->onMousePress((ActionHandler)&BattlescapeState::mapPress);
-	/* FIXME: Check what this function actually does */
+	/* On Android, turn the soldier if it was a swipe from him */
 	_map->onMouseRelease((ActionHandler)&BattlescapeState::mapRelease);
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
 	_map->onFingerMotion((ActionHandler)&BattlescapeState::fingerMotion);
 #ifdef __ANDROID__
 	_map->onKeyboardPress((ActionHandler)&BattlescapeState::mapKey, 0);
+#if 0	
+	_overlay = new Texture(_game->getScreen(), 320, 200);
+	std::ostringstream ss;
+	ss.str("");
+	ss << "/sdcard/openxcom/data/Resources/UI/overlay_sample.png";
+	_overlay->loadImage(ss.str());
+	_overlay->setSrcRect(0, 0, 320, 200);
+	_overlay->setDstRect(0, 0, 320, 200);
+	_game->getScreen()->addOverlay(_overlay);
+	_game->getScreen()->drawOverlays(true);
+#endif
+	
 #endif
 
 	// Add in custom reserve buttons
@@ -509,6 +524,9 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
  */
 BattlescapeState::~BattlescapeState()
 {
+#if 0
+	delete _overlay;
+#endif
 	delete _animTimer;
 	delete _gameTimer;
 	delete _battleGame;
@@ -811,6 +829,7 @@ void BattlescapeState::mapClick(Action *action)
 	}
 
 	// right-click aborts walking state
+	// Maybe make it any button on Android?
 	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		if (_battleGame->cancelCurrentAction())
@@ -822,13 +841,11 @@ void BattlescapeState::mapClick(Action *action)
 	// don't handle mouseclicks over the buttons (it overlaps with map surface)
 	if (_mouseOverIcons) return;
 
-
 	// don't accept leftclicks if there is no cursor or there is an action busy
 	if (_map->getCursorType() == CT_NONE || _battleGame->isBusy()) return;
 
 	Position pos;
 	_map->getSelectorPosition(&pos);
-
 	if (_save->getDebugMode())
 	{
 		std::wostringstream ss;
@@ -1454,23 +1471,12 @@ void BattlescapeState::blinkVisibleUnitButtons()
 {
 	static int delta = 1, color = 32;
 
-	SDL_Rect square1;
-	square1.x = 0;
-	square1.y = 0;
-	square1.w = 15;
-	square1.h = 12;
-	SDL_Rect square2;
-	square2.x = 1;
-	square2.y = 1;
-	square2.w = 13;
-	square2.h = 10;
-
 	for (int i = 0; i < VISIBLE_MAX;  ++i)
 	{
 		if (_btnVisibleUnit[i]->getVisible() == true)
 		{
-			_btnVisibleUnit[i]->drawRect(&square1, 15);
-			_btnVisibleUnit[i]->drawRect(&square2, color);
+			_btnVisibleUnit[i]->drawRect(0, 0, 15, 12, 15);
+			_btnVisibleUnit[i]->drawRect(1, 1, 13, 10, color);
 		}
 	}
 

@@ -233,8 +233,9 @@ void OptionsBaseState::btnOkClick(Action *)
 		if (Options::displayWidth != Options::newDisplayWidth ||
 			Options::displayHeight != Options::newDisplayHeight ||
 			Options::useOpenGL != Options::newOpenGL ||
-			Options::useScaleFilter != Options::newScaleFilter ||
-			Options::useHQXFilter != Options::newHQXFilter ||
+			Options::useNearestScaler != Options::newNearestScaler ||
+			Options::useLinearScaler != Options::newLinearScaler ||
+			Options::useAnisotropicScaler != Options::newAnisotropicScaler ||
 			Options::useOpenGLShader != Options::newOpenGLShader)
 		{
 			_game->pushState(new OptionsConfirmState(_game, _origin));
@@ -256,8 +257,8 @@ void OptionsBaseState::btnCancelClick(Action *)
 	Options::load();
 	// Again, Android and stuff.
 	//SDL_WM_GrabInput(Options::captureMouse);
-	Screen::updateScale(Options::battlescapeScale, Options::newBattlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, _origin == OPT_BATTLESCAPE);
-	Screen::updateScale(Options::geoscapeScale, Options::newGeoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, _origin != OPT_BATTLESCAPE);
+	Screen::updateScale(Options::newBattlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, _origin == OPT_BATTLESCAPE);
+	Screen::updateScale(Options::newGeoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, _origin != OPT_BATTLESCAPE);
 	_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	_game->popState();
 }

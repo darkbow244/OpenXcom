@@ -69,7 +69,11 @@ void create()
 	_info.push_back(OptionInfo("keyboardMode", (int*)&keyboardMode, KEYBOARD_ON));
 #endif
 
+#ifdef __ANDROID__
+	_info.push_back(OptionInfo("maxFrameSkip", &maxFrameSkip, 0, "STR_FRAMESKIP", "STR_GENERAL"));
+#else
 	_info.push_back(OptionInfo("maxFrameSkip", &maxFrameSkip, 0));
+#endif
 	_info.push_back(OptionInfo("traceAI", &traceAI, false));
 	_info.push_back(OptionInfo("baseXResolution", &baseXResolution, Screen::ORIGINAL_WIDTH));
 	_info.push_back(OptionInfo("baseYResolution", &baseYResolution, Screen::ORIGINAL_HEIGHT));
@@ -145,7 +149,13 @@ void create()
 #endif
 	_info.push_back(OptionInfo("preferredMusic", (int*)&preferredMusic, MUSIC_AUTO));
 	_info.push_back(OptionInfo("preferredSound", (int*)&preferredSound, SOUND_AUTO));
+	// SDL2 scaler options
+	_info.push_back(OptionInfo("useNearestScaler", &useNearestScaler, false));
+	_info.push_back(OptionInfo("useLinearScaler", &useLinearScaler, true));
+	_info.push_back(OptionInfo("useAnisotropicScaler", &useAnisotropicScaler, false));
 
+	
+	
 	// advanced options
 	_info.push_back(OptionInfo("playIntro", &playIntro, true, "STR_PLAYINTRO", "STR_GENERAL"));
 	_info.push_back(OptionInfo("autosave", &autosave, true, "STR_AUTOSAVE", "STR_GENERAL"));
@@ -154,7 +164,7 @@ void create()
 	_info.push_back(OptionInfo("changeValueByMouseWheel", &changeValueByMouseWheel, 0, "STR_CHANGEVALUEBYMOUSEWHEEL", "STR_GENERAL"));
 
 // this should probably be any small screen touch-device, i don't know the defines for all of them so i'll cover android and IOS as i imagine they're more common
-#ifdef __ANDROID_API__
+#ifdef __ANDROID__
 	_info.push_back(OptionInfo("maximizeInfoScreens", &maximizeInfoScreens, true, "STR_MAXIMIZE_INFO_SCREENS", "STR_GENERAL"));
 #elif __APPLE__
 	// todo: ask grussel how badly i messed this up.
@@ -638,6 +648,9 @@ void backupDisplay()
 	Options::newScaleFilter = Options::useScaleFilter;
 	Options::newHQXFilter = Options::useHQXFilter;
 	Options::newOpenGLShader = Options::useOpenGLShader;
+	Options::newNearestScaler = Options::useNearestScaler;
+	Options::newLinearScaler = Options::useLinearScaler;
+	Options::newAnisotropicScaler = Options::useAnisotropicScaler;
 }
 
 /**
@@ -654,6 +667,9 @@ void switchDisplay()
 	std::swap(geoscapeScale, newGeoscapeScale);
 	std::swap(useHQXFilter, newHQXFilter);
 	std::swap(useOpenGLShader, newOpenGLShader);
+	std::swap(useNearestScaler, newNearestScaler);
+	std::swap(useLinearScaler, newLinearScaler);
+	std::swap(useAnisotropicScaler, newAnisotropicScaler);
 }
 
 }
