@@ -35,7 +35,7 @@ const SDL_Keycode InteractiveSurface::SDLK_ANY = (SDL_Keycode)-1; // using an un
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _multiGesture(0), _wheel(0), _isHovered(false), _isFocused(true), _listButton(false)
+InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _multiGesture(0), _wheel(NULL), _isHovered(false), _isFocused(true), _listButton(false)
 {
 }
 
@@ -192,7 +192,10 @@ void InteractiveSurface::handle(Action *action, State *state)
 	}
 	else if (action->getDetails()->type == SDL_MOUSEWHEEL)
 	{
-		mouseWheel(action, state);
+		if (_isHovered)
+		{
+			mouseWheel(action, state);
+		}
 	}
 	else if (action->getDetails()->type == SDL_MOUSEBUTTONUP)
 	{
@@ -452,7 +455,7 @@ void InteractiveSurface::multiGesture(Action *action, State *state)
 
 void InteractiveSurface::mouseWheel(Action *action, State *state)
 {
-	if (_wheel != 0)
+	if (_wheel != NULL)
 	{
 		(state->*_wheel)(action);
 	}
