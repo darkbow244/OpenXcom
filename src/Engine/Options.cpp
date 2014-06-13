@@ -20,6 +20,7 @@
 #include "Options.h"
 #include "../version.h"
 #include <SDL.h>
+
 #include <SDL_mixer.h>
 #include <stdio.h>
 #include <iostream>
@@ -149,10 +150,13 @@ void create()
 #endif
 	_info.push_back(OptionInfo("preferredMusic", (int*)&preferredMusic, MUSIC_AUTO));
 	_info.push_back(OptionInfo("preferredSound", (int*)&preferredSound, SOUND_AUTO));
+	_info.push_back(OptionInfo("musicAlwaysLoop", &musicAlwaysLoop, false));
 	// SDL2 scaler options
 	_info.push_back(OptionInfo("useNearestScaler", &useNearestScaler, false));
 	_info.push_back(OptionInfo("useLinearScaler", &useLinearScaler, true));
-	_info.push_back(OptionInfo("useAnisotropicScaler", &useAnisotropicScaler, false));
+	_info.push_back(OptionInfo("useAnisotropicScaler", &useAnisotropicScaler, false));	
+	
+
 
 	
 	
