@@ -301,14 +301,14 @@ void MiniMapView::mouseOver(Action *action, State *state)
 		}
 
 		_isMouseScrolled = true;
-
+#ifndef __ANDROID__
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 		assert (0 && "FIXME");
 		/* FIXME: Mouse warping still doesn't work as intended */
 		//SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
-
+#endif
 		// Check the threshold
 		_totalMouseMoveX += action->getDetails()->motion.xrel;
 		_totalMouseMoveY += action->getDetails()->motion.yrel;
