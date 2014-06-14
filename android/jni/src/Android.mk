@@ -25,9 +25,11 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include \
 
 LOCAL_ARM_MODE := arm
 
+#LOCAL_ARM_NEON := true
+
 # Add your application source files here...
 # deleted: $(SDL_PATH)/src/main/android/SDL_android_main.c
-LOCAL_SRC_FILES := \
+LOCAL_SRC_FILES := SDL_android_main.c \
 	$(subst $(LOCAL_PATH)/,, \
 	$(LOCAL_PATH)/../../../src/main.cpp \
 	$(LOCAL_PATH)/../../../src/lodepng.cpp \

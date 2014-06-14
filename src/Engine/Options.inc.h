@@ -49,3 +49,4 @@ OPT int newDisplayWidth, newDisplayHeight, newBattlescapeScale, newGeoscapeScale
 OPT std::string newOpenGLShader;
 OPT std::vector<std::string> rulesets, purchaseExclusions, badMods;
 OPT SoundFormat currentSound;
+OPT std::string systemLocale;

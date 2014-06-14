@@ -328,6 +328,7 @@ void resetDefault()
  */
 void loadArgs(int argc, char *argv[])
 {
+	Options::systemLocale = "";
 	for (int i = 1; i < argc; ++i)
 	{
 		std::string arg = argv[i];
@@ -352,6 +353,11 @@ void loadArgs(int argc, char *argv[])
 				else if (argname == "cfg")
 				{
 					_configFolder = CrossPlatform::endPath(argv[i+1]);
+				}
+				else if (argname == "locale")
+				{
+					systemLocale += argv[i+1];
+					Log(LOG_INFO) << "Current locale is " << systemLocale;
 				}
 				else
 				{

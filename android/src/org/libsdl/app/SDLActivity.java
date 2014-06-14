@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import android.app.*;
 import android.content.*;
@@ -262,6 +263,19 @@ public class SDLActivity extends Activity {
             }
         }
     }
+    
+    /**
+     * This method returns the locale in the format of 'lang'-'country'. It is then passed
+     * to the native SDL thread.
+     */
+     public static String getLocaleString() {
+	final String localeLanguage = Locale.getDefault().getLanguage();
+	final String localeCountry = Locale.getDefault().getCountry();
+	String localeCode = localeLanguage;
+	localeCode = localeCode.concat("-");
+	localeCode = localeCode.concat(localeCountry);
+	return localeCode;
+     }
 
     // Handler for the messages
     Handler commandHandler = new SDLCommandHandler();
@@ -275,7 +289,7 @@ public class SDLActivity extends Activity {
     }
 
     // C functions we call
-    public static native int nativeInit();
+    public static native int nativeInit(String localeCode);
     public static native void nativeLowMemory();
     public static native void nativeQuit();
     public static native void nativePause();
@@ -546,7 +560,7 @@ class SDLMain implements Runnable {
     @Override
     public void run() {
         // Runs SDL_main()
-        SDLActivity.nativeInit();
+        SDLActivity.nativeInit(SDLActivity.getLocaleString());
 
         //Log.v("SDL", "SDL thread terminated");
     }
