@@ -3,7 +3,8 @@
 */
 
 /**
- * Modified version to accept parameters from Java, needed for argc and argv trickery
+ * This file is a modified version of SDL_android_main.c from SDL2 source code distribution.
+ * It is modified to feed locale string into the main application.
  */
 #include "../SDL/src/SDL_internal.h"
 
