@@ -410,11 +410,13 @@ void OptionsVideoState::txtDisplayHeightChange(Action *)
 	ss >> std::dec >> height;
 	Options::newDisplayHeight = height;
 	// Update resolution mode
-	if (_res != (SDL_Rect**)-1 && _res != (SDL_Rect**)0)
+	// TODO: Rewrite this part so that it would use std::vector
+#if 0
+	if (_res.size() > 0)
 	{
 		int i;
 		_resCurrent = -1;
-		for (i = 0; _res[i]; ++i)
+		for (std::vector<SDL_DisplayMode>::iterator i = _res.begin(); i != res.end(); ++i)
 		{
 			if (_resCurrent == -1 &&
 				((_res[i]->w == Options::newDisplayWidth && _res[i]->h <= Options::newDisplayHeight) || _res[i]->w < Options::newDisplayWidth))
@@ -423,6 +425,7 @@ void OptionsVideoState::txtDisplayHeightChange(Action *)
 			}
 		}
 	}
+#endif
 }
 
 /**
