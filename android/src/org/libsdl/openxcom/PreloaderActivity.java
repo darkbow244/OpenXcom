@@ -41,6 +41,7 @@ public class PreloaderActivity extends Activity {
 		setContentView(R.layout.activity_preloader);
 		context = this;
 		preloaderLog = (TextView) findViewById(R.id.preloaderLog);
+		assets = getAssets();
 	}
 	
 	@Override
@@ -61,7 +62,12 @@ public class PreloaderActivity extends Activity {
 		super.onStart();
 		// We only want to do all this if we have the game files.
 		if (hasGameFiles()) {
-			new AsyncTask<Void, String, Void>() 
+			// Check what needs updating
+			final boolean dataNeedsUpdating = needsUpdating(dataMarkerName);
+			final boolean translationNeedsUpdating = needsUpdating(translationMarkerName);
+			final boolean needsPatch = needsUpdating(patchMarkerName);
+			if (dataNeedsUpdating || translationNeedsUpdating || needsPatch) {
+				new AsyncTask<Void, String, Void>() 
 				{
 			
 					@Override
@@ -82,21 +88,20 @@ public class PreloaderActivity extends Activity {
 					@Override
 					protected Void doInBackground(Void... arg0) {
 						try {
-							assets = context.getAssets();
 							publishProgress("Checking data version...");
-							if (needsUpdating(dataMarkerName)) {
+							if (dataNeedsUpdating) {
 								publishProgress("Extracting data...");
 								extractFile("data.zip", "/sdcard/OpenXcom/");
 								copyMarker(dataMarkerName);
 							}
 							publishProgress("Checking translations version...");
-							if (needsUpdating(translationMarkerName)) {
+							if (translationNeedsUpdating) {
 								publishProgress("Extracting translations...");
 								extractFile("latest.zip", "/sdcard/OpenXcom/data/Language/");
 								copyMarker(translationMarkerName);
 							}
 							publishProgress("Checking patch version...");
-							if (needsUpdating(patchMarkerName)) {
+							if (needsPatch) {
 								publishProgress("Applying patch...");
 								extractFile("universal-patch.zip", "/sdcard/OpenXcom/data/");
 								copyMarker(patchMarkerName);
@@ -114,10 +119,16 @@ public class PreloaderActivity extends Activity {
 							pd.dismiss();
 						}
 						Log.i("OpenXcom", "Finishing asynctask...");
-						PassExecution();	
+						passExecution();	
 					}
 					
-				}.execute((Void[]) null);
+				}.execute((Void[]) null);	
+			}
+			else {
+				// We don't need to do anything, just pass execution further
+				passExecution();
+			}
+			
 		}
 	}
 	
@@ -125,7 +136,7 @@ public class PreloaderActivity extends Activity {
 	 * This method gets called by AsyncThread to execute the main activity.
 	 */
 	
-	protected void PassExecution() {
+	protected void passExecution() {
 		Intent intent = new Intent(this, OpenXcom.class);
 		startActivity(intent);
 		
