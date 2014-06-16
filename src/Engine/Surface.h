@@ -46,6 +46,11 @@ protected:
 	void *_alignedBuffer;
 	std::string _tooltip;
 
+	static const int RMASK;
+	static const int GMASK;
+	static const int BMASK;
+	static const int AMASK;
+	
 	void resize(int width, int height);
 public:
 	/// Creates a new surface with the specified size and position.

@@ -46,7 +46,7 @@ namespace OpenXcom
 
 namespace
 {
-
+  
 /**
  * Helper function counting pitch in bytes with 16byte padding
  * @param bpp bytes per pixel
@@ -122,6 +122,11 @@ inline void DeleteAligned(void* buffer)
 
 } //namespace
 
+
+const int Surface::RMASK = 0xFF000000;
+const int Surface::GMASK = 0x00FF0000;
+const int Surface::BMASK = 0x0000FF00;
+const int Surface::AMASK = 0x000000FF;
 /**
  * Sets up a blank 8bpp surface with the specified size and position,
  * with pure black as the transparent color.
@@ -134,11 +139,12 @@ inline void DeleteAligned(void* buffer)
  * @param y Y position in pixels.
  * @param bpp Bits-per-pixel depth.
  */
+
 Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _alignedBuffer(0)
 {
 	_alignedBuffer = NewAligned(bpp, width, height);
 	if (bpp == 32)
-		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, 32, GetPitch(32, width), 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, 32, GetPitch(32, width), RMASK, GMASK, BMASK, AMASK);
 	else
 		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
 
