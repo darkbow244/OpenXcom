@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,7 +20,6 @@
 #ifndef OPENXCOM_ARTICLESTATETEXT_H
 #define OPENXCOM_ARTICLESTATETEXT_H
 
-#include <string>
 #include "ArticleState.h"
 
 namespace OpenXcom
@@ -36,7 +35,7 @@ namespace OpenXcom
 	class ArticleStateText : public ArticleState
 	{
 	public:
-		ArticleStateText(Game *game, ArticleDefinitionText *article_defs, int palSwitch);
+		ArticleStateText(Game *game, ArticleDefinitionText *article_defs);
 		virtual ~ArticleStateText();
 
 	protected:

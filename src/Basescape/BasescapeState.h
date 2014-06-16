@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -78,15 +78,19 @@ public:
 	/// Handler for clicking the Geoscape button.
 	void btnGeoscapeClick(Action *action);
 	/// Handler for clicking the base view.
-	void viewClick(Action *action);
+	void viewLeftClick(Action *action);
+	/// Handler for right clicking the base view.
+	void viewRightClick(Action *action);
 	/// Handler for hovering the base view.
 	void viewMouseOver(Action *action);
 	/// Handler for hovering out of the base view.
 	void viewMouseOut(Action *action);
 	/// Handler for clicking the mini base view.
 	void miniClick(Action *action);
-	/// Handler for pressing a key on the Name edit.
-	void edtBaseKeyPress(Action *action);
+	/// Handler for changing the text on the Name edit.
+	void edtBaseChange(Action *action);
+	/// Handler for pressing a base selection hotkey.
+	void handleKeyPress(Action *action);
 };
 
 }

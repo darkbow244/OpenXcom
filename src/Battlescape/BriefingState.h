@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -29,7 +29,6 @@ class Window;
 class Text;
 class Craft;
 class Base;
-class Ufo;
 
 /**
  * Briefing screen which displays info

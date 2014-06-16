@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,12 +20,11 @@
 #define OPENXCOM_PLACESTARTFACILITYSTATE_H
 
 #include "PlaceFacilityState.h"
-#include "SelectStartFacilityState.h"
 
 namespace OpenXcom
 {
 
-class Globe;
+class SelectStartFacilityState;
 
 /**
  * Window shown when the player tries to
@@ -34,7 +33,6 @@ class Globe;
 class PlaceStartFacilityState : public PlaceFacilityState
 {
 private:
-	Globe *_globe;
 	SelectStartFacilityState *_select;
 
 public:

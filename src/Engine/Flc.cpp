@@ -29,14 +29,17 @@ grt,
 #include <math.h>
 /*
 */
-#include "SDL.h"
+#include <SDL.h>
 /*
 */
 #include "Flc.h"
 #include "Logger.h"
 #include "Exception.h"
 #include "Zoom.h"
-#include "../aresame.h"
+#include "Screen.h"
+#include "Surface.h"
+#include "Options.h"
+#include "../fmath.h"
 
 namespace OpenXcom
 {
@@ -73,11 +76,18 @@ void SDLInit(char *header)
 
 #endif
 
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define ReadU16(tmp1, tmp2) { Uint8 *sp = (Uint8 *)tmp2, *dp = (Uint8 *)tmp1; dp[0]=sp[1]; dp[1]=sp[0]; }
+#define ReadU32(tmp1, tmp2) { Uint8 *sp = (Uint8 *)tmp2, *dp = (Uint8 *)tmp1; dp[0]=sp[3]; dp[1]=sp[2]; dp[2]=sp[1]; dp[3]=sp[0]; }
+#else
 #define ReadU16(tmp1, tmp2) /* (Uint16) */ (*(tmp1) = ((Uint8)*(tmp2+1)<<8)+(Uint8)*(tmp2));
 #define ReadU32(tmp1, tmp2) /* (Uint32) */ (*(tmp1) = (((((((Uint8)*(tmp2+3)<<8)+((Uint8)*(tmp2+2)))<<8)+((Uint8)*(tmp2+1)))<<8)+(Uint8)*(tmp2)));
+#endif
 
 void FlcReadFile(Uint32 size)
-{ if(size>flc.membufSize) {
+{ 
+if(size>flc.membufSize) {
     if(!(flc.pMembuf=(Uint8*)realloc(flc.pMembuf, size+1))) {
       //printf("Realloc failed: %d\n", size);
       Log(LOG_FATAL) << "Realloc failed: " << size;
@@ -93,7 +103,8 @@ void FlcReadFile(Uint32 size)
 } /* FlcReadFile */
 
 int FlcCheckHeader(const char *filename)
-{ if((flc.file=fopen(filename, "rb"))==NULL) {
+{ 
+if((flc.file=fopen(filename, "rb"))==NULL) {
     Log(LOG_ERROR) << "Could not open flx file: " << filename;
 		return -1;
   }
@@ -118,21 +129,24 @@ int FlcCheckHeader(const char *filename)
   printf("flc.HeaderSpeed: %lf\n", flc.HeaderSpeed);
 #endif
 
-  if((flc.HeaderCheck==0x0AF12) || (flc.HeaderCheck==0x0AF11)) { 
+
+  if((flc.HeaderCheck==SDL_SwapLE16(0x0AF12)) || (flc.HeaderCheck==SDL_SwapLE16(0x0AF11))) { 
     flc.screen_w=flc.HeaderWidth;
     flc.screen_h=flc.HeaderHeight;
 	Log(LOG_INFO) << "Playing flx, " << flc.screen_w << "x" << flc.screen_h << ", " << flc.HeaderFrames << " frames";
     flc.screen_depth=8;
-    if(flc.HeaderCheck==0x0AF11) {
+	if(flc.HeaderCheck == SDL_SwapLE16(0x0AF11)){
       flc.HeaderSpeed*=1000.0/70.0;
     }
     return(0);
   }
   return(1);
+
 } /* FlcCheckHeader */
 
 int FlcCheckFrame()
-{ flc.pFrame=flc.pMembuf+flc.FrameSize-16;
+{ 
+flc.pFrame=flc.pMembuf+flc.FrameSize-16;
   ReadU32(&flc.FrameSize, flc.pFrame+0);
   ReadU16(&flc.FrameCheck, flc.pFrame+4);
   ReadU16(&flc.FrameChunks, flc.pFrame+6);
@@ -155,11 +169,14 @@ int FlcCheckFrame()
   if(flc.FrameCheck==0x0f100) { 
 #ifdef DEBUG
     printf("Ani info!!!\n");
-#endif
+#endif	
     return(0);
   }
 
   return(1);
+//#else
+//  return(0);
+//#endif
 } /* FlcCheckFrame */
 
 void COLORS256()
@@ -199,6 +216,7 @@ void SS2()
   pSrc=flc.pChunk+6;
   pDst=(Uint8*)flc.mainscreen->pixels + flc.offset;
   ReadU16(&Lines, pSrc);
+  
   pSrc+=2;
   while(Lines--) {
     ReadU16(&Count, pSrc);
@@ -222,7 +240,7 @@ void SS2()
       pSrc+=2;
     }
 
-    if((Count & 0xc000)==0x0000) {      // 0xc000h = 1100000000000000
+	if((Count & SDL_SwapLE16(0xc000))==0x0000) {      // 0xc000h = 1100000000000000
       pTmpDst=pDst;
       while(Count--) {
         ColumSkip=*(pSrc++);
@@ -427,7 +445,9 @@ void FlcDoOneFrame()
 } /* FlcDoOneFrame */
 
 void SDLWaitFrame(void)
-{ static double oldTick=0.0;
+{ 
+//#ifndef __NO_FLC
+static double oldTick=0.0;
   Uint32 currentTick;
   double waitTicks;
   double delay = flc.DelayOverride ? flc.DelayOverride : flc.HeaderSpeed;
@@ -442,10 +462,11 @@ void SDLWaitFrame(void)
 		waitTicks = (oldTick + delay - SDL_GetTicks());
 
 		if(waitTicks > 0.0) {
-			//SDL_Delay(floor(waitTicks + 0.5)); // biased rounding? mehhh?
+			//SDL_Delay((int)Round(waitTicks)); // biased rounding? mehhh?
 			SDL_Delay(1);
 		}
 	} while (waitTicks > 0.0); 
+//#endif
 } /* SDLWaitFrame */
 
 void FlcInitFirstFrame()
@@ -488,16 +509,16 @@ void FlcDeInit()
 void FlcMain(void (*frameCallBack)())
 { flc.quit=false;
   SDL_Event event;
+  
   FlcInitFirstFrame();
-  flc.offset = flc.dy*flc.mainscreen->pitch + flc.mainscreen->format->BytesPerPixel*flc.dx;
+  flc.offset = flc.dy * flc.mainscreen->pitch + flc.mainscreen->format->BytesPerPixel * flc.dx;
   while(!flc.quit) {
 	if (frameCallBack) (*frameCallBack)();
     flc.FrameCount++;
     if(FlcCheckFrame()) {
       if (flc.FrameCount<=flc.HeaderFrames) {
-        //printf("Frame failure -- corrupt file?\n");
         Log(LOG_ERROR) << "Frame failure -- corrupt file?";
-				return;
+	return;
       } else {
         if(flc.loop)
           FlcInitFirstFrame();
@@ -511,12 +532,13 @@ void FlcMain(void (*frameCallBack)())
 
     FlcReadFile(flc.FrameSize);
 
-    if(flc.FrameCheck!=0x0f100) {
+	if(flc.FrameCheck!=SDL_SwapLE16(0x0f100)) {
       FlcDoOneFrame();
       SDLWaitFrame();
       /* TODO: Track which rectangles have really changed */
       //SDL_UpdateRect(flc.mainscreen, 0, 0, 0, 0);
-      if (flc.mainscreen != flc.realscreen->getSurface()->getSurface()) SDL_BlitSurface(flc.mainscreen, 0, flc.realscreen->getSurface()->getSurface(), 0);
+      if (flc.mainscreen != flc.realscreen->getSurface()->getSurface())
+        SDL_BlitSurface(flc.mainscreen, 0, flc.realscreen->getSurface()->getSurface(), 0);
       flc.realscreen->flip();
     }
 
@@ -533,6 +555,22 @@ void FlcMain(void (*frameCallBack)())
 			  flc.realscreen->clear();
 			  return;
 			break;
+			case SDL_VIDEORESIZE:
+				if (Options::allowResize)
+				{
+					Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, event.resize.w);
+					Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, event.resize.h);
+					if (flc.mainscreen != flc.realscreen->getSurface()->getSurface())
+					{
+						flc.realscreen->resetDisplay();
+					}
+					else
+					{
+						flc.realscreen->resetDisplay();
+						flc.mainscreen = flc.realscreen->getSurface()->getSurface();
+					}
+				}
+				break;
 			case SDL_QUIT:
 			  exit(0);
 			default:
@@ -541,8 +579,9 @@ void FlcMain(void (*frameCallBack)())
 		}
 		if (finalFrame) SDL_Delay(50);
 	} while (!flc.quit && finalFrame && SDL_GetTicks() - pauseStart < 10000); // 10 sec pause but we're actually just fading out and going to main menu when the music ends
-	if (finalFrame) flc.quit = true;;
+	if (finalFrame) flc.quit = true;
   }
+//#endif
 } /* FlcMain */
 
 

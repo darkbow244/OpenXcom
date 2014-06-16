@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,7 +20,6 @@
 #ifndef OPENXCOM_ARTICLESTATEITEM_H
 #define OPENXCOM_ARTICLESTATEITEM_H
 
-#include <string>
 #include "ArticleState.h"
 
 namespace OpenXcom
@@ -30,7 +29,6 @@ namespace OpenXcom
 	class Text;
 	class TextList;
 	class ArticleDefinitionItem;
-	class RuleItem;
 
 	/**
 	 * ArticleStateItem has a caption, text, preview image and a stats block.
@@ -40,12 +38,10 @@ namespace OpenXcom
 	class ArticleStateItem : public ArticleState
 	{
 	public:
-		ArticleStateItem(Game *game, ArticleDefinitionItem *article_defs, int palSwitch);
+		ArticleStateItem(Game *game, ArticleDefinitionItem *article_defs);
 		virtual ~ArticleStateItem();
 
 	protected:
-		void setDamageTypeText(Text *text_field, RuleItem *ammo_rule);
-
 		Surface *_image;
 		Text *_txtTitle;
 		Text *_txtInfo;

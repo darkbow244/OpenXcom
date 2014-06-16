@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -23,10 +23,10 @@ namespace OpenXcom
 
 /**
  * Sets up a BattleAIState.
- * @param game pointer to the game.
- * @param unit pointer to the unit.
+ * @param save Pointer to the battle game.
+ * @param unit Pointer to the unit.
  */
-BattleAIState::BattleAIState(SavedBattleGame *game, BattleUnit *unit) : _game(game), _unit(unit)
+BattleAIState::BattleAIState(SavedBattleGame *save, BattleUnit *unit) : _save(save), _unit(unit)
 {
 
 }
@@ -49,10 +49,11 @@ void BattleAIState::load(const YAML::Node &)
 
 /**
  * Saves the AI state to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void BattleAIState::save(YAML::Emitter &) const
+YAML::Node BattleAIState::save() const
 {
+	return YAML::Node();
 }
 
 
@@ -76,6 +77,7 @@ void BattleAIState::exit()
 /**
  * Runs any code the state needs to keep updating every
  * AI cycle.
+ * @param action (possible) AI action to execute after thinking is done.
  */
 void BattleAIState::think(BattleAction *)
 {

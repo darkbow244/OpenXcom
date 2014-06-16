@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -44,17 +44,17 @@ public:
 	enum UfoStatus { FLYING, LANDED, CRASHED, DESTROYED };
 private:
 	RuleUfo *_rules;
-	int _id, _damage;
+	int _id, _crashId, _landId, _damage;
 	std::string _direction, _altitude;
 	enum UfoStatus _status;
-	unsigned _secondsRemaining;
+	size_t _secondsRemaining;
 	bool _inBattlescape;
 	int _shotDownByCraftId;
 	AlienMission *_mission;
 	const UfoTrajectory *_trajectory;
-	unsigned _trajectoryPoint;
+	size_t _trajectoryPoint;
 	bool _detected, _hyperDetected;
-	int _shootingAt;
+	int _shootingAt, _hitFrame;
 	/// Calculates a new speed vector to the destination.
 	void calculateSpeed();
 public:
@@ -65,9 +65,9 @@ public:
 	/// Loads the UFO from YAML.
 	void load(const YAML::Node& node, const Ruleset &ruleset, SavedGame &game);
 	/// Saves the UFO to YAML.
-	void save(YAML::Emitter& out) const;
+	YAML::Node save(bool newBattle) const;
 	/// Saves the UFO's ID to YAML.
-	void saveId(YAML::Emitter& out) const;
+	YAML::Node saveId() const;
 	/// Gets the UFO's ruleset.
 	RuleUfo *getRules() const;
 	/// Gets the UFO's ID.
@@ -85,9 +85,9 @@ public:
 	/// Sets the UFO's detection status.
 	void setDetected(bool detected);
 	/// Gets the UFO's seconds left on the ground.
-	int getSecondsRemaining() const;
+	size_t getSecondsRemaining() const;
 	/// Sets the UFO's seconds left on the ground.
-	void setSecondsRemaining(int seconds);
+	void setSecondsRemaining(size_t seconds);
 	/// Gets the UFO's direction.
 	std::string getDirection() const;
 	/// Gets the UFO's altitude.
@@ -125,17 +125,31 @@ public:
 	/// Sets the UFO's hyper detection status.
 	void setHyperDetected(bool hyperdetected);
 	/// Gets the UFO's progress on the trajectory track.
-	unsigned getTrajectoryPoint() const { return _trajectoryPoint; }
+	size_t getTrajectoryPoint() const { return _trajectoryPoint; }
 	/// Sets the UFO's progress on the trajectory track.
-	void setTrajectoryPoint(unsigned np) { _trajectoryPoint = np; }
+	void setTrajectoryPoint(size_t np) { _trajectoryPoint = np; }
 	/// Gets the UFO's trajectory.
 	const UfoTrajectory &getTrajectory() const { return *_trajectory; }
 	/// Gets the UFO's mission object.
 	AlienMission *getMission() const { return _mission; }
 	/// Sets the UFO's destination.
 	void setDestination(Target *dest);
-	const int getShootingAt() const;
+	/// Get which interceptor this ufo is engaging.
+	int getShootingAt() const;
+	/// Set which interceptor this ufo is engaging.
 	void setShootingAt(int target);
+	/// Gets the UFO's landing site ID.
+	int getLandId() const;
+	/// Sets the UFO's landing site ID.
+	void setLandId(int id);
+	/// Gets the UFO's crash site ID.
+	int getCrashId() const;
+	/// Sets the UFO's crash site ID.
+	void setCrashId(int id);
+	/// Sets the UFO's hit frame.
+	void setHitFrame(int frame);
+	/// Gets the UFO's hit frame.
+	int getHitFrame();
 
 };
 

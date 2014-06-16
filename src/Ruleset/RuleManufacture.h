@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -25,39 +25,41 @@
 
 namespace OpenXcom
 {
+
 /**
- * Represents information needed to manufacture an object
-*/
+ * Represents the information needed to manufacture an object.
+ */
 class RuleManufacture
 {
 private:
 	std::string _name, _category;
 	std::vector<std::string> _requires;
 	int _space, _time, _cost;
-	std::map<std::string, int> _requiredItems;
+	std::map<std::string, int> _requiredItems, _producedItems;
 	int _listOrder;
 public:
-	/// Create ManufactureInfo
+	/// Creates a new manufacture.
 	RuleManufacture(const std::string &name);
 	/// Loads the manufacture from YAML.
 	void load(const YAML::Node& node, int listOrder);
-	/// Saves the manufacture to YAML.
-	void save(YAML::Emitter& out) const;
-	///Get the manufacture name
+	/// Gets the manufacture name.
 	std::string getName () const;
-	///Get the manufacture category
+	/// Gets the manufacture category.
 	std::string getCategory () const;
 	/// Gets the manufacture's requirements.
 	const std::vector<std::string> &getRequirements () const;
-	///Get the required workshop space
+	/// Gets the required workshop space.
 	int getRequiredSpace () const;
-	///Get the time required to manufacture one object
+	/// Gets the time required to manufacture one object.
 	int getManufactureTime () const;
-	///Get the cost of manufacturing one object
+	/// Gets the cost of manufacturing one object.
 	int getManufactureCost () const;
-	///Get the list of items required to manufacture one object
+	/// Gets the list of items required to manufacture one object.
 	const std::map<std::string, int> & getRequiredItems() const;
-	/// get the list weight for this manufacture item.
+	/// Gets the list of items produced by completing "one object" of this project.
+	/// by default: it contains only the "name" item with a value of 1.
+	const std::map<std::string, int> & getProducedItems() const;
+	/// Gets the list weight for this manufacture item.
 	int getListOrder() const;
 };
 

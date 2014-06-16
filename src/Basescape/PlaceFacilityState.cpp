@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -53,14 +53,14 @@ PlaceFacilityState::PlaceFacilityState(Game *game, Base *base, RuleBaseFacility 
 	_btnCancel = new TextButton(112, 16, 200, 176);
 	_txtFacility = new Text(110, 9, 202, 50);
 	_txtCost = new Text(110, 9, 202, 62);
-	_numCost = new Text(110, 16, 202, 70);
+	_numCost = new Text(110, 17, 202, 70);
 	_txtTime = new Text(110, 9, 202, 90);
-	_numTime = new Text(110, 16, 202, 98);
+	_numTime = new Text(110, 17, 202, 98);
 	_txtMaintenance = new Text(110, 9, 202, 118);
-	_numMaintenance = new Text(110, 16, 202, 126);
+	_numMaintenance = new Text(110, 17, 202, 126);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(6)), Palette::backPos, 16);
+	setPalette("PAL_BASESCAPE", 6);
 
 	add(_window);
 	add(_view);
@@ -85,29 +85,29 @@ PlaceFacilityState::PlaceFacilityState(Game *game, Base *base, RuleBaseFacility 
 	_view->onMouseClick((ActionHandler)&PlaceFacilityState::viewClick);
 
 	_btnCancel->setColor(Palette::blockOffset(13)+10);
-	_btnCancel->setText(_game->getLanguage()->getString("STR_CANCEL"));
+	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler)&PlaceFacilityState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&PlaceFacilityState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&PlaceFacilityState::btnCancelClick, Options::keyCancel);
 
 	_txtFacility->setColor(Palette::blockOffset(13)+10);
-	_txtFacility->setText(_game->getLanguage()->getString(_rule->getType()));
+	_txtFacility->setText(tr(_rule->getType()));
 
 	_txtCost->setColor(Palette::blockOffset(13)+10);
-	_txtCost->setText(_game->getLanguage()->getString("STR_COST_UC"));
+	_txtCost->setText(tr("STR_COST_UC"));
 
 	_numCost->setColor(Palette::blockOffset(13));
 	_numCost->setBig();
 	_numCost->setText(Text::formatFunding(_rule->getBuildCost()));
 
 	_txtTime->setColor(Palette::blockOffset(13)+10);
-	_txtTime->setText(_game->getLanguage()->getString("STR_CONSTRUCTION_TIME_UC"));
+	_txtTime->setText(tr("STR_CONSTRUCTION_TIME_UC"));
 
 	_numTime->setColor(Palette::blockOffset(13));
 	_numTime->setBig();
 	_numTime->setText(tr("STR_DAY", _rule->getBuildTime()));
 
 	_txtMaintenance->setColor(Palette::blockOffset(13)+10);
-	_txtMaintenance->setText(_game->getLanguage()->getString("STR_MAINTENANCE_UC"));
+	_txtMaintenance->setText(tr("STR_MAINTENANCE_UC"));
 
 	_numMaintenance->setColor(Palette::blockOffset(13));
 	_numMaintenance->setBig();
@@ -140,12 +140,12 @@ void PlaceFacilityState::viewClick(Action *)
 	if (!_view->isPlaceable(_rule))
 	{
 		_game->popState();
-		_game->pushState(new ErrorMessageState(_game, "STR_CANNOT_BUILD_HERE", Palette::blockOffset(15)+1, "BACK01.SCR", 6));
+		_game->pushState(new ErrorMessageState(_game, "STR_CANNOT_BUILD_HERE", _palette, Palette::blockOffset(15)+1, "BACK01.SCR", 6));
 	}
 	else if (_game->getSavedGame()->getFunds() < _rule->getBuildCost())
 	{
 		_game->popState();
-		_game->pushState(new ErrorMessageState(_game, "STR_NOT_ENOUGH_MONEY", Palette::blockOffset(15)+1, "BACK01.SCR", 6));
+		_game->pushState(new ErrorMessageState(_game, "STR_NOT_ENOUGH_MONEY", _palette, Palette::blockOffset(15)+1, "BACK01.SCR", 6));
 	}
 	else
 	{
@@ -154,7 +154,7 @@ void PlaceFacilityState::viewClick(Action *)
 		fac->setY(_view->getGridY());
 		fac->setBuildTime(_rule->getBuildTime());
 		_base->getFacilities()->push_back(fac);
-		if (Options::getBool("allowBuildingQueue"))
+		if (Options::allowBuildingQueue)
 		{
 			if (_view->isQueuedBuilding(_rule)) fac->setBuildTime(std::numeric_limits<int>::max());
 			_view->reCalcQueuedBuildings();

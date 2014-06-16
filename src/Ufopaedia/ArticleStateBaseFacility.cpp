@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -37,15 +37,15 @@
 namespace OpenXcom
 {
 
-	ArticleStateBaseFacility::ArticleStateBaseFacility(Game *game, ArticleDefinitionBaseFacility *defs, int palSwitch) : ArticleState(game, defs->id, palSwitch)
+	ArticleStateBaseFacility::ArticleStateBaseFacility(Game *game, ArticleDefinitionBaseFacility *defs) : ArticleState(game, defs->id)
 	{
 		RuleBaseFacility *facility = _game->getRuleset()->getBaseFacility(defs->id);
 
 		// add screen elements
-		_txtTitle = new Text(200, 16, 10, 24);
+		_txtTitle = new Text(200, 17, 10, 24);
 
 		// Set palette
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_1")->getColors());
+		setPalette("PAL_BASESCAPE");
 
 		ArticleState::initLayout();
 
@@ -60,7 +60,7 @@ namespace OpenXcom
 
 		_txtTitle->setColor(Palette::blockOffset(13)+10);
 		_txtTitle->setBig();
-		_txtTitle->setText(Ufopaedia::buildText(_game, defs->title));
+		_txtTitle->setText(tr(defs->title));
 
 		// build preview image
 		int tile_size = 32;
@@ -113,7 +113,7 @@ namespace OpenXcom
 
 		_txtInfo->setColor(Palette::blockOffset(13)+10);
 		_txtInfo->setWordWrap(true);
-		_txtInfo->setText(Ufopaedia::buildText(_game, defs->text));
+		_txtInfo->setText(tr(defs->text));
 
 		_lstInfo = new TextList(200, 42, 10, 42);
 		add(_lstInfo);
@@ -125,26 +125,26 @@ namespace OpenXcom
 		_lstInfo->addRow(2, tr("STR_CONSTRUCTION_TIME").c_str(), tr("STR_DAY", facility->getBuildTime()).c_str());
 		_lstInfo->setCellColor(0, 1, Palette::blockOffset(13)+0);
 
-		std::wstringstream ss;
+		std::wostringstream ss;
 		ss << Text::formatFunding(facility->getBuildCost());
-		_lstInfo->addRow(2, _game->getLanguage()->getString("STR_CONSTRUCTION_COST").c_str(), ss.str().c_str());
+		_lstInfo->addRow(2, tr("STR_CONSTRUCTION_COST").c_str(), ss.str().c_str());
 		_lstInfo->setCellColor(1, 1, Palette::blockOffset(13)+0);
 
 		ss.str(L"");ss.clear();
 		ss << Text::formatFunding(facility->getMonthlyCost());
-		_lstInfo->addRow(2, _game->getLanguage()->getString("STR_MAINTENANCE_COST").c_str(), ss.str().c_str());
+		_lstInfo->addRow(2, tr("STR_MAINTENANCE_COST").c_str(), ss.str().c_str());
 		_lstInfo->setCellColor(2, 1, Palette::blockOffset(13)+0);
 
 		if (facility->getDefenseValue() > 0)
 		{
 			ss.str(L"");ss.clear();
 			ss << facility->getDefenseValue();
-			_lstInfo->addRow(2, _game->getLanguage()->getString("STR_DEFENSE_VALUE").c_str(), ss.str().c_str());
+			_lstInfo->addRow(2, tr("STR_DEFENSE_VALUE").c_str(), ss.str().c_str());
 			_lstInfo->setCellColor(3, 1, Palette::blockOffset(13)+0);
 
 			ss.str(L"");ss.clear();
 			ss << Text::formatPercentage(facility->getHitRatio());
-			_lstInfo->addRow(2, _game->getLanguage()->getString("STR_HIT_RATIO").c_str(), ss.str().c_str());
+			_lstInfo->addRow(2, tr("STR_HIT_RATIO").c_str(), ss.str().c_str());
 			_lstInfo->setCellColor(4, 1, Palette::blockOffset(13)+0);
 		}
 		centerAllSurfaces();

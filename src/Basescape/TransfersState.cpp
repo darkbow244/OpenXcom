@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -46,14 +46,14 @@ TransfersState::TransfersState(Game *game, Base *base) : State(game), _base(base
 	// Create objects
 	_window = new Window(this, 320, 184, 0, 8, POPUP_BOTH);
 	_btnOk = new TextButton(288, 16, 16, 166);
-	_txtTitle = new Text(278, 16, 21, 18);
-	_txtItem = new Text(114, 8, 16, 34);
-	_txtQuantity = new Text(54, 8, 152, 34);
-	_txtArrivalTime = new Text(112, 8, 212, 34);
+	_txtTitle = new Text(278, 17, 21, 18);
+	_txtItem = new Text(114, 9, 16, 34);
+	_txtQuantity = new Text(54, 9, 152, 34);
+	_txtArrivalTime = new Text(112, 9, 212, 34);
 	_lstTransfers = new TextList(273, 112, 14, 50);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(6)), Palette::backPos, 16);
+	setPalette("PAL_BASESCAPE", 6);
 
 	add(_window);
 	add(_btnOk);
@@ -70,23 +70,24 @@ TransfersState::TransfersState(Game *game, Base *base) : State(game), _base(base
 	_window->setBackground(_game->getResourcePack()->getSurface("BACK13.SCR"));
 
 	_btnOk->setColor(Palette::blockOffset(15)+6);
-	_btnOk->setText(_game->getLanguage()->getString("STR_OK"));
+	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&TransfersState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&TransfersState::btnOkClick, (SDLKey)Options::getInt("keyOk"));
+	_btnOk->onKeyboardPress((ActionHandler)&TransfersState::btnOkClick, Options::keyOk);
+	_btnOk->onKeyboardPress((ActionHandler)&TransfersState::btnOkClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(15)+6);
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);
-	_txtTitle->setText(_game->getLanguage()->getString("STR_TRANSFERS"));
+	_txtTitle->setText(tr("STR_TRANSFERS"));
 
 	_txtItem->setColor(Palette::blockOffset(15)+6);
-	_txtItem->setText(_game->getLanguage()->getString("STR_ITEM"));
+	_txtItem->setText(tr("STR_ITEM"));
 
 	_txtQuantity->setColor(Palette::blockOffset(15)+6);
-	_txtQuantity->setText(_game->getLanguage()->getString("STR_QUANTITY_UC"));
+	_txtQuantity->setText(tr("STR_QUANTITY_UC"));
 
 	_txtArrivalTime->setColor(Palette::blockOffset(15)+6);
-	_txtArrivalTime->setText(_game->getLanguage()->getString("STR_ARRIVAL_TIME_HOURS"));
+	_txtArrivalTime->setText(tr("STR_ARRIVAL_TIME_HOURS"));
 
 	_lstTransfers->setColor(Palette::blockOffset(13)+10);
 	_lstTransfers->setArrowColor(Palette::blockOffset(15)+6);
@@ -97,7 +98,7 @@ TransfersState::TransfersState(Game *game, Base *base) : State(game), _base(base
 
 	for (std::vector<Transfer*>::iterator i = _base->getTransfers()->begin(); i != _base->getTransfers()->end(); ++i)
 	{
-		std::wstringstream ss, ss2;
+		std::wostringstream ss, ss2;
 		ss << (*i)->getQuantity();
 		ss2 << (*i)->getHours();
 		_lstTransfers->addRow(3, (*i)->getName(_game->getLanguage()).c_str(), ss.str().c_str(), ss2.str().c_str());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,6 +20,7 @@
 #define OPENXCOM_TRANSFERITEMSSTATE_H
 
 #include "../Engine/State.h"
+#include "../Savegame/Transfer.h"
 #include <vector>
 #include <string>
 
@@ -47,30 +48,31 @@ private:
 	Window *_window;
 	Text *_txtTitle, *_txtItem, *_txtQuantity, *_txtAmountTransfer, *_txtAmountDestination;
 	TextList *_lstItems;
-	std::vector<int> _qtys;
+	std::vector<int> _baseQty, _transferQty;
 	std::vector<Soldier*> _soldiers;
 	std::vector<Craft*> _crafts;
 	std::vector<std::string> _items;
-	unsigned int _sel;
-	int _total, _sOffset, _eOffset, _aOffset, _pQty, _cQty, _aQty;
-	float _iQty;
+	size_t _sel, _itemOffset;
+	int _total, _pQty, _cQty, _aQty;
+	double _iQty;
+    int _hasSci, _hasEng;
 	double _distance;
 	Timer *_timerInc, *_timerDec;
-	int _changeValueByMouseWheel;
-	bool _canTransferCraftsWhileAirborne, _containmentLimit, _allowChangeListValuesByMouseWheel;
 	/// Gets selected cost.
-	int getCost();
+	int getCost() const;
 	/// Gets selected quantity.
-	int getQuantity();
+	int getQuantity() const;
 	/// Gets distance between bases.
-	double getDistance();
+	double getDistance() const;
+	/// Gets type of selected item.
+	enum TransferType getType(size_t selected) const;
+	/// Gets item Index.
+	size_t getItemIndex(size_t selected) const;
 public:
 	/// Creates the Transfer Items state.
 	TransferItemsState(Game *game, Base *baseFrom, Base *baseTo);
 	/// Cleans up the Transfer Items state.
 	~TransferItemsState();
-	/// Updates the palette.
-	void init();
 	/// Runs the timers.
 	void think();
 	/// Handler for clicking the OK button.

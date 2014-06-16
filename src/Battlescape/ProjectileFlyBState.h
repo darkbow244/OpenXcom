@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -28,17 +28,22 @@ namespace OpenXcom
 class BattlescapeGame;
 class BattleUnit;
 class BattleItem;
+class Tile;
 
+/**
+ * A projectile state.
+ */
 class ProjectileFlyBState : public BattleState
 {
 private:
 	BattleUnit *_unit;
 	BattleItem *_ammo;
 	BattleItem *_projectileItem;
-	Position _origin;
+	Position _origin, _targetVoxel, _originVoxel;
 	int _projectileImpact;
+	/// Tries to create a projectile sprite.
 	bool createNewProjectile();
-	bool _initialized;
+	bool _initialized, _targetFloor;
 public:
 	/// Creates a new ProjectileFly class
 	ProjectileFlyBState(BattlescapeGame *parent, BattleAction action);
@@ -47,11 +52,20 @@ public:
 	~ProjectileFlyBState();
 	/// Initializes the state.
 	void init();
-	/// Handles a cancels request.
+	/// Handles a cancel request.
 	void cancel();
 	/// Runs state functionality every cycle.
 	void think();
-	static bool validThrowRange(BattleAction *action);
+	/// Validates the throwing range.
+	static bool validThrowRange(BattleAction *action, Position origin, Tile *target);
+	/// Calculates the maximum throwing range.
+	static int getMaxThrowDistance(int weight, int strength, int level);
+	/// Set the origin voxel, used for the blaster launcher.
+	void setOriginVoxel(Position pos);
+	/// Set the boolean flag to angle a blaster bomb towards the floor.
+	void targetFloor();
+	void performMeleeAttack();
+
 };
 
 }

@@ -7,19 +7,20 @@
   version: 0.08 (2011-11-25)
   license: public domain
 */
-
 #ifndef OXC_OPENGL_H
 #define OXC_OPENGL_H
 
+#ifndef __NO_OPENGL
+
 #include <SDL.h>
 #include <SDL_opengl.h>
-
-#include "Surface.h"
+#include <string>
 
 namespace OpenXcom 
 {
 
-#define glGetProcAddress(name) SDL_GL_GetProcAddress(name)
+class Surface;
+
 #ifndef __APPLE__
 extern PFNGLCREATEPROGRAMPROC glCreateProgram;
 extern PFNGLUSEPROGRAMPROC glUseProgram;
@@ -35,6 +36,7 @@ extern PFNGLUNIFORM1IPROC glUniform1i;
 extern PFNGLUNIFORM2FVPROC glUniform2fv;
 extern PFNGLUNIFORM4FVPROC glUniform4fv;
 #endif
+
 std::string strGLError(GLenum glErr);
 
 #define glErrorCheck() {\
@@ -74,7 +76,7 @@ public:
   /// make all the pixels go away
   void clear();
   /// make the buffer show up on screen
-  void refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight);
+  void refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight, int topBlackBand, int bottomBlackBand, int leftBlackBand, int rightBlackBand);
   /// set a shader! but what kind?
   void set_shader(const char *source);
   /// same but for fragment shader?
@@ -89,8 +91,15 @@ public:
   void setVSync(bool sync);
   /// constructor -- like we said, we're too cool to actually construct things
   OpenGL();
+  ~OpenGL();
 };
 
 }
+
+#else
+
+namespace OpenXcom { class OpenGL {}; }
+
+#endif
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -36,35 +36,36 @@
 
 namespace OpenXcom
 {
+
 /**
- * Helper function return a string representation a type(mainly used for number)
- * t the value to stringify
- * @return a string representation of value
+ * Helper function that returns a string representation of a type (mainly used for numbers).
+ * @param t The value to stringify.
+ * @return A string representation of the value.
  */
 template<typename type>
 std::wstring toString (type t)
 {
-	std::wstringstream ss;
+	std::wostringstream ss;
 	ss << t;
 	return ss.str();
 }
 
 /**
- * Helper class for medikit title
+ * Helper class for the medikit title.
  */
 class MedikitTitle : public Text
 {
 public:
-	/// Create a medikit title
+	/// Creates a medikit title.
 	MedikitTitle(int y, const std::wstring & title);
 };
 
 /**
- * Initialize a Medikit title
- * @param y the Title y origin
- * @param title the title
+ * Initializes a Medikit title.
+ * @param y The title's y origin.
+ * @param title The title.
  */
-MedikitTitle::MedikitTitle (int y, const std::wstring & title) : Text (60, 16, 192, y)
+MedikitTitle::MedikitTitle (int y, const std::wstring & title) : Text (73, 9, 186, y)
 {
 	this->setText(title);
 	this->setHighContrast(true);
@@ -72,90 +73,91 @@ MedikitTitle::MedikitTitle (int y, const std::wstring & title) : Text (60, 16, 1
 }
 
 /**
- * Helper class for medikit value
+ * Helper class for the medikit value.
  */
 class MedikitTxt : public Text
 {
 public:
-	/// Create a medikit text
+	/// Creates a medikit text.
 	MedikitTxt(int y);
 };
 
 /**
- * Initialize a Medikit text
- * @param y the Text y origin
+ * Initializes a Medikit text.
+ * @param y The text's y origin.
  */
-MedikitTxt::MedikitTxt(int y) : Text(30, 22, 220, y)
+MedikitTxt::MedikitTxt(int y) : Text(33, 17, 220, y)
 {
-	// Note: we can't set setBig here. The needed font is only setted when added to State
+	// Note: we can't set setBig here. The needed font is only set when added to State
 	this->setColor(Palette::blockOffset(1));
 	this->setHighContrast(true);
 	this->setAlign(ALIGN_CENTER);
-	this->setVerticalAlign(ALIGN_MIDDLE);
 }
 
 /**
- * Helper class for medikit button
+ * Helper class for the medikit button.
  */
 class MedikitButton : public InteractiveSurface
 {
 public:
-	/// Create a medikit button
+	/// Creates a medikit button.
 	MedikitButton(int y);
 };
 
 /**
- * Initialize a Medikit button
- * @param y the button y origin
+ * Initializes a Medikit button.
+ * @param y The button's y origin.
  */
 MedikitButton::MedikitButton(int y) : InteractiveSurface(30, 20, 190, y)
 {
 }
 
 /**
- * Initialize the Medikit State
+ * Initializes the Medikit State.
  * @param game Pointer to the core game.
  * @param targetUnit The wounded unit.
  * @param action The healing action.
  */
 MedikitState::MedikitState (Game * game, BattleUnit * targetUnit, BattleAction *action) : State (game), _targetUnit(targetUnit), _action(action)
 {
+	if (Options::maximizeInfoScreens)
+	{
+		Options::baseXResolution = Screen::ORIGINAL_WIDTH;
+		Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
+		_game->getScreen()->resetDisplay(false);
+	}
+
 	_unit = action->actor;
 	_item = action->weapon;
-	_surface = new InteractiveSurface(320, 200);
+	_bg = new Surface(320, 200);
 
-	if (Screen::getDY() > 50)
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
+
+	if (_game->getScreen()->getDY() > 50)
 	{
 		_screen = false;
-		SDL_Rect current;
-		current.w = 190;
-		current.h = 100;
-		current.x = 67;
-		current.y = 44;
-		_surface->drawRect(&current, Palette::blockOffset(15)+15);
+		_bg->drawRect(67, 44, 190, 100, Palette::blockOffset(15)+15);
 	}
-	_partTxt = new Text(50, 15, 90, 120);
-	_woundTxt = new Text(10, 15, 145, 120);
+	_partTxt = new Text(62, 9, 82, 120);
+	_woundTxt = new Text(14, 9, 145, 120);
 	_medikitView = new MedikitView(52, 58, 95, 60, _game, _targetUnit, _partTxt, _woundTxt);
-	InteractiveSurface *endButton = new InteractiveSurface(20, 20,
-							       220, 140);
-
-	InteractiveSurface *stimulantButton = new MedikitButton(84);
-
-	InteractiveSurface *pkButton = new MedikitButton(48);
-	InteractiveSurface *healButton = new MedikitButton(120);
-	_pkText = new MedikitTxt (50);
-	_stimulantTxt = new MedikitTxt (85);
-	_healTxt = new MedikitTxt (120);
-	add(_surface);
+	_endButton = new InteractiveSurface(20, 20, 220, 140);
+	_stimulantButton = new MedikitButton(84);
+	_pkButton = new MedikitButton(48);
+	_healButton = new MedikitButton(120);
+	_pkText = new MedikitTxt (52);
+	_stimulantTxt = new MedikitTxt (88);
+	_healTxt = new MedikitTxt (124);
+	add(_bg);
 	add(_medikitView);
-	add(endButton);
-	add(new MedikitTitle (37, _game->getLanguage()->getString("STR_PAIN_KILLER")));
-	add(new MedikitTitle (73, _game->getLanguage()->getString("STR_STIMULANT")));
-	add(new MedikitTitle (109, _game->getLanguage()->getString("STR_HEAL")));
-	add(healButton);
-	add(stimulantButton);
-	add(pkButton);
+	add(_endButton);
+	add(new MedikitTitle (37, tr("STR_PAIN_KILLER")));
+	add(new MedikitTitle (73, tr("STR_STIMULANT")));
+	add(new MedikitTitle (109, tr("STR_HEAL")));
+	add(_healButton);
+	add(_stimulantButton);
+	add(_pkButton);
 	add(_pkText);
 	add(_stimulantTxt);
 	add(_healTxt);
@@ -164,7 +166,7 @@ MedikitState::MedikitState (Game * game, BattleUnit * targetUnit, BattleAction *
 
 	centerAllSurfaces();
 
-	_game->getResourcePack()->getSurface("MEDIBORD.PCK")->blit(_surface);
+	_game->getResourcePack()->getSurface("MEDIBORD.PCK")->blit(_bg);
 	_pkText->setBig();
 	_stimulantTxt->setBig();
 	_healTxt->setBig();
@@ -172,11 +174,11 @@ MedikitState::MedikitState (Game * game, BattleUnit * targetUnit, BattleAction *
 	_partTxt->setHighContrast(true);
 	_woundTxt->setColor(Palette::blockOffset(2));
 	_woundTxt->setHighContrast(true);
-	endButton->onMouseClick((ActionHandler)&MedikitState::onEndClick);
-	endButton->onKeyboardPress((ActionHandler)&MedikitState::onEndClick, (SDLKey)Options::getInt("keyCancel"));
-	healButton->onMouseClick((ActionHandler)&MedikitState::onHealClick);
-	stimulantButton->onMouseClick((ActionHandler)&MedikitState::onStimulantClick);
-	pkButton->onMouseClick((ActionHandler)&MedikitState::onPainKillerClick);
+	_endButton->onMouseClick((ActionHandler)&MedikitState::onEndClick);
+	_endButton->onKeyboardPress((ActionHandler)&MedikitState::onEndClick, Options::keyCancel);
+	_healButton->onMouseClick((ActionHandler)&MedikitState::onHealClick);
+	_stimulantButton->onMouseClick((ActionHandler)&MedikitState::onStimulantClick);
+	_pkButton->onMouseClick((ActionHandler)&MedikitState::onPainKillerClick);
 	update();
 }
 
@@ -189,21 +191,26 @@ void MedikitState::handle(Action *action)
 	State::handle(action);
 	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN && action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
-		_game->popState();
+		onEndClick(0);
 	}
 }
 
 /**
- * return to the previous screen
+ * Returns to the previous screen.
  * @param action Pointer to an action.
  */
 void MedikitState::onEndClick(Action *)
 {
+	if (Options::maximizeInfoScreens)
+	{
+		Screen::updateScale(Options::battlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, true);
+		_game->getScreen()->resetDisplay(false);
+	}
 	_game->popState();
 }
 
 /**
- * Handler for clicking on the heal button
+ * Handler for clicking on the heal button.
  * @param action Pointer to an action.
  */
 void MedikitState::onHealClick(Action *)
@@ -216,20 +223,26 @@ void MedikitState::onHealClick(Action *)
 	}
 	if (_unit->spendTimeUnits (rule->getTUUse()))
 	{
-		_targetUnit->heal(_medikitView->getSelectedPart(), rule->getHealAmount(), rule->getHealthAmount());
+		_targetUnit->heal(_medikitView->getSelectedPart(), rule->getWoundRecovery(), rule->getHealthRecovery());
 		_item->setHealQuantity(--heal);
+		_medikitView->updateSelectedPart();
 		_medikitView->invalidate();
 		update();
+
+		if (_targetUnit->getStatus() == STATUS_UNCONSCIOUS && _targetUnit->getStunlevel() < _targetUnit->getHealth() && _targetUnit->getHealth() > 0)
+		{
+			_targetUnit->setTimeUnits(0);
+		}
 	}
 	else
 	{
 		_action->result = "STR_NOT_ENOUGH_TIME_UNITS";
-		_game->popState();
+		onEndClick(0);
 	}
 }
 
 /**
- * Handler for clicking on the stimulant button
+ * Handler for clicking on the stimulant button.
  * @param action Pointer to an action.
  */
 void MedikitState::onStimulantClick(Action *)
@@ -242,25 +255,26 @@ void MedikitState::onStimulantClick(Action *)
 	}
 	if (_unit->spendTimeUnits (rule->getTUUse()))
 	{
-		_targetUnit->stimulant(rule->getEnergy(), rule->getStun());
+		_targetUnit->stimulant(rule->getEnergyRecovery(), rule->getStunRecovery());
 		_item->setStimulantQuantity(--stimulant);
 		update();
 
 		// if the unit has revived we quit this screen automatically
 		if (_targetUnit->getStatus() == STATUS_UNCONSCIOUS && _targetUnit->getStunlevel() < _targetUnit->getHealth() && _targetUnit->getHealth() > 0)
 		{
-			_game->popState();
+			_targetUnit->setTimeUnits(0);
+			onEndClick(0);
 		}
 	}
 	else
 	{
 		_action->result = "STR_NOT_ENOUGH_TIME_UNITS";
-		_game->popState();
+		onEndClick(0);
 	}
 }
 
 /**
- * Handler for clicking on the pain killer button
+ * Handler for clicking on the pain killer button.
  * @param action Pointer to an action.
  */
 void MedikitState::onPainKillerClick(Action *)
@@ -273,18 +287,19 @@ void MedikitState::onPainKillerClick(Action *)
 	}
 	if (_unit->spendTimeUnits (rule->getTUUse()))
 	{
+		_targetUnit->painKillers();
 		_item->setPainKillerQuantity(--pk);
 		update();
 	}
 	else
 	{
 		_action->result = "STR_NOT_ENOUGH_TIME_UNITS";
-		_game->popState();
+		onEndClick(0);
 	}
 }
 
 /**
- * Update medikit state
+ * Updates the medikit state.
  */
 void MedikitState::update()
 {

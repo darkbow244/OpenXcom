@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -28,6 +28,7 @@
 #include "../Battlescape/BattlescapeGenerator.h"
 #include "../Battlescape/BattlescapeState.h"
 #include "../Battlescape/BriefingState.h"
+#include "../Savegame/SavedBattleGame.h"
 #include "../Savegame/SavedGame.h"
 #include "../Engine/RNG.h"
 #include "../Ruleset/Ruleset.h"
@@ -39,51 +40,48 @@ namespace OpenXcom
 ConfirmCydoniaState::ConfirmCydoniaState(Game *game, Craft *craft) : State(game), _craft(craft)
 {
 	_screen = false;
+
 	// Create objects
 	_window = new Window(this, 256, 160, 32, 20);
 	_btnYes = new TextButton(80, 20, 70, 142);
 	_btnNo = new TextButton(80, 20, 170, 142);
 	_txtMessage = new Text(224, 48, 48, 76);
-	
+
+	// Set palette
+	setPalette("PAL_GEOSCAPE", 5);
+
 	add(_window);
 	add(_btnYes);
 	add(_btnNo);
 	add(_txtMessage);
 
 	centerAllSurfaces();
-	
+
 	// Set up objects
 	_window->setColor(Palette::blockOffset(8)+5);
 	_window->setBackground(_game->getResourcePack()->getSurface("BACK12.SCR"));
 
 	_btnYes->setColor(Palette::blockOffset(8)+5);
-	_btnYes->setText(_game->getLanguage()->getString("STR_YES"));
+	_btnYes->setText(tr("STR_YES"));
 	_btnYes->onMouseClick((ActionHandler)&ConfirmCydoniaState::btnYesClick);
-	_btnYes->onKeyboardPress((ActionHandler)&ConfirmCydoniaState::btnYesClick, (SDLKey)Options::getInt("keyOk"));
+	_btnYes->onKeyboardPress((ActionHandler)&ConfirmCydoniaState::btnYesClick, Options::keyOk);
 
 	_btnNo->setColor(Palette::blockOffset(8)+5);
-	_btnNo->setText(_game->getLanguage()->getString("STR_NO"));
+	_btnNo->setText(tr("STR_NO"));
 	_btnNo->onMouseClick((ActionHandler)&ConfirmCydoniaState::btnNoClick);
-	_btnNo->onKeyboardPress((ActionHandler)&ConfirmCydoniaState::btnNoClick, (SDLKey)Options::getInt("keyCancel"));
-	
+	_btnNo->onKeyboardPress((ActionHandler)&ConfirmCydoniaState::btnNoClick, Options::keyCancel);
+
 	_txtMessage->setAlign(ALIGN_CENTER);
 	_txtMessage->setBig();
 	_txtMessage->setWordWrap(true);
 	_txtMessage->setColor(Palette::blockOffset(8)+10);
-	_txtMessage->setText(_game->getLanguage()->getString("STR_ARE_YOU_SURE_CYDONIA"));
+	_txtMessage->setText(tr("STR_ARE_YOU_SURE_CYDONIA"));
 }
 
 /**
  *
  */
 ConfirmCydoniaState::~ConfirmCydoniaState()
-{
-}
-
-/**
- *
- */
-void ConfirmCydoniaState::init()
 {
 }
 
@@ -96,23 +94,17 @@ void ConfirmCydoniaState::btnYesClick(Action *)
 	_game->popState();
 	_game->popState();
 	
-	int month = 
-		((size_t) _game->getSavedGame()->getMonthsPassed()) > _game->getRuleset()->getAlienItemLevels().size() - 1 ?  // if
-		_game->getRuleset()->getAlienItemLevels().size() - 1 :  // then
-		_game->getSavedGame()->getMonthsPassed() ;  // else
-
 	SavedBattleGame *bgame = new SavedBattleGame();
 	_game->getSavedGame()->setBattleGame(bgame);
 	bgame->setMissionType("STR_MARS_CYDONIA_LANDING");
 	BattlescapeGenerator bgen = BattlescapeGenerator(_game);
 	bgen.setCraft(_craft);
 	bgen.setAlienRace("STR_SECTOID");
-	bgen.setAlienItemlevel(_game->getRuleset()->getAlienItemLevels().at(month).at(RNG::generate(0,9)));
 	bgen.setWorldShade(15);
 	bgen.run();
 
 	_game->pushState(new BriefingState(_game, _craft));
-	
+
 }
 
 /**
@@ -121,7 +113,6 @@ void ConfirmCydoniaState::btnYesClick(Action *)
  */
 void ConfirmCydoniaState::btnNoClick(Action *)
 {
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(0)), Palette::backPos, 16);
 	_game->popState();
 }
 

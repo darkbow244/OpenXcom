@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -48,18 +48,17 @@ ResearchState::ResearchState(Game *game, Base *base) : State(game), _base(base)
 	_window = new Window(this, 320, 200, 0, 0);
 	_btnNew = new TextButton(148, 16, 8, 176);
 	_btnOk = new TextButton(148, 16, 164, 176);
-	_txtTitle = new Text(310, 16, 5, 8);
+	_txtTitle = new Text(310, 17, 5, 8);
 	_txtAvailable = new Text(150, 9, 10, 24);
 	_txtAllocated = new Text(150, 9, 160, 24);
 	_txtSpace = new Text(300, 9, 10, 34);
-	_txtProject = new Text(110, 16, 10, 44);
-	_txtScientists = new Text(110, 16, 120, 44);
-	_txtProgress = new Text(80, 9, 230, 44);
+	_txtProject = new Text(110, 17, 10, 44);
+	_txtScientists = new Text(106, 17, 120, 44);
+	_txtProgress = new Text(84, 9, 226, 44);
 	_lstResearch = new TextList(288, 112, 8, 62);
-	
+
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_1")->getColors());
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(1)), Palette::backPos, 16);
+	setPalette("PAL_BASESCAPE", 1);
 
 	add(_window);
 	add(_btnNew);
@@ -80,18 +79,18 @@ ResearchState::ResearchState(Game *game, Base *base) : State(game), _base(base)
 	_window->setBackground(_game->getResourcePack()->getSurface("BACK05.SCR"));
 
 	_btnNew->setColor(Palette::blockOffset(15)+6);
-	_btnNew->setText(_game->getLanguage()->getString("STR_NEW_PROJECT"));
+	_btnNew->setText(tr("STR_NEW_PROJECT"));
 	_btnNew->onMouseClick((ActionHandler)&ResearchState::btnNewClick);
 
 	_btnOk->setColor(Palette::blockOffset(15)+6);
-	_btnOk->setText(_game->getLanguage()->getString("STR_OK"));
+	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&ResearchState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&ResearchState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&ResearchState::btnOkClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(13)+10);
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);
-	_txtTitle->setText(_game->getLanguage()->getString("STR_CURRENT_RESEARCH"));
+	_txtTitle->setText(tr("STR_CURRENT_RESEARCH"));
 
 	_txtAvailable->setColor(Palette::blockOffset(13)+10);
 	_txtAvailable->setSecondaryColor(Palette::blockOffset(13));
@@ -104,21 +103,22 @@ ResearchState::ResearchState(Game *game, Base *base) : State(game), _base(base)
 
 	_txtProject->setColor(Palette::blockOffset(13)+10);
 	_txtProject->setWordWrap(true);
-	_txtProject->setText(_game->getLanguage()->getString("STR_RESEARCH_PROJECT"));
+	_txtProject->setText(tr("STR_RESEARCH_PROJECT"));
 
 	_txtScientists->setColor(Palette::blockOffset(13)+10);
 	_txtScientists->setWordWrap(true);
-	_txtScientists->setText(_game->getLanguage()->getString("STR_SCIENTISTS_ALLOCATED_UC"));
+	_txtScientists->setText(tr("STR_SCIENTISTS_ALLOCATED_UC"));
 
 	_txtProgress->setColor(Palette::blockOffset(13)+10);
-	_txtProgress->setText(_game->getLanguage()->getString("STR_PROGRESS"));
+	_txtProgress->setText(tr("STR_PROGRESS"));
 
 	_lstResearch->setColor(Palette::blockOffset(15)+6);
 	_lstResearch->setArrowColor(Palette::blockOffset(13)+10);
-	_lstResearch->setColumns(3, 158, 62, 66);
+	_lstResearch->setColumns(3, 158, 58, 70);
 	_lstResearch->setSelectable(true);
 	_lstResearch->setBackground(_window);
 	_lstResearch->setMargin(2);
+	_lstResearch->setWordWrap(true);
 	_lstResearch->onMouseClick((ActionHandler)&ResearchState::onSelectProject);
 	fillProjectList();
 }
@@ -136,9 +136,6 @@ ResearchState::~ResearchState()
  */
 void ResearchState::btnOkClick(Action *)
 {
-	// restore palette
-	_game->setPalette(_oldPalette);
-	
 	_game->popState();
 }
 
@@ -152,9 +149,9 @@ void ResearchState::btnNewClick(Action *)
 }
 
 /**
- * Display list of possible ResearchProject
+ * Displays the list of possible ResearchProjects.
  * @param action Pointer to an action.
-*/
+ */
 void ResearchState::onSelectProject(Action *)
 {
 	const std::vector<ResearchProject *> & baseProjects(_base->getResearch());
@@ -162,37 +159,33 @@ void ResearchState::onSelectProject(Action *)
 }
 
 /**
- * Init State
-*/
+ * Updates the research list
+ * after going to other screens.
+ */
 void ResearchState::init()
 {
+	State::init();
 	fillProjectList();
 }
 
 /**
- * Fill list with Base ResearchProject. Also update count of available lab space and available/allocated scientist.
-*/
+ * Fills the list with Base ResearchProjects. Also updates count of available lab space and available/allocated scientists.
+ */
 void ResearchState::fillProjectList()
 {
 	const std::vector<ResearchProject *> & baseProjects(_base->getResearch());
 	_lstResearch->clearList();
 	for(std::vector<ResearchProject *>::const_iterator iter = baseProjects.begin (); iter != baseProjects.end (); ++iter)
 	{
-		std::wstringstream sstr;
+		std::wostringstream sstr;
 		sstr << (*iter)->getAssigned ();
 		const RuleResearch *r = (*iter)->getRules();
 
-		std::wstring wstr = _game->getLanguage()->getString(r->getName ());
-		_lstResearch->addRow(3, wstr.c_str(), sstr.str().c_str(), _game->getLanguage()->getString((*iter)->getResearchProgress()).c_str());
+		std::wstring wstr = tr(r->getName ());
+		_lstResearch->addRow(3, wstr.c_str(), sstr.str().c_str(), tr((*iter)->getResearchProgress()).c_str());
 	}
-	std::wstringstream ss;
-	ss << _game->getLanguage()->getString("STR_SCIENTISTS_AVAILABLE") << L'\x01' << _base->getAvailableScientists();
-	_txtAvailable->setText(ss.str());
-	std::wstringstream ss2;
-	ss2 << _game->getLanguage()->getString("STR_SCIENTISTS_ALLOCATED") << L'\x01' << _base->getAllocatedScientists();
-	_txtAllocated->setText(ss2.str());
-	std::wstringstream ss3;
-	ss3 << _game->getLanguage()->getString("STR_LABORATORY_SPACE_AVAILABLE") << L'\x01' << _base->getFreeLaboratories();
-	_txtSpace->setText(ss3.str());
+	_txtAvailable->setText(tr("STR_SCIENTISTS_AVAILABLE").arg(_base->getAvailableScientists()));
+	_txtAllocated->setText(tr("STR_SCIENTISTS_ALLOCATED").arg(_base->getAllocatedScientists()));
+	_txtSpace->setText(tr("STR_LABORATORY_SPACE_AVAILABLE").arg(_base->getFreeLaboratories()));
 }
 }

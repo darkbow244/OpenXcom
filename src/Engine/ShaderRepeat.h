@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -37,21 +37,21 @@ class ShaderRepeat : public helper::ShaderBase<const Pixel>
 	
 public:
 	typedef helper::ShaderBase<const Pixel> _base;
-	friend class helper::controler<ShaderRepeat<Pixel> >;
+	friend struct helper::controler<ShaderRepeat<Pixel> >;
 	
 	inline ShaderRepeat(const Surface* s):
 		_base(s),
 		_off_x(0),
 		_off_y(0)
 	{
-			
+        setOffset(0, 0);
 	}
 	inline ShaderRepeat(const std::vector<Pixel>& f, int max_x, int max_y):
 		_base(f, max_x, max_y),
 		_off_x(0),
 		_off_y(0)
 	{
-			
+        setOffset(0, 0);
 	}
 	
 	inline void setOffset(int x, int y)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -25,10 +25,11 @@
 namespace OpenXcom
 {
 
-class BattleItem;
-class State;
+class Game;
 class Font;
+class Language;
 class Text;
+class Frame;
 
 /**
  * A class that represents a single box in the action popup menu on the battlescape.
@@ -38,25 +39,25 @@ class Text;
 class ActionMenuItem : public InteractiveSurface
 {
 private:
-	int _id;
 	bool _highlighted;
 	BattleActionType _action;
 	int _tu;
+	Frame *_frame;
 	Text *_txtDescription, *_txtAcc, *_txtTU;
 public:
 	/// Creates a new ActionMenuItem.
-	ActionMenuItem(int id, Font *big, Font *small, int x, int y);
+	ActionMenuItem(int id, Game *game, int x, int y);
 	/// Cleans up the ActionMenuItem.
 	~ActionMenuItem();
-	/// Assign an action to it.
+	/// Assigns an action to it.
 	void setAction(BattleActionType action, std::wstring description, std::wstring accuracy, std::wstring timeunits, int tu);
-	/// Get the assigned action.
+	/// Gets the assigned action.
 	BattleActionType getAction() const;
-	/// Get the assigned action TUs.
+	/// Gets the assigned action TUs.
 	int getTUs() const;
-	/// Set the palettes.
+	/// Sets the palettes.
 	void setPalette(SDL_Color *colors, int firstcolor, int ncolors);
-	/// Redraw it.
+	/// Redraws it.
 	void draw();
 	/// Processes a mouse hover in event.
 	void mouseIn(Action *action, State *state);

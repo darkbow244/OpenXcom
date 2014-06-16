@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -57,7 +57,7 @@ SurfaceSet::~SurfaceSet()
 {
 	for (std::map<int, Surface*>::iterator i = _frames.begin(); i != _frames.end(); ++i)
 	{
-		delete (*i).second;
+		delete i->second;
 	}
 }
 
@@ -75,23 +75,28 @@ void SurfaceSet::loadPck(const std::string &pck, const std::string &tab)
 	int nframes = 0;
 
 	// Load TAB and get image offsets
-	std::ifstream offsetFile (tab.c_str(), std::ios::in | std::ios::binary);
-	if (!offsetFile)
+	if (!tab.empty())
 	{
-		nframes = 1;
-		Surface *surface = new Surface(_width, _height);
-		_frames[0] = surface;
-	}
-	else
-	{
+		std::ifstream offsetFile(tab.c_str(), std::ios::in | std::ios::binary);
+		if (!offsetFile)
+		{
+			throw Exception(tab + " not found");
+		}
 		Uint16 off;
-		while (offsetFile.read((char*)&off, sizeof(off)))
+		while (offsetFile.read((char*) &off, sizeof(off)))
 		{
 			off = SDL_SwapLE16(off);
 			Surface *surface = new Surface(_width, _height);
 			_frames[nframes] = surface;
 			nframes++;
 		}
+		offsetFile.close();
+	}
+	else
+	{
+		nframes = 1;
+		Surface *surface = new Surface(_width, _height);
+		_frames[0] = surface;
 	}
 
 	// Load PCX and put pixels in surfaces
@@ -140,7 +145,6 @@ void SurfaceSet::loadPck(const std::string &pck, const std::string &tab)
 	}
 
 	imgFile.close();
-	offsetFile.close();
 }
 
 /**
@@ -251,7 +255,7 @@ int SurfaceSet::getHeight() const
  * stored in the set.
  * @return Number of frames.
  */
-int SurfaceSet::getTotalFrames() const
+size_t SurfaceSet::getTotalFrames() const
 {
 	return _frames.size();
 }

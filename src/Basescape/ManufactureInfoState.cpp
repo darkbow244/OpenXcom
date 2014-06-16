@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -19,6 +19,7 @@
 #include "ManufactureInfoState.h"
 #include "../Interface/Window.h"
 #include "../Interface/TextButton.h"
+#include "../Interface/ToggleTextButton.h"
 #include "../Interface/Text.h"
 #include "../Interface/TextList.h"
 #include "../Interface/ArrowButton.h"
@@ -37,75 +38,67 @@
 
 namespace OpenXcom
 {
+
 /**
- * Initialize all elements in the Production settings screen(new Production)
+ * Initializes all elements in the Production settings screen (new Production).
  * @param game Pointer to the core game.
  * @param base Pointer to the base to get info from.
- * @param item the RuleManufacture to produce
-*/
+ * @param item The RuleManufacture to produce.
+ */
 ManufactureInfoState::ManufactureInfoState (Game * game, Base * base, RuleManufacture * item) : State (game), _base(base), _item(item), _production(0)
 {
 	buildUi();
 }
 
 /**
- * Initialize all elements in the Production settings screen(modifying Production)
+ * Initializes all elements in the Production settings screen (modifying Production).
  * @param game Pointer to the core game.
  * @param base Pointer to the base to get info from.
- * @param production the Production to modify
-*/
+ * @param production The Production to modify.
+ */
 ManufactureInfoState::ManufactureInfoState (Game * game, Base * base, Production * production) : State (game), _base(base), _item(0), _production(production)
 {
 	buildUi();
 }
 
 /**
- * build screen User Interface
-*/
+ * Builds screen User Interface.
+ */
 void ManufactureInfoState::buildUi()
 {
-	_changeValueByMouseWheel = Options::getInt("changeValueByMouseWheel");
-
 	_screen = false;
-	int width = 320;
-	int height = 170;
-	int max_width = 320;
-	int max_height = 200;
-	int start_x = (max_width - width) / 2;
-	int start_y = (max_height - height) / 2;
-	int button_x_border = 10;
-	int button_y_border = 10;
-	int button_height = 16;
 
-	int button_width = (width - 5 * button_x_border) / 2;
-	_window = new Window(this, width, height, start_x, start_y);
-	_txtTitle = new Text (width - 4 * button_x_border, button_height * 2, start_x + button_x_border, start_y + button_y_border);
-	_btnOk = new TextButton (button_width, button_height, width - button_width - button_x_border, start_y + height - button_height - button_y_border);
-	_btnStop = new TextButton (button_width, button_height, start_x + button_x_border, start_y + height - button_height - button_y_border);
-	_txtAvailableEngineer = new Text(width - 4 * button_x_border, button_height, start_x + button_x_border, start_y + 2 * button_height);
-	_txtAvailableSpace = new Text(width - 4 * button_x_border, button_height, start_x + button_x_border, start_y + 2.7f * button_height);
-	_txtAllocatedEngineer = new Text(button_width, 2*button_height, start_x + button_x_border, start_y + 3.5f * button_height);
-	_txtUnitToProduce = new Text(button_width, 2*button_height, width - button_width - button_x_border, start_y + 3.5f * button_height);
-	_txtEngineerUp = new Text(button_width, 2*button_height, start_x + 3*button_x_border, start_y + 6 * button_height);
-	_txtEngineerDown = new Text(button_width, 2*button_height, start_x + 3*button_x_border, start_y + 7.5f * button_height);
-	_txtUnitUp = new Text(button_width, 2*button_height, width - button_width - button_x_border + 3*button_x_border, start_y + 6 * button_height);
-	_txtUnitDown = new Text(button_width, 2*button_height, width - button_width - button_x_border + 3*button_x_border, start_y + 7.5f * button_height);
-	_btnEngineerUp = new ArrowButton (ARROW_BIG_UP, 1.4f*button_x_border, button_height-2, width - button_width - 4*button_x_border, start_y + 6 * button_height);
-	_btnEngineerDown = new ArrowButton (ARROW_BIG_DOWN, 1.4f*button_x_border, button_height-2, width - button_width - 4*button_x_border, start_y + 7.5f * button_height);
-	_btnUnitUp = new ArrowButton (ARROW_BIG_UP, 1.4f*button_x_border, button_height-2, width - 4*button_x_border, start_y + 6 * button_height);
-	_btnUnitDown = new ArrowButton (ARROW_BIG_DOWN, 1.4f*button_x_border, button_height-2, width - 4*button_x_border, start_y + 7.5f * button_height);
-	_txtAllocated = new Text(button_width, 2*button_height, width - button_width - 5*button_x_border, start_y + 4 * button_height);
-	_txtTodo = new Text(button_width, 2*button_height, width - 5*button_x_border, start_y + 4 * button_height);
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(6)), Palette::backPos, 16);
+	_window = new Window(this, 320, 150, 0, 25, POPUP_BOTH);
+	_txtTitle = new Text(320, 17, 0, 35);
+	_btnOk = new TextButton(136, 16, 168, 150);
+	_btnStop = new TextButton(136, 16, 16, 150);
+	_btnSell = new ToggleTextButton(60, 16, 244, 56);
+	_txtAvailableEngineer = new Text(200, 9, 16, 55);
+	_txtAvailableSpace = new Text(200, 9, 16, 65);
+	_txtAllocatedEngineer = new Text(112, 32, 16, 75);
+	_txtUnitToProduce = new Text(104, 32, 168, 75);
+	_txtEngineerUp = new Text(90, 9, 40, 113);
+	_txtEngineerDown = new Text(90, 9, 40, 133);
+	_txtUnitUp = new Text(90, 9, 192, 113);
+	_txtUnitDown = new Text(90, 9, 192, 133);
+	_btnEngineerUp = new ArrowButton(ARROW_BIG_UP, 13, 14, 132, 109);
+	_btnEngineerDown = new ArrowButton(ARROW_BIG_DOWN, 13, 14, 132, 131);
+	_btnUnitUp = new ArrowButton(ARROW_BIG_UP, 13, 14, 284, 109);
+	_btnUnitDown = new ArrowButton(ARROW_BIG_DOWN, 13, 14, 284, 131);
+	_txtAllocated = new Text(40, 16, 128, 83);
+	_txtTodo = new Text(40, 16, 272, 83);
 
-	_surface1 = new InteractiveSurface((_btnEngineerUp->getX()+_btnEngineerUp->getWidth()+_txtUnitToProduce->getX()) / 2, height, start_x, start_y);
-	_surface1->onMouseClick((ActionHandler)&ManufactureInfoState::handleWheelEngineer, 0);
+	_surfaceEngineers = new InteractiveSurface(160, 150, 0, 25);
+	_surfaceEngineers->onMouseClick((ActionHandler)&ManufactureInfoState::handleWheelEngineer, 0);
 
-	_surface2 = new InteractiveSurface(_surface1->getWidth(), height, start_x + _surface1->getWidth(), start_y);
-	_surface2->onMouseClick((ActionHandler)&ManufactureInfoState::handleWheelUnit, 0);
+	_surfaceUnits = new InteractiveSurface(160, 150, 160, 25);
+	_surfaceUnits->onMouseClick((ActionHandler)&ManufactureInfoState::handleWheelUnit, 0);
 
-	add(_surface1);
-	add(_surface2);
+	// Set palette
+	setPalette("PAL_BASESCAPE", 6);
+
+	add(_surfaceEngineers);
+	add(_surfaceUnits);
 	add(_window);
 	add(_txtTitle);
 	add(_txtAvailableEngineer);
@@ -124,13 +117,14 @@ void ManufactureInfoState::buildUi()
 	add(_btnUnitDown);
 	add(_btnOk);
 	add(_btnStop);
+	add(_btnSell);
 
 	centerAllSurfaces();
 
 	_window->setColor(Palette::blockOffset(15)+1);
 	_window->setBackground(_game->getResourcePack()->getSurface("BACK17.SCR"));
 	_txtTitle->setColor(Palette::blockOffset(15)+1);
-	_txtTitle->setText(_game->getLanguage()->getString(_item ? _item->getName() : _production->getRules()->getName()));
+	_txtTitle->setText(tr(_item ? _item->getName() : _production->getRules()->getName()));
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);
 
@@ -140,8 +134,10 @@ void ManufactureInfoState::buildUi()
 	_txtAvailableSpace->setSecondaryColor(Palette::blockOffset(13));
 
 	_txtAllocatedEngineer->setColor(Palette::blockOffset(15)+1);
-	_txtAllocatedEngineer->setText(_game->getLanguage()->getString("STR_ENGINEERS__ALLOCATED"));
+	_txtAllocatedEngineer->setText(tr("STR_ENGINEERS__ALLOCATED"));
 	_txtAllocatedEngineer->setBig();
+	_txtAllocatedEngineer->setWordWrap(true);
+	_txtAllocatedEngineer->setVerticalAlign(ALIGN_MIDDLE);
 
 	_txtAllocated->setColor(Palette::blockOffset(15)+1);
 	_txtAllocated->setSecondaryColor(Palette::blockOffset(13));
@@ -151,13 +147,15 @@ void ManufactureInfoState::buildUi()
 	_txtTodo->setBig();
 
 	_txtUnitToProduce->setColor(Palette::blockOffset(15)+1);
-	_txtUnitToProduce->setText(_game->getLanguage()->getString("STR_TOTAL_TO_PRODUCE"));
+	_txtUnitToProduce->setText(tr("STR_UNITS_TO_PRODUCE"));
 	_txtUnitToProduce->setBig();
+	_txtUnitToProduce->setWordWrap(true);
+	_txtUnitToProduce->setVerticalAlign(ALIGN_MIDDLE);
 
 	_txtEngineerUp->setColor(Palette::blockOffset(15)+1);
-	_txtEngineerUp->setText(_game->getLanguage()->getString("STR_INCREASE_UC"));
+	_txtEngineerUp->setText(tr("STR_INCREASE_UC"));
 	_txtEngineerDown->setColor(Palette::blockOffset(15)+1);
-	_txtEngineerDown->setText(_game->getLanguage()->getString("STR_DECREASE_UC"));
+	_txtEngineerDown->setText(tr("STR_DECREASE_UC"));
 	_btnEngineerUp->setColor(Palette::blockOffset(15)+1);
 	_btnEngineerUp->onMousePress((ActionHandler)&ManufactureInfoState::moreEngineerPress);
 	_btnEngineerUp->onMouseRelease((ActionHandler)&ManufactureInfoState::moreEngineerRelease);
@@ -179,25 +177,29 @@ void ManufactureInfoState::buildUi()
 	_btnUnitDown->onMouseClick((ActionHandler)&ManufactureInfoState::lessUnitClick, 0);
 
 	_txtUnitUp->setColor(Palette::blockOffset(15)+1);
-	_txtUnitUp->setText(_game->getLanguage()->getString("STR_INCREASE_UC"));
+	_txtUnitUp->setText(tr("STR_INCREASE_UC"));
 	_txtUnitDown->setColor(Palette::blockOffset(15)+1);
-	_txtUnitDown->setText(_game->getLanguage()->getString("STR_DECREASE_UC"));
+	_txtUnitDown->setText(tr("STR_DECREASE_UC"));
 
-	_btnOk->setColor(Palette::blockOffset(13)+10);
-	_btnOk->setText(_game->getLanguage()->getString("STR_OK"));
+	_btnSell->setColor(Palette::blockOffset(15)+1);
+	_btnSell->setText(tr("STR_SELL_PRODUCTION"));
+
+	_btnOk->setColor(Palette::blockOffset(15)+6);
+	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&ManufactureInfoState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&ManufactureInfoState::btnOkClick, (SDLKey)Options::getInt("keyOk"));
-	_btnOk->onKeyboardPress((ActionHandler)&ManufactureInfoState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&ManufactureInfoState::btnOkClick, Options::keyOk);
+	_btnOk->onKeyboardPress((ActionHandler)&ManufactureInfoState::btnOkClick, Options::keyCancel);
 
-	_btnStop->setColor(Palette::blockOffset(13)+10);
-	_btnStop->setText(_game->getLanguage()->getString("STR_STOP_PRODUCTION"));
+	_btnStop->setColor(Palette::blockOffset(15)+6);
+	_btnStop->setText(tr("STR_STOP_PRODUCTION"));
 	_btnStop->onMouseClick((ActionHandler)&ManufactureInfoState::btnStopClick);
 	if(!_production)
 	{
-		_production = new Production (_item, 0);
+		_production = new Production (_item, 1);
 		_base->addProduction(_production);
 	}
 	setAssignedEngineer();
+	_btnSell->setPressed(_production->getSellItems());
 
 	_timerMoreEngineer = new Timer(250);
 	_timerLessEngineer = new Timer(250);
@@ -210,9 +212,9 @@ void ManufactureInfoState::buildUi()
 }
 
 /**
- * Stop this Production. Return to previous screen
- * @param action a pointer to an Action
-*/
+ * Stops this Production. Returns to the previous screen.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::btnStopClick (Action *)
 {
 	_base->removeProduction(_production);
@@ -220,21 +222,22 @@ void ManufactureInfoState::btnStopClick (Action *)
 }
 
 /**
- * Start this Production(if new). Return to previous screen
- * @param action a pointer to an Action
-*/
+ * Starts this Production (if new). Returns to the previous screen.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::btnOkClick (Action *)
 {
 	if(_item)
 	{
 		_production->startItem(_base, _game->getSavedGame());
 	}
+	_production->setSellItems(_btnSell->getPressed());
 	exitState();
 }
 
 /**
- * Return to previous screen
-*/
+ * Returns to the previous screen.
+ */
 void ManufactureInfoState::exitState()
 {
 	_game->popState();
@@ -245,33 +248,26 @@ void ManufactureInfoState::exitState()
 }
 
 /**
- * Update display of assigned/available engineer/workshop space
+ * Updates display of assigned/available engineer/workshop space.
  */
 void ManufactureInfoState::setAssignedEngineer()
 {
-	int availableEngineer = _base->getAvailableEngineers();
-	int availableWorkSpace = _base->getFreeWorkshops();
-	std::wstringstream s1;
-	s1 << _game->getLanguage()->getString("STR_ENGINEERS_AVAILABLE_UC") << L"\x01" << availableEngineer;
-	_txtAvailableEngineer->setText(s1.str());
-	std::wstringstream s2;
-	s2 << _game->getLanguage()->getString("STR_WORKSHOP_SPACE_AVAILABLE_UC") << L"\x01" << availableWorkSpace;
-	_txtAvailableSpace->setText(s2.str());
-	std::wstringstream s3;
+	_txtAvailableEngineer->setText(tr("STR_ENGINEERS_AVAILABLE_UC").arg(_base->getAvailableEngineers()));
+	_txtAvailableSpace->setText(tr("STR_WORKSHOP_SPACE_AVAILABLE_UC").arg(_base->getFreeWorkshops()));
+	std::wostringstream s3;
 	s3 << L">\x01" << _production->getAssignedEngineers();
 	_txtAllocated->setText(s3.str());
-	std::wstringstream s4;
+	std::wostringstream s4;
 	s4 << L">\x01";
-	if (Options::getBool("allowAutoSellProduction") && _production->getAmountTotal() == std::numeric_limits<int>::max())
-		s4 << "$$$";
+	if (_production->getInfiniteAmount()) s4 << Language::utf8ToWstr("∞");
 	else s4 << _production->getAmountTotal();
 	_txtTodo->setText(s4.str());
 }
 
 /**
- * Add given number of engineers to the project if possible
- * @param change how much we want to add
-*/
+ * Adds given number of engineers to the project if possible.
+ * @param change How much we want to add.
+ */
 void ManufactureInfoState::moreEngineer(int change)
 {
 	if (0 >= change) return;
@@ -287,18 +283,18 @@ void ManufactureInfoState::moreEngineer(int change)
 }
 
 /**
- * Start the timerMoreEngineer
- * @param action a pointer to an Action
-*/
+ * Starts the timerMoreEngineer.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::moreEngineerPress(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerMoreEngineer->start();
 }
 
 /**
- * Stop the timerMoreEngineer
- * @param action a pointer to an Action
-*/
+ * Stops the timerMoreEngineer.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::moreEngineerRelease(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
@@ -309,9 +305,9 @@ void ManufactureInfoState::moreEngineerRelease(Action * action)
 }
 
 /**
- * Allocate all engineers
- * @param action a pointer to an Action
-*/
+ * Allocates all engineers.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::moreEngineerClick(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) moreEngineer(std::numeric_limits<int>::max());
@@ -319,9 +315,9 @@ void ManufactureInfoState::moreEngineerClick(Action * action)
 }
 
 /**
- * Remove the given number of engineers from the project if possible
- * @param change how much we want to subtract
-*/
+ * Removes the given number of engineers from the project if possible.
+ * @param change How much we want to subtract.
+ */
 void ManufactureInfoState::lessEngineer(int change)
 {
 	if (0 >= change) return;
@@ -336,18 +332,18 @@ void ManufactureInfoState::lessEngineer(int change)
 }
 
 /**
- * Start the timerLessEngineer
- * @param action a pointer to an Action
-*/
+ * Starts the timerLessEngineer.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::lessEngineerPress(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerLessEngineer->start();
 }
 
 /**
- * Stop the timerLessEngineer
- * @param action a pointer to an Action
-*/
+ * Stops the timerLessEngineer.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::lessEngineerRelease(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
@@ -358,9 +354,9 @@ void ManufactureInfoState::lessEngineerRelease(Action * action)
 }
 
 /**
- * Allocate 0 engineers
- * @param action a pointer to an Action
-*/
+ * Removes engineers from the production.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::lessEngineerClick(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) lessEngineer(std::numeric_limits<int>::max());
@@ -368,16 +364,16 @@ void ManufactureInfoState::lessEngineerClick(Action * action)
 }
 
 /**
- * Add given number of units to produce to the project if possible
- * @param change how much we want to add
-*/
+ * Adds given number of units to produce to the project if possible.
+ * @param change How much we want to add.
+ */
 void ManufactureInfoState::moreUnit(int change)
 {
 	if (0 >= change) return;
 	if (_production->getRules()->getCategory() == "STR_CRAFT" && _base->getAvailableHangars() - _base->getUsedHangars() == 0)
 	{
 		_timerMoreUnit->stop();
-		_game->pushState(new ErrorMessageState(_game, "STR_NO_FREE_HANGARS_FOR_CRAFT_PRODUCTION", Palette::blockOffset(15)+1, "BACK17.SCR", 6));
+		_game->pushState(new ErrorMessageState(_game, "STR_NO_FREE_HANGARS_FOR_CRAFT_PRODUCTION", _palette, Palette::blockOffset(15)+1, "BACK17.SCR", 6));
 	}
 	else
 	{
@@ -391,9 +387,9 @@ void ManufactureInfoState::moreUnit(int change)
 }
 
 /**
- * Start the timerMoreUnit
- * @param action a pointer to an Action
-*/
+ * Starts the timerMoreUnit.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::moreUnitPress(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && _production->getAmountTotal() < std::numeric_limits<int>::max())
@@ -401,9 +397,9 @@ void ManufactureInfoState::moreUnitPress(Action * action)
 }
 
 /**
- * Stop the timerMoreUnit
- * @param action a pointer to an Action
-*/
+ * Stops the timerMoreUnit.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::moreUnitRelease(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
@@ -414,25 +410,30 @@ void ManufactureInfoState::moreUnitRelease(Action * action)
 }
 
 /**
- * Increases the units-to-produce to 999 or to $$$ when allowAutoSellProduction is true.
- * @param action a pointer to an Action
-*/
+ * Increases the "units to produce", in the case of a right-click, to infinite, and 1 on left-click.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::moreUnitClick(Action * action)
 {
+	if (_production->getInfiniteAmount()) return; // We can't increase over infinite :)
 	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
-		moreUnit(Options::getBool("allowAutoSellProduction") ? std::numeric_limits<int>::max() : (999 - _production->getAmountTotal()));
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) moreUnit(1);
+	{
+		_production->setInfiniteAmount(true);
+		setAssignedEngineer();
+	}
+	else if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	{
+		moreUnit(1);
+	}
 }
 
 /**
- * Remove the given number of units to produce from the project if possible
- * @param change how much we want to subtract
-*/
+ * Removes the given number of units to produce from the project if possible.
+ * @param change How much we want to subtract.
+ */
 void ManufactureInfoState::lessUnit(int change)
 {
 	if (0 >= change) return;
-	if (Options::getBool("allowAutoSellProduction") && _production->getAmountTotal() == std::numeric_limits<int>::max())
-		_production->setAmountTotal(std::max(_production->getAmountProduced()+1,999));
 	int units = _production->getAmountTotal();
 	change = std::min(units-(_production->getAmountProduced()+1), change);
 	_production->setAmountTotal(units-change);
@@ -440,18 +441,18 @@ void ManufactureInfoState::lessUnit(int change)
 }
 
 /**
- * Start the timerLessUnit
- * @param action a pointer to an Action
-*/
+ * Starts the timerLessUnit.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::lessUnitPress(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) _timerLessUnit->start();
 }
 
 /**
- * Stop the timerLessUnit
- * @param action a pointer to an Action
-*/
+ * Stops the timerLessUnit.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::lessUnitRelease(Action * action)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
@@ -462,17 +463,27 @@ void ManufactureInfoState::lessUnitRelease(Action * action)
 }
 
 /**
- * Build no more unit
- * @param action a pointer to an Action
-*/
+ * Decreases the units to produce.
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::lessUnitClick(Action * action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) lessUnit(std::numeric_limits<int>::max());
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) lessUnit(1);
+	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT
+	||  action->getDetails()->button.button == SDL_BUTTON_LEFT)
+	{
+		_production->setInfiniteAmount(false);
+		if (action->getDetails()->button.button == SDL_BUTTON_RIGHT
+		|| _production->getAmountTotal() <= _production->getAmountProduced())
+		{ // So the produced item number is increased over the planned, OR it was simply a right-click
+			_production->setAmountTotal(_production->getAmountProduced()+1);
+			setAssignedEngineer();
+		}
+		if (action->getDetails()->button.button == SDL_BUTTON_LEFT) lessUnit(1);
+	}
 }
 
 /**
- * Assign one more engineer(if possible)
+ * Assigns one more engineer (if possible).
  */
 void ManufactureInfoState::onMoreEngineer()
 {
@@ -481,7 +492,7 @@ void ManufactureInfoState::onMoreEngineer()
 }
 
 /**
- * Remove one engineer(if possible)
+ * Removes one engineer (if possible).
  */
 void ManufactureInfoState::onLessEngineer()
 {
@@ -491,16 +502,16 @@ void ManufactureInfoState::onLessEngineer()
 
 /**
  * Increases or decreases the Engineers according the mouse-wheel used.
- * @param action a pointer to an Action
-*/
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::handleWheelEngineer(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP) moreEngineer(_changeValueByMouseWheel);
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN) lessEngineer(_changeValueByMouseWheel);
+	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP) moreEngineer(Options::changeValueByMouseWheel);
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN) lessEngineer(Options::changeValueByMouseWheel);
 }
 
 /**
- * Build one more unit
+ * Builds one more unit.
  */
 void ManufactureInfoState::onMoreUnit()
 {
@@ -509,7 +520,7 @@ void ManufactureInfoState::onMoreUnit()
 }
 
 /**
- * Build one less unit(if possible)
+ * Builds one less unit( if possible).
  */
 void ManufactureInfoState::onLessUnit()
 {
@@ -519,16 +530,16 @@ void ManufactureInfoState::onLessUnit()
 
 /**
  * Increases or decreases the Units to produce according the mouse-wheel used.
- * @param action a pointer to an Action
-*/
+ * @param action A pointer to an Action.
+ */
 void ManufactureInfoState::handleWheelUnit(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP) moreUnit(_changeValueByMouseWheel);
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN) lessUnit(_changeValueByMouseWheel);
+	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP) moreUnit(Options::changeValueByMouseWheel);
+	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN) lessUnit(Options::changeValueByMouseWheel);
 }
 
 /**
- * Runs state functionality every cycle(used to update the timer).
+ * Runs state functionality every cycle (used to update the timer).
  */
 void ManufactureInfoState::think()
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,17 +20,24 @@
 #define OPENXCOM_UNITFALLBSTATE_H
 
 #include "BattleState.h"
-#include "Position.h"
 
 namespace OpenXcom
 {
 
+class BattlescapeGame;
 class TileEngine;
+class Tile;
+class BattleUnit;
 
+/**
+ * State for falling units.
+ */
 class UnitFallBState : public BattleState
 {
 private:
 	TileEngine *_terrain;
+	std::vector<Tile*> tilesToFallInto;
+	std::vector<BattleUnit*> unitsToMove;
 public:
 	/// Creates a new UnitWalkBState class
 	UnitFallBState(BattlescapeGame *parent);
@@ -38,7 +45,7 @@ public:
 	~UnitFallBState();
 	/// Initializes the state.
 	void init();
-	/// Runs state functionality every cycle. Returns false when finished.
+	/// Runs state functionality every cycle. Returns when finished.
 	void think();
 };
 

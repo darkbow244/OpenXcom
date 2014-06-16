@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -30,34 +30,37 @@ PathfindingOpenSet::~PathfindingOpenSet()
 {
 	while (!_queue.empty())
 	{
-		delete _queue.top();
+		OpenSetEntry *entry = _queue.top();
 		_queue.pop();
+		delete entry;
 	}
 }
 
 /**
- * Keep removing all discarded entries that have come to the top of the queue.
+ * Keeps removing all discarded entries that have come to the top of the queue.
  */
 void PathfindingOpenSet::removeDiscarded()
 {
 	while (!_queue.empty() && !_queue.top()->_node)
 	{
-		delete _queue.top();
+		OpenSetEntry *entry = _queue.top();
 		_queue.pop();
+		delete entry;
 	}
 }
 
 /**
- * Get the node with the least cost.
+ * Gets the node with the least cost.
  * After this call, the node is no longer in the set. It is an error to call this when the set is empty.
  * @return A pointer to the node which had the least cost.
  */
 PathfindingNode *PathfindingOpenSet::pop()
 {
 	assert(!empty());
-	PathfindingNode *nd = _queue.top()->_node;
-	delete _queue.top();
+	OpenSetEntry *entry = _queue.top();
+	PathfindingNode *nd = entry->_node;
 	_queue.pop();
+	delete entry;
 	nd->_openentry = 0;
 
 	// Discarded entries might be visible now.
@@ -66,7 +69,7 @@ PathfindingNode *PathfindingOpenSet::pop()
 }
 
 /**
- * Place the node in the set.
+ * Places the node in the set.
  * If the node was already in the set, the previous entry is discarded.
  * It is the caller's responsibility to never re-add a node with a worse cost.
  * @param node A pointer to the node to add.

@@ -1,10 +1,12 @@
+# X-COM 1 (UFO: Enemy Unknown) ruleset
+# For documentation on these values, see http://ufopaedia.org/index.php?title=Rulesets_(OpenXcom)
 countries:
   - type: STR_USA
     fundingBase: 600
     fundingCap: 10000
     labelLon: 260
     labelLat: -40
-    areas:   # lonMin lonMax latMin latMax
+    areas:
       - [235, 255, -49, -32]
       - [255, 277.5, -49, -29]
       - [260, 265, -29, -26]
@@ -174,7 +176,7 @@ regions:
       STR_ALIEN_ABDUCTION: 20
       STR_ALIEN_INFILTRATION: 20
       STR_ALIEN_BASE: 20
-    missionZones:  # lonMin lonMax latMin latMax
+    missionZones:
       -
         - [200, 220, -65, -60]
         - [230, 260, -65, -55]
@@ -209,6 +211,16 @@ regions:
         - [274.5, 276.25, -44.375, -43.375]
         - [200.625, 216.75, -64.75, -62.25]
       -
+        - [286.125, 286.125, -40.75, -40.75]
+        - [282.875, 282.875, -38.75, -38.75]
+        - [241.75, 241.75, -34.125, -34.125]
+        - [284.25, 284.25, -45.5, -45.5]
+        - [277.625, 277.625, -22.5, -22.5]
+        - [260.875, 260.875, -19.375, -19.375]
+        - [272.375, 272.375, -41.875, -41.875]
+        - [236.75, 236.75, -49.375, -49.375]
+        - [263.375, 263.375, -32.75, -32.75]
+      -
         - [250, 270, -66, -64]
         - [280, 292.5, -51, -46]
         - [267.5, 269.5, -30, -29.5]
@@ -238,10 +250,7 @@ regions:
     missionWeights:
       STR_ALIEN_RESEARCH: 25
       STR_ALIEN_BASE: 35
-    missionZones:  # lonMin lonMax latMin latMax
-      -
-        - [302.25, 323.625, -80.75, -78.625]
-        - [62, 66, -76.125, -75.25]
+    missionZones:
       -
         - [305.25, 333.125, -79.25, -75.25]
         - [273.25, 282.125, -73.375, -71.625]
@@ -263,6 +272,9 @@ regions:
         - [168.5, 184.625, -83.375, -82.25]
         - [268.625, 280.75, -78.875, -76.75]
         - [0, 359.875, -90, -88.125]
+      -
+        - [302.25, 323.625, -80.75, -78.625]
+        - [62, 66, -76.125, -75.25]
       -
         - [302.25, 323.625, -80.75, -78.625]
         - [62, 66, -76.125, -75.25]
@@ -289,10 +301,7 @@ regions:
     missionWeights:
       STR_ALIEN_RESEARCH: 25
       STR_ALIEN_BASE: 35
-    missionZones:  # lonMin lonMax latMin latMax
-      -
-        - [291.125, 296.25, 68.25, 70.5]
-        - [129.625, 152.75, 69.75, 73.625]
+    missionZones:
       -
         - [77, 108.125, 62.125, 76.125]
         - [340.75, 408.5, 57.25, 72.75]
@@ -311,6 +320,9 @@ regions:
         - [6.625, 35.125, 72.875, 77]
         - [148.125, 154.75, 70, 72.75]
         - [0, 359.875, 87.5, 90]
+      -
+        - [291.125, 296.25, 68.25, 70.5]
+        - [129.625, 152.75, 69.75, 73.625]
       -
         - [291.125, 296.25, 68.25, 70.5]
         - [129.625, 152.75, 69.75, 73.625]
@@ -384,6 +396,14 @@ regions:
         - [287.875, 292.25, 47.25, 49.25]
         - [299.5, 301.125, 51.375, 51.875]
       -
+        - [312.125, 312.125, 15.75, 15.75]
+        - [285.875, 285.875, -4.5, -4.5]
+        - [302.5, 302.5, 34.5, 34.5]
+        - [289.375, 289.375, 33.375, 33.375]
+        - [316.875, 316.875, 22.875, 22.875]
+        - [283, 283, 12, 12]
+        - [293.125, 293.125, -10.5, -10.5]
+      -
         - [290.125, 305.5, 1.5, 7.625]
         - [285.875, 289.5, 13.625, 15.625]
         - [290, 294.125, 41.25, 44.875]
@@ -432,7 +452,7 @@ regions:
       STR_ALIEN_ABDUCTION: 15
       STR_ALIEN_INFILTRATION: 20
       STR_ALIEN_BASE: 6
-    missionZones:  # lonMin lonMax latMin latMax
+    missionZones:
       -
         - [334, 396.125, -66.125, -58.125]
         - [348, 361.875, -59.375, -49.375]
@@ -450,6 +470,14 @@ regions:
         - [8.625, 10.375, -57, -56]
         - [17.125, 27.875, -45.75, -43.125]
         - [352.625, 358.875, -39.375, -37.75]
+      -
+        - [359.875, 359.875, -51.5, -51.5]
+        - [2.375, 2.375, -48.75, -48.75]
+        - [13.375, 13.375, -52.5, -52.5]
+        - [37.625, 37.625, -55.75, -55.75]
+        - [12.5, 12.5, -41.875, -41.875]
+        - [356.25, 356.25, -40.375, -40.375]
+        - [19.125, 19.125, -47.5, -47.5]
       -
         - [355.875, 357.25, -57.625, -57]
         - [17.5, 29, -69.375, -67.625]
@@ -506,6 +534,10 @@ regions:
         - [348, 357.125, -10.75, -7.5]
         - [2.25, 8.5, -35.875, -34.625]
       -
+        - [3.125, 3.125, -6.5, -6.5]
+        - [31.25, 31.25, -30, -30]
+        - [352.375, 352.375, -33.5, -33.5]
+      -
         - [5.625, 9, -6.125, -5]
         - [15.75, 31.75, -26.125, -18.75]
         - [350.375, 355.625, -8.375, -6.125]
@@ -561,6 +593,11 @@ regions:
         - [30.5, 38.375, 11.625, 16.75]
         - [17.75, 29.75, 26.25, 29.875]
         - [45, 48.75, 16.25, 18.75]
+      -
+        - [28.125, 28.125, 26.25, 26.25]
+        - [36.75, 36.75, 1.25, 1.25]
+        - [18.5, 18.5, 34, 34]
+        - [15.375, 15.375, 4.375, 4.375]
       -
         - [17.125, 23.25, 22.75, 27.125]
         - [12, 26.875, -2.625, 4]
@@ -629,6 +666,14 @@ regions:
         - [79.875, 81.125, -8.25, -6.875]
         - [66.75, 81.5, -46.125, -43.5]
         - [77.875, 89.375, -27, -23.375]
+      -
+        - [32.75, 32.75, -39.875, -39.875]
+        - [77.25, 77.25, -28.625, -28.625]
+        - [67, 67, -24.875, -24.875]
+        - [44.5, 44.5, -33.25, -33.25]
+        - [51.5, 51.5, -35.625, -35.625]
+        - [73.125, 73.125, -18.875, -18.875]
+        - [88.375, 88.375, -22.625, -22.625]
       -
         - [42.375, 52.125, -23.5, -18.375]
         - [77.75, 84.875, -36, -32.75]
@@ -702,6 +747,16 @@ regions:
         - [127, 137, -48.5, -45]
         - [101.25, 111.875, -43.875, -37.875]
       -
+        - [139.75, 139.75, -35.625, -35.625]
+        - [116.375, 116.375, -39.875, -39.875]
+        - [100.625, 100.625, -13.625, -13.625]
+        - [121, 121, -14.625, -14.625]
+        - [127, 127, -37.5, -37.5]
+        - [103.875, 103.875, -1.375, -1.375]
+        - [106.75, 106.75, 6.25, 6.25]
+        - [121.5, 121.5, -31.25, -31.25]
+        - [114.125, 114.125, -22.25, -22.25]
+      -
         - [100.625, 103.125, -0.375, 0.75]
         - [96.125, 104.75, -42.625, -39]
         - [142.125, 143.875, -51.25, -49.125]
@@ -746,6 +801,8 @@ regions:
         - [86, 97.75, -73.25, -68.875]
         - [125.875, 141.5, -64.25, -59.5]
         - [91.375, 108.875, -61.375, -57.375]
+      -
+        - [82.75, 82.75, -55, -55]
       -
         - [63.125, 78.375, -66.5, -62]
         - [157.75, 162.5, -57.25, -55.625]
@@ -803,6 +860,11 @@ regions:
         - [168.5, 170.375, 44.25, 45.25]
         - [141.375, 150.125, 32.875, 36.375]
       -
+        - [149.125, 149.125, 35.375, 35.375]
+        - [175.125, 175.125, 41.25, 41.25]
+        - [145, 145, 37.875, 37.875]
+        - [115.75, 115.75, 32, 32]
+      -
         - [122.25, 135.375, 21, 27.5]
         - [149.875, 151.25, 4.75, 5.5]
         - [140.875, 143.625, 8.125, 8.875]
@@ -833,9 +895,6 @@ regions:
       STR_ALIEN_BASE: 27
     missionZones:
       -
-        - [209.125, 209.625, -19.875, -19.375]
-        - [207, 207.125, -21.625, -21.5]
-      -
         - [194.5, 225.625, -29.25, -15.25]
         - [172.5, 186.875, 10.875, 26.375]
         - [158.375, 171.375, 12.25, 27.75]
@@ -850,6 +909,9 @@ regions:
         - [207, 207.125, -21.625, -21.5]
         - [177.75, 178.25, 17.5, 17.875]
         - [164.625, 164.75, 20.5, 20.75]
+      - 
+        - [209.125, 209.625, -19.875, -19.375]
+        - [207, 207.125, -21.625, -21.5]
       -
         - [209.125, 209.625, -19.875, -19.375]
         - [207, 207.125, -21.625, -21.5]
@@ -1065,6 +1127,7 @@ crafts:
     soldiers: 14
     vehicles: 3
     costBuy: 500000
+    costRent: 500000
     refuelRate: 50
     transferTime: 72
     score: 200
@@ -1085,10 +1148,13 @@ crafts:
     accel: 3
     weapons: 2
     costBuy: 600000
+    costRent: 600000
     refuelRate: 50
     transferTime: 96
     score: 250
   - type: STR_FIRESTORM
+    requires:
+      - STR_NEW_FIGHTER_CRAFT
     sprite: 4
     fuelMax: 20
     damageMax: 500
@@ -1099,6 +1165,8 @@ crafts:
     refuelRate: 5
     score: 250
   - type: STR_LIGHTNING
+    requires:
+      - STR_NEW_FIGHTER_TRANSPORTER
     sprite: 1
     fuelMax: 30
     damageMax: 800
@@ -1118,7 +1186,22 @@ crafts:
         - name: LIGHTNIN
           width: 20
           length: 10
+    deployment:
+      - [10, 5, 1, 2]
+      - [10, 6, 1, 2]
+      - [10, 4, 1, 2]
+      - [9, 7, 1, 2]
+      - [9, 3, 1, 2]
+      - [8, 7, 1, 2]
+      - [8, 3, 1, 2]
+      - [7, 7, 1, 2]
+      - [7, 3, 1, 2]
+      - [6, 6, 1, 2]
+      - [6, 4, 1, 2]
+      - [6, 5, 1, 2]
   - type: STR_AVENGER
+    requires:
+      - STR_ULTIMATE_CRAFT
     sprite: 2
     fuelMax: 60
     damageMax: 1200
@@ -1140,6 +1223,33 @@ crafts:
         - name: AVENGER
           width: 10
           length: 20
+    deployment:
+      - [4, 9, 1, 0]
+      - [5, 9, 1, 0]
+      - [4, 10, 1, 0]
+      - [5, 10, 1, 0]
+      - [4, 11, 1, 0]
+      - [5, 11, 1, 0]
+      - [4, 12, 1, 0]
+      - [5, 12, 1, 0]
+      - [4, 13, 1, 0]
+      - [5, 13, 1, 0]
+      - [4, 14, 1, 0]
+      - [5, 14, 1, 0]
+      - [4, 15, 1, 0]
+      - [5, 15, 1, 0]
+      - [4, 16, 1, 0]
+      - [5, 16, 1, 0]
+      - [3, 10, 1, 0]
+      - [3, 11, 1, 0]
+      - [3, 12, 1, 0]
+      - [3, 13, 1, 0]
+      - [3, 14, 1, 0]
+      - [6, 10, 1, 0]
+      - [6, 11, 1, 0]
+      - [6, 12, 1, 0]
+      - [6, 13, 1, 0]
+      - [6, 14, 1, 0]
 craftWeapons:
   - type: STR_STINGRAY
     sprite: 0
@@ -1179,7 +1289,7 @@ craftWeapons:
     reloadStandard: 2
     reloadAggressive: 2
     ammoMax: 200
-    rearmRate: 50
+    rearmRate: 100
     launcher: STR_CANNON
     clip: STR_CANNON_ROUNDS_X50
     projectileType: 2
@@ -1193,8 +1303,8 @@ craftWeapons:
     reloadCautious: 12
     reloadStandard: 12
     reloadAggressive: 12
-    ammoMax: 99
-    rearmRate: 99
+    ammoMax: 100
+    rearmRate: 50
     launcher: STR_LASER_CANNON
     projectileType: 4
   - type: STR_PLASMA_BEAM_UC
@@ -1207,7 +1317,7 @@ craftWeapons:
     reloadStandard: 12
     reloadAggressive: 12
     ammoMax: 100
-    rearmRate: 100
+    rearmRate: 50
     launcher: STR_PLASMA_BEAM
     projectileType: 5
   - type: STR_FUSION_BALL_UC
@@ -1225,98 +1335,48 @@ craftWeapons:
     projectileType: 3
     projectileSpeed: 8
 items:
-# Item Definitions:
-#  - type: Internal item name, reference to string defined in .lng, must be unique. (string)
-#    name: used to replace type name, if defined (string)
-#    requires: this corresponds to a research entry, if one is defined, then that research is required to use this item (string)
-#    size: How much space this item takes up in storage. (float) (default 0.0)
-#    costBuy: Cost in purchase menu. undefined/0 = cannot buy. (int) (default 0)
-#    costSell: Value in sell menu. undefined/0 = cannot sell. (int) (default 0)
-#    transferTime: time (in hours) to transfer this item (int) (default factor of distance vs weight)
-#    weight: Weight penalty to soldiers carrying this item. (int) (default 0)
-#    bigSprite: Sprite reference in BigObs.pck. -1 for none. values higher than 56 will be considered additions rather than replacements,
-#       and will be indexed internally to avoid conflicts. (int) (default -1) (http://www.ufopaedia.org/index.php?title=BIGOBS.PCK)
-#    floorSprite: Sprite reference in FloorOb.pck. -1 for none. values higher than 72 will be considered additions rather than replacements,
-#       and will be indexed internally to avoid conflicts. (int) (default -1) (http://www.ufopaedia.org/index.php?title=FLOOROB.PCK)
-#    handSprite: Sprite reference in HandOb.pck. -1 for none. values higher than 128 will be considered additions rather than replacements,
-#       and will be indexed internally to avoid conflicts. (int) (default -1) (http://www.ufopaedia.org/index.php?title=HANDOB.PCK)
-#    bulletSprite: Projectile sprite. (int) 0 = rocket, 1 = pistol bullet, 2 = rifle bullet, 3 = auto cannon bullet, 
-#    4 = heavy cannon bullet, 5 = small laser, 6 = laser rifle, 7 = heavy laser, 8 = plasma, 9 = small launcher, 10 = blaster launcher
-#       note: if you are adding a new projectile (for example 11), its corresponding sprite definition must be 35 times this number
-#       (so for projectile 11, you'd need to define the extraSprites 385+)
-#    fireSound: Sound effect Reference in Sample2.cat. -1 for none. values higher than 54 will be considered additions rather than replacements,
-#       and will be indexed internally to avoid conflicts. (int) (default -1) (http://www.ufopaedia.org/index.php?title=SOUND#SAMPLE2.CAT)
-#    hitSound: Sound effect Reference in Sample2.cat. -1 for none. values higher than 54 will be considered additions rather than replacements,
-#       and will be indexed internally to avoid conflicts. (int) (default -1) (http://www.ufopaedia.org/index.php?title=SOUND#SAMPLE2.CAT)
-#    hitAnimation: reference in smoke.pck for "hit" explosion. values higher than 54 will be considered additions rather than replacements,
-#       and will be indexed internally to avoid conflicts. (0-2 * 18) (int) (http://www.ufopaedia.org/index.php?title=SMOKE.PCK)
-#       NOTE - melee and psi-amp weapons use HIT.PCK instead, DO NOT define a hitAnimation for these types.
-#    power: average damage of the weapon, in most cases, the damage will be +- 50% (int)
-#    compatibleAmmo:
-#      - Name of ammo item 1
-#      - Name of ammo item 2
-#      - etc.
-#    damageType: What kind of damage does this do? (int)
-#        0 = NONE, 1 = ARMOR PIERCING, 2 = INCENDIARY, 3 = HIGH EXPLOSIVE, 4 = LASER, 5 = PLASMA,
-#        6 = STUN, 7 = MELEE, 8 = ACID, 9 = SMOKE
-#    accuracyAuto: Auto-Shot accuracy, as a percentage, affected by the unit's firing skill. (int)
-#    accuracySnap: Snap-Shot accuracy, as a percentage, affected by the unit's firing skill. (int)
-#    accuracyAimed: Aimed-Shot accuracy, as a percentage, affected by the unit's firing skill. (int)
-#    tuAuto: Auto-Shot time unit usage, as a percentage of the firing unit's TU. (int)
-#    tuSnap: Snap-Shot time unit usage, as a percentage of the firing unit's TU. (int)
-#    tuAimed: Aimed-Shot time unit usage, as a percentage of the firing unit's TU. (int)
-#    clipSize: How many bullets in this clip? -1 for infinite. (int) (default 0)
-#    accuracyMelee: Melee accuracy, as a percentage, affected by the unit's melee skill. (int)
-#    tuMelee: Melee time unit usage, as a percentage of the attacking unit's TU. (int)
-#    battleType: What kind of item is this? (int) (default 0)
-#        0 = NONE, 1 = FIREARM, 2 = AMMO, 3 = MELEE, 4 = GRENADE, 5 = PROXIMITYGRENADE, 6 = MEDIKIT,
-#        7 = SCANNER, 8 = MINDPROBE, 9 = PSIAMP, 10 = FLARE, 11 = CORPSE
-#    twoHanded: Is this a two-handed weapon. (boolean) (default false)
-#    waypoint: Does this weapon use waypoints or direct fire? (boolean) (default false)
-#    fixedWeapon: can this item be dropped? (boolean) (default true)
-#    invWidth: Width of this item in the inventory screen. (int) (default 1)
-#    invHeight: Height of this item in the inventory screen. (int) (default 1)
-#    painKiller: 10
-#    heal: 10
-#    stimulant: 10
-#    healAmount: 1
-#    healthAmount: 3
-#    stun: 4
-#    energy: 10
-#    tuUse: TU usage for "special" actions, ie: psi-amp. flat TU cost. (int) (default 0)
-#    recoveryPoints: How many points does XCom get for recovering this item? (int) (default 0)
-#    armor: How much damage is needed to destoy this item on the ground. (int) (default 0)
-#    recover: Tally this item for end of mission results? (boolean) (default false)
-#    turretType: Which turret number to use for this tank (0-4) (int) (http://www.ufopaedia.org/index.php?title=TANKS.PCK)
-#    liveAlien: Does this require containment? (boolean) (default false)
-#    blastRadius: How big of an explosion does this cause? 0 for none. (int) (default -1, meaning "use formula")
-#    flatRate: Does using this weapon charge a flat rate for TU usage? (boolean) (default false)
-#    arcingShot: Does this weapon fire in an arc? (boolean) (default false)
-#    attraction: Represents how likely an alien is to pick this up. values below 5 will be ignored (by design) (int) (default 0)
-#    listOrder: Where in the lists should this item appear? (int) (default: 100 higher than the previous item that was defined, starting at 100)
-#    maxRange: The maximum range at which this weapon can operate, 0 for "no limit" (int) (default 0)
-#    bulletSpeed: how much faster (or slower, if you use a negative number) is a projectile fired from this weapon
-#       compared to the average? (int) (default 0)
-#    
   - type: STR_STINGRAY_LAUNCHER
     size: 0.8
     costBuy: 16000
     costSell: 12000
     transferTime: 48
+  - type: STR_STINGRAY_MISSILES
+    size: 0.4
+    costBuy: 3000
+    costSell: 2400
+    transferTime: 48
+    clipSize: 1
   - type: STR_AVALANCHE_LAUNCHER
     size: 1
     costBuy: 17000
     costSell: 12750
     transferTime: 48
+  - type: STR_AVALANCHE_MISSILES
+    size: 1.5
+    costBuy: 9000
+    costSell: 7200
+    transferTime: 48
+    clipSize: 1
   - type: STR_CANNON
     size: 1.5
     costBuy: 30000
     costSell: 22500
     transferTime: 48
+  - type: STR_CANNON_ROUNDS_X50
+    size: 0.1
+    costBuy: 1240
+    costSell: 1012
+    transferTime: 96
+    clipSize: 50
   - type: STR_FUSION_BALL_LAUNCHER
     size: 2.0
     costSell: 281000
     transferTime: 48
+  - type: STR_FUSION_BALL
+    size: 0.6
+    costSell: 53300
+    transferTime: 48
+    clipSize: 1
   - type: STR_LASER_CANNON
     size: 2.0
     costSell: 211000
@@ -1324,25 +1384,6 @@ items:
   - type: STR_PLASMA_BEAM
     size: 1.2
     costSell: 267300
-    transferTime: 48
-  - type: STR_STINGRAY_MISSILES
-    size: 0.4
-    costBuy: 3000
-    costSell: 2400
-    transferTime: 48
-  - type: STR_AVALANCHE_MISSILES
-    size: 1.5
-    costBuy: 9000
-    costSell: 7200
-    transferTime: 48
-  - type: STR_CANNON_ROUNDS_X50
-    size: 0
-    costBuy: 1240
-    costSell: 1012
-    transferTime: 96
-  - type: STR_FUSION_BALL
-    size: 0.6
-    costSell: 53300
     transferTime: 48
   - type: STR_TANK_CANNON
     size: 6
@@ -1354,7 +1395,7 @@ items:
     floorSprite: 0
     handSprite: 0
     bulletSprite: 4
-    fireSound: 2
+    fireSound: 12
     compatibleAmmo:
       - STR_HWP_CANNON_SHELLS
     accuracySnap: 60
@@ -1365,7 +1406,6 @@ items:
     fixedWeapon: true
     invWidth: 2
     invHeight: 3
-    armor: 20
     turretType: 0
   - type: STR_HWP_CANNON_SHELLS
     size: 0.1
@@ -1373,7 +1413,7 @@ items:
     costSell: 100
     transferTime: 48
     weight: 1
-    bigSprite: -1 # It must be -1 to avoid putting it to the base-defense battlescape. Original value: 12
+    bigSprite: -1
     floorSprite: 12
     hitSound: 13
     hitAnimation: 26
@@ -1383,7 +1423,6 @@ items:
     battleType: 2
     invWidth: 2
     invHeight: 1
-    armor: 20
   - type: STR_TANK_ROCKET_LAUNCHER
     size: 6
     costBuy: 480000
@@ -1405,7 +1444,6 @@ items:
     fixedWeapon: true
     invWidth: 2
     invHeight: 3
-    armor: 20
     turretType: 1
   - type: STR_HWP_ROCKETS
     size: 0.6
@@ -1413,7 +1451,7 @@ items:
     costSell: 2250
     transferTime: 48
     weight: 1
-    bigSprite: -1 # It must be -1 to avoid putting it to the base-defense battlescape. Original value: 16
+    bigSprite: -1
     floorSprite: 16
     hitSound: 0
     hitAnimation: 0
@@ -1423,7 +1461,6 @@ items:
     battleType: 2
     invWidth: 1
     invHeight: 3
-    armor: 20
   - type: STR_TANK_LASER_CANNON
     size: 6
     costSell: 594000
@@ -1447,7 +1484,6 @@ items:
     clipSize: -1
     invWidth: 2
     invHeight: 3
-    armor: 20
     turretType: 2
   - type: STR_HOVERTANK_PLASMA
     size: 6
@@ -1472,7 +1508,6 @@ items:
     clipSize: -1
     invWidth: 2
     invHeight: 3
-    armor: 20
     turretType: 3
   - type: STR_HOVERTANK_LAUNCHER
     size: 6
@@ -1493,15 +1528,13 @@ items:
     waypoint: true
     invWidth: 2
     invHeight: 3
-    armor: 20
     turretType: 4
   - type: STR_HWP_FUSION_BOMB
-    size: 6
+    size: 0.6
     costSell: 31500
     transferTime: 48
     weight: 1
-    weight: 3
-    bigSprite: -1 # It must be -1 to avoid putting it to the base-defense battlescape. Original value: 36
+    bigSprite: -1
     floorSprite: 35
     hitSound: 0
     hitAnimation: 0
@@ -1511,7 +1544,6 @@ items:
     battleType: 2
     invWidth: 1
     invHeight: 1
-    armor: 20
     blastRadius: 11
   - type: STR_PISTOL
     size: 0.1
@@ -1532,8 +1564,6 @@ items:
     battleType: 1
     invWidth: 1
     invHeight: 2
-    armor: 20
-    attraction: 1
   - type: STR_PISTOL_CLIP
     size: 0.1
     costBuy: 70
@@ -1548,7 +1578,6 @@ items:
     clipSize: 12
     battleType: 2
     armor: 12
-    attraction: 1
   - type: STR_RIFLE
     size: 0.2
     costBuy: 3000
@@ -1571,7 +1600,6 @@ items:
     twoHanded: true
     invWidth: 1
     invHeight: 3
-    armor: 20
   - type: STR_RIFLE_CLIP
     size: 0.1
     costBuy: 200
@@ -1585,7 +1613,6 @@ items:
     damageType: 1
     clipSize: 20
     battleType: 2
-    armor: 20
   - type: STR_HEAVY_CANNON
     size: 0.3
     costBuy: 6400
@@ -1595,7 +1622,7 @@ items:
     floorSprite: 11
     handSprite: 24
     bulletSprite: 4
-    fireSound: 2
+    fireSound: 12
     compatibleAmmo:
       - STR_HC_AP_AMMO
       - STR_HC_HE_AMMO
@@ -1608,7 +1635,6 @@ items:
     twoHanded: true
     invWidth: 2
     invHeight: 3
-    armor: 20
   - type: STR_HC_AP_AMMO
     size: 0.1
     costBuy: 300
@@ -1624,8 +1650,6 @@ items:
     battleType: 2
     invWidth: 2
     invHeight: 1
-    armor: 20
-    attraction: 1
   - type: STR_HC_HE_AMMO
     size: 0.1
     costBuy: 500
@@ -1641,8 +1665,6 @@ items:
     battleType: 2
     invWidth: 2
     invHeight: 1
-    armor: 20
-    attraction: 1
   - type: STR_HC_I_AMMO
     size: 0.1
     costBuy: 400
@@ -1658,8 +1680,6 @@ items:
     battleType: 2
     invWidth: 2
     invHeight: 1
-    armor: 20
-    attraction: 1
   - type: STR_AUTO_CANNON
     size: 0.3
     costBuy: 13500
@@ -1669,7 +1689,7 @@ items:
     floorSprite: 7
     handSprite: 32
     bulletSprite: 3
-    fireSound: 2
+    fireSound: 12
     compatibleAmmo:
       - STR_AC_AP_AMMO
       - STR_AC_HE_AMMO
@@ -1684,7 +1704,6 @@ items:
     twoHanded: true
     invWidth: 2
     invHeight: 3
-    armor: 20
   - type: STR_AC_AP_AMMO
     size: 0.1
     costBuy: 500
@@ -1700,7 +1719,6 @@ items:
     battleType: 2
     invWidth: 2
     invHeight: 1
-    armor: 20
   - type: STR_AC_HE_AMMO
     size: 0.1
     costBuy: 700
@@ -1716,7 +1734,6 @@ items:
     battleType: 2
     invWidth: 2
     invHeight: 1
-    armor: 20
   - type: STR_AC_I_AMMO
     size: 0.1
     costBuy: 650
@@ -1732,8 +1749,6 @@ items:
     battleType: 2
     invWidth: 2
     invHeight: 1
-    armor: 20
-    attraction: 1
   - type: STR_ROCKET_LAUNCHER
     size: 0.4
     costBuy: 4000
@@ -1756,7 +1771,6 @@ items:
     twoHanded: true
     invWidth: 2
     invHeight: 3
-    armor: 20
   - type: STR_SMALL_ROCKET
     size: 0.2
     costBuy: 600
@@ -1772,7 +1786,6 @@ items:
     battleType: 2
     invWidth: 1
     invHeight: 3
-    armor: 20
   - type: STR_LARGE_ROCKET
     size: 0.2
     costBuy: 900
@@ -1788,7 +1801,6 @@ items:
     battleType: 2
     invWidth: 1
     invHeight: 3
-    armor: 20
   - type: STR_INCENDIARY_ROCKET
     size: 0.2
     costBuy: 1200
@@ -1804,7 +1816,6 @@ items:
     battleType: 2
     invWidth: 1
     invHeight: 3
-    armor: 20
   - type: STR_LASER_PISTOL
     size: 0.1
     costSell: 20000
@@ -1828,7 +1839,6 @@ items:
     battleType: 1
     invWidth: 1
     invHeight: 2
-    armor: 20
   - type: STR_LASER_RIFLE
     size: 0.2
     costSell: 36900
@@ -1853,7 +1863,6 @@ items:
     twoHanded: true
     invWidth: 1
     invHeight: 3
-    armor: 20
   - type: STR_HEAVY_LASER
     size: 0.3
     costSell: 61000
@@ -1876,7 +1885,6 @@ items:
     twoHanded: true
     invWidth: 2
     invHeight: 3
-    armor: 20
   - type: STR_GRENADE
     size: 0.1
     costBuy: 300
@@ -1887,7 +1895,6 @@ items:
     power: 50
     damageType: 3
     battleType: 4
-    armor: 20
     blastRadius: 5
   - type: STR_SMOKE_GRENADE
     size: 0.1
@@ -1899,7 +1906,6 @@ items:
     power: 60
     damageType: 9
     battleType: 4
-    armor: 20
     blastRadius: 5
   - type: STR_PROXIMITY_GRENADE
     size: 0.1
@@ -1911,10 +1917,9 @@ items:
     power: 70
     damageType: 3
     battleType: 5
-    armor: 20
     blastRadius: 5
   - type: STR_HIGH_EXPLOSIVE
-    size: 0.25
+    size: 0.2
     costBuy: 1500
     costSell: 1200
     weight: 6
@@ -1925,7 +1930,6 @@ items:
     battleType: 4
     invWidth: 2
     invHeight: 1
-    armor: 20
     blastRadius: 5
   - type: STR_MOTION_SCANNER
     size: 0.1
@@ -1935,7 +1939,6 @@ items:
     floorSprite: 23
     battleType: 7
     tuUse: 25
-    armor: 20
   - type: STR_MEDI_KIT
     size: 0.1
     costSell: 46500
@@ -1948,13 +1951,12 @@ items:
     painKiller: 10
     heal: 10
     stimulant: 10
-    healAmount: 1
-    healthAmount: 3
-    stun: 4
-    energy: 10
+    woundRecovery: 1
+    healthRecovery: 3
+    stunRecovery: 4
+    energyRecovery: 10
     tuUse: 10
     flatRate: true
-    armor: 20
   - type: STR_PSI_AMP
     requires:
       - STR_PSI_AMP
@@ -1971,7 +1973,6 @@ items:
     invHeight: 3
     tuUse: 25
     flatRate: true
-    armor: 20
   - type: STR_STUN_ROD
     size: 0.1
     costBuy: 1260
@@ -1980,7 +1981,7 @@ items:
     bigSprite: 26
     floorSprite: 26
     handSprite: 80
-    hitSound: 54
+    meleeSound: 54
     power: 65
     damageType: 6
     accuracyMelee: 100
@@ -1989,7 +1990,7 @@ items:
     twoHanded: true
     invWidth: 1
     invHeight: 3
-    armor: 20
+    skillApplied: false
   - type: STR_ELECTRO_FLARE
     size: 0.1
     costBuy: 60
@@ -2006,7 +2007,6 @@ items:
     floorSprite: 39
     invWidth: 2
     invHeight: 3
-    armor: 20
     recover: false
   - type: STR_CORPSE_ARMOR
     name: STR_CORPSE
@@ -2051,7 +2051,6 @@ items:
     invHeight: 3
     recoveryPoints: 5
     armor: 50
-    attraction: 1
   - type: STR_HEAVY_PLASMA_CLIP
     requires:
       - STR_HEAVY_PLASMA_CLIP
@@ -2067,8 +2066,6 @@ items:
     clipSize: 35
     battleType: 2
     recoveryPoints: 1
-    armor: 20
-    attraction: 1
   - type: STR_PLASMA_RIFLE
     requires:
       - STR_PLASMA_RIFLE
@@ -2094,7 +2091,6 @@ items:
     invHeight: 3
     recoveryPoints: 4
     armor: 50
-    attraction: 1
   - type: STR_PLASMA_RIFLE_CLIP
     requires:
       - STR_PLASMA_RIFLE_CLIP
@@ -2110,8 +2106,6 @@ items:
     clipSize: 28
     battleType: 2
     recoveryPoints: 1
-    armor: 20
-    attraction: 1
   - type: STR_PLASMA_PISTOL
     requires:
       - STR_PLASMA_PISTOL
@@ -2136,7 +2130,6 @@ items:
     invHeight: 2
     recoveryPoints: 3
     armor: 45
-    attraction: 1
   - type: STR_PLASMA_PISTOL_CLIP
     requires:
       - STR_PLASMA_PISTOL_CLIP
@@ -2152,8 +2145,6 @@ items:
     clipSize: 26
     battleType: 2
     recoveryPoints: 1
-    armor: 20
-    attraction: 1
   - type: STR_BLASTER_LAUNCHER
     requires:
       - STR_BLASTER_LAUNCHER
@@ -2176,7 +2167,6 @@ items:
     invHeight: 3
     recoveryPoints: 5
     armor: 40
-    attraction: 1
   - type: STR_BLASTER_BOMB
     requires:
       - STR_BLASTER_BOMB
@@ -2194,9 +2184,7 @@ items:
     invWidth: 1
     invHeight: 2
     recoveryPoints: 1
-    armor: 20
-    blastRadius: 11
-    attraction: 1
+    blastRadius: 10
   - type: STR_SMALL_LAUNCHER
     requires:
       - STR_SMALL_LAUNCHER
@@ -2219,8 +2207,6 @@ items:
     invWidth: 2
     invHeight: 2
     recoveryPoints: 4
-    armor: 20
-    attraction: 1
   - type: STR_STUN_BOMB
     requires:
       - STR_STUN_BOMB
@@ -2236,8 +2222,6 @@ items:
     clipSize: 1
     battleType: 2
     recoveryPoints: 1
-    armor: 20
-    attraction: 1
   - type: STR_ALIEN_GRENADE
     requires:
       - STR_ALIEN_GRENADE
@@ -2250,9 +2234,7 @@ items:
     damageType: 3
     battleType: 4
     recoveryPoints: 1
-    armor: 20
     blastRadius: 5
-    attraction: 1
   - type: STR_ELERIUM_115
     size: 0.1
     costSell: 5000
@@ -2261,8 +2243,6 @@ items:
     floorSprite: 37
     invWidth: 1
     invHeight: 1
-    armor: 20
-    attraction: 4
   - type: STR_MIND_PROBE
     requires:
       - STR_MIND_PROBE
@@ -2277,8 +2257,6 @@ items:
     invHeight: 2
     tuUse: 50
     recoveryPoints: 1
-    armor: 20
-    attraction: 1
   - type: STR_SECTOID_CORPSE
     size: 0.4
     costSell: 20000
@@ -2366,7 +2344,6 @@ items:
     invHeight: 3
     recoveryPoints: 3
     battleType: 11
-    armor: 20
   - type: STR_REAPER_CORPSE
     size: 1
     costSell: 20000
@@ -2378,27 +2355,23 @@ items:
     invHeight: 0
     battleType: 11
     recoveryPoints: 3
-    armor: 20
   - type: REAPER_CORPSE_2
     floorSprite: 55
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: REAPER_CORPSE_3
     floorSprite: 54
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: REAPER_CORPSE_4
     floorSprite: 53
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: STR_SECTOPOD_CORPSE
     size: 1
@@ -2411,32 +2384,30 @@ items:
     invHeight: 0
     battleType: 11
     recoveryPoints: 3
-    armor: 20
   - type: SECTOPOD_CORPSE_2
     floorSprite: 61
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: SECTOPOD_CORPSE_3
     floorSprite: 62
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: SECTOPOD_CORPSE_4
     floorSprite: 63
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: STR_CYBERDISC_CORPSE
     size: 1
     costSell: 20000
     battleType: 11
+    power: 120
+    blastRadius: 6
   - type: CYBERDISC_CORPSE_1
     name: STR_CYBERDISC_CORPSE
     floorSprite: 56
@@ -2444,13 +2415,11 @@ items:
     invHeight: 0
     battleType: 11
     recoveryPoints: 3
-    armor: 20
   - type: CYBERDISC_CORPSE_2
     floorSprite: 57
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: CYBERDISC_CORPSE_3
     name: STR_CYBERDISC_CORPSE
@@ -2458,7 +2427,6 @@ items:
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: CYBERDISC_CORPSE_4
     name: STR_CYBERDISC_CORPSE
@@ -2466,7 +2434,6 @@ items:
     invWidth: 0
     invHeight: 0
     battleType: 11
-    armor: 20
     recover: false
   - type: HOVERTANK_CORPSE_1
     floorSprite: 64
@@ -2567,7 +2534,7 @@ items:
     costSell: 115000
   - type: CYBERDISC_WEAPON
     weight: 3
-    bigSprite: 40
+    bigSprite: -2
     floorSprite: 31
     handSprite: 104
     bulletSprite: 8
@@ -2588,39 +2555,40 @@ items:
     recover: false
   - type: REAPER_WEAPON
     weight: 3
-    bigSprite: 26
+    bigSprite: -3
     floorSprite: 31
     handSprite: 104
-    hitSound: 48
+    meleeSound: 48
     clipSize: -1
-    power: 90
+    strengthApplied: true
     damageType: 7
-    accuracyMelee: 80
+    accuracyMelee: 100
     tuMelee: 15
     battleType: 3
     fixedWeapon: true
-    invWidth: 1
+    invWidth: 2
     invHeight: 3
     recover: false
   - type: CHRYSSALID_WEAPON
     weight: 3
-    bigSprite: 26
+    bigSprite: -1
     floorSprite: 31
     handSprite: 104
-    hitSound: 48
+    meleeSound: 48
     clipSize: -1
-    power: 114
+    strengthApplied: true
     damageType: 7
-    accuracyMelee: 80
+    accuracyMelee: 100
     tuMelee: 15
     battleType: 3
     fixedWeapon: true
-    invWidth: 1
+    invWidth: 2
     invHeight: 3
     recover: false
+    zombieUnit: STR_ZOMBIE
   - type: CELATID_WEAPON
     weight: 3
-    bigSprite: 40
+    bigSprite: -2
     floorSprite: 31
     handSprite: 104
     bulletSprite: 8
@@ -2642,13 +2610,13 @@ items:
     arcingShot: true
   - type: SILACOID_WEAPON
     weight: 3
-    bigSprite: 40
+    bigSprite: -4
     floorSprite: 31
     handSprite: 104
-    hitSound: 48
-    power: 70
-    damageType: 2
-    accuracyMelee: 92
+    meleeSound: 48
+    strengthApplied: true
+    damageType: 7
+    accuracyMelee: 100
     tuMelee: 15
     clipSize: -1
     battleType: 3
@@ -2658,7 +2626,7 @@ items:
     recover: false
   - type: SECTOPOD_WEAPON
     weight: 3
-    bigSprite: 40
+    bigSprite: -2
     floorSprite: 31
     handSprite: 104
     fireSound: 18
@@ -2684,10 +2652,10 @@ items:
     bigSprite: 26
     floorSprite: 31
     handSprite: 104
-    hitSound: 48
-    power: 84
+    meleeSound: 48
+    strengthApplied: true
     damageType: 7
-    accuracyMelee: 80
+    accuracyMelee: 100
     tuMelee: 15
     battleType: 3
     fixedWeapon: true
@@ -2860,7 +2828,7 @@ ufos:
     range: 0
     score: 50
     reload: 56
-    breakOffTime: 200
+    breakOffTime: 100
     battlescapeTerrainData:
       name: UFO1A
       mapDataSets:
@@ -2879,8 +2847,8 @@ ufos:
     power: 20
     range: 15
     score: 75
-    reload: 56
-    breakOffTime: 250
+    reload: 28
+    breakOffTime: 125
     battlescapeTerrainData:
       name: UFO_110
       mapDataSets:
@@ -2901,8 +2869,8 @@ ufos:
     power: 20
     range: 34
     score: 125
-    reload: 48
-    breakOffTime: 300
+    reload: 24
+    breakOffTime: 150
     battlescapeTerrainData:
       name: UFO_120
       mapDataSets:
@@ -2918,13 +2886,13 @@ ufos:
     size: STR_MEDIUM_UC
     sprite: 4
     damageMax: 500
-    speedMax: 4000
+    speedMax: 4300
     accel: 8
     power: 40
-    range: 22
+    range: 20
     score: 250
-    reload: 48
-    breakOffTime: 500
+    reload: 16
+    breakOffTime: 250
     battlescapeTerrainData:
       name: UFO_140
       mapDataSets:
@@ -2941,13 +2909,13 @@ ufos:
     size: STR_MEDIUM_UC
     sprite: 3
     damageMax: 500
-    speedMax: 4300
+    speedMax: 4000
     accel: 8
     power: 40
-    range: 20
+    range: 22
     score: 250
-    reload: 32
-    breakOffTime: 500
+    reload: 24
+    breakOffTime: 250
     battlescapeTerrainData:
       name: UFO_130
       mapDataSets:
@@ -2969,8 +2937,8 @@ ufos:
     power: 60
     range: 36
     score: 400
-    reload: 24
-    breakOffTime: 3000
+    reload: 12
+    breakOffTime: 1500
     battlescapeTerrainData:
       name: UFO_170
       mapDataSets:
@@ -2992,8 +2960,8 @@ ufos:
     power: 120
     range: 42
     score: 500
-    reload: 24
-    breakOffTime: 2000
+    reload: 12
+    breakOffTime: 1000
     battlescapeTerrainData:
       name: UFO_150
       mapDataSets:
@@ -3009,14 +2977,14 @@ ufos:
   - type: STR_BATTLESHIP
     size: STR_VERY_LARGE
     sprite: 6
-    damageMax: 3200
+    damageMax: 3000
     speedMax: 5000
     accel: 6
-    power: 148
+    power: 140
     range: 65
     score: 700
-    reload: 24
-    breakOffTime: 4000
+    reload: 12
+    breakOffTime: 2000
     battlescapeTerrainData:
       name: UFO_160
       mapDataSets:
@@ -3030,6 +2998,124 @@ ufos:
           width: 30
           length: 30
 invs:
+  - id: STR_GROUND
+    x: 0
+    y: 152
+    type: 2
+    costs:
+      STR_BACK_PACK: 20
+      STR_BELT: 12
+      STR_LEFT_HAND: 8
+      STR_LEFT_LEG: 10
+      STR_LEFT_SHOULDER: 12
+      STR_RIGHT_HAND: 8
+      STR_RIGHT_LEG: 10
+      STR_RIGHT_SHOULDER: 12
+  - id: STR_RIGHT_HAND
+    x: 0
+    y: 63
+    type: 1
+    costs:
+      STR_BACK_PACK: 14
+      STR_BELT: 8
+      STR_GROUND: 2
+      STR_LEFT_HAND: 4
+      STR_LEFT_LEG: 10
+      STR_LEFT_SHOULDER: 10
+      STR_RIGHT_LEG: 8
+      STR_RIGHT_SHOULDER: 10
+  - id: STR_LEFT_HAND
+    x: 128
+    y: 63
+    type: 1
+    costs:
+      STR_BACK_PACK: 14
+      STR_BELT: 8
+      STR_GROUND: 2
+      STR_LEFT_LEG: 8
+      STR_LEFT_SHOULDER: 10
+      STR_RIGHT_HAND: 4
+      STR_RIGHT_LEG: 10
+      STR_RIGHT_SHOULDER: 10
+  - id: STR_BELT
+    x: 192
+    y: 104
+    slots:
+      - [0, 0]
+      - [1, 0]
+      - [2, 0]
+      - [3, 0]
+      - [0, 1]
+      - [3, 1]
+    costs:
+      STR_BACK_PACK: 16
+      STR_GROUND: 6
+      STR_LEFT_HAND: 4
+      STR_LEFT_LEG: 10
+      STR_LEFT_SHOULDER: 12
+      STR_RIGHT_HAND: 4
+      STR_RIGHT_LEG: 10
+      STR_RIGHT_SHOULDER: 12
+  - id: STR_RIGHT_LEG
+    x: 0
+    y: 120
+    slots:
+      - [0, 0]
+      - [1, 0]
+    costs:
+      STR_BACK_PACK: 18
+      STR_BELT: 10
+      STR_GROUND: 6
+      STR_LEFT_HAND: 6
+      STR_LEFT_LEG: 10
+      STR_LEFT_SHOULDER: 10
+      STR_RIGHT_HAND: 4
+      STR_RIGHT_SHOULDER: 10
+  - id: STR_LEFT_LEG
+    x: 128
+    y: 120
+    slots:
+      - [0, 0]
+      - [1, 0]
+    costs:
+      STR_BACK_PACK: 18
+      STR_BELT: 10
+      STR_GROUND: 6
+      STR_LEFT_HAND: 4
+      STR_LEFT_SHOULDER: 10
+      STR_RIGHT_HAND: 6
+      STR_RIGHT_LEG: 10
+      STR_RIGHT_SHOULDER: 10
+  - id: STR_RIGHT_SHOULDER
+    x: 16
+    y: 37
+    slots:
+      - [0, 0]
+      - [1, 0]
+    costs:
+      STR_BACK_PACK: 16
+      STR_BELT: 10
+      STR_GROUND: 4
+      STR_LEFT_HAND: 3
+      STR_LEFT_LEG: 12
+      STR_LEFT_SHOULDER: 8
+      STR_RIGHT_HAND: 3
+      STR_RIGHT_LEG: 12
+  - id: STR_LEFT_SHOULDER
+    x: 112
+    y: 37
+    slots:
+      - [0, 0]
+      - [1, 0]
+    costs:
+      STR_BACK_PACK: 16
+      STR_BELT: 10
+      STR_GROUND: 4
+      STR_LEFT_HAND: 3
+      STR_LEFT_LEG: 12
+      STR_RIGHT_HAND: 3
+      STR_RIGHT_LEG: 12
+      STR_RIGHT_SHOULDER: 8
   - id: STR_BACK_PACK
     x: 192
     y: 37
@@ -3052,124 +3138,6 @@ invs:
       STR_RIGHT_HAND: 8
       STR_RIGHT_LEG: 16
       STR_RIGHT_SHOULDER: 14
-  - id: STR_BELT
-    x: 192
-    y: 104
-    slots:
-      - [0, 0]
-      - [1, 0]
-      - [2, 0]
-      - [3, 0]
-      - [0, 1]
-      - [3, 1]
-    costs:
-      STR_BACK_PACK: 16
-      STR_GROUND: 6
-      STR_LEFT_HAND: 4
-      STR_LEFT_LEG: 10
-      STR_LEFT_SHOULDER: 12
-      STR_RIGHT_HAND: 4
-      STR_RIGHT_LEG: 10
-      STR_RIGHT_SHOULDER: 12
-  - id: STR_GROUND
-    x: 0
-    y: 152
-    type: 2
-    costs:
-      STR_BACK_PACK: 20
-      STR_BELT: 12
-      STR_LEFT_HAND: 8
-      STR_LEFT_LEG: 10
-      STR_LEFT_SHOULDER: 12
-      STR_RIGHT_HAND: 8
-      STR_RIGHT_LEG: 10
-      STR_RIGHT_SHOULDER: 12
-  - id: STR_LEFT_HAND
-    x: 128
-    y: 63
-    type: 1
-    costs:
-      STR_BACK_PACK: 14
-      STR_BELT: 8
-      STR_GROUND: 2
-      STR_LEFT_LEG: 8
-      STR_LEFT_SHOULDER: 10
-      STR_RIGHT_HAND: 4
-      STR_RIGHT_LEG: 10
-      STR_RIGHT_SHOULDER: 10
-  - id: STR_LEFT_LEG
-    x: 128
-    y: 120
-    slots:
-      - [0, 0]
-      - [1, 0]
-    costs:
-      STR_BACK_PACK: 18
-      STR_BELT: 10
-      STR_GROUND: 6
-      STR_LEFT_HAND: 4
-      STR_LEFT_SHOULDER: 10
-      STR_RIGHT_HAND: 6
-      STR_RIGHT_LEG: 10
-      STR_RIGHT_SHOULDER: 10
-  - id: STR_LEFT_SHOULDER
-    x: 112
-    y: 37
-    slots:
-      - [0, 0]
-      - [1, 0]
-    costs:
-      STR_BACK_PACK: 16
-      STR_BELT: 10
-      STR_GROUND: 4
-      STR_LEFT_HAND: 3
-      STR_LEFT_LEG: 12
-      STR_RIGHT_HAND: 3
-      STR_RIGHT_LEG: 12
-      STR_RIGHT_SHOULDER: 8
-  - id: STR_RIGHT_HAND
-    x: 0
-    y: 63
-    type: 1
-    costs:
-      STR_BACK_PACK: 14
-      STR_BELT: 8
-      STR_GROUND: 2
-      STR_LEFT_HAND: 4
-      STR_LEFT_LEG: 10
-      STR_LEFT_SHOULDER: 10
-      STR_RIGHT_LEG: 8
-      STR_RIGHT_SHOULDER: 10
-  - id: STR_RIGHT_LEG
-    x: 0
-    y: 120
-    slots:
-      - [0, 0]
-      - [1, 0]
-    costs:
-      STR_BACK_PACK: 18
-      STR_BELT: 10
-      STR_GROUND: 6
-      STR_LEFT_HAND: 6
-      STR_LEFT_LEG: 10
-      STR_LEFT_SHOULDER: 10
-      STR_RIGHT_HAND: 4
-      STR_RIGHT_SHOULDER: 10
-  - id: STR_RIGHT_SHOULDER
-    x: 16
-    y: 37
-    slots:
-      - [0, 0]
-      - [1, 0]
-    costs:
-      STR_BACK_PACK: 16
-      STR_BELT: 10
-      STR_GROUND: 4
-      STR_LEFT_HAND: 3
-      STR_LEFT_LEG: 12
-      STR_LEFT_SHOULDER: 8
-      STR_RIGHT_HAND: 3
-      STR_RIGHT_LEG: 12
 terrains:
   - name: CULTA
     mapDataSets:
@@ -3604,15 +3572,18 @@ terrains:
       - name: UBASE_11
         width: 10
         length: 10
-      - name: UBASE_12
-        width: 10
-        length: 10
-      - name: UBASE_13
-        width: 10
-        length: 10
-      - name: UBASE_14
-        width: 10
-        length: 10
+#       UBASE_12 is impassable, 13 and 14 are apparently unused.
+#       in the interest of preserving an original experience,
+#       they have been disabled. delete the hashes to re-enable.
+#      - name: UBASE_12
+#        width: 10
+#        length: 10
+#      - name: UBASE_13
+#        width: 10
+#        length: 10
+#      - name: UBASE_14
+#        width: 10
+#        length: 10
       - name: UBASE_15
         width: 20
         length: 20
@@ -3625,6 +3596,11 @@ terrains:
       - URBAN
       - FRNITURE
     largeBlockLimit: 5
+    civilianTypes:
+      - MALE_CIVILIAN
+      - FEMALE_CIVILIAN
+    # roadTypeOdds: [EWRoad, NSRoad] (Crossroad is remainder)
+    roadTypeOdds: [50, 25]
     mapBlocks:
       - name: URBAN00
         width: 10
@@ -3760,7 +3736,8 @@ armors:
     spriteSheet: XCOM_0.PCK
     spriteInv: MAN_0
     storeItem: STR_NONE
-    corpseItem: STR_CORPSE
+    corpseBattle:
+      - STR_CORPSE
     frontArmor: 12
     sideArmor: 8
     rearArmor: 5
@@ -3776,15 +3753,16 @@ armors:
       - 1.2
       - 1.6
       - 1.0
-    loftemps: 3
+    loftempsSet: [ 3 ]
   - type: STR_PERSONAL_ARMOR_UC
     spriteSheet: XCOM_1.PCK
     spriteInv: MAN_1
-    corpseItem: STR_CORPSE_ARMOR
+    corpseBattle:
+      - STR_CORPSE_ARMOR
     storeItem: STR_PERSONAL_ARMOR
     frontArmor: 50
     sideArmor: 40
-    rearArmor: 40
+    rearArmor: 30
     underArmor: 30
     damageModifier:
       - 1.0
@@ -3797,11 +3775,12 @@ armors:
       - 1.0
       - 1.1
       - 1.0
-    loftemps: 3
+    loftempsSet: [ 3 ]
   - type: STR_POWER_SUIT_UC
     spriteSheet: XCOM_2.PCK
     spriteInv: MAN_2
-    corpseItem: STR_CORPSE_SUIT
+    corpseBattle:
+      - STR_CORPSE_SUIT
     storeItem: STR_POWER_SUIT
     frontArmor: 100
     sideArmor: 80
@@ -3818,11 +3797,12 @@ armors:
       - 1.0
       - 1.0
       - 0.0
-    loftemps: 3
+    loftempsSet: [ 3 ]
   - type: STR_FLYING_SUIT_UC
     spriteSheet: XCOM_2.PCK
     spriteInv: MAN_3
-    corpseItem: STR_CORPSE_SUIT
+    corpseBattle:
+      - STR_CORPSE_SUIT
     storeItem: STR_FLYING_SUIT
     frontArmor: 110
     sideArmor: 90
@@ -3840,10 +3820,11 @@ armors:
       - 1.0
       - 1.0
       - 0.0
-    loftemps: 3
+    loftempsSet: [ 3 ]
   - type: SECTOID_ARMOR0
     spriteSheet: SECTOID.PCK
-    corpseItem: STR_SECTOID_CORPSE
+    corpseBattle:
+      - STR_SECTOID_CORPSE
     frontArmor: 4
     sideArmor: 3
     rearArmor: 2
@@ -3859,10 +3840,11 @@ armors:
       - 1.2
       - 1.6
       - 1.0
-    loftemps: 2
+    loftempsSet: [ 2 ]
   - type: FLOATER_ARMOR0
     spriteSheet: FLOATER.PCK
-    corpseItem: STR_FLOATER_CORPSE
+    corpseBattle:
+      - STR_FLOATER_CORPSE
     frontArmor: 8
     sideArmor: 6
     rearArmor: 4
@@ -3880,10 +3862,11 @@ armors:
       - 1.2
       - 1.6
       - 1.0
-    loftemps: 3
+    loftempsSet: [ 3 ]
   - type: FLOATER_ARMOR1
     spriteSheet: FLOATER.PCK
-    corpseItem: STR_FLOATER_CORPSE
+    corpseBattle:
+      - STR_FLOATER_CORPSE
     frontArmor: 16
     sideArmor: 12
     rearArmor: 8
@@ -3901,10 +3884,11 @@ armors:
       - 1.2
       - 1.6
       - 1.0
-    loftemps: 3
+    loftempsSet: [ 3 ]
   - type: FLOATER_ARMOR2
     spriteSheet: FLOATER.PCK
-    corpseItem: STR_FLOATER_CORPSE
+    corpseBattle:
+      - STR_FLOATER_CORPSE
     frontArmor: 24
     sideArmor: 18
     rearArmor: 12
@@ -3922,10 +3906,15 @@ armors:
       - 1.2
       - 1.6
       - 1.0
-    loftemps: 3
+    loftempsSet: [ 3 ]
   - type: CYBERDISC_ARMOR
     spriteSheet: CYBER.PCK
-    corpseItem: CYBERDISC_CORPSE_
+    corpseBattle:
+      - CYBERDISC_CORPSE_1
+      - CYBERDISC_CORPSE_2
+      - CYBERDISC_CORPSE_3
+      - CYBERDISC_CORPSE_4
+    corpseGeo: STR_CYBERDISC_CORPSE
     frontArmor: 34
     sideArmor: 34
     rearArmor: 34
@@ -3947,7 +3936,12 @@ armors:
     loftempsSet: [ 92, 89, 90, 91 ]
   - type: REAPER_ARMOR
     spriteSheet: X_REAP.PCK
-    corpseItem: REAPER_CORPSE_
+    corpseBattle:
+      - REAPER_CORPSE_1
+      - REAPER_CORPSE_2
+      - REAPER_CORPSE_3
+      - REAPER_CORPSE_4
+    corpseGeo: STR_REAPER_CORPSE
     frontArmor: 28
     sideArmor: 28
     rearArmor: 28
@@ -3968,14 +3962,18 @@ armors:
     loftempsSet: [ 92, 89, 90, 91 ]
   - type: SECTOPOD_ARMOR
     spriteSheet: X_ROB.PCK
-    corpseItem: SECTOPOD_CORPSE_
+    corpseBattle:
+      - SECTOPOD_CORPSE_1
+      - SECTOPOD_CORPSE_2
+      - SECTOPOD_CORPSE_3
+      - SECTOPOD_CORPSE_4
+    corpseGeo: STR_SECTOPOD_CORPSE
     frontArmor: 145
     sideArmor: 130
     rearArmor: 100
     underArmor: 90
     drawingRoutine: 5
     size: 2
-    modifiedWalk: 23
     damageModifier:
       - 1.0
       - 1.0
@@ -3990,7 +3988,11 @@ armors:
     loftempsSet: [ 92, 89, 90, 91 ]
   - type: TANK_ARMOR
     spriteSheet: TANKS.PCK
-    corpseItem: TANK_CORPSE_
+    corpseBattle:
+      - TANK_CORPSE_1
+      - TANK_CORPSE_2
+      - TANK_CORPSE_3
+      - TANK_CORPSE_4
     frontArmor: 90
     sideArmor: 75
     rearArmor: 60
@@ -4011,7 +4013,11 @@ armors:
     loftempsSet: [ 92, 89, 90, 91 ]
   - type: HOVERTANK_ARMOR
     spriteSheet: TANKS.PCK
-    corpseItem: HOVERTANK_CORPSE_
+    corpseBattle:
+      - HOVERTANK_CORPSE_1
+      - HOVERTANK_CORPSE_2
+      - HOVERTANK_CORPSE_3
+      - HOVERTANK_CORPSE_4
     frontArmor: 130
     sideArmor: 130
     rearArmor: 130
@@ -4033,7 +4039,8 @@ armors:
     loftempsSet: [ 92, 89, 90, 91 ]
   - type: CIVM_ARMOR
     spriteSheet: CIVM.PCK
-    corpseItem: CIVM_CORPSE
+    corpseBattle:
+      - CIVM_CORPSE
     frontArmor: 0
     sideArmor: 0
     rearArmor: 0
@@ -4050,10 +4057,11 @@ armors:
       - 1.2
       - 1.6
       - 1.0
-    loftemps: 3
+    loftempsSet: [ 3 ]
   - type: CIVF_ARMOR
     spriteSheet: CIVF.PCK
-    corpseItem: CIVF_CORPSE
+    corpseBattle:
+      - CIVF_CORPSE
     frontArmor: 0
     sideArmor: 0
     rearArmor: 0
@@ -4066,10 +4074,15 @@ armors:
       - 1.0
       - 1.0
       - 1.0
-    loftemps: 3
+      - 1.0
+      - 1.2
+      - 1.6
+      - 1.0
+    loftempsSet: [ 3 ]
   - type: SNAKEMAN_ARMOR0
     spriteSheet: SNAKEMAN.PCK
-    corpseItem: STR_SNAKEMAN_CORPSE
+    corpseBattle:
+      - STR_SNAKEMAN_CORPSE
     frontArmor: 20
     sideArmor: 18
     rearArmor: 16
@@ -4077,39 +4090,41 @@ armors:
     drawingRoutine: 6
     damageModifier:
       - 1.0
-      - 1.2
+      - 1.0
       - 0.7
-      - 1.1
-      - 0.8
-      - 0.8
       - 1.0
-      - 1.2
-      - 1.6
       - 1.0
-    loftemps: 3
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: SNAKEMAN_ARMOR1
     spriteSheet: SNAKEMAN.PCK
-    corpseItem: STR_SNAKEMAN_CORPSE
+    corpseBattle:
+      - STR_SNAKEMAN_CORPSE
     frontArmor: 20
     sideArmor: 24
     rearArmor: 22
     underArmor: 20
     drawingRoutine: 6
     damageModifier:
-      - 0.9
-      - 1.1
-      - 0.6
+      - 1.0
       - 1.0
       - 0.7
-      - 0.7
-      - 0.9
-      - 1.1
-      - 1.5
-      - 0.9
-    loftemps: 3
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: SNAKEMAN_ARMOR2
     spriteSheet: SNAKEMAN.PCK
-    corpseItem: STR_SNAKEMAN_CORPSE
+    corpseBattle:
+      - STR_SNAKEMAN_CORPSE
     frontArmor: 26
     sideArmor: 26
     rearArmor: 22
@@ -4118,78 +4133,82 @@ armors:
     damageModifier:
       - 1.0
       - 1.0
-      - 0.5
-      - 0.9
-      - 0.6
-      - 0.6
-      - 0.8
+      - 0.7
       - 1.0
-      - 1.4
-      - 0.8
-    loftemps: 3
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: MUTON_ARMOR0
     spriteSheet: MUTON.PCK
-    corpseItem: STR_MUTON_CORPSE
+    corpseBattle:
+      - STR_MUTON_CORPSE
     frontArmor: 20
     sideArmor: 20
     rearArmor: 20
     underArmor: 10
     drawingRoutine: 10
     damageModifier:
-      - 0.9
-      - 0.7
-      - 0.9
-      - 0.7
-      - 0.8
       - 1.0
-      - 0.9
-      - 0.8
-      - 0.9
-      - 0.9
-    loftemps: 3
+      - 0.6
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: MUTON_ARMOR1
     spriteSheet: MUTON.PCK
-    corpseItem: STR_MUTON_CORPSE
+    corpseBattle:
+      - STR_MUTON_CORPSE
     frontArmor: 24
     sideArmor: 24
     rearArmor: 24
     underArmor: 15
     drawingRoutine: 10
     damageModifier:
-      - 0.8
+      - 1.0
       - 0.6
-      - 0.8
-      - 0.6
-      - 0.7
-      - 0.9
-      - 0.8
-      - 0.7
-      - 0.8
-      - 0.8
-    loftemps: 3
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: MUTON_ARMOR2
     spriteSheet: MUTON.PCK
-    corpseItem: STR_MUTON_CORPSE
+    corpseBattle:
+      - STR_MUTON_CORPSE
     frontArmor: 28
     sideArmor: 28
     rearArmor: 28
     underArmor: 20
     drawingRoutine: 10
     damageModifier:
-      - 0.7
-      - 0.5
-      - 0.7
-      - 0.5
+      - 1.0
       - 0.6
-      - 0.8
-      - 0.7
-      - 0.6
-      - 0.7
-      - 0.7  
-    loftemps: 3
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: ETHEREAL_ARMOR0
     spriteSheet: ETHEREAL.PCK
-    corpseItem: STR_ETHEREAL_CORPSE
+    corpseBattle:
+      - STR_ETHEREAL_CORPSE
     frontArmor: 35
     sideArmor: 35
     rearArmor: 35
@@ -4197,20 +4216,21 @@ armors:
     movementType: 1
     drawingRoutine: 4
     damageModifier:
-      - 0.9
-      - 0.9
-      - 1.1
-      - 0.9
+      - 1.0
+      - 1.0
+      - 0.7
+      - 1.0
+      - 1.0
       - 1.0
       - 0.8
-      - 0.9
-      - 0.9
       - 1.0
-      - 0.9
-    loftemps: 3
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: ETHEREAL_ARMOR1
     spriteSheet: ETHEREAL.PCK
-    corpseItem: STR_ETHEREAL_CORPSE
+    corpseBattle:
+      - STR_ETHEREAL_CORPSE
     frontArmor: 40
     sideArmor: 40
     rearArmor: 40
@@ -4218,41 +4238,43 @@ armors:
     movementType: 1
     drawingRoutine: 4
     damageModifier:
-      - 0.8
-      - 0.8
+      - 1.0
+      - 1.0
+      - 0.7
+      - 1.0
+      - 1.0
       - 1.0
       - 0.8
-      - 0.9
-      - 0.7
-      - 0.8
-      - 0.8
-      - 0.9
-      - 0.8
-    loftemps: 3
+      - 1.0
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: ETHEREAL_ARMOR2
     spriteSheet: ETHEREAL.PCK
-    corpseItem: STR_ETHEREAL_CORPSE
-    frontArmor: 40
-    sideArmor: 40
-    rearArmor: 40
-    underArmor: 40
+    corpseBattle:
+      - STR_ETHEREAL_CORPSE
+    frontArmor: 45
+    sideArmor: 45
+    rearArmor: 45
+    underArmor: 45
     movementType: 1
     drawingRoutine: 4
     damageModifier:
+      - 1.0
+      - 1.0
       - 0.7
-      - 0.7
-      - 0.9
-      - 0.7
+      - 1.0
+      - 1.0
+      - 1.0
       - 0.8
-      - 0.6
-      - 0.7
-      - 0.7
-      - 0.8
-      - 0.7
-    loftemps: 3
+      - 1.0
+      - 1.0
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: CHRYSSALID_ARMOR
     spriteSheet: CHRYS.PCK
-    corpseItem: STR_CHRYSSALID_CORPSE
+    corpseBattle:
+      - STR_CHRYSSALID_CORPSE
     frontArmor: 34
     sideArmor: 34
     rearArmor: 34
@@ -4260,19 +4282,20 @@ armors:
     drawingRoutine: 7
     damageModifier:
       - 1.0
+      - 1.0
+      - 0.8
+      - 1.0
+      - 1.0
+      - 1.0
       - 0.9
       - 1.0
-      - 0.9
-      - 0.7
       - 1.0
-      - 1.0
-      - 1.0
-      - 1.0
-      - 1.0
-    loftemps: 3
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: ZOMBIE_ARMOR
     spriteSheet: ZOMBIE.PCK
-    corpseItem: STR_ZOMBIE_CORPSE
+    corpseBattle:
+      - STR_ZOMBIE_CORPSE
     frontArmor: 4
     sideArmor: 4
     rearArmor: 4
@@ -4288,17 +4311,17 @@ armors:
       - 0.0
       - 1.0
       - 1.0
-      - 1.0
-    loftemps: 2
+      - 0.0
+    loftempsSet: [ 3 ]
   - type: SILACOID_ARMOR
     spriteSheet: SILACOID.PCK
-    corpseItem: STR_SILACOID_CORPSE
+    corpseBattle:
+      - STR_SILACOID_CORPSE
     frontArmor: 50
     sideArmor: 50
     rearArmor: 50
     underArmor: 10
     drawingRoutine: 8
-    modifiedWalk: 47
     damageModifier:
       - 1.0
       - 1.0
@@ -4309,17 +4332,17 @@ armors:
       - 1.0
       - 1.0
       - 1.0
-      - 1.0
-    loftemps: 5
+      - 0.0
+    loftempsSet: [ 5 ]
   - type: CELATID_ARMOR
     spriteSheet: CELATID.PCK
-    corpseItem: STR_CELATID_CORPSE
-    frontArmor: 50
-    sideArmor: 50
-    rearArmor: 50
-    underArmor: 10
+    corpseBattle:
+      - STR_CELATID_CORPSE
+    frontArmor: 20
+    sideArmor: 20
+    rearArmor: 20
+    underArmor: 20
     drawingRoutine: 9
-    modifiedWalk: 16
     damageModifier:
       - 1.0
       - 1.0
@@ -4328,10 +4351,10 @@ armors:
       - 1.0
       - 1.0
       - 1.0
+      - 1.2
+      - 1.6
       - 1.0
-      - 1.0
-      - 1.0
-    loftemps: 2
+    loftempsSet: [ 3 ]
 soldiers:
   - type: XCOM
     minStats:
@@ -4344,7 +4367,6 @@ soldiers:
       throwing: 50
       strength: 20
       psiStrength: 0
-# psiSkill here is treated as the initial stat
       psiSkill: 0
       melee: 20
     maxStats:
@@ -4357,14 +4379,8 @@ soldiers:
       throwing: 80
       strength: 40
       psiStrength: 100
-# psiSkill here is treated as the minimum value for the initial month of training using
-# a random number between (this) and (150% of this)
       psiSkill: 16
       melee: 40
-# Note: caps are not absolute, it IS possible to go one or two points over (at most)
-# this is NOT a bug, it is a design choice, for variety's sake.
-# bravery is ALWAYS treated in multiples of 10, and cannot go above the cap. 101 will be treated as 110
-# psi strength is NEVER increased.
     statCaps:
       tu: 80
       stamina: 100
@@ -4380,7 +4396,155 @@ soldiers:
     armor: STR_NONE_UC
     standHeight: 22
     kneelHeight: 14
+    genderRatio: [3, 1]
 units:
+  - type: STR_TANK_CANNON
+    race: STR_TANK_CANNON
+    stats:
+      tu: 70
+      stamina: 100
+      health: 90
+      bravery: 110
+      reactions: 20
+      firing: 60
+      throwing: 0
+      strength: 60
+      psiStrength: 100
+      psiSkill: 0
+      melee: 70
+    armor: TANK_ARMOR
+    standHeight: 16
+    kneelHeight: 16
+    value: 20
+    deathSound: 23
+    moveSound: 14
+    energyRecovery: 50
+  - type: STR_TANK_ROCKET_LAUNCHER
+    race: STR_TANK_ROCKET_LAUNCHER
+    stats:
+      tu: 70
+      stamina: 100
+      health: 90
+      bravery: 110
+      reactions: 20
+      firing: 60
+      throwing: 0
+      strength: 60
+      psiStrength: 100
+      psiSkill: 0
+      melee: 70
+    armor: TANK_ARMOR
+    standHeight: 16
+    kneelHeight: 16
+    value: 20
+    deathSound: 23
+    moveSound: 14
+    energyRecovery: 50
+  - type: STR_TANK_LASER_CANNON
+    race: STR_TANK_LASER_CANNON
+    stats:
+      tu: 70
+      stamina: 100
+      health: 90
+      bravery: 110
+      reactions: 20
+      firing: 60
+      throwing: 0
+      strength: 60
+      psiStrength: 100
+      psiSkill: 0
+      melee: 7
+    armor: TANK_ARMOR
+    standHeight: 16
+    kneelHeight: 16
+    value: 20
+    deathSound: 23
+    moveSound: 14
+    energyRecovery: 50
+  - type: STR_HOVERTANK_PLASMA
+    race: STR_HOVERTANK_PLASMA
+    stats:
+      tu: 100
+      stamina: 100
+      health: 90
+      bravery: 110
+      reactions: 30
+      firing: 60
+      throwing: 0
+      strength: 60
+      psiStrength: 100
+      psiSkill: 0
+      melee: 70
+    armor: HOVERTANK_ARMOR
+    standHeight: 12
+    kneelHeight: 12
+    floatHeight: 6
+    value: 20
+    deathSound: 23
+    moveSound: 40
+    energyRecovery: 50
+  - type: STR_HOVERTANK_LAUNCHER
+    race: STR_HOVERTANK_LAUNCHER
+    stats:
+      tu: 100
+      stamina: 100
+      health: 90
+      bravery: 110
+      reactions: 30
+      firing: 60
+      throwing: 0
+      strength: 60
+      psiStrength: 100
+      psiSkill: 0
+      melee: 60
+    armor: HOVERTANK_ARMOR
+    standHeight: 12
+    kneelHeight: 12
+    floatHeight: 6
+    value: 20
+    deathSound: 23
+    moveSound: 40
+    energyRecovery: 50
+  - type: MALE_CIVILIAN
+    race: STR_CIVILIAN
+    stats:
+      tu: 35
+      stamina: 65
+      health: 30
+      bravery: 80
+      reactions: 30
+      firing: 30
+      throwing: 50
+      strength: 20
+      psiStrength: 5
+      psiSkill: 0
+      melee: 50
+    armor: CIVM_ARMOR
+    standHeight: 21
+    kneelHeight: 14
+    value: 30
+    intelligence: 4
+    energyRecovery: 20
+  - type: FEMALE_CIVILIAN
+    race: STR_CIVILIAN
+    stats:
+      tu: 35
+      stamina: 65
+      health: 30
+      bravery: 80
+      reactions: 30
+      firing: 30
+      throwing: 50
+      strength: 20
+      psiStrength: 5
+      psiSkill: 0
+      melee: 50
+    armor: CIVF_ARMOR
+    standHeight: 21
+    kneelHeight: 14
+    value: 30
+    intelligence: 4
+    energyRecovery: 20
   - type: STR_SECTOID_SOLDIER
     race: STR_SECTOID
     rank: STR_LIVE_SOLDIER
@@ -4515,6 +4679,7 @@ units:
     aggression: 0
   - type: STR_CYBERDISC_TERRORIST
     race: STR_CYBERDISC
+    rank: STR_LIVE_TERRORIST
     stats:
       tu: 62
       stamina: 90
@@ -4536,6 +4701,7 @@ units:
     moveSound: 40
     intelligence: 5
     aggression: 1
+    energyRecovery: 50
     specab: 1
     livingWeapon: true
   - type: STR_FLOATER_SOLDIER
@@ -4684,6 +4850,7 @@ units:
     aggression: 0
   - type: STR_REAPER_TERRORIST
     race: STR_REAPER
+    rank: STR_LIVE_TERRORIST
     stats:
       tu: 62
       stamina: 90
@@ -4703,147 +4870,8 @@ units:
     deathSound: 48
     intelligence: 2
     aggression: 2
+    energyRecovery: 34
     livingWeapon: true
-  - type: STR_TANK_CANNON
-    race: STR_TANK_CANNON
-    stats:
-      tu: 70
-      stamina: 100
-      health: 90
-      bravery: 110
-      reactions: 20
-      firing: 60
-      throwing: 0
-      strength: 60
-      psiStrength: 100
-      psiSkill: 0
-      melee: 70
-    armor: TANK_ARMOR
-    standHeight: 16
-    kneelHeight: 16
-    value: 20
-    deathSound: 23
-    moveSound: 14    
-  - type: STR_TANK_ROCKET_LAUNCHER
-    race: STR_TANK_ROCKET_LAUNCHER
-    stats:
-      tu: 70
-      stamina: 100
-      health: 90
-      bravery: 110
-      reactions: 20
-      firing: 60
-      throwing: 0
-      strength: 60
-      psiStrength: 100
-      psiSkill: 0
-      melee: 70
-    armor: TANK_ARMOR
-    standHeight: 16
-    kneelHeight: 16
-    value: 20
-    deathSound: 23
-    moveSound: 14
-  - type: STR_TANK_LASER_CANNON
-    race: STR_TANK_LASER_CANNON
-    stats:
-      tu: 70
-      stamina: 100
-      health: 90
-      bravery: 110
-      reactions: 20
-      firing: 60
-      throwing: 0
-      strength: 60
-      psiStrength: 100
-      psiSkill: 0
-      melee: 7
-    armor: TANK_ARMOR
-    standHeight: 16
-    kneelHeight: 16
-    value: 20
-    deathSound: 23
-    moveSound: 14
-  - type: STR_HOVERTANK_PLASMA
-    race: STR_HOVERTANK_PLASMA
-    stats:
-      tu: 100
-      stamina: 100
-      health: 90
-      bravery: 110
-      reactions: 30
-      firing: 60
-      throwing: 0
-      strength: 60
-      psiStrength: 100
-      psiSkill: 0
-      melee: 70
-    armor: HOVERTANK_ARMOR
-    standHeight: 12
-    kneelHeight: 12
-    floatHeight: 6
-    value: 20
-    deathSound: 23
-    moveSound: 40
-  - type: STR_HOVERTANK_LAUNCHER
-    race: STR_HOVERTANK_LAUNCHER
-    stats:
-      tu: 100
-      stamina: 100
-      health: 90
-      bravery: 110
-      reactions: 30
-      firing: 60
-      throwing: 0
-      strength: 60
-      psiStrength: 100
-      psiSkill: 0
-      melee: 60
-    armor: HOVERTANK_ARMOR
-    standHeight: 12
-    kneelHeight: 12
-    floatHeight: 6
-    value: 20
-    deathSound: 23
-    moveSound: 40
-  - type: MALE_CIVILIAN
-    race: STR_CIVILIAN
-    stats:
-      tu: 35
-      stamina: 65
-      health: 30
-      bravery: 80
-      reactions: 30
-      firing: 30
-      throwing: 50
-      strength: 20
-      psiStrength: 5
-      psiSkill: 0
-      melee: 50
-    armor: CIVM_ARMOR
-    standHeight: 22
-    kneelHeight: 14
-    value: 30
-    intelligence: 4
-  - type: FEMALE_CIVILIAN
-    race: STR_CIVILIAN
-    stats:
-      tu: 35
-      stamina: 65
-      health: 30
-      bravery: 80
-      reactions: 30
-      firing: 30
-      throwing: 50
-      strength: 20
-      psiStrength: 5
-      psiSkill: 0
-      melee: 50
-    armor: CIVF_ARMOR
-    standHeight: 22
-    kneelHeight: 14
-    value: 30
-    intelligence: 4
   - type: STR_SNAKEMAN_SOLDIER
     race: STR_SNAKEMAN
     rank: STR_LIVE_SOLDIER
@@ -4958,142 +4986,8 @@ units:
     deathSound: 8
     moveSound: 0
     intelligence: 6
-    aggression: 2 
-  - type: STR_MUTON_SOLDIER
-    race: STR_MUTON
-    rank: STR_LIVE_SOLDIER
-    stats:
-      tu: 56
-      stamina: 90
-      health: 125
-      bravery: 80
-      reactions: 60
-      firing: 54
-      throwing: 62
-      strength: 70
-      psiStrength: 25
-      psiSkill: 0
-      melee: 76
-    armor: MUTON_ARMOR0
-    standHeight: 21
-    kneelHeight: 16
-    value: 15
-    deathSound: 6
-    intelligence: 2
     aggression: 2
-  - type: STR_MUTON_NAVIGATOR
-    race: STR_MUTON
-    rank: STR_LIVE_NAVIGATOR
-    stats:
-      tu: 56
-      stamina: 90
-      health: 125
-      bravery: 80
-      reactions: 60
-      firing: 54
-      throwing: 62
-      strength: 70
-      psiStrength: 25
-      psiSkill: 0
-      melee: 76
-    armor: MUTON_ARMOR1
-    standHeight: 21
-    kneelHeight: 16
-    value: 17
-    deathSound: 6
-    intelligence: 3
-    aggression: 2 
-  - type: STR_MUTON_ENGINEER
-    race: STR_MUTON
-    rank: STR_LIVE_ENGINEER
-    stats:
-      tu: 56
-      stamina: 90
-      health: 125
-      bravery: 80
-      reactions: 60
-      firing: 54
-      throwing: 62
-      strength: 70
-      psiStrength: 25
-      psiSkill: 0
-      melee: 76
-    armor: MUTON_ARMOR2
-    standHeight: 21
-    kneelHeight: 16
-    value: 19
-    deathSound: 6
-    intelligence: 4
-    aggression: 2 
-  - type: STR_ETHEREAL_SOLDIER
-    race: STR_ETHEREAL
-    rank: STR_LIVE_SOLDIER
-    stats:
-      tu: 68
-      stamina: 96
-      health: 55
-      bravery: 80
-      reactions: 75
-      firing: 74
-      throwing: 80
-      strength: 48
-      psiStrength: 50
-      psiSkill: 40
-      melee: 85
-    armor: ETHEREAL_ARMOR0
-    standHeight: 20
-    kneelHeight: 15
-    value: 20
-    deathSound: 9
-    moveSound: 15
-    intelligence: 6
-    aggression: 1     
-  - type: STR_ETHEREAL_LEADER
-    race: STR_ETHEREAL
-    rank: STR_LIVE_LEADER
-    stats:
-      tu: 68
-      stamina: 96
-      health: 55
-      bravery: 80
-      reactions: 75
-      firing: 74
-      throwing: 80
-      strength: 48
-      psiStrength: 60
-      psiSkill: 45
-      melee: 85
-    armor: ETHEREAL_ARMOR1
-    standHeight: 20
-    kneelHeight: 15
-    value: 30
-    deathSound: 9
-    moveSound: 15
-    intelligence: 7
-    aggression: 1    
-  - type: STR_ETHEREAL_COMMANDER
-    race: STR_ETHEREAL
-    rank: STR_LIVE_COMMANDER
-    stats:
-      tu: 68
-      stamina: 96
-      health: 55
-      bravery: 80
-      reactions: 75
-      firing: 74
-      throwing: 80
-      strength: 48
-      psiStrength: 65
-      psiSkill: 50
-      melee: 85
-    armor: ETHEREAL_ARMOR2
-    standHeight: 20
-    kneelHeight: 15
-    value: 40
-    deathSound: 9
-    moveSound: 15
-    intelligence: 8
-    aggression: 1 
+    energyRecovery: 40
   - type: STR_CHRYSSALID_TERRORIST
     race: STR_CHRYSSALID
     rank: STR_LIVE_TERRORIST
@@ -5117,8 +5011,77 @@ units:
     aggroSound: 49
     intelligence: 4
     aggression: 1
-    zombieUnit: STR_ZOMBIE
+    energyRecovery: 40
     livingWeapon: true
+  - type: STR_MUTON_SOLDIER
+    race: STR_MUTON
+    rank: STR_LIVE_SOLDIER
+    stats:
+      tu: 56
+      stamina: 90
+      health: 125
+      bravery: 80
+      reactions: 60
+      firing: 54
+      throwing: 62
+      strength: 70
+      psiStrength: 25
+      psiSkill: 0
+      melee: 76
+    armor: MUTON_ARMOR0
+    standHeight: 21
+    kneelHeight: 16
+    value: 15
+    deathSound: 6
+    intelligence: 2
+    aggression: 2
+    energyRecovery: 40
+  - type: STR_MUTON_NAVIGATOR
+    race: STR_MUTON
+    rank: STR_LIVE_NAVIGATOR
+    stats:
+      tu: 56
+      stamina: 90
+      health: 125
+      bravery: 80
+      reactions: 60
+      firing: 54
+      throwing: 62
+      strength: 70
+      psiStrength: 25
+      psiSkill: 0
+      melee: 76
+    armor: MUTON_ARMOR1
+    standHeight: 21
+    kneelHeight: 16
+    value: 17
+    deathSound: 6
+    intelligence: 3
+    aggression: 2
+    energyRecovery: 40
+  - type: STR_MUTON_ENGINEER
+    race: STR_MUTON
+    rank: STR_LIVE_ENGINEER
+    stats:
+      tu: 56
+      stamina: 90
+      health: 125
+      bravery: 80
+      reactions: 60
+      firing: 54
+      throwing: 62
+      strength: 70
+      psiStrength: 25
+      psiSkill: 0
+      melee: 76
+    armor: MUTON_ARMOR2
+    standHeight: 21
+    kneelHeight: 16
+    value: 19
+    deathSound: 6
+    intelligence: 4
+    aggression: 2
+    energyRecovery: 40
   - type: STR_SILACOID_TERRORIST
     race: STR_SILACOID
     rank: STR_LIVE_TERRORIST
@@ -5142,6 +5105,7 @@ units:
     moveSound: 47
     intelligence: 3
     aggression: 2
+    energyRecovery: 40
     specab: 2
     livingWeapon: true
   - type: STR_CELATID_TERRORIST
@@ -5168,7 +5132,80 @@ units:
     moveSound: 16
     intelligence: 3
     aggression: 2
+    energyRecovery: 40
     livingWeapon: true
+  - type: STR_ETHEREAL_SOLDIER
+    race: STR_ETHEREAL
+    rank: STR_LIVE_SOLDIER
+    stats:
+      tu: 68
+      stamina: 96
+      health: 55
+      bravery: 80
+      reactions: 75
+      firing: 74
+      throwing: 80
+      strength: 48
+      psiStrength: 50
+      psiSkill: 40
+      melee: 85
+    armor: ETHEREAL_ARMOR0
+    standHeight: 20
+    kneelHeight: 15
+    value: 20
+    deathSound: 9
+    moveSound: 15
+    intelligence: 6
+    aggression: 1
+    energyRecovery: 40
+  - type: STR_ETHEREAL_LEADER
+    race: STR_ETHEREAL
+    rank: STR_LIVE_LEADER
+    stats:
+      tu: 68
+      stamina: 96
+      health: 55
+      bravery: 80
+      reactions: 75
+      firing: 74
+      throwing: 80
+      strength: 48
+      psiStrength: 60
+      psiSkill: 45
+      melee: 85
+    armor: ETHEREAL_ARMOR1
+    standHeight: 20
+    kneelHeight: 15
+    value: 30
+    deathSound: 9
+    moveSound: 15
+    intelligence: 7
+    aggression: 1
+    energyRecovery: 40
+  - type: STR_ETHEREAL_COMMANDER
+    race: STR_ETHEREAL
+    rank: STR_LIVE_COMMANDER
+    stats:
+      tu: 68
+      stamina: 96
+      health: 55
+      bravery: 80
+      reactions: 75
+      firing: 74
+      throwing: 80
+      strength: 48
+      psiStrength: 65
+      psiSkill: 50
+      melee: 85
+    armor: ETHEREAL_ARMOR2
+    standHeight: 20
+    kneelHeight: 15
+    value: 40
+    deathSound: 9
+    moveSound: 15
+    intelligence: 8
+    aggression: 1
+    energyRecovery: 40
   - type: STR_SECTOPOD_TERRORIST
     race: STR_SECTOPOD
     rank: STR_LIVE_TERRORIST
@@ -5191,6 +5228,7 @@ units:
     deathSound: 23
     intelligence: 4
     aggression: 1
+    energyRecovery: 50
     livingWeapon: true
   - type: STR_ZOMBIE
     race: STR_ZOMBIE
@@ -5214,6 +5252,7 @@ units:
     deathSound: 48
     intelligence: 3
     aggression: 2
+    energyRecovery: 20
     spawnUnit: STR_CHRYSSALID_TERRORIST
     livingWeapon: true
 alienRaces:
@@ -5227,36 +5266,6 @@ alienRaces:
       - STR_SECTOID_SOLDIER
       - STR_CYBERDISC_TERRORIST
       - STR_CYBERDISC_TERRORIST
-  - id: STR_SNAKEMAN
-    members:
-      - STR_SNAKEMAN_COMMANDER
-      - STR_SNAKEMAN_LEADER
-      - STR_SNAKEMAN_ENGINEER
-      - STR_SNAKEMAN_SOLDIER
-      - STR_SNAKEMAN_NAVIGATOR
-      - STR_SNAKEMAN_SOLDIER
-      - STR_CHRYSSALID_TERRORIST
-      - STR_CHRYSSALID_TERRORIST
-  - id: STR_ETHEREAL
-    members:
-      - STR_ETHEREAL_COMMANDER
-      - STR_ETHEREAL_LEADER
-      - STR_ETHEREAL_LEADER
-      - STR_ETHEREAL_LEADER
-      - STR_ETHEREAL_LEADER
-      - STR_ETHEREAL_SOLDIER
-      - STR_SECTOPOD_TERRORIST
-      - STR_SECTOPOD_TERRORIST
-  - id: STR_MUTON
-    members:
-      - STR_MUTON_SOLDIER
-      - STR_MUTON_SOLDIER
-      - STR_MUTON_ENGINEER
-      - STR_MUTON_SOLDIER
-      - STR_MUTON_NAVIGATOR
-      - STR_MUTON_SOLDIER
-      - STR_SILACOID_TERRORIST
-      - STR_CELATID_TERRORIST
   - id: STR_FLOATER
     members:
       - STR_FLOATER_COMMANDER
@@ -5267,7 +5276,38 @@ alienRaces:
       - STR_FLOATER_SOLDIER
       - STR_REAPER_TERRORIST
       - STR_REAPER_TERRORIST
+  - id: STR_SNAKEMAN
+    members:
+      - STR_SNAKEMAN_COMMANDER
+      - STR_SNAKEMAN_LEADER
+      - STR_SNAKEMAN_ENGINEER
+      - STR_SNAKEMAN_SOLDIER
+      - STR_SNAKEMAN_NAVIGATOR
+      - STR_SNAKEMAN_SOLDIER
+      - STR_CHRYSSALID_TERRORIST
+      - STR_CHRYSSALID_TERRORIST
+  - id: STR_MUTON
+    members:
+      - STR_MUTON_SOLDIER
+      - STR_MUTON_SOLDIER
+      - STR_MUTON_ENGINEER
+      - STR_MUTON_SOLDIER
+      - STR_MUTON_NAVIGATOR
+      - STR_MUTON_SOLDIER
+      - STR_SILACOID_TERRORIST
+      - STR_CELATID_TERRORIST
+  - id: STR_ETHEREAL
+    members:
+      - STR_ETHEREAL_COMMANDER
+      - STR_ETHEREAL_LEADER
+      - STR_ETHEREAL_LEADER
+      - STR_ETHEREAL_LEADER
+      - STR_ETHEREAL_LEADER
+      - STR_ETHEREAL_SOLDIER
+      - STR_SECTOPOD_TERRORIST
+      - STR_SECTOPOD_TERRORIST
   - id: STR_MIXED
+    retaliation: false
     members:
       - STR_ETHEREAL_SOLDIER
       - STR_ETHEREAL_LEADER
@@ -6109,11 +6149,34 @@ alienDeployments:
     length: 50
     height: 4
     civilians: 16
-    # roadTypeOdds: [EWRoad, NWRoad] (Crossroad is remainder)
-    roadTypeOdds: [50, 25]
-    terrain: URBAN
+    terrains:
+      - URBAN
   - type: STR_ALIEN_BASE_ASSAULT
     data:
+      - alienRank: 6
+        lowQty: 1
+        highQty: 3
+        dQty: 1
+        percentageOutsideUfo: 0
+        itemSets:
+          -
+            []
+          -
+            []
+          -
+            []
+      - alienRank: 7
+        lowQty: 0
+        highQty: 2
+        dQty: 1
+        percentageOutsideUfo: 0
+        itemSets:
+          -
+            []
+          -
+            []
+          -
+            []
       - alienRank: 5
         lowQty: 5
         highQty: 7
@@ -6233,34 +6296,11 @@ alienDeployments:
             - STR_HEAVY_PLASMA_CLIP
             - STR_HEAVY_PLASMA_CLIP
             - STR_ALIEN_GRENADE
-      - alienRank: 6
-        lowQty: 1
-        highQty: 3
-        dQty: 1
-        percentageOutsideUfo: 0
-        itemSets:
-          -
-            []
-          -
-            []
-          -
-            []
-      - alienRank: 7
-        lowQty: 0
-        highQty: 2
-        dQty: 1
-        percentageOutsideUfo: 0
-        itemSets:
-          -
-            []
-          -
-            []
-          -
-            []
     width: 50
     length: 50
     height: 2
-    terrain: UBASE
+    terrains:
+      - UBASE
     shade: 15
   - type: STR_BASE_DEFENSE
     data:
@@ -6414,7 +6454,8 @@ alienDeployments:
     width: 60
     length: 60
     height: 2
-    terrain: XBASE
+    terrains:
+      - XBASE
     shade: 5
   - type: STR_MARS_CYDONIA_LANDING
     data:
@@ -6481,7 +6522,8 @@ alienDeployments:
     width: 60
     length: 60
     height: 4
-    terrain: MARS
+    terrains:
+      - MARS
     shade: 15
     nextStage: STR_MARS_THE_FINAL_ASSAULT
   - type: STR_MARS_THE_FINAL_ASSAULT
@@ -6630,7 +6672,8 @@ alienDeployments:
     width: 60
     length: 60
     height: 2
-    terrain: UBASE
+    terrains:
+      - UBASE
     shade: 5
 research:
   - name: STR_LASER_WEAPONS
@@ -6738,8 +6781,6 @@ research:
     dependencies:
       - STR_CYDONIA_DEP
   - name: STR_CYDONIA_DEP
-    cost: 0
-    points: 0
     unlocks:
       - STR_CYDONIA_OR_BUST
     requires:
@@ -6755,6 +6796,7 @@ research:
     needItem: true
   - name: STR_EXAMINATION_ROOM
     cost: 150
+    points: 30
     needItem: true
   - name: STR_FLYING_SUIT
     cost: 330
@@ -6862,10 +6904,7 @@ research:
     points: 25
     dependencies:
       - STR_ETHEREAL_COMMANDER
-      - STR_ETHEREAL_ENGINEER
       - STR_ETHEREAL_LEADER
-      - STR_ETHEREAL_MEDIC
-      - STR_ETHEREAL_NAVIGATOR
       - STR_ETHEREAL_SOLDIER
       - STR_SECTOID_LEADER
       - STR_SECTOID_COMMANDER
@@ -6884,7 +6923,6 @@ research:
       - STR_ALIEN_ORIGINS
       - STR_LEADER_PLUS
   - name: STR_LEADER_PLUS
-    cost: 0
     requires:
       - STR_ALIEN_ORIGINS
     dependencies:
@@ -6910,6 +6948,7 @@ research:
     needItem: true
   - name: STR_UFO_POWER_SOURCE
     cost: 450
+    points: 30
     needItem: true
   - name: STR_ULTIMATE_CRAFT
     cost: 900
@@ -7086,35 +7125,6 @@ research:
       - STR_ALIEN_TERROR
       - STR_ALIEN_RETALIATION
       - STR_ALIEN_SUPPLY
-  - name: STR_SNAKEMAN_MEDIC
-    cost: 192
-    points: 50
-    lookup: STR_SNAKEMAN
-    needItem: true
-    unlocks:
-      - STR_ALIEN_ORIGINS
-    getOneFree:
-      - STR_SECTOID
-      - STR_MUTON
-      - STR_ETHEREAL
-      - STR_FLOATER
-      - STR_CHRYSSALID
-      - STR_SECTOPOD
-      - STR_CYBERDISC
-      - STR_SILACOID
-      - STR_CELATID
-      - STR_REAPER
-      - STR_SECTOID_CORPSE
-      - STR_SNAKEMAN_CORPSE
-      - STR_MUTON_CORPSE
-      - STR_ETHEREAL_CORPSE
-      - STR_FLOATER_CORPSE
-      - STR_CHRYSSALID_CORPSE
-      - STR_SECTOPOD_CORPSE
-      - STR_CYBERDISC_CORPSE
-      - STR_SILACOID_CORPSE
-      - STR_CELATID_CORPSE
-      - STR_REAPER_CORPSE
   - name: STR_SNAKEMAN_LEADER
     cost: 192
     points: 50
@@ -7252,6 +7262,7 @@ research:
     lookup: STR_SECTOID
   - name: STR_SECTOID_ENGINEER
     cost: 192
+    points: 50
     needItem: true
     unlocks:
       - STR_ALIEN_ORIGINS
@@ -7303,37 +7314,30 @@ research:
       - STR_ALIEN_ORIGINS
       - STR_PSI_LAB
   - name: STR_PLASMA_CANNON_DEP1
-    cost: 0
     dependencies:
       - STR_HEAVY_PLASMA
       - STR_HEAVY_PLASMA_CLIP
     unlocks:
       - STR_PLASMA_CANNON
   - name: STR_PLASMA_CANNON_DEP2
-    cost: 0
     dependencies:
       - STR_PLASMA_RIFLE
       - STR_PLASMA_RIFLE_CLIP
     unlocks:
       - STR_PLASMA_CANNON
   - name: STR_SECTOID
-    cost: 0
     points: 50
     needItem: true
   - name: STR_FLOATER
-    cost: 0
     points: 50
     needItem: true
   - name: STR_SNAKEMAN
-    cost: 0
     points: 50
     needItem: true
   - name: STR_MUTON
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ETHEREAL
-    cost: 0
     points: 50
     needItem: true
   - name: STR_CYBERDISC_TERRORIST
@@ -7344,7 +7348,6 @@ research:
     unlocks:
       - STR_ALIEN_ORIGINS
   - name: STR_CYBERDISC
-    cost: 0
     points: 50
     needItem: true
   - name: STR_REAPER_TERRORIST
@@ -7355,7 +7358,6 @@ research:
     unlocks:
       - STR_ALIEN_ORIGINS
   - name: STR_REAPER
-    cost: 0
     points: 50
     needItem: true
   - name: STR_CHRYSSALID_TERRORIST
@@ -7366,7 +7368,6 @@ research:
     unlocks:
       - STR_ALIEN_ORIGINS
   - name: STR_CHRYSSALID
-    cost: 170
     points: 50
     needItem: true
   - name: STR_SILACOID_TERRORIST
@@ -7377,7 +7378,6 @@ research:
     unlocks:
       - STR_ALIEN_ORIGINS
   - name: STR_SILACOID
-    cost: 170
     points: 50
     needItem: true
   - name: STR_CELATID_TERRORIST
@@ -7399,115 +7399,87 @@ research:
     unlocks:
       - STR_ALIEN_ORIGINS
   - name: STR_SECTOPOD
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ALIEN_RESEARCH
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ALIEN_HARVEST
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ALIEN_ABDUCTION
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ALIEN_INFILTRATION
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ALIEN_BASE
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ALIEN_TERROR
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ALIEN_RETALIATION
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ALIEN_SUPPLY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_SMALL_SCOUT
-    cost: 0
     points: 50
     needItem: true
   - name: STR_MEDIUM_SCOUT
-    cost: 0
     points: 50
     needItem: true
   - name: STR_LARGE_SCOUT
-    cost: 0
     points: 50
     needItem: true
   - name: STR_HARVESTER
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ABDUCTOR
-    cost: 0
     points: 50
     needItem: true
   - name: STR_TERROR_SHIP
-    cost: 0
     points: 50
     needItem: true
   - name: STR_BATTLESHIP
-    cost: 0
     points: 50
     needItem: true
   - name: STR_SUPPLY_SHIP
-    cost: 0
     points: 50
     needItem: true
   - name: STR_SECTOID_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_SNAKEMAN_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_FLOATER_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_MUTON_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_ETHEREAL_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_CYBERDISC_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_CHRYSSALID_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_REAPER_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_CELATID_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_SILACOID_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
   - name: STR_SECTOPOD_AUTOPSY
-    cost: 0
     points: 50
     needItem: true
 manufacture:
@@ -7633,6 +7605,7 @@ manufacture:
     category: STR_WEAPON
     requires:
       - STR_HEAVY_PLASMA
+      - STR_HEAVY_PLASMA_CLIP
     space: 4
     time: 1000
     cost: 122000
@@ -7651,6 +7624,7 @@ manufacture:
     category: STR_WEAPON
     requires:
       - STR_PLASMA_RIFLE
+      - STR_PLASMA_RIFLE_CLIP
     space: 4
     time: 820
     cost: 88000
@@ -7669,6 +7643,7 @@ manufacture:
     category: STR_WEAPON
     requires:
       - STR_PLASMA_PISTOL
+      - STR_PLASMA_PISTOL_CLIP
     space: 3
     time: 600
     cost: 56000
@@ -7687,6 +7662,7 @@ manufacture:
     category: STR_WEAPON
     requires:
       - STR_BLASTER_LAUNCHER
+      - STR_BLASTER_BOMB
     space: 5
     time: 1200
     cost: 90000
@@ -7705,6 +7681,7 @@ manufacture:
     category: STR_WEAPON
     requires:
       - STR_SMALL_LAUNCHER
+      - STR_STUN_BOMB
     space: 3
     time: 900
     cost: 78000
@@ -7833,7 +7810,7 @@ ufopaedia:
     rect_stats:
       x: 160
       y: 5
-      width: 140
+      width: 160
       height: 60
     rect_text:
       x: 5
@@ -7850,7 +7827,7 @@ ufopaedia:
     rect_stats:
       x: 5
       y: 132
-      width: 140
+      width: 160
       height: 60
     rect_text:
       x: 5
@@ -7867,7 +7844,7 @@ ufopaedia:
     rect_stats:
       x: 160
       y: 5
-      width: 140
+      width: 160
       height: 60
     rect_text:
       x: 5
@@ -7882,7 +7859,7 @@ ufopaedia:
     rect_stats:
       x: 5
       y: 110
-      width: 140
+      width: 160
       height: 60
     rect_text:
       x: 5
@@ -7899,7 +7876,7 @@ ufopaedia:
     rect_stats:
       x: 160
       y: 5
-      width: 140
+      width: 160
       height: 60
     rect_text:
       x: 5
@@ -7947,7 +7924,7 @@ ufopaedia:
     type_id: 3
     section: STR_HEAVY_WEAPONS_PLATFORMS
     text: STR_TANK_CANNON_UFOPEDIA
-    weapon: STR_ARMOR_PIERCING
+    weapon: STR_CANNON
   - id: STR_TANK_ROCKET_LAUNCHER
     type_id: 3
     section: STR_HEAVY_WEAPONS_PLATFORMS
@@ -7981,16 +7958,19 @@ ufopaedia:
     section: STR_WEAPONS_AND_EQUIPMENT
     requires:
       - STR_PERSONAL_ARMOR
+    text: STR_PERSONAL_ARMOR_UFOPEDIA
   - id: STR_POWER_SUIT_UC
     type_id: 5
     section: STR_WEAPONS_AND_EQUIPMENT
     requires:
       - STR_POWER_SUIT
+    text: STR_POWER_SUIT_UFOPEDIA
   - id: STR_FLYING_SUIT_UC
     type_id: 5
     section: STR_WEAPONS_AND_EQUIPMENT
     requires:
       - STR_FLYING_SUIT
+    text: STR_FLYING_SUIT_UFOPEDIA
   - id: STR_PISTOL
     type_id: 4
     section: STR_WEAPONS_AND_EQUIPMENT
@@ -8044,10 +8024,6 @@ ufopaedia:
   - id: STR_INCENDIARY_ROCKET
     type_id: 4
     section: STR_NOT_AVAILABLE
-  - id: STR_ROCKET_LAUNCHER
-    type_id: 4
-    section: STR_WEAPONS_AND_EQUIPMENT
-    text: STR_ROCKET_LAUNCHER_UFOPEDIA
   - id: STR_LASER_PISTOL
     type_id: 4
     section: STR_WEAPONS_AND_EQUIPMENT
@@ -8113,7 +8089,7 @@ ufopaedia:
     section: STR_ALIEN_ARTIFACTS
     requires:
       - STR_HEAVY_PLASMA
-    text: STR_PLASMA_RIFLE_UFOPEDIA
+    text: STR_HEAVY_PLASMA_UFOPEDIA
   - id: STR_HEAVY_PLASMA_CLIP
     type_id: 4
     section: STR_ALIEN_ARTIFACTS
@@ -8517,7 +8493,7 @@ ufopaedia:
       - STR_UFO_POWER_SOURCE
     image_id: UP032.SPK
     text: STR_UFO_POWER_SOURCE_UFOPEDIA
-    text_width: 160
+    text_width: 163
   - id: STR_UFO_NAVIGATION
     type_id: 7
     section: STR_UFO_COMPONENTS
@@ -8525,7 +8501,7 @@ ufopaedia:
       - STR_UFO_NAVIGATION
     image_id: UP033.SPK
     text: STR_UFO_NAVIGATION_UFOPEDIA
-    text_width: 145
+    text_width: 147
   - id: STR_UFO_CONSTRUCTION
     type_id: 7
     section: STR_UFO_COMPONENTS
@@ -8541,7 +8517,7 @@ ufopaedia:
       - STR_ALIEN_FOOD
     image_id: UP035.SPK
     text: STR_ALIEN_FOOD_UFOPEDIA
-    text_width: 170
+    text_width: 173
   - id: STR_ALIEN_REPRODUCTION
     type_id: 7
     section: STR_UFO_COMPONENTS
@@ -8549,7 +8525,7 @@ ufopaedia:
       - STR_ALIEN_REPRODUCTION
     image_id: UP036.SPK
     text: STR_ALIEN_REPRODUCTION_UFOPEDIA
-    text_width: 165
+    text_width: 167
   - id: STR_ALIEN_ENTERTAINMENT
     type_id: 7
     section: STR_UFO_COMPONENTS
@@ -8557,7 +8533,7 @@ ufopaedia:
       - STR_ALIEN_ENTERTAINMENT
     image_id: UP037.SPK
     text: STR_ALIEN_ENTERTAINMENT_UFOPEDIA
-    text_width: 145
+    text_width: 146
   - id: STR_ALIEN_SURGERY
     type_id: 7
     section: STR_UFO_COMPONENTS
@@ -8565,7 +8541,7 @@ ufopaedia:
       - STR_ALIEN_SURGERY
     image_id: UP038.SPK
     text: STR_ALIEN_SURGERY_UFOPEDIA
-    text_width: 105
+    text_width: 108
   - id: STR_EXAMINATION_ROOM
     type_id: 7
     section: STR_UFO_COMPONENTS
@@ -8631,158 +8607,90 @@ ufopaedia:
       - STR_SUPPLY_SHIP
     text: STR_SUPPLY_SHIP_UFOPEDIA
 startingBase:
-  - lon: 0.0
-    lat: 0.0
-    name: ""
-    inBattlescape: false
-    facilities:
-      - type: STR_ACCESS_LIFT
-        x: 2
-        y: 2
-        buildTime: 0
-      - type: STR_HANGAR
-        x: 2
-        y: 0
-        buildTime: 0
-      - type: STR_HANGAR
-        x: 0
-        y: 4
-        buildTime: 0
-      - type: STR_HANGAR
-        x: 4
-        y: 4
-        buildTime: 0
-      - type: STR_LIVING_QUARTERS
-        x: 3
-        y: 2
-        buildTime: 0
-      - type: STR_GENERAL_STORES
-        x: 2
-        y: 3
-        buildTime: 0
-      - type: STR_LABORATORY
-        x: 3
-        y: 3
-        buildTime: 0
-      - type: STR_WORKSHOP
-        x: 4
-        y: 3
-        buildTime: 0
-      - type: STR_SMALL_RADAR_SYSTEM
-        x: 1
-        y: 3
-        buildTime: 0
-    randomSoldiers: 8
-    soldiers:
-      []
-    crafts:
-      - lon: 0.0
-        lat: 0.0
-        speedLon: 0
-        speedLat: 0
-        speedRadian: 0
-        speed: 0
-        type: STR_SKYRANGER
-        id: 1
-        fuel: 1500
-        damage: 0
-        weapons:
-          []
-        items:
-          STR_GRENADE: 8
-          STR_HC_AP_AMMO: 2
-          STR_HC_HE_AMMO: 2
-          STR_HEAVY_CANNON: 1
-          STR_PISTOL: 3
-          STR_PISTOL_CLIP: 5
-          STR_RIFLE: 6
-          STR_RIFLE_CLIP: 12
-        vehicles:
-          []
-        status: STR_READY
-        lowFuel: false
-        inBattlescape: false
-        inDogfight: false
-        interceptionOrder: 0
-      - lon: 0.0
-        lat: 0.0
-        speedLon: 0
-        speedLat: 0
-        speedRadian: 0
-        speed: 0
-        type: STR_INTERCEPTOR
-        id: 1
-        fuel: 1000
-        damage: 0
-        weapons:
-          - type: STR_STINGRAY
-            ammo: 6
-            rearming: false
-          - type: STR_CANNON_UC
-            ammo: 200
-            rearming: false
-        items:
-          {}
-        vehicles:
-          []
-        status: STR_READY
-        lowFuel: false
-        inBattlescape: false
-        inDogfight: false
-        interceptionOrder: 0
-      - lon: 0.0
-        lat: 0.0
-        speedLon: 0
-        speedLat: 0
-        speedRadian: 0
-        speed: 0
-        type: STR_INTERCEPTOR
-        id: 2
-        fuel: 1000
-        damage: 0
-        weapons:
-          - type: STR_STINGRAY
-            ammo: 6
-            rearming: false
-          - type: STR_CANNON_UC
-            ammo: 200
-            rearming: false
-        items:
-          {}
-        vehicles:
-          []
-        status: STR_READY
-        lowFuel: false
-        inBattlescape: false
-        inDogfight: false
-        interceptionOrder: 0
-    items:
-      STR_AC_AP_AMMO: 6
-      STR_AUTO_CANNON: 1
-      STR_AVALANCHE_LAUNCHER: 1
-      STR_AVALANCHE_MISSILES: 10
-      STR_CANNON: 2
-      STR_CANNON_ROUNDS_X50: 1
-      STR_GRENADE: 5
-      STR_HC_AP_AMMO: 6
-      STR_HEAVY_CANNON: 1
-      STR_PISTOL: 2
-      STR_PISTOL_CLIP: 8
-      STR_RIFLE: 2
-      STR_RIFLE_CLIP: 8
-      STR_ROCKET_LAUNCHER: 1
-      STR_SMALL_ROCKET: 4
-      STR_SMOKE_GRENADE: 5
-      STR_STINGRAY_LAUNCHER: 1
-      STR_STINGRAY_MISSILES: 25
-    scientists: 10
-    engineers: 10
-    transfers:
-      []
-    research:
-      []
-    productions:
-      []
+  facilities:
+    - type: STR_ACCESS_LIFT
+      x: 2
+      y: 2
+    - type: STR_HANGAR
+      x: 2
+      y: 0
+    - type: STR_HANGAR
+      x: 0
+      y: 4
+    - type: STR_HANGAR
+      x: 4
+      y: 4
+    - type: STR_LIVING_QUARTERS
+      x: 3
+      y: 2
+    - type: STR_GENERAL_STORES
+      x: 2
+      y: 3
+    - type: STR_LABORATORY
+      x: 3
+      y: 3
+    - type: STR_WORKSHOP
+      x: 4
+      y: 3
+    - type: STR_SMALL_RADAR_SYSTEM
+      x: 1
+      y: 3
+  randomSoldiers: 8
+  crafts:
+    - type: STR_SKYRANGER
+      id: 1
+      fuel: 1500
+      damage: 0
+      items:
+        STR_GRENADE: 8
+        STR_HC_AP_AMMO: 2
+        STR_HC_HE_AMMO: 2
+        STR_HEAVY_CANNON: 1
+        STR_PISTOL: 3
+        STR_PISTOL_CLIP: 5
+        STR_RIFLE: 6
+        STR_RIFLE_CLIP: 12
+      status: STR_READY
+    - type: STR_INTERCEPTOR
+      id: 1
+      fuel: 1000
+      damage: 0
+      weapons:
+        - type: STR_STINGRAY
+          ammo: 6
+        - type: STR_CANNON_UC
+          ammo: 200
+      status: STR_READY
+    - type: STR_INTERCEPTOR
+      id: 2
+      fuel: 1000
+      damage: 0
+      weapons:
+        - type: STR_STINGRAY
+          ammo: 6
+        - type: STR_CANNON_UC
+          ammo: 200
+  items:
+    STR_AC_AP_AMMO: 6
+    STR_AUTO_CANNON: 1
+    STR_AVALANCHE_LAUNCHER: 1
+    STR_AVALANCHE_MISSILES: 10
+    STR_CANNON: 2
+    STR_CANNON_ROUNDS_X50: 1
+    STR_GRENADE: 5
+    STR_HC_AP_AMMO: 6
+    STR_HEAVY_CANNON: 1
+    STR_PISTOL: 2
+    STR_PISTOL_CLIP: 8
+    STR_RIFLE: 2
+    STR_RIFLE_CLIP: 8
+    STR_ROCKET_LAUNCHER: 1
+    STR_SMALL_ROCKET: 4
+    STR_SMOKE_GRENADE: 5
+    STR_STINGRAY_LAUNCHER: 1
+    STR_STINGRAY_MISSILES: 25
+  scientists: 10
+  engineers: 10
 startingTime:
   second: 0
   minute: 0
@@ -8795,90 +8703,91 @@ costSoldier: 20000
 costEngineer: 25000
 costScientist: 30000
 timePersonnel: 72
+initialFunding: 6000
 ufoTrajectories:
   - id: P0
     groundTimer: 3000
     waypoints:
       - [5, 4, 100]
-      - [1, 3, 74]
-      - [1, 1, 28]
-      - [2, 1, 47]
+      - [0, 3, 74]
+      - [0, 1, 28]
+      - [1, 1, 47]
       - [5, 2, 100]
   - id: P1
     groundTimer: 4000
     waypoints:
       - [5, 4, 100]
-      - [1, 2, 76]
-      - [1, 2, 20]
-      - [2, 1, 44]
-      - [1, 0, 20]
-      - [1, 2, 32]
-      - [3, 1, 65]
+      - [0, 2, 76]
+      - [0, 2, 20]
+      - [1, 1, 44]
+      - [0, 0, 20]
+      - [0, 2, 32]
+      - [2, 1, 65]
       - [5, 0, 100]
   - id: P2
     groundTimer: 5000
     waypoints:
       - [5, 4, 100]
-      - [1, 3, 57]
-      - [1, 2, 26]
-      - [2, 1, 50]
+      - [0, 3, 57]
+      - [0, 2, 26]
+      - [1, 1, 50]
       - [5, 0, 100]
   - id: P3
     groundTimer: 6000
     waypoints:
       - [5, 4, 100]
-      - [1, 3, 30]
-      - [1, 2, 25]
-      - [3, 1, 20]
+      - [0, 3, 30]
+      - [0, 2, 25]
+      - [2, 1, 20]
       - [5, 0, 100]
   - id: P4
     groundTimer: 7000
     waypoints:
       - [5, 4, 100]
-      - [1, 2, 67]
-      - [1, 2, 52]
-      - [3, 1, 40]
-      - [1, 0, 30]
-      - [1, 2, 20]
-      - [3, 1, 30]
+      - [0, 2, 67]
+      - [0, 2, 52]
+      - [2, 1, 40]
+      - [0, 0, 30]
+      - [0, 2, 20]
+      - [2, 1, 30]
       - [5, 0, 100]
   - id: P5
     groundTimer: 4000
     waypoints:
       - [5, 4, 100]
-      - [1, 2, 50]
-      - [1, 2, 20]
+      - [0, 2, 50]
+      - [0, 2, 20]
       - [4, 1, 15]
-      - [1, 0, 20]
-      - [1, 2, 29]
+      - [0, 0, 20]
+      - [0, 2, 29]
       - [4, 1, 42]
       - [5, 0, 90]
   - id: P6
     groundTimer: 5000
     waypoints:
       - [5, 4, 100]
-      - [1, 3, 50]
-      - [1, 2, 25]
+      - [0, 3, 50]
+      - [0, 2, 25]
       - [4, 1, 16]
       - [5, 0, 100]
   - id: P7
     groundTimer: 9000
     waypoints:
       - [5, 4, 100]
-      - [1, 3, 60]
-      - [1, 2, 30]
-      - [0, 1, 20]
+      - [0, 3, 60]
+      - [0, 2, 30]
+      - [3, 1, 20]
       - [5, 0, 100]
   - id: P8
     groundTimer: 6000
     waypoints:
       - [5, 4, 100]
-      - [2, 1, 60]
-      - [3, 1, 20]
-      - [0, 1, 30]
+      - [1, 1, 60]
+      - [2, 1, 20]
+      - [3, 1, 30]
       - [4, 1, 20]
-      - [1, 1, 42]
-      - [3, 1, 56]
+      - [0, 1, 42]
+      - [2, 1, 56]
       - [5, 4, 100]
   - id: P9
     groundTimer: 2000
@@ -9257,6 +9166,8 @@ MCDPatches:
         bigWall: 4
       - MCDIndex: 33
         bigWall: 4
+      - MCDIndex: 39
+        LOFTS: [6,29,29,29,29,29,0,0,0,0,0,0]
       - MCDIndex: 43
         bigWall: 6
       - MCDIndex: 44
@@ -9267,6 +9178,8 @@ MCDPatches:
         bigWall: 6
       - MCDIndex: 48
         bigWall: 2
+      - MCDIndex: 54
+        TUSlide: 2
       - MCDIndex: 56
         terrainHeight: -7
   - type: LIGHTNIN
@@ -9299,6 +9212,17 @@ MCDPatches:
         bigWall: 2
       - MCDIndex: 13
         bigWall: 7
+        LOFTS: [44,44,44,44,44,44,44,44,44,44,44,44]
+  - type: PLANE
+    data:
+      - MCDIndex: 13
+        bigWall: 6
+      - MCDIndex: 14
+        bigWall: 6
+      - MCDIndex: 49
+        LOFTS: [6,6,6,6,6,6,6,6,6,6,6,6]
+      - MCDIndex: 51
+        LOFTS: [6,6,6,6,6,6,6,6,6,6,6,6]
   - type: U_EXT02
     data:
       - MCDIndex: 2
@@ -9321,6 +9245,37 @@ MCDPatches:
         bigWall: 2
       - MCDIndex: 15
         bigWall: 2
+  - type: U_BITS
+    data:
+      - MCDIndex: 6
+        TUWalk: 4
+        TUFly: 4
+        TUSlide: 4
+      - MCDIndex: 7
+        TUWalk: 4
+        TUFly: 4
+        TUSlide: 4
+  - type: U_BASE
+    data:
+      - MCDIndex: 9
+        TUFly: 2
+      - MCDIndex: 10
+        deathTile: 30
+      - MCDIndex: 17
+        armor: 60
+        HEBlock: 60
+      - MCDIndex: 22
+        flammability: 40
+        fuel: 4
+      - MCDIndex: 23
+        flammability: 40
+        fuel: 4
+      - MCDIndex: 24
+        flammability: 40
+        fuel: 4
+      - MCDIndex: 25
+        flammability: 40
+        fuel: 4
 # Mountain terrain death tile fix
   - type: MOUNT
     data:
@@ -9378,12 +9333,77 @@ MCDPatches:
         deathTile: 75
       - MCDIndex: 73
         deathTile: 76
+  - type: U_PODS
+    data:
+      - MCDIndex: 6
+        TUWalk: 4
+        TUFly: 4
+        TUSlide: 4
+  - type: U_OPER2
+    data:
+      - MCDIndex: 6
+        TUWalk: 4
+        TUFly: 4
+        TUSlide: 4
+      - MCDIndex: 7
+        TUWalk: 4
+        TUFly: 4
+        TUSlide: 4
+  - type: URBITS
+    data:
+      - MCDIndex: 6
+        TUFly: 2
+      - MCDIndex: 7
+        TUFly: 2
+  - type: POLAR
+    data:
+      - MCDIndex: 0
+        TUFly: 4
+        noFloor: true
+      - MCDIndex: 63
+        noFloor: true
+      - MCDIndex: 64
+        noFloor: true
+      - MCDIndex: 65
+        noFloor: true
+      - MCDIndex: 66
+        noFloor: true
+      - MCDIndex: 67
+        noFloor: true
+      - MCDIndex: 68
+        noFloor: true
+      - MCDIndex: 69
+        noFloor: true
+      - MCDIndex: 70
+        noFloor: true
+      - MCDIndex: 71
+        noFloor: true
+      - MCDIndex: 72
+        noFloor: true
+      - MCDIndex: 73
+        noFloor: true
+      - MCDIndex: 74
+        noFloor: true
+      - MCDIndex: 75
+        noFloor: true
+      - MCDIndex: 76
+        noFloor: true
+      - MCDIndex: 77
+        noFloor: true
+      - MCDIndex: 78
+        noFloor: true
+      - MCDIndex: 79
+        noFloor: true
+      - MCDIndex: 80
+        noFloor: true
 extraSprites:
   - type: Pathfinding
-    width: 64
-    height: 80
     files:
-      0: Resources/Pathfinding/
+      0: Resources/Pathfinding/Pathfinding.png
+    width: 384
+    height: 80
+    subX: 32
+    subY: 40
   - type: Projectiles
     width: 105
     height: 33
@@ -9391,44 +9411,16 @@ extraSprites:
     subY: 3
     files:
       0: Resources/BulletSprites/BulletSprites.png
-#New spritesheet Example:
-#  - type: GIANTBUNNY.PCK
-#    width: 32
-#    height: 40
-#    files:
-#      0: Resources/Bunny/Bunny00.png
-#      1: Resources/Bunny/Bunny01.bmp
-#      2: Resources/Bunny/Bunny02.gif
-#
-#Extra Sounds:
-# type should correspond to one of the following: 
-#   - BATTLE.CAT     - battlescape noises, original cat file has 55 entries (0-54) 
-#                      see http://www.ufopaedia.org/index.php?title=SOUND#SAMPLE2.CAT
-#   - GMINTRO.CAT    - some intro sounds, probably best not to mess with these.
-#   - SAMPLE3.CAT    - some more intro sounds, probably best not to mess with these.
-#   - GEO.CAT        - geoscape/UI noises, original cat file has 14 entries (0-13)
-#                      see http://www.ufopaedia.org/index.php?title=SOUND#SAMPLE.CAT
-#extraSounds:
-#  - type: BATTLE.CAT
-#    files:
-#      55: Resources/Sounds/sample.wav
-#Extra strings:
-# type must correspond to the filename of the language you want to add to
-# the rest should be fairly straight forward
-#extraStrings:
-#  - type: English
-#    strings:
-#      STR_SNIPER_RIFLE: Sniper Rifle
-#      STR_SNIPER_RIFLE_CLIP: Sniper Rifle Clip
-#  - type: EnglishUk
-#    strings:
-#      STR_SNIPER_RIFLE: Sniper Rifle
-#      STR_SNIPER_RIFLE_CLIP: Sniper Rifle Clip
-#  - type: German
-#    strings:
-#      STR_SNIPER_RIFLE: Scharfschützengewehr
-#      STR_SNIPER_RIFLE_CLIP: Scharfschützengewehrmunition
-#  - type: Russian
-#    strings:
-#      STR_SNIPER_RIFLE: Снайперская винтовка
-#      STR_SNIPER_RIFLE_CLIP: Магазин к снайп. винтовке
+  - type: TFTDReserve
+    width: 59
+    height: 24
+    singleImage: true
+    files:
+      0: Resources/UI/reserve.png
+  - type: BIGOBS.PCK
+    width: 64
+    height: 96
+    subX: 32
+    subY: 48
+    files:
+      -4: Resources/Weapons/Terror.png

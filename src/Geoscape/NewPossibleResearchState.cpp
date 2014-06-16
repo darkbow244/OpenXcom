@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -52,7 +52,7 @@ NewPossibleResearchState::NewPossibleResearchState(Game * game, Base * base, con
 	_lstPossibilities = new TextList(288, 80, 16, 56);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(1)), Palette::backPos, 16);
+	setPalette("PAL_GEOSCAPE", 1);
 
 	add(_window);
 	add(_btnOk);
@@ -67,13 +67,13 @@ NewPossibleResearchState::NewPossibleResearchState(Game * game, Base * base, con
 	_window->setBackground(_game->getResourcePack()->getSurface("BACK05.SCR"));
 
 	_btnOk->setColor(Palette::blockOffset(8)+5);
-	_btnOk->setText(_game->getLanguage()->getString("STR_OK"));
+	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&NewPossibleResearchState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&NewPossibleResearchState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&NewPossibleResearchState::btnOkClick, Options::keyCancel);
 	_btnResearch->setColor(Palette::blockOffset(8)+5);
-	_btnResearch->setText(_game->getLanguage()->getString("STR_ALLOCATE_RESEARCH"));
+	_btnResearch->setText(tr("STR_ALLOCATE_RESEARCH"));
 	_btnResearch->onMouseClick((ActionHandler)&NewPossibleResearchState::btnResearchClick);
-	_btnResearch->onKeyboardPress((ActionHandler)&NewPossibleResearchState::btnResearchClick, (SDLKey)Options::getInt("keyOk"));
+	_btnResearch->onKeyboardPress((ActionHandler)&NewPossibleResearchState::btnResearchClick, Options::keyOk);
 	_txtTitle->setColor(Palette::blockOffset(15)-1);
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);
@@ -87,10 +87,10 @@ NewPossibleResearchState::NewPossibleResearchState(Game * game, Base * base, con
 	for(std::vector<RuleResearch *>::const_iterator iter = possibilities.begin (); iter != possibilities.end (); ++iter)
 	{
 		bool liveAlien = _game->getRuleset()->getUnit((*iter)->getName()) != 0;
-		if(!_game->getSavedGame()->wasResearchPopped(*iter) && (*iter)->getRequirements().size() == 0 && !liveAlien)
+		if(!_game->getSavedGame()->wasResearchPopped(*iter) && (*iter)->getRequirements().empty() && !liveAlien)
 		{
 			_game->getSavedGame()->addPoppedResearch((*iter));
-			_lstPossibilities->addRow (1, _game->getLanguage()->getString((*iter)->getName ()).c_str());
+			_lstPossibilities->addRow (1, tr((*iter)->getName ()).c_str());
 		}
 		else
 		{
@@ -100,16 +100,8 @@ NewPossibleResearchState::NewPossibleResearchState(Game * game, Base * base, con
 
 	if (!(tally == possibilities.size () || possibilities.empty ()))
 	{
-		_txtTitle->setText(_game->getLanguage()->getString("STR_WE_CAN_NOW_RESEARCH"));
+		_txtTitle->setText(tr("STR_WE_CAN_NOW_RESEARCH"));
 	}
-}
-
-/**
- * Resets the palette.
- */
-void NewPossibleResearchState::init()
-{
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(1)), Palette::backPos, 16);
 }
 
 /**
@@ -118,7 +110,7 @@ void NewPossibleResearchState::init()
  */
 void NewPossibleResearchState::btnOkClick(Action *)
 {
-	_game->popState ();
+	_game->popState();
 }
 
 /**
@@ -130,4 +122,5 @@ void NewPossibleResearchState::btnResearchClick(Action *)
 	_game->popState();
 	_game->pushState (new ResearchState(_game, _base));
 }
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -33,8 +33,8 @@ class TextList;
 class Armor;
 
 /**
- * Select Armor window that allows to
- * change the armor equipped on a soldier.
+ * Select Armor window that allows changing
+ * of the armor equipped on a soldier.
  */
 class SoldierArmorState : public State
 {
@@ -44,7 +44,7 @@ private:
 
 	TextButton *_btnCancel;
 	Window *_window;
-	Text *_txtTitle, *_txtSoldier, *_txtType, *_txtQuantity;
+	Text *_txtTitle, *_txtType, *_txtQuantity;
 	TextList *_lstArmor;
 	std::vector<Armor*> _armors;
 public:

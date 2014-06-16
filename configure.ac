@@ -4,8 +4,8 @@ AC_PREREQ([2.65])
 # ====================
 # Version informations
 # ====================
-m4_define([openxcom_version_major],[0])
-m4_define([openxcom_version_minor],[9])
+m4_define([openxcom_version_major],[1])
+m4_define([openxcom_version_minor],[0])
 m4_define([openxcom_version_micro],[0])
 m4_define([openxcom_version],[openxcom_version_major.openxcom_version_minor.openxcom_version_micro])
 
@@ -85,24 +85,22 @@ AC_ARG_WITH(man,
 
 AS_IF([test "x$with_man" != "xno"], [
 	build_man=yes
-	AS_IF([test -z "$DOCBOOK2MAN"], [
-		AC_PATH_PROG(DOCBOOK2MAN,[docbook-to-man])
-		AS_IF([test -z "$DOCBOOK2MAN"], [
-			AC_PATH_PROG(DOCBOOK2MAN,[docbook2man.pl])
-			AS_IF([test -z "$DOCBOOK2MAN"], [
-				AC_MSG_ERROR([docbook-to-man is missing. Install docbook2X package.])
-			])
+	# Ask your favorite distribution WHY
+	AS_IF([test -z "$XMLTO"], [
+		AC_PATH_PROG(XMLTO,[xmlto])
+		AS_IF([test -z "$XMLTO"], [
+			AC_MSG_ERROR([xmlto binary is missing. Install xmlto package.])
 		])
 	])
 ], [build_man=no])
-AC_SUBST(DOCBOOK2MAN)
+AC_SUBST(XMLTO)
 AM_CONDITIONAL([WITH_OPENXCOM_MAN], [test "x$build_man" != "xno"])
 
 # ==================
 # Check dependencies
 # ==================
 PKG_CHECK_MODULES([SDL],[sdl >= 1.2.13 SDL_mixer >= 1.2.11 SDL_gfx >= 2.0.22 SDL_image >= 1.2])
-PKG_CHECK_MODULES([YAML],[yaml-cpp <= 0.3.0])
+PKG_CHECK_MODULES([YAML],[yaml-cpp >= 0.5.0])
 AX_CHECK_GL
 
 AC_CONFIG_FILES([

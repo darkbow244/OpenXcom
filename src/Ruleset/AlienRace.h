@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -37,6 +37,7 @@ class AlienRace
 private:
 	std::string _id;
 	std::vector<std::string> _members;
+	bool _retaliation;
 public:
 	/// Creates a blank alien race ruleset.
 	AlienRace(const std::string &id);
@@ -44,12 +45,12 @@ public:
 	~AlienRace();
 	/// Loads alien race data from YAML.
 	void load(const YAML::Node& node);
-	/// Saves the alien race data to YAML.
-	void save(YAML::Emitter& out) const;
 	/// Gets the alien race's id.
 	std::string getId() const;
 	/// Gets a certain member of this alien race family.
 	std::string getMember(int id) const;
+	/// Gets if the race can retaliate.
+	bool canRetaliate() const;
 };
 
 }

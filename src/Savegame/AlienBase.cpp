@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -44,36 +44,38 @@ AlienBase::~AlienBase()
 void AlienBase::load(const YAML::Node &node)
 {
 	Target::load(node);
-	node["id"] >> _id;
-	node["race"] >> _race;
-	node["inBattlescape"] >> _inBattlescape;
-	node["discovered"] >> _discovered;
+	_id = node["id"].as<int>(_id);
+	_race = node["race"].as<std::string>(_race);
+	_inBattlescape = node["inBattlescape"].as<bool>(_inBattlescape);
+	_discovered = node["discovered"].as<bool>(_discovered);
 }
 
 /**
  * Saves the alien base to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void AlienBase::save(YAML::Emitter &out) const
+YAML::Node AlienBase::save() const
 {
-	Target::save(out);
-	out << YAML::Key << "id" << YAML::Value << _id;
-	out << YAML::Key << "race" << YAML::Value << _race;
-	out << YAML::Key << "inBattlescape" << YAML::Value << _inBattlescape;
-	out << YAML::Key << "discovered" << YAML::Value << _discovered;
-	out << YAML::EndMap;
+	YAML::Node node = Target::save();
+	node["id"] = _id;
+	node["race"] = _race;
+	if (_inBattlescape)
+		node["inBattlescape"] = _inBattlescape;
+	if (_discovered)
+		node["discovered"] = _discovered;
+	return node;
 }
 
 /**
  * Saves the alien base's unique identifiers to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void AlienBase::saveId(YAML::Emitter &out) const
+YAML::Node AlienBase::saveId() const
 {
-	Target::saveId(out);
-	out << YAML::Key << "type" << YAML::Value << "STR_ALIEN_BASE";
-	out << YAML::Key << "id" << YAML::Value << _id;
-	out << YAML::EndMap;
+	YAML::Node node = Target::saveId();
+	node["type"] = "STR_ALIEN_BASE";
+	node["id"] = _id;
+	return node;
 }
 
 /**
@@ -101,9 +103,7 @@ void AlienBase::setId(int id)
  */
 std::wstring AlienBase::getName(Language *lang) const
 {
-	std::wstringstream name;
-	name << lang->getString("STR_ALIEN_BASE_") << _id;
-	return name.str();
+	return lang->getString("STR_ALIEN_BASE_").arg(_id);
 }
 
 /**
@@ -126,7 +126,7 @@ void AlienBase::setAlienRace(const std::string &race)
 
 /**
  * Gets the alien base's battlescape status.
- * @return bool
+ * @return Is the base on the battlescape?
  */
 bool AlienBase::isInBattlescape() const
 {
@@ -135,7 +135,7 @@ bool AlienBase::isInBattlescape() const
 
 /**
  * Sets the alien base's battlescape status.
- * @param inbattle .
+ * @param inbattle True if it's in battle, False otherwise.
  */
 void AlienBase::setInBattlescape(bool inbattle)
 {
@@ -143,8 +143,8 @@ void AlienBase::setInBattlescape(bool inbattle)
 }
 
 /**
- * Gets the alien base's battlescape status.
- * @return bool.
+ * Gets the alien base's geoscape status.
+ * @return Has the base been discovered?
  */
 bool AlienBase::isDiscovered() const
 {
@@ -152,8 +152,8 @@ bool AlienBase::isDiscovered() const
 }
 
 /**
- * Sets the alien base's discovered status.
- * @param discovered.
+ * Sets the alien base's geoscape status.
+ * @param discovered Has the base been discovered?
  */
 void AlienBase::setDiscovered(bool discovered)
 {

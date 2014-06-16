@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,16 +17,14 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "MCDPatch.h"
-#include "Ruleset.h"
 #include "MapDataSet.h"
 #include "MapData.h"
-#include <sstream>
 
 namespace OpenXcom
 {
 
 /**
- * Initializes an MCD Patch
+ * Initializes an MCD Patch.
  */
 MCDPatch::MCDPatch()
 {
@@ -46,68 +44,86 @@ MCDPatch::~MCDPatch()
  */
 void MCDPatch::load(const YAML::Node &node)
 {
-	for (YAML::Iterator i = node.begin(); i != node.end(); ++i)
+	YAML::Node data = node["data"];
+	for (YAML::const_iterator i = data.begin(); i != data.end(); ++i)
 	{
-		std::string key;
-		i.first() >> key;
-		if (key == "data")
+		size_t MCDIndex = (*i)["MCDIndex"].as<size_t>();
+		if ((*i)["bigWall"])
 		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				size_t MCDIndex;
-				(*j)["MCDIndex"] >> MCDIndex;
-				if (const YAML::Node *pName = (*j).FindValue("bigWall"))
-				{
-					int bigWall;
-					(*pName) >> bigWall;
-					_bigWalls.push_back(std::make_pair(MCDIndex, bigWall));
-				}
-				if (const YAML::Node *pName = (*j).FindValue("TUWalk"))
-				{
-					int TUWalk;
-					(*pName) >> TUWalk;
-					_TUWalks.push_back(std::make_pair(MCDIndex, TUWalk));
-				}
-				if (const YAML::Node *pName = (*j).FindValue("TUFly"))
-				{
-					int TUFly;
-					(*pName) >> TUFly;
-					_TUFlys.push_back(std::make_pair(MCDIndex, TUFly));
-				}
-				if (const YAML::Node *pName = (*j).FindValue("TUSlide"))
-				{
-					int TUSlide;
-					(*pName) >> TUSlide;
-					_TUSlides.push_back(std::make_pair(MCDIndex, TUSlide));
-				}
-				if (const YAML::Node *pName = (*j).FindValue("deathTile"))
-				{
-					int deathTile;
-					(*pName) >> deathTile;
-					_deathTiles.push_back(std::make_pair(MCDIndex, deathTile));
-				}
-				if (const YAML::Node *pName = (*j).FindValue("terrainHeight"))
-				{
-					int terrainHeight;
-					(*pName) >> terrainHeight;
-					_terrainHeight.push_back(std::make_pair(MCDIndex, terrainHeight));
-				}
-			}
+			int bigWall = (*i)["bigWall"].as<int>();
+			_bigWalls.push_back(std::make_pair(MCDIndex, bigWall));
+		}
+		if ((*i)["TUWalk"])
+		{
+			int TUWalk = (*i)["TUWalk"].as<int>();
+			_TUWalks.push_back(std::make_pair(MCDIndex, TUWalk));
+		}
+		if ((*i)["TUFly"])
+		{
+			int TUFly = (*i)["TUFly"].as<int>();
+			_TUFlys.push_back(std::make_pair(MCDIndex, TUFly));
+		}
+		if ((*i)["TUSlide"])
+		{
+			int TUSlide = (*i)["TUSlide"].as<int>();
+			_TUSlides.push_back(std::make_pair(MCDIndex, TUSlide));
+		}
+		if ((*i)["deathTile"])
+		{
+			int deathTile = (*i)["deathTile"].as<int>();
+			_deathTiles.push_back(std::make_pair(MCDIndex, deathTile));
+		}
+		if ((*i)["terrainHeight"])
+		{
+			int terrainHeight = (*i)["terrainHeight"].as<int>();
+			_terrainHeight.push_back(std::make_pair(MCDIndex, terrainHeight));
+		}
+		if ((*i)["specialType"])
+		{
+			int specialType = (*i)["specialType"].as<int>();
+			_specialTypes.push_back(std::make_pair(MCDIndex, specialType));
+		}
+		if ((*i)["explosive"])
+		{
+			int explosive = (*i)["explosive"].as<int>();
+			_explosives.push_back(std::make_pair(MCDIndex, explosive));
+		}
+		if ((*i)["armor"])
+		{
+			int armor = (*i)["armor"].as<int>();
+			_armors.push_back(std::make_pair(MCDIndex, armor));
+		}
+		if ((*i)["flammability"])
+		{
+			int flammability = (*i)["flammability"].as<int>();
+			_flammabilities.push_back(std::make_pair(MCDIndex, flammability));
+		}
+		if ((*i)["fuel"])
+		{
+			int fuel = (*i)["fuel"].as<int>();
+			_fuels.push_back(std::make_pair(MCDIndex, fuel));
+		}
+		if ((*i)["HEBlock"])
+		{
+			int HEBlock = (*i)["HEBlock"].as<int>();
+			_HEBlocks.push_back(std::make_pair(MCDIndex, HEBlock));
+		}
+		if ((*i)["noFloor"])
+		{
+			bool noFloor = (*i)["noFloor"].as<bool>();
+			_noFloors.push_back(std::make_pair(MCDIndex, noFloor));
+		}
+		if ((*i)["LOFTS"])
+		{
+			std::vector<int> lofts = (*i)["LOFTS"].as< std::vector<int> >();
+			_LOFTS.push_back(std::make_pair(MCDIndex, lofts));
 		}
 	}
 }
 
 /**
- * Saves the MCD Patch to a YAML file.
- * @param out YAML emitter.
- */
-void MCDPatch::save(YAML::Emitter &out) const
-{
-}
-
-/**
  * Applies an MCD patch to a mapDataSet.
- * @param dataSet the MapDataSet we want to modify.
+ * @param dataSet The MapDataSet we want to modify.
  */
 void MCDPatch::modifyData(MapDataSet *dataSet) const
 {
@@ -134,6 +150,43 @@ void MCDPatch::modifyData(MapDataSet *dataSet) const
 	for (std::vector<std::pair<size_t, int> >::const_iterator i = _terrainHeight.begin(); i != _terrainHeight.end(); ++i)
 	{
 		dataSet->getObjects()->at(i->first)->setTerrainLevel(i->second);
+	}
+	for (std::vector<std::pair<size_t, int> >::const_iterator i = _specialTypes.begin(); i != _specialTypes.end(); ++i)
+	{
+		dataSet->getObjects()->at(i->first)->setSpecialType(i->second, dataSet->getObjects()->at(i->first)->getObjectType());
+	}
+	for (std::vector<std::pair<size_t, int> >::const_iterator i = _explosives.begin(); i != _explosives.end(); ++i)
+	{
+		dataSet->getObjects()->at(i->first)->setExplosive(i->second);
+	}
+	for (std::vector<std::pair<size_t, int> >::const_iterator i = _armors.begin(); i != _armors.end(); ++i)
+	{
+		dataSet->getObjects()->at(i->first)->setArmor(i->second);
+	}
+	for (std::vector<std::pair<size_t, int> >::const_iterator i = _flammabilities.begin(); i != _flammabilities.end(); ++i)
+	{
+		dataSet->getObjects()->at(i->first)->setFlammable(i->second);
+	}
+	for (std::vector<std::pair<size_t, int> >::const_iterator i = _fuels.begin(); i != _fuels.end(); ++i)
+	{
+		dataSet->getObjects()->at(i->first)->setFuel(i->second);
+	}
+	for (std::vector<std::pair<size_t, int> >::const_iterator i = _HEBlocks.begin(); i != _HEBlocks.end(); ++i)
+	{
+		dataSet->getObjects()->at(i->first)->setHEBlock(i->second);
+	}
+	for (std::vector<std::pair<size_t, bool> >::const_iterator i = _noFloors.begin(); i != _noFloors.end(); ++i)
+	{
+		dataSet->getObjects()->at(i->first)->setNoFloor(i->second);
+	}
+	for (std::vector<std::pair<size_t, std::vector<int> > >::const_iterator i = _LOFTS.begin(); i != _LOFTS.end(); ++i)
+	{
+		int layer = 0;
+		for (std::vector<int>::const_iterator j = i->second.begin(); j != i->second.end(); ++j)
+		{
+			dataSet->getObjects()->at(i->first)->setLoftID(*j, layer);
+			++layer;
+		}
 	}
 }
 

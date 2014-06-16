@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,38 +20,39 @@
 #define OPENXCOM_SCANNERSTATE_H
 
 #include "../Engine/State.h"
-#include "BattlescapeGame.h"
 
 namespace OpenXcom
 {
-class InteractiveSurface;
+
+class Surface;
 class Timer;
 class ScannerView;
-class Text;
-class BattleItem;
-class BattleUnit;
+struct BattleAction;
 
 /**
  * The Scanner User Interface.
  */
 class ScannerState : public State
 {
-	InteractiveSurface *_surface1, *_surface2;
+	InteractiveSurface *_bg;
+	Surface *_scan;
 	ScannerView *_scannerView;
 	BattleAction *_action;
-	/// update scanner interface
+	/// Updates scanner interface.
 	void update();
 	Timer *_timerAnimate;
-	/// Handle Minimap animation
+	/// Handles Minimap animation.
 	void animate();
 public:
-	/// Create the ScannerState
+	/// Creates the ScannerState.
 	ScannerState (Game * game, BattleAction *action);
 	~ScannerState();
 	/// Handler for right-clicking anything.
 	void handle(Action *action);
-	/// Handle timers
-	void think ();
+	/// Handles timers.
+	void think();
+	/// Handler for exiting the state.
+	void exitClick(Action *action);
 };
 }
 

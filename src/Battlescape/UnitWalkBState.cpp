@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -27,12 +27,12 @@
 #include "BattleAIState.h"
 #include "ExplosionBState.h"
 #include "../Engine/Game.h"
+#include "../Savegame/BattleItem.h"
 #include "../Savegame/BattleUnit.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Savegame/Tile.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Sound.h"
-#include "../Engine/RNG.h"
 #include "../Engine/Options.h"
 #include "../Ruleset/Armor.h"
 #include "../Engine/Logger.h"
@@ -43,8 +43,10 @@ namespace OpenXcom
 
 /**
  * Sets up an UnitWalkBState.
+ * @param parent Pointer to the Battlescape.
+ * @param action Pointer to an action.
  */
-UnitWalkBState::UnitWalkBState(BattlescapeGame *parent, BattleAction action, const Position finalFacing, const bool pathfindForFinalTurn) : BattleState(parent, action), _unit(0), _pf(0), _terrain(0), _falling(false), _finalFacing(finalFacing), _pathfindForFinalTurn(pathfindForFinalTurn), _numUnitsSpotted(0)
+UnitWalkBState::UnitWalkBState(BattlescapeGame *parent, BattleAction action) : BattleState(parent, action), _unit(0), _pf(0), _terrain(0), _falling(false), _beforeFirstStep(false), _numUnitsSpotted(0), _preMovementCost(0)
 {
 
 }
@@ -57,6 +59,9 @@ UnitWalkBState::~UnitWalkBState()
 
 }
 
+/**
+ * Initializes the state.
+ */
 void UnitWalkBState::init()
 {
 	_unit = _action.actor;
@@ -65,13 +70,21 @@ void UnitWalkBState::init()
 	_pf = _parent->getPathfinding();
 	_terrain = _parent->getTileEngine();
 	_target = _action.target;
-	if (_parent->getSave()->getTraceSetting()) { Log(LOG_INFO) << "Walking from: " << _unit->getPosition().x << "," << _unit->getPosition().y << "," << _unit->getPosition().z << "," << " to " << _target.x << "," << _target.y << "," << _target.z;}
+	if (Options::traceAI) { Log(LOG_INFO) << "Walking from: " << _unit->getPosition() << "," << " to " << _target;}
+	int dir = _pf->getStartDirection();
+	if (!_action.strafe && dir != -1 && dir != _unit->getDirection())
+	{
+		_beforeFirstStep = true;
+	}
 }
 
+/**
+ * Runs state functionality every cycle.
+ */
 void UnitWalkBState::think()
 {
 	bool unitSpotted = false;
-	bool onScreen = (_unit->getVisible() && _parent->getMap()->getCamera()->isOnScreen(_unit->getPosition()));
+	bool onScreen = (_unit->getVisible() && _parent->getMap()->getCamera()->isOnScreen(_unit->getPosition(), true));
 	if (_unit->isKneeled())
 	{
 		if (_parent->kneel(_unit))
@@ -135,7 +148,7 @@ void UnitWalkBState::think()
 				}
 			}
 			_falling = largeCheck && _unit->getPosition().z != 0 && _unit->getTile()->hasNoFloor(tileBelow) && _unit->getArmor()->getMovementType() != MT_FLY && _unit->getWalkingPhase() == 0;
-			
+
 			if (_falling)
 			{
 				for (int x = _unit->getArmor()->getSize() - 1; x >= 0; --x)
@@ -155,7 +168,7 @@ void UnitWalkBState::think()
 				}
 			}
 
-			if (!_parent->getMap()->getCamera()->isOnScreen(_unit->getPosition()) && _unit->getFaction() != FACTION_PLAYER && _unit->getVisible())
+			if (!_parent->getMap()->getCamera()->isOnScreen(_unit->getPosition(), true) && _unit->getFaction() != FACTION_PLAYER && _unit->getVisible())
 				_parent->getMap()->getCamera()->centerOnPosition(_unit->getPosition());
 			// if the unit changed level, camera changes level with
 			_parent->getMap()->getCamera()->setViewLevel(_unit->getPosition().z);
@@ -177,49 +190,17 @@ void UnitWalkBState::think()
 			if (_unit->getFaction() != FACTION_PLAYER)
 			{
 				_unit->setVisible(false);
-				_terrain->calculateFOV(_unit->getPosition());
 			}
-			else
-			{
-				_terrain->calculateFOV(_unit);
-			}
-			unitSpotted = (_parent->getPanicHandled() && _numUnitsSpotted != _unit->getUnitsSpottedThisTurn().size());
+			_terrain->calculateFOV(_unit->getPosition());
+			unitSpotted = (!_falling && !_action.desperate && _parent->getPanicHandled() && _numUnitsSpotted != _unit->getUnitsSpottedThisTurn().size());
 
-			// check for proximity grenades (1 tile around the unit in every direction) (for large units, we need to check every tile it occupies)
-			int size = _unit->getArmor()->getSize() - 1;
-			for (int x = size; x >= 0; x--)
+			if (_parent->checkForProximityGrenades(_unit))
 			{
-				for (int y = size; y >= 0; y--)
-				{
-					for (int tx = -1; tx < 2; tx++)
-					{
-						for (int ty = -1; ty < 2; ty++)
-						{
-							Tile *t = _parent->getSave()->getTile(_unit->getPosition() + Position(x,y,0) + Position(tx,ty,0));
-							if (t)
-							for (std::vector<BattleItem*>::iterator i = t->getInventory()->begin(); i != t->getInventory()->end(); ++i)
-							{
-								if ((*i)->getRules()->getBattleType() == BT_PROXIMITYGRENADE && (*i)->getExplodeTurn() > 0)
-								{
-									Position p;
-									p.x = t->getPosition().x*16 + 8;
-									p.y = t->getPosition().y*16 + 8;
-									p.z = t->getPosition().z*24 + t->getTerrainLevel();
-									_parent->statePushNext(new ExplosionBState(_parent, p, (*i), (*i)->getPreviousOwner()));
-									t->getInventory()->erase(i);
-									_unit->setCache(0);
-									_parent->getMap()->cacheUnit(_unit);
-									_parent->popState();
-									return;
-								}
-							}
-						}
-					}
-				}
+				_parent->popState();
+				return;
 			}
 			if (unitSpotted)
 			{
-				_terrain->calculateFOV(_unit->getPosition());
 				_unit->setCache(0);
 				_parent->getMap()->cacheUnit(_unit);
 				_pf->abortPath();
@@ -264,7 +245,7 @@ void UnitWalkBState::think()
 		// check if we did spot new units
 		if (unitSpotted && !_action.desperate && _unit->getCharging() == 0 && !_falling)
 		{
-			if (_parent->getSave()->getTraceSetting()) { Log(LOG_INFO) << "Uh-oh! Company!"; }			
+			if (Options::traceAI) { Log(LOG_INFO) << "Uh-oh! Company!"; }
 			_unit->_hidingForTurn = false; // clearly we're not hidden now
 			_parent->getMap()->cacheUnit(_unit);
 			postPathProcedures();
@@ -295,10 +276,7 @@ void UnitWalkBState::think()
 			Position destination;
 			int tu = _pf->getTUCost(_unit->getPosition(), dir, &destination, _unit, 0, false); // gets tu cost, but also gets the destination position.
 			if (_unit->getFaction() == FACTION_HOSTILE &&
-				((_parent->getSave()->getTile(destination)->getUnit() &&
-				_parent->getSave()->getTile(destination)->getUnit()->getFaction() == FACTION_HOSTILE &&
-				_parent->getSave()->getTile(destination)->getUnit() != _unit) ||
-				_parent->getSave()->getTile(destination)->getFire() > 0))
+				_parent->getSave()->getTile(destination)->getFire() > 0)
 			{
 				tu -= 32; // we artificially inflate the TU cost by 32 points in getTUCost under these conditions, so we have to deflate it here.
 			}
@@ -312,7 +290,10 @@ void UnitWalkBState::think()
 				tu *= 0.75;
 				energy *= 1.5;
 			}
-
+			if (dir >= Pathfinding::DIR_UP)
+			{
+				energy = 0;
+			}
 			if (tu > _unit->getTimeUnits())
 			{
 				if (_parent->getPanicHandled() && tu < 255)
@@ -352,6 +333,8 @@ void UnitWalkBState::think()
 			if (dir != _unit->getDirection() && dir < Pathfinding::DIR_UP && !_pf->getStrafeMove())
 			{
 				_unit->lookAt(dir);
+				_unit->setCache(0);
+				_parent->getMap()->cacheUnit(_unit);
 				return;
 			}
 
@@ -392,7 +375,10 @@ void UnitWalkBState::think()
 						>= 28)))  // 4+ voxels poking into the tile above, we don't kick people in the head here at XCom.
 					{
 						_action.TU = 0;
-						postPathProcedures();
+						_pf->abortPath();
+						_unit->setCache(0);
+						_parent->getMap()->cacheUnit(_unit);
+						_parent->popState();
 						return;
 					}
 				}
@@ -410,6 +396,7 @@ void UnitWalkBState::think()
 				{
 					Tile *tileBelow = _parent->getSave()->getTile(_unit->getPosition() + Position(0,0,-1));
 					_unit->startWalking(dir, destination, tileBelow, onScreen);
+					_beforeFirstStep = false;
 				}
 			}
 			// make sure the unit sprites are up to date
@@ -435,33 +422,42 @@ void UnitWalkBState::think()
 	// turning during walking costs no tu
 	if (_unit->getStatus() == STATUS_TURNING)
 	{
+		// except before the first step.
+		if (_beforeFirstStep)
+		{
+			_preMovementCost++;
+		}
+
 		_unit->turn();
 
 		// calculateFOV is unreliable for setting the unitSpotted bool, as it can be called from various other places
 		// in the code, ie: doors opening, and this messes up the result.
 		_terrain->calculateFOV(_unit);
-		unitSpotted = (_parent->getPanicHandled() && _numUnitsSpotted != _unit->getUnitsSpottedThisTurn().size());
+		unitSpotted = (!_falling && !_action.desperate && _parent->getPanicHandled() && _numUnitsSpotted != _unit->getUnitsSpottedThisTurn().size());
 
 		// make sure the unit sprites are up to date
-		if (onScreen)
+		_unit->setCache(0);
+		_parent->getMap()->cacheUnit(_unit);
+
+		if (unitSpotted && !_action.desperate && !_unit->getCharging() && !_falling)
 		{
-			_unit->setCache(0);
-			_parent->getMap()->cacheUnit(_unit);
-		}
-		if (unitSpotted && !(_action.desperate || _unit->getCharging()) && !_falling)
-		{
-			if (_parent->getSave()->getTraceSetting()) { Log(LOG_INFO) << "Egads! A turn reveals new units! I must pause!"; }
+			if (_beforeFirstStep)
+			{
+				_unit->spendTimeUnits(_preMovementCost);
+			}
+			if (Options::traceAI) { Log(LOG_INFO) << "Egads! A turn reveals new units! I must pause!"; }
 			_unit->_hidingForTurn = false; // not hidden, are we...
 			_pf->abortPath();
+			_unit->abortTurn(); //revert to a standing state.
 			_unit->setCache(0);
 			_parent->getMap()->cacheUnit(_unit);
-			return;
+			_parent->popState();
 		}
 	}
 }
 
-/*
- * Abort unit walking.
+/**
+ * Aborts unit walking.
  */
 void UnitWalkBState::cancel()
 {
@@ -469,23 +465,23 @@ void UnitWalkBState::cancel()
 	_pf->abortPath();
 }
 
-/*
- * Handle some calculations when the path is finished.
+/**
+ * Handles some calculations when the path is finished.
  */
 void UnitWalkBState::postPathProcedures()
 {
 	_action.TU = 0;
 	if (_unit->getFaction() != FACTION_PLAYER)
 	{
-		Position voxelPosA = Position ((_finalFacing.x * 16)+8, (_finalFacing.y * 16)+8, (_finalFacing.z * 24)+12);
-		Position voxelPosB = Position ((_unit->getPosition().x * 16)+8, (_unit->getPosition().y * 16)+8, (_unit->getPosition().z * 24)+12);
-		int visibility = _parent->getTileEngine()->calculateLine(voxelPosA, voxelPosB, false, 0, _unit, false);
+		int dir = _action.finalFacing;
+		if (_action.finalAction)
+		{
+			_unit->dontReselect();
+		}
 		if (_unit->getCharging() != 0)
 		{
-			_unit->lookAt(_unit->getCharging()->getPosition() + Position(_unit->getArmor()->getSize()-1, _unit->getArmor()->getSize()-1, 0), false);
-			while (_unit->getStatus() == STATUS_TURNING)
-				_unit->turn();
-			if (_parent->getTileEngine()->validMeleeRange(_unit, _action.actor->getCharging(), _unit->getDirection()))
+			dir = _parent->getTileEngine()->getDirectionTo(_unit->getPosition(), _unit->getCharging()->getPosition());
+			if (_parent->getTileEngine()->validMeleeRange(_unit, _action.actor->getCharging(), dir))
 			{
 				BattleAction action;
 				action.actor = _unit;
@@ -497,30 +493,25 @@ void UnitWalkBState::postPathProcedures()
 				_unit->setCharging(0);
 				_parent->statePushBack(new ProjectileFlyBState(_parent, action));
 			}
-		} // check that _finalFacing points to a valid tile; out of bounds value indicates no final turn
-		else if (_parent->getSave()->getTile(_finalFacing) != 0 && (visibility == -1|| visibility == 4))
+		}
+		else if (_unit->_hidingForTurn)
 		{
-			if (_pathfindForFinalTurn)
-			{        
-				// if we can't see the target, try to face where they might come from        
-				_pf->abortPath();
-				_pf->calculate(_unit, _finalFacing, _parent->getSave()->getTile(_finalFacing)->getUnit());
-
-				if (_pf->getStartDirection() != -1)
-				{
-					_unit->lookAt(_pf->getStartDirection(), false);
-				} else
-				{
-					_unit->lookAt(_finalFacing);
-				}
-				_pf->abortPath();
-			} else
+			dir = _unit->getDirection() + 4;
+			_unit->_hidingForTurn = false;
+			_unit->dontReselect();
+		}
+		if (dir != -1)
+		{
+			if (dir >= 8)
 			{
-				_unit->lookAt(_finalFacing); // this duplicated call looks weird but let's not run the pathfinding code if we don't have to; lookAt(), otoh, is very cheap
+				dir -= 8;
 			}
-
-			while (_unit->getStatus() == STATUS_TURNING) // cheat-turn by recommendation of warboy; use no time-units to face our foes in battle and such
+			_unit->lookAt(dir);
+			while (_unit->getStatus() == STATUS_TURNING)
+			{
 				_unit->turn();
+				_parent->getTileEngine()->calculateFOV(_unit);
+			}
 		}
 	}
 	else if (!_parent->getPanicHandled())
@@ -537,24 +528,24 @@ void UnitWalkBState::postPathProcedures()
 		_parent->popState();
 }
 
-/*
- * Handle some calculations when the walking finished.
+/**
+ * Handles some calculations when the walking is finished.
  */
 void UnitWalkBState::setNormalWalkSpeed()
 {
 	if (_unit->getFaction() == FACTION_PLAYER)
-		_parent->setStateInterval(Options::getInt("battleXcomSpeed"));
+		_parent->setStateInterval(Options::battleXcomSpeed);
 	else
-		_parent->setStateInterval(Options::getInt("battleAlienSpeed"));
+		_parent->setStateInterval(Options::battleAlienSpeed);
 }
 
 
-/*
- * Handle the stepping sounds.
+/**
+ * Handles the stepping sounds.
  */
 void UnitWalkBState::playMovementSound()
 {
-	if ((!_unit->getVisible() && !_parent->getSave()->getDebugMode()) || !_parent->getMap()->getCamera()->isOnScreen(_unit->getPosition())) return;
+	if ((!_unit->getVisible() && !_parent->getSave()->getDebugMode()) || !_parent->getMap()->getCamera()->isOnScreen(_unit->getPosition(), true)) return;
 
 	if (_unit->getMoveSound() != -1)
 	{
@@ -590,7 +581,7 @@ void UnitWalkBState::playMovementSound()
 		else
 		{
 			// play default flying sound
-			if (_unit->getWalkingPhase() == 0 && !_falling)
+			if (_unit->getWalkingPhase() == 1 && !_falling)
 			{
 				_parent->getResourcePack()->getSound("BATTLE.CAT", 15)->play();
 			}

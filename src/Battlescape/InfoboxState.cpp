@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,14 +17,12 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "InfoboxState.h"
-#include <sstream>
+#include <string>
 #include "../Engine/Game.h"
-#include "../Resource/ResourcePack.h"
-#include "../Engine/Language.h"
 #include "../Engine/Palette.h"
 #include "../Engine/Timer.h"
 #include "../Interface/Text.h"
-#include "../Interface/Window.h"
+#include "../Interface/Frame.h"
 #include "../Engine/Action.h"
 
 namespace OpenXcom
@@ -40,25 +38,30 @@ InfoboxState::InfoboxState(Game *game, const std::wstring &msg) : State(game)
 	_screen = false;
 
 	// Create objects
-	_window = new Window(this, 261, 122, 34, 10);
+	_frame = new Frame(261, 122, 34, 10);
 	_text = new Text(251, 112, 39, 15);
 
-	add(_window);
+	// Set palette
+	setPalette("PAL_BATTLESCAPE");
+
+	add(_frame);
 	add(_text);
 
 	centerAllSurfaces();
 
-	_window->setColor(Palette::blockOffset(0));
-	_window->setHighContrast(true);
+	_frame->setHighContrast(true);
+	_frame->setColor(Palette::blockOffset(0) + 7);
+	_frame->setBackground(Palette::blockOffset(0) + 14);
+	_frame->setThickness(9);
 
 	_text->setAlign(ALIGN_CENTER);
 	_text->setVerticalAlign(ALIGN_MIDDLE);
 	_text->setBig();
 	_text->setWordWrap(true);
 	_text->setText(msg);
-	_text->setColor(Palette::blockOffset(0));
+	_text->setColor(Palette::blockOffset(0)-1);
 	_text->setHighContrast(true);
-	_text->setPalette(_window->getPalette());
+	_text->setPalette(_frame->getPalette());
 
 	_timer = new Timer(INFOBOX_DELAY);
 	_timer->onTimer((StateHandler)&InfoboxState::close);
@@ -70,7 +73,7 @@ InfoboxState::InfoboxState(Game *game, const std::wstring &msg) : State(game)
  */
 InfoboxState::~InfoboxState()
 {
-
+	delete _timer;
 }
 
 /**
@@ -87,7 +90,6 @@ void InfoboxState::handle(Action *action)
 	}
 }
 
-
 /**
  * Keeps the animation timers running.
  */
@@ -97,13 +99,11 @@ void InfoboxState::think()
 }
 
 /**
- * closes the window.
+ * Closes the window.
  */
 void InfoboxState::close()
 {
 	_game->popState();
 }
-
-
 
 }

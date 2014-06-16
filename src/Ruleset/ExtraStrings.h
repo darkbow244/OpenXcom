@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -26,6 +26,9 @@
 namespace OpenXcom
 {
 
+/**
+ * For adding a set of extra strings to the game.
+ */
 class ExtraStrings
 {
 private:
@@ -35,9 +38,9 @@ public:
 	ExtraStrings();
 	/// Cleans up the external strings set.
 	virtual ~ExtraStrings();
-	/// Loads the data from yaml
+	/// Loads the data from YAML.
 	void load(const YAML::Node &node);
-	/// Gets the list of strings defined by this mod
+	/// Gets the list of strings defined by this mod.
 	std::map<std::string, std::string> *getStrings();
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -33,7 +33,7 @@ class ResourcePack;
 
 /**
  * Represents a Terrain Map Datafile.
- * Which corresponds to an Xcom MCD & PCK file.
+ * Which corresponds to an XCom MCD & PCK file.
  * The list of map datafiles is stored in RuleSet, but referenced in RuleTerrain.
  * @sa http://www.ufopaedia.org/index.php?title=MCD
  */
@@ -51,24 +51,23 @@ public:
 	~MapDataSet();
 	/// Loads the map data set from YAML.
 	void load(const YAML::Node& node);
-	/// Saves the map data set to YAML.
-	void save(YAML::Emitter& out) const;
 	/// Loads voxeldata from a DAT file.
 	static void loadLOFTEMPS(const std::string &filename, std::vector<Uint16> *voxelData);
-	/// Get the dataset name (used for MAP generation).
+	/// Gets the dataset name (used for MAP generation).
 	std::string getName() const;
-	/// Get the dataset size.
-	int getSize() const;
-	/// Get objects in this dataset.
+	/// Gets the dataset size.
+	size_t getSize() const;
+	/// Gets the objects in this dataset.
 	std::vector<MapData*> *getObjects();
-	/// Get surfaces in this dataset.
+	/// Gets the surfaces in this dataset.
 	SurfaceSet *getSurfaceset() const;
-	/// Load the objects from an MCD file.
+	/// Loads the objects from an MCD file.
 	void loadData();
-	///	Unload to free memory.
+	///	Unloads to free memory.
 	void unloadData();
-	///
+	/// Gets a blank floor tile.
 	static MapData *getBlankFloorTile();
+	/// Gets a scorched earth tile.
 	static MapData *getScorchedEarthTile();
 };
 

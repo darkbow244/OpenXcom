@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,12 +20,16 @@
 #define OPENXCOM_UNITPANICBSTATE_H
 
 #include "BattleState.h"
+#include <string>
 
 namespace OpenXcom
 {
 
 class BattleUnit;
 
+/**
+ * State for panicking units.
+ */
 class UnitPanicBState : public BattleState
 {
 private:
@@ -41,7 +45,7 @@ public:
 	void cancel();
 	/// Runs state functionality every cycle.
 	void think();
-	/// Get the result of the state.
+	/// Gets the result of the state.
 	std::string getResult() const;
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -18,7 +18,8 @@
  */
 #include "Ruleset.h"
 #include <fstream>
-#include "../aresame.h"
+#include <algorithm>
+#include "../fmath.h"
 #include "../Engine/Options.h"
 #include "../Engine/Exception.h"
 #include "../Engine/CrossPlatform.h"
@@ -50,6 +51,7 @@
 #include "../Savegame/Country.h"
 #include "../Savegame/Soldier.h"
 #include "../Savegame/Craft.h"
+#include "../Savegame/Transfer.h"
 #include "../Ufopaedia/Ufopaedia.h"
 #include "../Savegame/AlienStrategy.h"
 #include "../Savegame/GameTime.h"
@@ -59,6 +61,8 @@
 #include "MCDPatch.h"
 #include "../Engine/Logger.h"
 #include <algorithm>
+#include "../Ufopaedia/Ufopaedia.h"
+#include "StatString.h"
 
 namespace OpenXcom
 {
@@ -66,7 +70,7 @@ namespace OpenXcom
 /**
  * Creates a ruleset with blank sets of rules.
  */
-Ruleset::Ruleset() : _costSoldier(0), _costEngineer(0), _costScientist(0), _timePersonnel(0), _modIndex(0), _facilityListOrder(0), _craftListOrder(0), _itemListOrder(0), _researchListOrder(0),  _manufactureListOrder(0), _ufopaediaListOrder(0)
+Ruleset::Ruleset() : _costSoldier(0), _costEngineer(0), _costScientist(0), _timePersonnel(0), _initialFunding(0), _startingTime(6, 1, 1, 1999, 12, 0, 0), _modIndex(0), _facilityListOrder(0), _craftListOrder(0), _itemListOrder(0), _researchListOrder(0),  _manufactureListOrder(0), _ufopaediaListOrder(0), _invListOrder(0)
 {
     // Check in which data dir the folder is stored
     std::string path = CrossPlatform::getDataFolder("SoldierName/");
@@ -75,7 +79,7 @@ Ruleset::Ruleset() : _costSoldier(0), _costEngineer(0), _costScientist(0), _time
 
 	for (std::vector<std::string>::iterator i = names.begin(); i != names.end(); ++i)
 	{
-		std::string file = (*i).substr(0, (*i).length()-4);
+		std::string file = CrossPlatform::noExt(*i);
 		SoldierNamePool *pool = new SoldierNamePool();
 		pool->load(file);
 		_names.push_back(pool);
@@ -175,11 +179,11 @@ Ruleset::~Ruleset()
 	{
 		delete i->second;
 	}
-	for (std::vector<std::pair<std::string, ExtraSprites *> >::const_iterator i = _extraSprites.begin (); i != _extraSprites.end (); ++i)
+	for (std::vector< std::pair<std::string, ExtraSprites *> >::const_iterator i = _extraSprites.begin (); i != _extraSprites.end (); ++i)
 	{
 		delete i->second;
 	}
-	for (std::vector<std::pair<std::string, ExtraSounds *> >::const_iterator i = _extraSounds.begin (); i != _extraSounds.end (); ++i)
+	for (std::vector< std::pair<std::string, ExtraSounds *> >::const_iterator i = _extraSounds.begin (); i != _extraSounds.end (); ++i)
 	{
 		delete i->second;
 	}
@@ -209,518 +213,291 @@ void Ruleset::load(const std::string &source)
  */
 void Ruleset::loadFile(const std::string &filename)
 {
-	std::ifstream fin(filename.c_str());
-	if (!fin)
-	{
-		throw Exception(filename + " not found");
-	}
-	YAML::Parser parser(fin);
-	YAML::Node doc;
+	YAML::Node doc = YAML::LoadFile(filename);
 
-	parser.GetNextDocument(doc);
-	for (YAML::Iterator i = doc.begin(); i != doc.end(); ++i)
+	for (YAML::const_iterator i = doc["countries"].begin(); i != doc["countries"].end(); ++i)
 	{
-		std::string key;
-		i.first() >> key;
-		if (key == "countries")
+		RuleCountry *rule = loadRule(*i, &_countries, &_countriesIndex);
+		if (rule != 0)
 		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
+			rule->load(*i);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["regions"].begin(); i != doc["regions"].end(); ++i)
+	{
+		RuleRegion *rule = loadRule(*i, &_regions, &_regionsIndex);
+		if (rule != 0)
+		{
+			rule->load(*i);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["facilities"].begin(); i != doc["facilities"].end(); ++i)
+	{
+		RuleBaseFacility *rule = loadRule(*i, &_facilities, &_facilitiesIndex);
+		if (rule != 0)
+		{
+			_facilityListOrder += 100;
+			rule->load(*i, _modIndex, _facilityListOrder);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["crafts"].begin(); i != doc["crafts"].end(); ++i)
+	{
+		RuleCraft *rule = loadRule(*i, &_crafts, &_craftsIndex);
+		if (rule != 0)
+		{
+			_craftListOrder += 100;
+			rule->load(*i, this, _modIndex, _craftListOrder);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["craftWeapons"].begin(); i != doc["craftWeapons"].end(); ++i)
+	{
+		RuleCraftWeapon *rule = loadRule(*i, &_craftWeapons, &_craftWeaponsIndex);
+		if (rule != 0)
+		{
+			rule->load(*i, _modIndex);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["items"].begin(); i != doc["items"].end(); ++i)
+	{
+		RuleItem *rule = loadRule(*i, &_items, &_itemsIndex);
+		if (rule != 0)
+		{
+			_itemListOrder += 100;
+			rule->load(*i, _modIndex, _itemListOrder);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["ufos"].begin(); i != doc["ufos"].end(); ++i)
+	{
+		RuleUfo *rule = loadRule(*i, &_ufos, &_ufosIndex);
+		if (rule != 0)
+		{
+			rule->load(*i, this);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["invs"].begin(); i != doc["invs"].end(); ++i)
+	{
+		RuleInventory *rule = loadRule(*i, &_invs, &_invsIndex, "id");
+		if (rule != 0)
+		{
+			_invListOrder += 10;
+			rule->load(*i, _invListOrder);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["terrains"].begin(); i != doc["terrains"].end(); ++i)
+	{
+		RuleTerrain *rule = loadRule(*i, &_terrains, &_terrainIndex, "name");
+		if (rule != 0)
+		{
+			rule->load(*i, this);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["armors"].begin(); i != doc["armors"].end(); ++i)
+	{
+		Armor *rule = loadRule(*i, &_armors, &_armorsIndex);
+		if (rule != 0)
+		{
+			rule->load(*i);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["soldiers"].begin(); i != doc["soldiers"].end(); ++i)
+	{
+		RuleSoldier *rule = loadRule(*i, &_soldiers);
+		if (rule != 0)
+		{
+			rule->load(*i);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["units"].begin(); i != doc["units"].end(); ++i)
+	{
+		Unit *rule = loadRule(*i, &_units);
+		if (rule != 0)
+		{
+			rule->load(*i, _modIndex);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["alienRaces"].begin(); i != doc["alienRaces"].end(); ++i)
+	{
+		AlienRace *rule = loadRule(*i, &_alienRaces, &_aliensIndex, "id");
+		if (rule != 0)
+		{
+			rule->load(*i);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["alienDeployments"].begin(); i != doc["alienDeployments"].end(); ++i)
+	{
+		AlienDeployment *rule = loadRule(*i, &_alienDeployments, &_deploymentsIndex);
+		if (rule != 0)
+		{
+			rule->load(*i);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["research"].begin(); i != doc["research"].end(); ++i)
+	{
+		RuleResearch *rule = loadRule(*i, &_research, &_researchIndex, "name");
+		if (rule != 0)
+		{
+			_researchListOrder += 100;
+			rule->load(*i, _researchListOrder);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["manufacture"].begin(); i != doc["manufacture"].end(); ++i)
+	{
+		RuleManufacture *rule = loadRule(*i, &_manufacture, &_manufactureIndex, "name");
+		if (rule != 0)
+		{
+			_manufactureListOrder += 100;
+			rule->load(*i, _manufactureListOrder);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["ufopaedia"].begin(); i != doc["ufopaedia"].end(); ++i)
+	{
+		if ((*i)["id"])
+		{
+			std::string id = (*i)["id"].as<std::string>();
+			ArticleDefinition *rule;
+			if (_ufopaediaArticles.find(id) != _ufopaediaArticles.end())
 			{
-				std::string type;
-				(*j)["type"] >> type;
-				RuleCountry *rule;
-				if (_countries.find(type) != _countries.end())
-				{
-					rule = _countries[type];
-				}
-				else
-				{
-					rule = new RuleCountry(type);
-					_countries[type] = rule;
-					_countriesIndex.push_back(type);
-				}
-				rule->load(*j);
+				rule = _ufopaediaArticles[id];
 			}
-		}
-		else if (key == "regions")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
+			else
 			{
-				std::string type;
-				(*j)["type"] >> type;
-				RuleRegion *rule;
-				if (_regions.find(type) != _regions.end())
+				UfopaediaTypeId type = (UfopaediaTypeId)(*i)["type_id"].as<int>();
+				switch (type)
 				{
-					rule = _regions[type];
+				case UFOPAEDIA_TYPE_CRAFT: rule = new ArticleDefinitionCraft(); break;
+				case UFOPAEDIA_TYPE_CRAFT_WEAPON: rule = new ArticleDefinitionCraftWeapon(); break;
+				case UFOPAEDIA_TYPE_VEHICLE: rule = new ArticleDefinitionVehicle(); break;
+				case UFOPAEDIA_TYPE_ITEM: rule = new ArticleDefinitionItem(); break;
+				case UFOPAEDIA_TYPE_ARMOR: rule = new ArticleDefinitionArmor(); break;
+				case UFOPAEDIA_TYPE_BASE_FACILITY: rule = new ArticleDefinitionBaseFacility(); break;
+				case UFOPAEDIA_TYPE_TEXTIMAGE: rule = new ArticleDefinitionTextImage(); break;
+				case UFOPAEDIA_TYPE_TEXT: rule = new ArticleDefinitionText(); break;
+				case UFOPAEDIA_TYPE_UFO: rule = new ArticleDefinitionUfo(); break;
+				default: rule = 0; break;
 				}
-				else
-				{
-					rule = new RuleRegion(type);
-					_regions[type] = rule;
-					_regionsIndex.push_back(type);
-				}
-				rule->load(*j);
+				_ufopaediaArticles[id] = rule;
+				_ufopaediaIndex.push_back(id);
 			}
+			_ufopaediaListOrder += 100;
+			rule->load(*i, _ufopaediaListOrder);
 		}
-		else if (key == "facilities")
+		else if ((*i)["delete"])
 		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
+			std::string type = (*i)["delete"].as<std::string>();
+			std::map<std::string, ArticleDefinition*>::iterator i = _ufopaediaArticles.find(type);
+			if (i != _ufopaediaArticles.end())
 			{
-				std::string type;
-				(*j)["type"] >> type;
-				RuleBaseFacility *rule;
-				if (_facilities.find(type) != _facilities.end())
-				{
-					rule = _facilities[type];
-				}
-				else
-				{
-					rule = new RuleBaseFacility(type);
-					_facilities[type] = rule;
-					_facilitiesIndex.push_back(type);
-				}
-				_facilityListOrder += 100;
-				rule->load(*j, _modIndex, _facilityListOrder);
+				_ufopaediaArticles.erase(i);
 			}
-		}
-		else if (key == "crafts")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
+			std::vector<std::string>::iterator idx = std::find(_ufopaediaIndex.begin(), _ufopaediaIndex.end(), type);
+			if (idx != _ufopaediaIndex.end())
 			{
-				std::string type;
-				(*j)["type"] >> type;
-				RuleCraft *rule;
-				if (_crafts.find(type) != _crafts.end())
-				{
-					rule = _crafts[type];
-				}
-				else
-				{
-					rule = new RuleCraft(type);
-					_crafts[type] = rule;
-					_craftsIndex.push_back(type);
-				}
-				_craftListOrder += 100;
-				rule->load(*j, this, _modIndex, _craftListOrder);
-			}
-		}
-		else if (key == "craftWeapons")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				RuleCraftWeapon *rule;
-				if (_craftWeapons.find(type) != _craftWeapons.end())
-				{
-					rule = _craftWeapons[type];
-				}
-				else
-				{
-					rule = new RuleCraftWeapon(type);
-					_craftWeapons[type] = rule;
-					_craftWeaponsIndex.push_back(type);
-				}
-				rule->load(*j, _modIndex);
-			}
-		}
-		else if (key == "items")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				RuleItem *rule;
-				if (_items.find(type) != _items.end())
-				{
-					rule = _items[type];
-				}
-				else
-				{
-					rule = new RuleItem(type);
-					_items[type] = rule;
-					_itemsIndex.push_back(type);
-				}
-				_itemListOrder += 100;
-				rule->load(*j, _modIndex, _itemListOrder);
-			}
-		}
-		else if (key == "ufos")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				RuleUfo *rule;
-				if (_ufos.find(type) != _ufos.end())
-				{
-					rule = _ufos[type];
-				}
-				else
-				{
-					rule = new RuleUfo(type);
-					_ufos[type] = rule;
-					_ufosIndex.push_back(type);
-				}
-				rule->load(*j, this);
-			}
-		}
-		else if (key == "invs")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["id"] >> type;
-				RuleInventory *rule;
-				if (_invs.find(type) != _invs.end())
-				{
-					rule = _invs[type];
-				}
-				else
-				{
-					rule = new RuleInventory(type);
-					_invs[type] = rule;
-				}
-				rule->load(*j);
-			}
-		}
-		else if (key == "terrains")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["name"] >> type;
-				RuleTerrain *rule;
-				if (_terrains.find(type) != _terrains.end())
-				{
-					rule = _terrains[type];
-				}
-				else
-				{
-					rule = new RuleTerrain(type);
-					_terrains[type] = rule;
-					_terrainIndex.push_back(type);
-				}
-				rule->load(*j, this);
-			}
-		}
-		else if (key == "armors")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				Armor *rule;
-				if (_armors.find(type) != _armors.end())
-				{
-					rule = _armors[type];
-				}
-				else
-				{
-					rule = new Armor(type, "", 0);
-					_armors[type] = rule;
-					_armorsIndex.push_back(type);
-				}
-				rule->load(*j);
-			}
-		}
-		else if (key == "soldiers")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				RuleSoldier *rule;
-				if (_soldiers.find(type) != _soldiers.end())
-				{
-					rule = _soldiers[type];
-				}
-				else
-				{
-					rule = new RuleSoldier(type);
-					_soldiers[type] = rule;
-				}
-				rule->load(*j);
-			}
-		}
-		else if (key == "units")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				Unit *rule;
-				if (_units.find(type) != _units.end())
-				{
-					rule = _units[type];
-				}
-				else
-				{
-					rule = new Unit(type, "", "");
-					_units[type] = rule;
-				}
-				rule->load(*j);
-			}
-		}
-		else if (key == "alienRaces")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["id"] >> type;
-				AlienRace *rule;
-				if (_alienRaces.find(type) != _alienRaces.end())
-				{
-					rule = _alienRaces[type];
-				}
-				else
-				{
-					rule = new AlienRace(type);
-					_alienRaces[type] = rule;
-					_aliensIndex.push_back(type);
-				}
-				rule->load(*j);
-			}
-		}
-		else if (key == "alienDeployments")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				AlienDeployment *rule;
-				if (_alienDeployments.find(type) != _alienDeployments.end())
-				{
-					rule = _alienDeployments[type];
-				}
-				else
-				{
-					rule = new AlienDeployment(type);
-					_alienDeployments[type] = rule;
-					_deploymentsIndex.push_back(type);
-				}
-				rule->load(*j);
-			}
-		}
-		else if (key == "research")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["name"] >> type;
-				RuleResearch *rule;
-				if (_research.find(type) != _research.end())
-				{
-					rule = _research[type];
-				}
-				else
-				{
-					rule = new RuleResearch(type);
-					_research[type] = rule;
-					_researchIndex.push_back(type);
-				}
-				_researchListOrder += 100;
-				rule->load(*j, _researchListOrder);
-			}
-		}
-		else if (key == "manufacture")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["name"] >> type;
-				RuleManufacture *rule;
-				if (_manufacture.find(type) != _manufacture.end())
-				{
-					rule = _manufacture[type];
-				}
-				else
-				{
-					rule = new RuleManufacture(type);
-					_manufacture[type] = rule;
-					_manufactureIndex.push_back(type);
-				}
-				_manufactureListOrder += 100;
-				rule->load(*j, _manufactureListOrder);
-			}
-		}
-		else if (key == "ufopaedia")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string id;
-				(*j)["id"] >> id;
-				ArticleDefinition *rule;
-				if (_ufopaediaArticles.find(id) != _ufopaediaArticles.end())
-				{
-					rule = _ufopaediaArticles[id];
-				}
-				else
-				{
-					int type;
-					(*j)["type_id"] >> type;
-					switch ((UfopaediaTypeId)type)
-					{
-					case UFOPAEDIA_TYPE_CRAFT: rule = new ArticleDefinitionCraft(); break;
-					case UFOPAEDIA_TYPE_CRAFT_WEAPON: rule = new ArticleDefinitionCraftWeapon(); break;
-					case UFOPAEDIA_TYPE_VEHICLE: rule = new ArticleDefinitionVehicle(); break;
-					case UFOPAEDIA_TYPE_ITEM: rule = new ArticleDefinitionItem(); break;
-					case UFOPAEDIA_TYPE_ARMOR: rule = new ArticleDefinitionArmor(); break;
-					case UFOPAEDIA_TYPE_BASE_FACILITY: rule = new ArticleDefinitionBaseFacility(); break;
-					case UFOPAEDIA_TYPE_TEXTIMAGE: rule = new ArticleDefinitionTextImage(); break;
-					case UFOPAEDIA_TYPE_TEXT: rule = new ArticleDefinitionText(); break;
-					case UFOPAEDIA_TYPE_UFO: rule = new ArticleDefinitionUfo(); break;
-					default: rule = 0; break;
-					}
-					_ufopaediaArticles[id] = rule;
-					_ufopaediaIndex.push_back(id);
-				}
-				_ufopaediaListOrder += 100;
-				rule->load(*j, _ufopaediaListOrder);
-			}
-		}
-		else if (key == "startingBase")
-		{
-			//_startingBase->load(i.second(), 0);
-			_startingBase = i.second().Clone();
-		}
-		else if (key == "startingTime")
-		{
-			_startingTime = i.second().Clone();
-		}
-		else if (key == "costSoldier")
-		{
-			i.second() >> _costSoldier;
-		}
-		else if (key == "costEngineer")
-		{
-			i.second() >> _costEngineer;
-		}
-		else if (key == "costScientist")
-		{
-			i.second() >> _costScientist;
-		}
-		else if (key == "timePersonnel")
-		{
-			i.second() >> _timePersonnel;
-		}
-		else if (key == "ufoTrajectories")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string id;
-				(*j)["id"] >> id;
-				if (_ufoTrajectories.find(id) != _ufoTrajectories.end())
-				{
-					_ufoTrajectories[id]->load(*j);
-				}
-				else
-				{
-					std::auto_ptr<UfoTrajectory> rule(new UfoTrajectory);
-					rule->load(*j);
-					_ufoTrajectories[id] = rule.release();
-				}
-			}
-		}
-		else if (key == "alienMissions")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				if (_alienMissions.find(type) != _alienMissions.end())
-				{
-					_alienMissions[type]->load(*j);
-				}
-				else
-				{
-					std::auto_ptr<RuleAlienMission> rule(new RuleAlienMission());
-					rule->load(*j);
-					_alienMissions[type] = rule.release();
-					_alienMissionsIndex.push_back(type);
-				}
-			}
-		}
-		else if (key == "alienItemLevels")
-		{
-			_alienItemLevels.clear();
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::vector<int> type;
-				(*j) >> type;
-				_alienItemLevels.push_back(type);
-			}
-		}
-		else if (key == "MCDPatches")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				if (_MCDPatches.find(type) != _MCDPatches.end())
-				{
-					_MCDPatches[type]->load(*j);
-				}
-				else
-				{
-					std::auto_ptr<MCDPatch> patch(new MCDPatch());
-					patch->load(*j);
-					_MCDPatches[type] = patch.release();
-					_MCDPatchesIndex.push_back(type);
-				}
-			}
-		}
-		else if (key == "extraSprites")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				std::auto_ptr<ExtraSprites> extraSprites(new ExtraSprites());
-				extraSprites->load(*j, _modIndex);
-				_extraSprites.push_back(std::make_pair(type, extraSprites.release()));
-				_extraSpritesIndex.push_back(type);
-			}
-		}
-		else if (key == "extraSounds")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				std::auto_ptr<ExtraSounds> extraSounds(new ExtraSounds());
-				extraSounds->load(*j, _modIndex);
-				_extraSounds.push_back(std::make_pair(type, extraSounds.release()));
-				_extraSoundsIndex.push_back(type);
-			}
-		}
-		else if (key == "extraStrings")
-		{
-			for (YAML::Iterator j = i.second().begin(); j != i.second().end(); ++j)
-			{
-				std::string type;
-				(*j)["type"] >> type;
-				if (_extraStrings.find(type) != _extraStrings.end())
-				{
-					_extraStrings[type]->load(*j);
-				}
-				else
-				{
-					std::auto_ptr<ExtraStrings> extraStrings(new ExtraStrings());
-					extraStrings->load(*j);
-					_extraStrings[type] = extraStrings.release();
-					_extraStringsIndex.push_back(type);
-				}
+				_ufopaediaIndex.erase(idx);
 			}
 		}
 	}
-	fin.close();
+ 	// Bases can't be copied, so for savegame purposes we store the node instead
+	YAML::Node base = doc["startingBase"];
+	if (base)
+	{
+		for (YAML::const_iterator i = base.begin(); i != base.end(); ++i)
+		{
+			_startingBase[i->first.as<std::string>()] = YAML::Node(i->second);
+		}
+	}
+ 	_startingTime.load(doc["startingTime"]);
+ 	_costSoldier = doc["costSoldier"].as<int>(_costSoldier);
+ 	_costEngineer = doc["costEngineer"].as<int>(_costEngineer);
+ 	_costScientist = doc["costScientist"].as<int>(_costScientist);
+ 	_timePersonnel = doc["timePersonnel"].as<int>(_timePersonnel);
+ 	_initialFunding = doc["initialFunding"].as<int>(_initialFunding);
+ 	for (YAML::const_iterator i = doc["ufoTrajectories"].begin(); i != doc["ufoTrajectories"].end(); ++i)
+	{
+		UfoTrajectory *rule = loadRule(*i, &_ufoTrajectories, 0, "id");
+		if (rule != 0)
+		{
+			rule->load(*i);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["alienMissions"].begin(); i != doc["alienMissions"].end(); ++i)
+	{
+		RuleAlienMission *rule = loadRule(*i, &_alienMissions, &_alienMissionsIndex);
+		if (rule != 0)
+		{
+			rule->load(*i);
+		}
+	}
+ 	_alienItemLevels = doc["alienItemLevels"].as< std::vector< std::vector<int> > >(_alienItemLevels);
+ 	for (YAML::const_iterator i = doc["MCDPatches"].begin(); i != doc["MCDPatches"].end(); ++i)
+	{
+		std::string type = (*i)["type"].as<std::string>();
+		if (_MCDPatches.find(type) != _MCDPatches.end())
+		{
+			_MCDPatches[type]->load(*i);
+		}
+		else
+		{
+			std::auto_ptr<MCDPatch> patch(new MCDPatch());
+			patch->load(*i);
+			_MCDPatches[type] = patch.release();
+			_MCDPatchesIndex.push_back(type);
+		}
+	}
+ 	for (YAML::const_iterator i = doc["extraSprites"].begin(); i != doc["extraSprites"].end(); ++i)
+	{
+		std::string type = (*i)["type"].as<std::string>();
+		std::auto_ptr<ExtraSprites> extraSprites(new ExtraSprites());
+		extraSprites->load(*i, _modIndex);
+		_extraSprites.push_back(std::make_pair(type, extraSprites.release()));
+		_extraSpritesIndex.push_back(type);
+	}
+ 	for (YAML::const_iterator i = doc["extraSounds"].begin(); i != doc["extraSounds"].end(); ++i)
+	{
+		std::string type = (*i)["type"].as<std::string>();
+		std::auto_ptr<ExtraSounds> extraSounds(new ExtraSounds());
+		extraSounds->load(*i, _modIndex);
+		_extraSounds.push_back(std::make_pair(type, extraSounds.release()));
+		_extraSoundsIndex.push_back(type);
+	}
+ 	for (YAML::const_iterator i = doc["extraStrings"].begin(); i != doc["extraStrings"].end(); ++i)
+	{
+		std::string type = (*i)["type"].as<std::string>();
+		if (_extraStrings.find(type) != _extraStrings.end())
+		{
+			_extraStrings[type]->load(*i);
+		}
+		else
+		{
+			std::auto_ptr<ExtraStrings> extraStrings(new ExtraStrings());
+			extraStrings->load(*i);
+			_extraStrings[type] = extraStrings.release();
+			_extraStringsIndex.push_back(type);
+		}
+	}
+
+	for (YAML::const_iterator i = doc["statStrings"].begin(); i != doc["statStrings"].end(); ++i)
+	{
+		StatString *statString = new StatString();
+		statString->load(*i);
+		_statStrings.push_back(statString);
+	}
+
+  // refresh _psiRequirements for psiStrengthEval
+	for (std::vector<std::string>::const_iterator i = _facilitiesIndex.begin(); i != _facilitiesIndex.end(); ++i)
+	{
+		RuleBaseFacility *rule = getBaseFacility(*i);
+		if (0 < rule->getPsiLaboratories())
+		{
+			_psiRequirements = rule->getRequirements();
+			break;
+		}
+	}
 
 	_modIndex += 1000;
 }
 
 /**
- * Load the contents of all rule files in the given directory.
+ * Loads the contents of all the rule files in the given directory.
  * @param dirname The name of an existing directory containing rule files.
  */
 void Ruleset::loadFiles(const std::string &dirname)
@@ -734,175 +511,58 @@ void Ruleset::loadFiles(const std::string &dirname)
 }
 
 /**
- * Saves a ruleset's contents to a YAML file.
- * @param filename YAML filename.
+ * Loads a rule element, adding/removing from vectors as necessary.
+ * @param node YAML node.
+ * @param map Map associated to the rule type.
+ * @param index Index vector for the rule type.
+ * @param key Rule key name.
+ * @return Pointer to new rule if one was created, or NULL if one was removed.
  */
-void Ruleset::save(const std::string &filename) const
+template <typename T>
+T *Ruleset::loadRule(const YAML::Node &node, std::map<std::string, T*> *map, std::vector<std::string> *index, const std::string &key)
 {
-	std::string s = CrossPlatform::getDataFile("Ruleset/" + filename + ".rul");
-	std::ofstream sav(s.c_str());
-	if (!sav)
+	T *rule = 0;
+	if (node[key])
 	{
-		throw Exception("Failed to save ruleset");
+		std::string type = node[key].as<std::string>();
+		typename std::map<std::string, T*>::iterator i = map->find(type);
+		if (i != map->end())
+		{
+			rule = i->second;
+		}
+		else
+		{
+			rule = new T(type);
+			(*map)[type] = rule;
+			if (index != 0)
+			{
+				index->push_back(type);
+			}
+		}
 	}
-
-	YAML::Emitter out;
-
-	out << YAML::BeginMap;
-	out << YAML::Key << "countries" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleCountry*>::const_iterator i = _countries.begin(); i != _countries.end(); ++i)
+	else if (node["delete"])
 	{
-		i->second->save(out);
+		std::string type = node["delete"].as<std::string>();
+		typename std::map<std::string, T*>::iterator i = map->find(type);
+		if (i != map->end())
+		{
+			map->erase(i);
+		}
+		if (index != 0)
+		{
+			std::vector<std::string>::iterator idx = std::find(index->begin(), index->end(), type);
+			if (idx != index->end())
+			{
+				index->erase(idx);
+			}
+		}
 	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "regions" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleRegion*>::const_iterator i = _regions.begin(); i != _regions.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "facilities" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleBaseFacility*>::const_iterator i = _facilities.begin(); i != _facilities.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "crafts" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleCraft*>::const_iterator i = _crafts.begin(); i != _crafts.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "craftWeapons" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleCraftWeapon*>::const_iterator i = _craftWeapons.begin(); i != _craftWeapons.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "items" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleItem*>::const_iterator i = _items.begin(); i != _items.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "ufos" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleUfo*>::const_iterator i = _ufos.begin(); i != _ufos.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "invs" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleInventory*>::const_iterator i = _invs.begin(); i != _invs.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "terrains" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleTerrain*>::const_iterator i = _terrains.begin(); i != _terrains.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "armors" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, Armor*>::const_iterator i = _armors.begin(); i != _armors.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "soldiers" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleSoldier*>::const_iterator i = _soldiers.begin(); i != _soldiers.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "units" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, Unit*>::const_iterator i = _units.begin(); i != _units.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "alienRaces" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, AlienRace*>::const_iterator i = _alienRaces.begin(); i != _alienRaces.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "alienDeployments" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, AlienDeployment*>::const_iterator i = _alienDeployments.begin(); i != _alienDeployments.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "research" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleResearch*>::const_iterator i = _research.begin(); i != _research.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "manufacture" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleManufacture*>::const_iterator i = _manufacture.begin(); i != _manufacture.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "ufopaedia" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, ArticleDefinition*>::const_iterator i = _ufopaediaArticles.begin(); i != _ufopaediaArticles.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "ufoTrajectories" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, UfoTrajectory*>::const_iterator i = _ufoTrajectories.begin(); i != _ufoTrajectories.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "alienMissions" << YAML::Value;
-	out << YAML::BeginSeq;
-	for (std::map<std::string, RuleAlienMission*>::const_iterator i = _alienMissions.begin(); i != _alienMissions.end(); ++i)
-	{
-		i->second->save(out);
-	}
-	out << YAML::EndSeq;
-	out << YAML::Key << "alienItemLevels" << YAML::Value;
-	out << YAML::BeginSeq;
-	for ( std::vector<std::vector<int> >::const_iterator i = _alienItemLevels.begin(); i != _alienItemLevels.end(); ++i)
-	{
-		out << *i;
-	}
-	out << YAML::EndSeq;
-	/*out << YAML::Key << "startingBase" << YAML::Value;
-	_startingBase->save(out);*/
-	out << YAML::Key << "costSoldier" << YAML::Value << _costSoldier;
-	out << YAML::Key << "costEngineer" << YAML::Value << _costEngineer;
-	out << YAML::Key << "costScientist" << YAML::Value << _costScientist;
-	out << YAML::Key << "timePersonnel" << YAML::Value << _timePersonnel;
-	out << YAML::EndMap;
-	sav << out.c_str();
-	sav.close();
+	return rule;
 }
 
 /**
  * Generates a brand new saved game with starting data.
- * @return New saved game.
+ * @return A new saved game.
  */
 SavedGame *Ruleset::newSave() const
 {
@@ -914,10 +574,15 @@ SavedGame *Ruleset::newSave() const
 		save->getCountries()->push_back(new Country(getCountry(*i)));
 	}
 	// Adjust funding to total $6M
-	int missing = ((6000 - save->getCountryFunding()/1000) / (int)save->getCountries()->size()) * 1000;
+	int missing = ((_initialFunding - save->getCountryFunding()/1000) / (int)save->getCountries()->size()) * 1000;
 	for (std::vector<Country*>::iterator i = save->getCountries()->begin(); i != save->getCountries()->end(); ++i)
 	{
-		(*i)->setFunding((*i)->getFunding().back() + missing);
+		int funding = (*i)->getFunding().back() + missing;
+		if (funding < 0)
+		{
+			funding = (*i)->getFunding().back();
+		}
+		(*i)->setFunding(funding);
 	}
 	save->setFunds(save->getCountryFunding());
 
@@ -927,23 +592,9 @@ SavedGame *Ruleset::newSave() const
 		save->getRegions()->push_back(new Region(getRegion(*i)));
 	}
 
-	// Set up IDs
-	std::map<std::string, int> ids;
-	for (std::vector<std::string>::const_iterator i = _craftsIndex.begin(); i != _craftsIndex.end(); ++i)
-	{
-		ids[*i] = 1;
-	}
-	ids["STR_UFO"] = 1;
-	ids["STR_WAYPOINT"] = 1;
-	ids["STR_TERROR_SITE"] = 1;
-	ids["STR_ALIEN_BASE"] = 1;
-	ids["STR_SOLDIER"] = 1;
-	ids["ALIEN_MISSIONS"] = 1;
-	save->initIds(ids);
-
 	// Set up starting base
 	Base *base = new Base(this);
-	base->load(*_startingBase->begin(), save, true);
+	base->load(_startingBase, save, true);
 
 	// Correct IDs
 	for (std::vector<Craft*>::const_iterator i = base->getCrafts()->begin(); i != base->getCrafts()->end(); ++i)
@@ -952,14 +603,10 @@ SavedGame *Ruleset::newSave() const
 	}
 
 	// Generate soldiers
-	int soldiers = 0;
-	if (const YAML::Node *pName = (*_startingBase->begin()).FindValue("randomSoldiers"))
-	{
-		(*pName) >> soldiers;
-	}
+	int soldiers = _startingBase["randomSoldiers"].as<int>(0);
 	for (int i = 0; i < soldiers; ++i)
 	{
-		Soldier *soldier = new Soldier(getSoldier("XCOM"), getArmor("STR_NONE_UC"), &_names, save->getId("STR_SOLDIER"));
+		Soldier *soldier = genSoldier(save);
 		soldier->setCraft(base->getCrafts()->front());
 		base->getSoldiers()->push_back(soldier);
 	}
@@ -967,8 +614,7 @@ SavedGame *Ruleset::newSave() const
 	save->getBases()->push_back(base);
 	// Setup alien strategy
 	save->getAlienStrategy().init(this);
-
-	save->getTime()->load(*_startingTime);
+	save->setTime(_startingTime);
 
 	return save;
 }
@@ -994,7 +640,7 @@ RuleCountry *Ruleset::getCountry(const std::string &id) const
 }
 
 /**
- * Returns the list of all countries.
+ * Returns the list of all countries
  * provided by the ruleset.
  * @return List of countries.
  */
@@ -1090,7 +736,7 @@ const std::vector<std::string> &Ruleset::getCraftWeaponsList() const
 /**
  * Returns the rules for the specified item.
  * @param id Item type.
- * @return Rules for the item. Or 0 when the item is not found.
+ * @return Rules for the item, or 0 when the item is not found.
  */
 RuleItem *Ruleset::getItem(const std::string &id) const
 {
@@ -1143,7 +789,7 @@ const std::vector<std::string> &Ruleset::getTerrainList() const
 
 /**
  * Returns the rules for the specified terrain.
- * @param name terrain name.
+ * @param name Terrain name.
  * @return Rules for the terrain.
  */
 RuleTerrain *Ruleset::getTerrain(const std::string &name) const
@@ -1153,8 +799,8 @@ RuleTerrain *Ruleset::getTerrain(const std::string &name) const
 }
 
 /**
- * Returns the info about a specific map data file
- * @param name datafile name.
+ * Returns the info about a specific map data file.
+ * @param name Datafile name.
  * @return Rules for the datafile.
  */
 MapDataSet *Ruleset::getMapDataSet(const std::string &name)
@@ -1173,7 +819,7 @@ MapDataSet *Ruleset::getMapDataSet(const std::string &name)
 }
 
 /**
- * Returns the info about a specific unit
+ * Returns the info about a specific unit.
  * @param name Unit name.
  * @return Rules for the units.
  */
@@ -1184,7 +830,7 @@ RuleSoldier *Ruleset::getSoldier(const std::string &name) const
 }
 
 /**
- * Returns the info about a specific unit
+ * Returns the info about a specific unit.
  * @param name Unit name.
  * @return Rules for the units.
  */
@@ -1195,7 +841,7 @@ Unit *Ruleset::getUnit(const std::string &name) const
 }
 
 /**
- * Returns the info about a specific alien race
+ * Returns the info about a specific alien race.
  * @param name Race name.
  * @return Rules for the race.
  */
@@ -1206,7 +852,7 @@ AlienRace *Ruleset::getAlienRace(const std::string &name) const
 }
 
 /**
- * Returns the list of all alien races
+ * Returns the list of all alien races.
  * provided by the ruleset.
  * @return List of alien races.
  */
@@ -1216,7 +862,7 @@ const std::vector<std::string> &Ruleset::getAlienRacesList() const
 }
 
 /**
- * Returns the info about a specific deployment
+ * Returns the info about a specific deployment.
  * @param name Deployment name.
  * @return Rules for the deployment.
  */
@@ -1237,7 +883,7 @@ const std::vector<std::string> &Ruleset::getDeploymentsList() const
 }
 
 /**
- * Returns the info about a specific armor
+ * Returns the info about a specific armor.
  * @param name Armor name.
  * @return Rules for the armor.
  */
@@ -1339,6 +985,15 @@ RuleInventory *Ruleset::getInventory(const std::string &id) const
 }
 
 /**
+ * Returns the list of inventories.
+ * @return The list of inventories.
+ */
+const std::vector<std::string> &Ruleset::getInvsList () const
+{
+	return _invsIndex;
+}
+
+/**
  * Returns the rules for the specified research project.
  * @param id Research project type.
  * @return Rules for the research project.
@@ -1378,6 +1033,7 @@ const std::vector<std::string> &Ruleset::getManufactureList () const
 	return _manufactureIndex;
 }
 
+
 /**
  * Generates and returns a list of facilities for custom bases.
  * The list contains all the facilities that are listed in the 'startingBase'
@@ -1386,13 +1042,11 @@ const std::vector<std::string> &Ruleset::getManufactureList () const
  */
 std::vector<OpenXcom::RuleBaseFacility*> Ruleset::getCustomBaseFacilities() const
 {
-	const YAML::Node &node = *_startingBase->begin();
 	std::vector<OpenXcom::RuleBaseFacility*> PlaceList;
 
-	for (YAML::Iterator i = node["facilities"].begin(); i != node["facilities"].end(); ++i)
+	for (YAML::const_iterator i = _startingBase["facilities"].begin(); i != _startingBase["facilities"].end(); ++i)
 	{
-		std::string type;
-		(*i)["type"] >> type;
+		std::string type = (*i)["type"].as<std::string>();
 		if (type != "STR_ACCESS_LIFT")
 		{
 			PlaceList.push_back(getBaseFacility(type));
@@ -1434,15 +1088,16 @@ const std::vector<std::string> &Ruleset::getAlienMissionList() const
 
 #define CITY_EPSILON 0.00000000000001 // compensate for slight coordinate change
 
-/** @brief Match a city based on coordinates.
- * This function object compare a city's coordinates with the stored coordinates.
+/**
+ * @brief Match a city based on coordinates.
+ * This function object compares a city's coordinates with the stored coordinates.
  */
 class EqualCoordinates: std::unary_function<const City *, bool>
 {
 public:
-	/// Remember the coordinates.
+	/// Remembers the coordinates.
 	EqualCoordinates(double lon, double lat) : _lon(lon), _lat(lat) { /* Empty by design */ }
-	/// Compare with stored coordinates.
+	/// Compares with stored coordinates.
 	//bool operator()(const City *city) const { return AreSame(city->getLongitude(), _lon) && AreSame(city->getLatitude(), _lat); }
 	bool operator()(const City *city) const { return (fabs(city->getLongitude() - _lon) < CITY_EPSILON) &&
 	                                                 (fabs(city->getLatitude() - _lat) < CITY_EPSILON); }
@@ -1451,7 +1106,7 @@ private:
 };
 
 /**
- * Find the city at coordinates @a lon, @a lat.
+ * Finds the city at coordinates @a lon, @a lat.
  * The search will only match exact coordinates.
  * @param lon The longtitude.
  * @param lat The latitude.
@@ -1472,7 +1127,8 @@ const City *Ruleset::locateCity(double lon, double lat) const
 }
 
 /**
- * @return a deep array containing the alien item levels.
+ * Gets the alien item level table.
+ * @return A deep array containing the alien item levels.
  */
 const std::vector<std::vector<int> > &Ruleset::getAlienItemLevels() const
 {
@@ -1480,16 +1136,18 @@ const std::vector<std::vector<int> > &Ruleset::getAlienItemLevels() const
 }
 
 /**
- * @return the starting base definition.
+ * Gets the Defined starting base.
+ * @return The starting base definition.
  */
 const YAML::Node &Ruleset::getStartingBase()
 {
-	return *_startingBase->begin();
+	return _startingBase;
 }
 
 /**
- * @param id the ID of the MCDPatch we want.
- * @return the MCDPatch based on ID, or 0 if none defined.
+ * Gets an MCDPatch.
+ * @param id The ID of the MCDPatch we want.
+ * @return The MCDPatch based on ID, or 0 if none defined.
  */
 MCDPatch *Ruleset::getMCDPatch(const std::string id) const
 {
@@ -1498,8 +1156,8 @@ MCDPatch *Ruleset::getMCDPatch(const std::string id) const
 }
 
 /**
- * @param id the ID of the MCDPatch we want.
- * @return the MCDPatch based on ID, or 0 if none defined.
+ * Gets the list of external sprites.
+ * @return The list of external sprites.
  */
 std::vector<std::pair<std::string, ExtraSprites *> > Ruleset::getExtraSprites() const
 {
@@ -1507,165 +1165,204 @@ std::vector<std::pair<std::string, ExtraSprites *> > Ruleset::getExtraSprites() 
 }
 
 /**
- * @param id the ID of the MCDPatch we want.
- * @return the MCDPatch based on ID, or 0 if none defined.
+ * Gets the list of external sounds.
+ * @return The list of external sounds.
  */
 std::vector<std::pair<std::string, ExtraSounds *> > Ruleset::getExtraSounds() const
 {
 	return _extraSounds;
 }
 /**
- * @param id the ID of the MCDPatch we want.
- * @return the MCDPatch based on ID, or 0 if none defined.
+ * Gets the list of external strings.
+ * @return The list of external strings.
  */
 std::map<std::string, ExtraStrings *> Ruleset::getExtraStrings() const
 {
 	return _extraStrings;
 }
 
-/*
- * Sort all our lists according to their weight.
+/**
+ * Gets the list of StatStrings.
+ * @return The list of StatStrings.
+ */
+std::vector<StatString *> Ruleset::getStatStrings() const
+{
+	return _statStrings;
+}
+
+/**
+ * Compares rules based on their list orders.
+ */
+template <typename T>
+struct compareRule : public std::binary_function<const std::string&, const std::string&, bool>
+{
+	Ruleset *_ruleset;
+	typedef T*(Ruleset::*RuleLookup)(const std::string &id);
+	RuleLookup _lookup;
+
+	compareRule(Ruleset *ruleset, RuleLookup lookup) : _ruleset(ruleset), _lookup(lookup)
+	{
+	}
+
+	bool operator()(const std::string &r1, const std::string &r2) const
+	{
+		T *rule1 = (_ruleset->*_lookup)(r1);
+		T *rule2 = (_ruleset->*_lookup)(r2);
+		return (rule1->getListOrder() < rule2->getListOrder());
+	}
+};
+
+/**
+ * Craft weapons use the list order of their launcher item.
+ */
+template <>
+struct compareRule<RuleCraftWeapon> : public std::binary_function<const std::string&, const std::string&, bool>
+{
+	Ruleset *_ruleset;
+
+	compareRule(Ruleset *ruleset) : _ruleset(ruleset)
+	{
+	}
+
+	bool operator()(const std::string &r1, const std::string &r2) const
+	{
+		RuleItem *rule1 = _ruleset->getItem(_ruleset->getCraftWeapon(r1)->getLauncherItem());
+		RuleItem *rule2 = _ruleset->getItem(_ruleset->getCraftWeapon(r2)->getLauncherItem());
+		return (rule1->getListOrder() < rule2->getListOrder());
+	}
+};
+
+/**
+ * Armor uses the list order of their store item.
+ * Itemless armor comes before all else.
+ */
+template <>
+struct compareRule<Armor> : public std::binary_function<const std::string&, const std::string&, bool>
+{
+	Ruleset *_ruleset;
+
+	compareRule(Ruleset *ruleset) : _ruleset(ruleset)
+	{
+	}
+
+	bool operator()(const std::string &r1, const std::string &r2) const
+	{
+		Armor* armor1 = _ruleset->getArmor(r1);
+		Armor* armor2 = _ruleset->getArmor(r2);
+		RuleItem *rule1 = _ruleset->getItem(armor1->getStoreItem());
+		RuleItem *rule2 = _ruleset->getItem(armor2->getStoreItem());
+		if (!rule1 && !rule2)
+			return (armor1 < armor2); // tiebreaker, don't care about order, pointers are as good as any
+		else if (!rule1)
+			return true;
+		else if (!rule2)
+			return false;
+		else
+			return (rule1->getListOrder() < rule2->getListOrder());
+	}
+};
+
+/**
+ * Ufopaedia articles use section and list order.
+ */
+template <>
+struct compareRule<ArticleDefinition> : public std::binary_function<const std::string&, const std::string&, bool>
+{
+	Ruleset *_ruleset;
+	static std::map<std::string, int> _sections;
+
+	compareRule(Ruleset *ruleset) : _ruleset(ruleset)
+	{
+		_sections[UFOPAEDIA_XCOM_CRAFT_ARMAMENT] = 0;
+		_sections[UFOPAEDIA_HEAVY_WEAPONS_PLATFORMS] = 1;
+		_sections[UFOPAEDIA_WEAPONS_AND_EQUIPMENT] = 2;
+		_sections[UFOPAEDIA_ALIEN_ARTIFACTS] = 3;
+		_sections[UFOPAEDIA_BASE_FACILITIES] = 4;
+		_sections[UFOPAEDIA_ALIEN_LIFE_FORMS] = 5;
+		_sections[UFOPAEDIA_ALIEN_RESEARCH] = 6;
+		_sections[UFOPAEDIA_UFO_COMPONENTS] = 7;
+		_sections[UFOPAEDIA_UFOS] = 8;
+		_sections[UFOPAEDIA_NOT_AVAILABLE] = 9;
+	}
+
+	bool operator()(const std::string &r1, const std::string &r2) const
+	{
+		ArticleDefinition *rule1 = _ruleset->getUfopaediaArticle(r1);
+		ArticleDefinition *rule2 = _ruleset->getUfopaediaArticle(r2);
+		if (_sections[rule1->section] == _sections[rule2->section])
+			return (rule1->getListOrder() < rule2->getListOrder());
+		else
+			return (_sections[rule1->section] < _sections[rule2->section]);
+	}
+};
+std::map<std::string, int> compareRule<ArticleDefinition>::_sections;
+
+/**
+ * Sorts all our lists according to their weight.
  */
 void Ruleset::sortLists()
 {
-	std::map<int, std::string> list;
-	int offset = 0;
-
-	for (std::vector<std::string>::const_iterator i = _itemsIndex.begin(); i != _itemsIndex.end(); ++i)
-	{
-		while (list.find(getItem(*i)->getListOrder() + offset) != list.end())
-		{
-			++offset;
-		}
-		list[getItem(*i)->getListOrder() + offset] = *i;
-	}
-	_itemsIndex.clear();
-	for (std::map<int, std::string>::const_iterator i = list.begin(); i != list.end(); ++i)
-	{
-		_itemsIndex.push_back(i->second);
-	}
-	list.clear();
-	offset = 0;
-
-	for (std::vector<std::string>::const_iterator i = _craftsIndex.begin(); i != _craftsIndex.end(); ++i)
-	{
-		while (list.find(getCraft(*i)->getListOrder() + offset) != list.end())
-		{
-			++offset;
-		}
-		list[getCraft(*i)->getListOrder() + offset] = *i;
-	}
-	_craftsIndex.clear();
-	for (std::map<int, std::string>::const_iterator i = list.begin(); i != list.end(); ++i)
-	{
-		_craftsIndex.push_back(i->second);
-	}
-	list.clear();
-	offset = 0;
-	
-	for (std::vector<std::string>::const_iterator i = _facilitiesIndex.begin(); i != _facilitiesIndex.end(); ++i)
-	{
-		while (list.find(getBaseFacility(*i)->getListOrder() + offset) != list.end())
-		{
-			++offset;
-		}
-		list[getBaseFacility(*i)->getListOrder() + offset] = *i;
-	}
-	_facilitiesIndex.clear();
-	for (std::map<int, std::string>::const_iterator i = list.begin(); i != list.end(); ++i)
-	{
-		_facilitiesIndex.push_back(i->second);
-	}
-	list.clear();
-	offset = 0;
-	
-	for (std::vector<std::string>::const_iterator i = _craftWeaponsIndex.begin(); i != _craftWeaponsIndex.end(); ++i)
-	{
-		while (list.find(getItem(getCraftWeapon(*i)->getLauncherItem())->getListOrder() + offset) != list.end())
-		{
-			++offset;
-		}
-		list[getItem(getCraftWeapon(*i)->getLauncherItem())->getListOrder() + offset] = *i;
-	}
-	_craftWeaponsIndex.clear();
-	for (std::map<int, std::string>::const_iterator i = list.begin(); i != list.end(); ++i)
-	{
-		_craftWeaponsIndex.push_back(i->second);
-	}
-	list.clear();
-	offset = 0;
-	
-	int alternateEntry = 0;
-	for (std::vector<std::string>::const_iterator i = _armorsIndex.begin(); i != _armorsIndex.end(); ++i)
-	{
-		if (getItem(getArmor(*i)->getStoreItem()))
-		{
-			while (list.find(getItem(getArmor(*i)->getStoreItem())->getListOrder() + offset) != list.end())
-			{
-				++offset;
-			}
-			list[getItem(getArmor(*i)->getStoreItem())->getListOrder() + offset] = *i;
-		}
-		else
-		{
-			list[alternateEntry] = *i;
-			alternateEntry += 1;
-		}
-	}
-	_armorsIndex.clear();
-	for (std::map<int, std::string>::const_iterator i = list.begin(); i != list.end(); ++i)
-	{
-		_armorsIndex.push_back(i->second);
-	}
-	list.clear();
-	offset = 0;
-	
-	for (std::vector<std::string>::const_iterator i = _ufopaediaIndex.begin(); i != _ufopaediaIndex.end(); ++i)
-	{
-		while (list.find(getUfopaediaArticle(*i)->getListOrder() + offset) != list.end())
-		{
-			++offset;
-		}
-		list[getUfopaediaArticle(*i)->getListOrder() + offset] = *i;
-	}
-	_ufopaediaIndex.clear();
-	for (std::map<int, std::string>::const_iterator i = list.begin(); i != list.end(); ++i)
-	{
-		_ufopaediaIndex.push_back(i->second);
-	}
-	list.clear();
-	offset = 0;
-	
-	for (std::vector<std::string>::const_iterator i = _researchIndex.begin(); i != _researchIndex.end(); ++i)
-	{
-		while (list.find(getResearch(*i)->getListOrder() + offset) != list.end())
-		{
-			++offset;
-		}
-		list[getResearch(*i)->getListOrder() + offset] = *i;
-	}
-	_researchIndex.clear();
-	for (std::map<int, std::string>::const_iterator i = list.begin(); i != list.end(); ++i)
-	{
-		_researchIndex.push_back(i->second);
-	}
-	list.clear();
-	offset = 0;
-	
-	for (std::vector<std::string>::const_iterator i = _manufactureIndex.begin(); i != _manufactureIndex.end(); ++i)
-	{
-		while (list.find(getManufacture(*i)->getListOrder() + offset) != list.end())
-		{
-			++offset;
-		}
-		list[getManufacture(*i)->getListOrder() + offset] = *i;
-	}
-	_manufactureIndex.clear();
-	for (std::map<int, std::string>::const_iterator i = list.begin(); i != list.end(); ++i)
-	{
-		_manufactureIndex.push_back(i->second);
-	}
-	list.clear();
-	offset = 0;
+	std::sort(_itemsIndex.begin(), _itemsIndex.end(), compareRule<RuleItem>(this, (compareRule<RuleItem>::RuleLookup)&Ruleset::getItem));
+	std::sort(_craftsIndex.begin(), _craftsIndex.end(), compareRule<RuleCraft>(this, (compareRule<RuleCraft>::RuleLookup)&Ruleset::getCraft));
+	std::sort(_facilitiesIndex.begin(), _facilitiesIndex.end(), compareRule<RuleBaseFacility>(this, (compareRule<RuleBaseFacility>::RuleLookup)&Ruleset::getBaseFacility));
+	std::sort(_researchIndex.begin(), _researchIndex.end(), compareRule<RuleResearch>(this, (compareRule<RuleResearch>::RuleLookup)&Ruleset::getResearch));
+	std::sort(_manufactureIndex.begin(), _manufactureIndex.end(), compareRule<RuleManufacture>(this, (compareRule<RuleManufacture>::RuleLookup)&Ruleset::getManufacture));
+	std::sort(_invsIndex.begin(), _invsIndex.end(), compareRule<RuleInventory>(this, (compareRule<RuleInventory>::RuleLookup)&Ruleset::getInventory));
+	// special cases
+	std::sort(_craftWeaponsIndex.begin(), _craftWeaponsIndex.end(), compareRule<RuleCraftWeapon>(this));
+	std::sort(_armorsIndex.begin(), _armorsIndex.end(), compareRule<Armor>(this));
+	std::sort(_ufopaediaIndex.begin(), _ufopaediaIndex.end(), compareRule<ArticleDefinition>(this));
 }
+
+/**
+ * Gets the research-requirements for Psi-Lab (it's a cache for psiStrengthEval)
+ */
+std::vector<std::string> Ruleset::getPsiRequirements() const
+{
+	return _psiRequirements;
+}
+
+/**
+ * Creates a new randomly-generated soldier.
+ * @param save Saved game the soldier belongs to.
+ * @return Newly generated soldier.
+ */
+Soldier *Ruleset::genSoldier(SavedGame *save) const
+{
+	Soldier *soldier = 0;
+	int newId = save->getId("STR_SOLDIER");
+
+	// Check for duplicates
+	// Original X-COM gives up after 10 tries so might as well do the same here
+	bool duplicate = true;
+	for (int i = 0; i < 10 && duplicate; i++)
+	{
+		delete soldier;
+		soldier = new Soldier(getSoldier("XCOM"), getArmor("STR_NONE_UC"), &_names, newId);
+		duplicate = false;
+		for (std::vector<Base*>::iterator i = save->getBases()->begin(); i != save->getBases()->end() && !duplicate; ++i)
+		{
+			for (std::vector<Soldier*>::iterator j = (*i)->getSoldiers()->begin(); j != (*i)->getSoldiers()->end() && !duplicate; ++j)
+			{
+				if ((*j)->getName() == soldier->getName())
+				{
+					duplicate = true;
+				}
+			}
+			for (std::vector<Transfer*>::iterator k = (*i)->getTransfers()->begin(); k != (*i)->getTransfers()->end() && !duplicate; ++k)
+			{
+				if ((*k)->getType() == TRANSFER_SOLDIER && (*k)->getSoldier()->getName() == soldier->getName())
+				{
+					duplicate = true;
+				}
+			}
+		}
+	}
+
+	// calculate new statString
+	soldier->calcStatString(getStatStrings(), (Options::psiStrengthEval && save->isResearched(getPsiRequirements())));
+
+	return soldier;
+}
+
 }

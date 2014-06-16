@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -18,6 +18,8 @@
  */
 #include "CraftWeapon.h"
 #include "../Ruleset/RuleCraftWeapon.h"
+#include "../Ruleset/Ruleset.h"
+#include "../Ruleset/RuleItem.h"
 #include "CraftWeaponProjectile.h"
 
 namespace OpenXcom
@@ -45,21 +47,22 @@ CraftWeapon::~CraftWeapon()
  */
 void CraftWeapon::load(const YAML::Node &node)
 {
-	node["ammo"] >> _ammo;
-	node["rearming"] >> _rearming;
+	_ammo = node["ammo"].as<int>(_ammo);
+	_rearming = node["rearming"].as<bool>(_rearming);
 }
 
 /**
  * Saves the base to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void CraftWeapon::save(YAML::Emitter &out) const
+YAML::Node CraftWeapon::save() const
 {
-	out << YAML::BeginMap;
-	out << YAML::Key << "type" << YAML::Value << _rules->getType();
-	out << YAML::Key << "ammo" << YAML::Value << _ammo;
-	out << YAML::Key << "rearming" << YAML::Value << _rearming;
-	out << YAML::EndMap;
+	YAML::Node node;
+	node["type"] = _rules->getType();
+	node["ammo"] = _ammo;
+	if (_rearming)
+		node["rearming"] = _rearming;
+	return node;
 }
 
 /**
@@ -83,6 +86,7 @@ int CraftWeapon::getAmmo() const
 /**
  * Changes the ammo contained in this craft weapon.
  * @param ammo Weapon ammo.
+ * @return If the weapon ran out of ammo.
  */
 bool CraftWeapon::setAmmo(int ammo)
 {
@@ -120,14 +124,36 @@ void CraftWeapon::setRearming(bool rearming)
 
 /**
  * Rearms this craft weapon's ammo.
+ * @param available number of clips available.
+ * @param clipSize number of rounds in said clips.
+ * @return number of clips used.
  */
-void CraftWeapon::rearm()
+int CraftWeapon::rearm(const int available, const int clipSize)
 {
-	setAmmo(_ammo + _rules->getRearmRate());
-	if (_ammo == _rules->getAmmoMax())
+	int used = 0;
+
+	if (clipSize > 0)
 	{
+		const int needed = std::max(1, (_rules->getAmmoMax() - _ammo) / clipSize);
+		used = std::min(_rules->getRearmRate() / clipSize, needed);
+	}
+
+	if (available >= used)
+	{
+		setAmmo(_ammo + _rules->getRearmRate());
+	}
+	else
+	{
+		setAmmo(_ammo + (clipSize * available));
+	}
+
+	if (_ammo >= _rules->getAmmoMax())
+	{
+		_ammo = _rules->getAmmoMax();
 		_rearming = false;
 	}
+
+	return used;
 }
 
 /*
@@ -143,6 +169,24 @@ CraftWeaponProjectile* CraftWeapon::fire() const
 	p->setDamage(this->getRules()->getDamage());
 	p->setRange(this->getRules()->getRange());
 	return p;
+}
+
+/*
+ * get how many clips are loaded into this weapon.
+ * @param ruleset a pointer to the core ruleset.
+ * @return number of clips loaded.
+ */
+int CraftWeapon::getClipsLoaded(Ruleset *ruleset)
+{
+	int retVal = (int)floor((double)_ammo / _rules->getRearmRate());
+	RuleItem *clip = ruleset->getItem(_rules->getClipItem());
+
+	if (clip && clip->getClipSize() > 0)
+	{
+		retVal = (int)floor((double)_ammo / clip->getClipSize());
+	}
+
+	return retVal;
 }
 
 }

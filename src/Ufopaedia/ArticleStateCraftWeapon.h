@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,7 +20,6 @@
 #ifndef OPENXCOM_ARTICLESTATECRAFTWEAPON_H
 #define OPENXCOM_ARTICLESTATECRAFTWEAPON_H
 
-#include <string>
 #include "ArticleState.h"
 
 namespace OpenXcom
@@ -37,7 +36,7 @@ namespace OpenXcom
 	class ArticleStateCraftWeapon : public ArticleState
 	{
 	public:
-		ArticleStateCraftWeapon(Game *game, ArticleDefinitionCraftWeapon *article_defs, int palSwitch);
+		ArticleStateCraftWeapon(Game *game, ArticleDefinitionCraftWeapon *article_defs);
 		virtual ~ArticleStateCraftWeapon();
 
 	protected:

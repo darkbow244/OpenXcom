@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -25,10 +25,13 @@
 #include "Logger.h"
 #include "Exception.h"
 #include "Options.h"
-#include "LocalizedText.h"
+#include "LanguagePlurality.h"
 #include "../Ruleset/ExtraStrings.h"
 #include "../Interface/TextList.h"
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
@@ -36,214 +39,57 @@
 namespace OpenXcom
 {
 
-/**
- * This class is the interface used to find plural forms for the different languages.
- * Derived classes implement getKeys() according to the specific language's rules.
- */
-class Language::PluralityRules
-{
-public:
-	/// Allow proper destruction through base pointer.
-	virtual ~PluralityRules() { /* Empty by design. */ }
-	/// Get dictionary key suffix for value of @a n.
-	/**
-	  @param count The number controlling the plurality.
-	  @return Pointer to the zero-terminated suffix string.
-	 */
-	virtual const char *getSuffix(unsigned n) const = 0;
-	/// Create a concrete instance for a given language.
-	static PluralityRules *create(const std::string &language);
-
-protected:
-	PluralityRules() { /* Empty by design. */ }
-private:
-	typedef PluralityRules *(*PFCreate)();
-	static std::map<std::string, PFCreate> s_factoryFunctions;
-};
-}
-
-namespace {
-using OpenXcom::Language;
-/**
- * Plurality rules for English (also used as default).
- * Provide rules for languages that have singular and plural, with zero using the plural form.
- * @langsuffixes _1 for singular and _2 for plural.
- */
-class ManyOneMany: public Language::PluralityRules
-{
-public:
-	virtual const char *getSuffix(unsigned n) const;
-	static PluralityRules *create() { return new ManyOneMany; }
-};
-
-const char *ManyOneMany::getSuffix(unsigned n) const
-{
-	if (n == 1)
-		return "_1";
-	return "_2";
-}
-
-/**
- * Plurality rules for French.
- * Provide rules for languages that have singular and plural, with zero using the singular form.
- * @langsuffixes _1 for singular and _2 for plural.
- */
-class FrenchRules: public Language::PluralityRules
-{
-public:
-	virtual const char *getSuffix(unsigned n) const;
-	static PluralityRules *create() { return new FrenchRules; }
-};
-
-const char *FrenchRules::getSuffix(unsigned n) const
-{
-	if (n < 2)
-		return "_1";
-	return "_2";
-}
-
-/**
- * Plurality rules for Czech.
- * @langsuffixes _1 n%100 == 1, 2<= n%100 <= 4, _3 otherwise.
- */
-class CzechRules: public Language::PluralityRules
-{
-public:
-	virtual const char *getSuffix(unsigned n) const;
-	static PluralityRules *create() { return new CzechRules; }
-};
-
-const char *CzechRules::getSuffix(unsigned n) const
-{
-	if (n%100 == 1)
-		return "_1";
-	if (n%100 >= 2 && n%100 <=4)
-		return "_2";
-	return "_3";
-}
-
-/**
- * Plurality rules for Polish.
- * @langsuffixes _1 n%100 == 1, 2<= n%100 <= 4 && (n%100<10 || n%100>20), _3 otherwise.
- */
-class PolishRules: public Language::PluralityRules
-{
-public:
-	virtual const char *getSuffix(unsigned n) const;
-	static PluralityRules *create() { return new PolishRules; }
-};
-
-const char *PolishRules::getSuffix(unsigned n) const
-{
-	if (n%100 == 1)
-		return "_1";
-	if ( 2 <= n%10 && n%10 <=4 && (n%100 < 10 || n%100 > 20))
-		return "_2";
-	return "_3";
-}
-
-/**
- * Plurality rules for Romanian.
- * @langsuffixes _1 n%100 == 1, _2 n == 0 || 1 <= n%100 <= 20, _3 otherwise.
- */
-class RomanianRules: public Language::PluralityRules
-{
-public:
-	virtual const char *getSuffix(unsigned n) const;
-	static PluralityRules *create() { return new RomanianRules; }
-};
-
-const char *RomanianRules::getSuffix(unsigned n) const
-{
-	if (n%100 == 1)
-		return "_1";
-	if (0 == n || (1 <= n%100 && n%100 <= 20))
-		return "_2";
-	return "_3";
-}
-
-/**
- * Plurality rules for Russian.
- * @langsuffixes _1 n%10 == 1 && n%100 != 11, 2<= n%100 <= 4 && (n%100<10 || n%100>20), _3 otherwise.
- */
-class RusianRules: public Language::PluralityRules
-{
-public:
-	virtual const char *getSuffix(unsigned n) const;
-	static PluralityRules *create() { return new RusianRules; }
-};
-
-const char *RusianRules::getSuffix(unsigned n) const
-{
-	if (n%10 == 1 && n%100 != 11)
-		return "_1";
-	if ( 2 <= n%10 && n%10 <=4 && (n%100 < 10 || n%100 > 20))
-		return "_2";
-	return "_3";
-}
-
-/**
- * Plurality rules for Hungarian.
- * @langsuffixes _1 for everything.
- */
-class HungarianRules: public Language::PluralityRules
-{
-public:
-	virtual const char *getSuffix(unsigned n) const;
-	static PluralityRules *create() { return new HungarianRules; }
-};
-
-const char *HungarianRules::getSuffix(unsigned) const
-{
-	return "_1";
-}
-
-}
-
-namespace OpenXcom {
-
-/** A mapping of language to plurality rules.
- * It is populated the first time plurality rules are requested.
- * @see Language::PluralityRules::create
- */
-std::map<std::string, Language::PluralityRules::PFCreate> Language::PluralityRules::s_factoryFunctions;
-
-/**
- * Search and create a handler for the plurality rules of @a language.
- * If the language was not found, a default with the same rules as English is returned.
- * @param language The target language.
- * @return A newly created PluralityRules instance for the given language.
- * @todo Make sure the rest of the languages we support in OpenXcom are ok with
- * the English rules for plurality.
- * @internal The first time this is called, we populate the language => rules mapping.
- */
-Language::PluralityRules *Language::PluralityRules::create(const std::string &language)
-{
-	// Populate factory the first time we are called.
-	if (s_factoryFunctions.empty())
-	{
-		s_factoryFunctions.insert(std::make_pair("FRANÇAIS", &FrenchRules::create));
-		s_factoryFunctions.insert(std::make_pair("ČESKY", &CzechRules::create));
-		s_factoryFunctions.insert(std::make_pair("POLSKI", &PolishRules::create));
-		s_factoryFunctions.insert(std::make_pair("ROMÂNĂ", &RomanianRules::create));
-		s_factoryFunctions.insert(std::make_pair("РУССКИЙ", &RusianRules::create));
-		s_factoryFunctions.insert(std::make_pair("MAGYAR", &HungarianRules::create));
-	}
-	PFCreate creator = &ManyOneMany::create;
-	std::map<std::string, PFCreate>::const_iterator found = s_factoryFunctions.find(language);
-	if (found != s_factoryFunctions.end())
-	{
-		creator = found->second;
-	}
-	return (*creator)();
-}
+std::map<std::string, std::wstring> Language::_names;
+std::vector<std::string> Language::_rtl, Language::_cjk;
 
 /**
  * Initializes an empty language file.
  */
-Language::Language() : _name(L""), _strings(), _handler(0)
+Language::Language() : _id(""), _strings(), _handler(0), _direction(DIRECTION_LTR), _wrap(WRAP_WORDS)
 {
-
+	// maps don't have initializers :(
+	if (_names.empty())
+	{
+		_names["en-US"] = utf8ToWstr("English (US)");
+		_names["en-GB"] = utf8ToWstr("English (UK)");
+		_names["bg-BG"] = utf8ToWstr("Български");
+		_names["cs-CZ"] = utf8ToWstr("Česky");
+		_names["da"] = utf8ToWstr("Dansk");
+		_names["de"] = utf8ToWstr("Deutsch");
+		_names["es"] = utf8ToWstr("Español (ES)");
+		_names["es-419"] = utf8ToWstr("Español (AL)");
+		_names["fr"] = utf8ToWstr("Français");
+		_names["fi"] = utf8ToWstr("Suomi");
+		_names["grk"] = utf8ToWstr("Ελληνικά");
+		_names["hu-HU"] = utf8ToWstr("Magyar");
+		_names["it"] = utf8ToWstr("Italiano");
+		_names["ja-JP"] = utf8ToWstr("日本語");
+		_names["ko"] = utf8ToWstr("한국어");
+		_names["nl"] = utf8ToWstr("Nederlands");
+		_names["no"] = utf8ToWstr("Norsk");
+		_names["pl-PL"] = utf8ToWstr("Polski");
+		_names["pt-BR"] = utf8ToWstr("Português (BR)");
+		_names["pt-PT"] = utf8ToWstr("Português (PT)");
+		_names["ro"] = utf8ToWstr("Română");
+		_names["ru"] = utf8ToWstr("Русский");
+		_names["sk-SK"] = utf8ToWstr("Slovenčina");
+		_names["sv"] = utf8ToWstr("Svenska");
+		_names["tr-TR"] = utf8ToWstr("Türkçe");
+		_names["uk"] = utf8ToWstr("Українська");
+		_names["zh-CN"] = utf8ToWstr("中文");
+		_names["zh-TW"] = utf8ToWstr("文言");
+	}
+	if (_rtl.empty())
+	{
+		_rtl.push_back("he");
+	}
+	if (_cjk.empty())
+	{
+		_cjk.push_back("ja-JP");
+		//_cjk.push_back("ko");  has spacing between words
+		_cjk.push_back("zh-CN");
+		_cjk.push_back("zh-TW");
+	}
 }
 
 /**
@@ -330,9 +176,26 @@ std::string Language::wstrToCp(const std::wstring& src)
 #else
 	const int MAX = 500;
 	char buffer[MAX];
+	setlocale(LC_ALL, "");
 	wcstombs(buffer, src.c_str(), MAX);
+	setlocale(LC_ALL, "C");
 	std::string str(buffer);
 	return str;
+#endif
+}
+
+/**
+ * Takes a wide-character string and converts it to an
+ * 8-bit string with the filesystem encoding.
+ * @param src Wide-character string.
+ * @return Filesystem string.
+ */
+std::string Language::wstrToFs(const std::wstring& src)
+{
+#ifdef _WIN32
+	return Language::wstrToCp(src);
+#else
+	return Language::wstrToUtf8(src);
 #endif
 }
 
@@ -421,10 +284,27 @@ std::wstring Language::cpToWstr(const std::string& src)
 #else
 	const int MAX = 500;
 	wchar_t buffer[MAX + 1];
+	setlocale(LC_ALL, "");
 	size_t len = mbstowcs(buffer, src.c_str(), MAX);
+	setlocale(LC_ALL, "C");
 	if (len == (size_t)-1)
 		return L"?";
 	return std::wstring(buffer, len);
+#endif
+}
+
+/**
+ * Takes an 8-bit string with the filesystem encoding
+ * and converts it to a wide-character string.
+ * @param src Filesystem string.
+ * @return Wide-character string.
+ */
+std::wstring Language::fsToWstr(const std::string& src)
+{
+#ifdef _WIN32
+	return Language::cpToWstr(src);
+#else
+	return Language::utf8ToWstr(src);
 #endif
 }
 
@@ -436,11 +316,9 @@ std::wstring Language::cpToWstr(const std::string& src)
  */
 void Language::replace(std::string &str, const std::string &find, const std::string &replace)
 {
-	for (size_t i = str.find(find); i != std::string::npos;)
+	for (size_t i = str.find(find); i != std::string::npos; i = str.find(find, i + replace.length()))
 	{
 		str.replace(i, find.length(), replace);
-		++i;
-		i = str.find(find, i);
 	}
 }
 
@@ -452,7 +330,7 @@ void Language::replace(std::string &str, const std::string &find, const std::str
  */
 void Language::replace(std::wstring &str, const std::wstring &find, const std::wstring &replace)
 {
-	for (size_t i = str.find(find); i != std::wstring::npos; i = str.find(find, i + 1))
+	for (size_t i = str.find(find); i != std::wstring::npos; i = str.find(find, i + replace.length()))
 	{
 		str.replace(i, find.length(), replace);
 	}
@@ -460,112 +338,112 @@ void Language::replace(std::wstring &str, const std::wstring &find, const std::w
 
 /**
  * Gets all the languages found in the
- * data folder and adds them to a text list.
- * @param list Text list.
- * @return List of language filenames.
+ * Data folder and returns their properties.
+ * @param files List of language filenames.
+ * @param names List of language human-readable names.
  */
-std::vector<std::string> Language::getList(TextList *list)
+void Language::getList(std::vector<std::string> &files, std::vector<std::wstring> &names)
 {
-	std::vector<std::string> langs = CrossPlatform::getFolderContents(CrossPlatform::getDataFolder("Language/"), "lng");
+	files = CrossPlatform::getFolderContents(CrossPlatform::getDataFolder("Language/"), "yml");
+	names.clear();
 
-	for (std::vector<std::string>::iterator i = langs.begin(); i != langs.end();)
+	for (std::vector<std::string>::iterator i = files.begin(); i != files.end(); ++i)
 	{
-		std::string file = (*i);
-		std::string fullname = Options::getDataFolder() + "Language/" + file;
-		std::ifstream fin(fullname.c_str(), std::ios::in | std::ios::binary);
-		try
+		*i = CrossPlatform::noExt(*i);
+		std::wstring name;
+		std::map<std::string, std::wstring>::iterator lang = _names.find(*i);
+		if (lang != _names.end())
 		{
-			if (!fin)
-			{
-				throw Exception(file + " not found");
-			}
-			char value;
-			std::string langname;
-			while (fin.read(&value, 1))
-			{
-				if (value != '\n')
-				{
-					langname += value;
-				}
-				else
-				{
-					break;
-				}
-			}
-			fin.close();
-			if (list != 0)
-			{
-				list->addRow(1, Language::utf8ToWstr(langname).c_str());
-			}
-			(*i) = file.substr(0, file.length()-4);
-			++i;
+			name = lang->second;
 		}
-		catch (Exception &e)
+		else
 		{
-			Log(LOG_ERROR) << e.what();
-			i = langs.erase(i);
-			continue;
+			name = Language::fsToWstr(*i);
 		}
+		names.push_back(name);
 	}
-	return langs;
 }
 
 /**
- * Loads pairs of strings separated by linebreaks contained
- * in a text file into the Language. Each pair is made of
- * an ID and a localized string.
- * @param filename Filename of the LNG file.
- * @sa @ref LanguageFiles
+ * Loads a language file in Ruby-on-Rails YAML format.
+ * Not that this has anything to do with Ruby, but since it's a
+ * widely-supported format and we already have YAML, it was convenient.
+ * @param filename Filename of the YAML file.
+ * @param extras Pointer to extra strings from ruleset.
  */
-void Language::loadLng(const std::string &filename, ExtraStrings *extras)
+void Language::load(const std::string &filename, ExtraStrings *extras)
 {
 	_strings.clear();
 
-	std::ifstream txtFile (filename.c_str(), std::ios::in | std::ios::binary);
-	if (!txtFile)
+	YAML::Node doc = YAML::LoadFile(filename);
+	_id = doc.begin()->first.as<std::string>();
+	YAML::Node lang = doc.begin()->second;
+	for (YAML::const_iterator i = lang.begin(); i != lang.end(); ++i)
 	{
-		throw Exception(filename + " not found");
-	}
-	txtFile.exceptions(std::ios::badbit);
-
-	try
-	{
-		std::string id, u8msg;
-		std::string language;
-		// Get language name
-		std::getline(txtFile, language);
-		_name = utf8ToWstr(language);
-		// Read lines in pairs.
-		while (!std::getline(txtFile, id).eof())
+		// Regular strings
+		if (i->second.IsScalar())
 		{
-			if (std::getline(txtFile, u8msg).fail())
-			{
-				throw Exception("Invalid language file");
-			}
-			replace(u8msg, "{NEWLINE}", "\n");
-			replace(u8msg, "{SMALLLINE}", "\x02");
-			replace(u8msg, "{ALT}", "\x01");
-			_strings[id] = utf8ToWstr(u8msg);
+			_strings[i->first.as<std::string>()] = loadString(i->second.as<std::string>());
 		}
-		delete _handler;
-		_handler = PluralityRules::create(language);
-	}
-	catch (std::ifstream::failure e)
-	{
-		throw Exception("Invalid language file");
+		// Strings with plurality
+		else if (i->second.IsMap())
+		{
+			for (YAML::const_iterator j = i->second.begin(); j != i->second.end(); ++j)
+			{
+				std::string s = i->first.as<std::string>() + "_" + j->first.as<std::string>();
+				_strings[s] = loadString(j->second.as<std::string>());
+			}
+		}
 	}
 	if (extras)
 	{
 		for (std::map<std::string, std::string>::const_iterator i = extras->getStrings()->begin(); i != extras->getStrings()->end(); ++i)
 		{
-			std::string s = i->second;
-			replace(s, "{NEWLINE}", "\n");
-			replace(s, "{SMALLLINE}", "\x02");
-			replace(s, "{ALT}", "\x01");
-			_strings[i->first] = utf8ToWstr(s);
+			_strings[i->first] = loadString(i->second);
 		}
 	}
-	txtFile.close();
+	delete _handler;
+	_handler = LanguagePlurality::create(_id);
+	if (std::find(_rtl.begin(), _rtl.end(), _id) == _rtl.end())
+	{
+		_direction = DIRECTION_LTR;
+	}
+	else
+	{
+		_direction = DIRECTION_RTL;
+	}
+	if (std::find(_cjk.begin(), _cjk.end(), _id) == _cjk.end())
+	{
+		_wrap = WRAP_WORDS;
+	}
+	else
+	{
+		_wrap = WRAP_LETTERS;
+	}
+}
+
+/**
+* Replaces all special string markers with the approriate characters
+* and converts the string encoding.
+* @param string Original UTF-8 string.
+* @return New widechar string.
+*/
+std::wstring Language::loadString(const std::string &string) const
+{
+	std::string s = string;
+	replace(s, "{NEWLINE}", "\n");
+	replace(s, "{SMALLLINE}", "\x02");
+	replace(s, "{ALT}", "\x01");
+	return utf8ToWstr(s);
+}
+
+/**
+ * Returns the language's locale.
+ * @return IANA language tag.
+ */
+std::string Language::getId() const
+{
+	return _id;
 }
 
 /**
@@ -574,7 +452,7 @@ void Language::loadLng(const std::string &filename, ExtraStrings *extras)
  */
 std::wstring Language::getName() const
 {
-	return _name;
+	return _names[_id];
 }
 
 /**
@@ -586,11 +464,12 @@ std::wstring Language::getName() const
 const LocalizedText &Language::getString(const std::string &id) const
 {
 	static LocalizedText hack(L"");
-	// assert(!id.empty()); // Isn't an empty ID an error?
+	if (id.empty())
+		return hack;
 	std::map<std::string, LocalizedText>::const_iterator s = _strings.find(id);
 	if (s == _strings.end())
 	{
-		Log(LOG_WARNING) << id << " not found in " << Options::getString("language");
+		Log(LOG_WARNING) << id << " not found in " << Options::language;
 		hack = LocalizedText(utf8ToWstr(id));
 		return hack;
 	}
@@ -615,7 +494,7 @@ LocalizedText Language::getString(const std::string &id, unsigned n) const
 	if (0 == n)
 	{
 		// Try specialized form.
-		s = _strings.find(id + "_0");
+		s = _strings.find(id + "_zero");
 	}
 	if (s == _strings.end())
 	{
@@ -624,10 +503,10 @@ LocalizedText Language::getString(const std::string &id, unsigned n) const
 	}
 	if (s == _strings.end())
 	{
-		Log(LOG_WARNING) << id << " not found in " << Options::getString("language");
+		Log(LOG_WARNING) << id << " not found in " << Options::language;
 		return LocalizedText(utf8ToWstr(id));
 	}
-	std::wstringstream ss;
+	std::wostringstream ss;
 	ss << n;
 	std::wstring marker(L"{N}"), val(ss.str()), txt(s->second);
 	replace(txt, marker, val);
@@ -638,6 +517,7 @@ LocalizedText Language::getString(const std::string &id, unsigned n) const
  * Returns the localized text with the specified ID, in the proper form for the gender.
  * If it's not found, just returns the ID.
  * @param id ID of the string.
+ * @param gender Current soldier gender.
  * @return String with the requested ID.
  */
 const LocalizedText &Language::getString(const std::string &id, SoldierGender gender) const
@@ -685,20 +565,40 @@ void Language::toHtml(const std::string &filename) const
 	htmlFile.close();
 }
 
+/**
+ * Returns the direction to use for rendering
+ * text in this language.
+ * @return Text direction.
+ */
+TextDirection Language::getTextDirection() const
+{
+	return _direction;
+}
+
+/**
+ * Returns the wrapping rules to use for rendering
+ * text in this language.
+ * @return Text wrapping.
+ */
+TextWrapping Language::getTextWrapping() const
+{
+	return _wrap;
+}
+
 }
 
 /** @page LanguageFiles Format of the language files.
 
-Language files (.lng) contain UTF-8 text.
-The first line in a language file is the language's name, in the language itself.
-The rest of the file is processed in line pairs. The first line of each pair
-contains the ID string (dictionary key), the next line contains the localized
-text for the given key.
+Language files are formatted as YAML (.yml) containing UTF-8 (no BOM) text.
+The first line in a language file is the language's identifier.
+The rest of the file are key-value pairs. The key of each pair
+contains the ID string (dictionary key), and the value contains the localized
+text for the given key in quotes.
 
 The localized text may contain the following special markers:
 <table>
 <tr>
- <td><tt>{</tt><i>1, 2, 3, ...</i> <tt>}</tt></td>
+ <td><tt>{</tt><i>0, 1, 2, ...</i> <tt>}</tt></td>
  <td>These markers will be replaced by programmer-supplied values before the
  message is displayed.</td></tr>
 <tr>
@@ -709,7 +609,7 @@ The localized text may contain the following special markers:
  <td><tt>{NEWLINE}</tt></td>
  <td>It will be replaced with a line break in the game.</td></tr>
 <tr>
- <td>{SMALLLINE}</td>
+ <td><tt>{SMALLLINE}</tt></td>
  <td>The rest of the text will be in a small font.</td></tr>
 </table>
 
@@ -717,36 +617,16 @@ There is an additional marker sequence, that should only appear in texts that
 depend on a number. This marker <tt>{N}</tt> will be replaced by the actual
 number used. The keys for texts that depend on numbers also have special
 suffixes, that depend on the language. For all languages, a suffix of
-<tt>_0</tt> is tried if the number is zero, before trying the actual key
-according to the language rules. The rest of the suffixes depend on the language.
-
-<table>
-<caption>Current rules</caption>
-<tr><th>Language</th><th>Suffixes</th></tr>
-<tr><td>English</td><td><tt>_1</tt> n == 1, <tt>_2</tt> otherwise</td></tr>
-<tr><td>French</td><td><tt>_1</tt> n < 2, <tt>_2</tt> otherwise</td></tr>
-<tr><td>Czech</td><td><tt>_1</tt> n % 100 == 1, <tt>_2</tt> 2 <= n % 100 <= 4, <tt>_3</tt> otherwise</td></tr>
-<tr><td>Polish</td><td><tt>_1</tt> n % 100 == 1,
- <tt>_2</tt> 2 <= n % 10 <= 4 && (n % 100 < 10 || n % 100 > 20),
- <tt>_3</tt> otherwise</td></tr>
-<tr><td>Romanian</td><td><tt>_1</tt> n % 100 == 1,
- <tt>_2</tt> n == 0 || 1 <= n % 100 <= 20,
- <tt>_3</tt> otherwise</td></tr>
-<tr><td>Russian</td><td><tt>_1</tt> n % 10 == 1 && n % 100 != 11,
- <tt>_2</tt> 2 <= n % 10 <= 4 && (n % 100 < 10 || n % 100 > 20),
- <tt>_3</tt> otherwise</td></tr>
-<tr><td>Hungarian</td><td><tt>_1</tt> for every case.</td></tr>
-<tr><td><i>Other languages</i></th><td><tt>_1</tt> n == 1, <tt>_2</tt> otherwise</td></tr>
-</table>
+<tt>_zero</tt> is tried if the number is zero, before trying the actual key
+according to the language rules. The rest of the suffixes depend on the language,
+as described <a href="http://unicode.org/repos/cldr-tmp/trunk/diff/supplemental/language_plural_rules.html">here</a>.
 
 So, you would write (for English):
 <pre>
-STR_ENEMIES_0
-There are no enemies left.
-STR_ENEMIES_1
-There is a single enemy left.
-STR_ENEMIES_2
-There are {N} enemies left.
+STR_ENEMIES:
+  zero:  "There are no enemies left."
+  one:   "There is a single enemy left."
+  other: "There are {N} enemies left."
 </pre>
 
 */

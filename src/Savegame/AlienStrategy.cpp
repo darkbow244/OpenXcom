@@ -83,10 +83,9 @@ void AlienStrategy::load(const Ruleset *, const YAML::Node &node)
 	_regionChances.clear();
 	_regionChances.load(node["regions"]);
 	const YAML::Node &strat = node["possibleMissions"];
-	for (YAML::Iterator nn = strat.begin(); nn != strat.end(); ++nn)
+	for (YAML::const_iterator nn = strat.begin(); nn != strat.end(); ++nn)
 	{
-		std::string region;
-		(*nn)["region"] >> region;
+		std::string region = (*nn)["region"].as<std::string>();
 		const YAML::Node &missions = (*nn)["missions"];
 		std::auto_ptr<WeightedOptions> options(new WeightedOptions());
 		options->load(missions);
@@ -96,34 +95,37 @@ void AlienStrategy::load(const Ruleset *, const YAML::Node &node)
 
 /**
  * Saves the alien data to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void AlienStrategy::save(YAML::Emitter &out) const
+YAML::Node AlienStrategy::save() const
 {
-	out << YAML::BeginMap;
-	out << YAML::Key << "regions" << YAML::Value;
-	_regionChances.save(out);
-	out << YAML::Key << "possibleMissions" << YAML::Value;
-	out << YAML::BeginSeq;
+	YAML::Node node;
+	node["regions"] = _regionChances.save();
 	for (MissionsByRegion::const_iterator ii = _regionMissions.begin(); ii != _regionMissions.end(); ++ii)
 	{
-		out << YAML::BeginMap;
-		out << YAML::Key << "region" << YAML::Value << ii->first;
-		out << YAML::Key << "missions" << YAML::Value;
-		ii->second->save(out);
-		out << YAML::EndMap;
+		YAML::Node subnode;
+		subnode["region"] = ii->first;
+		subnode["missions"] = ii->second->save();
+		node["possibleMissions"].push_back(subnode);
 	}
-	out << YAML::EndSeq;
-	out << YAML::EndMap;
+	return node;
 }
 
 /**
  * Choose one of the regions for a mission.
+ * @param rules Pointer to the ruleset.
  * @return The region id.
  */
-const std::string &AlienStrategy::chooseRandomRegion() const
+const std::string AlienStrategy::chooseRandomRegion(const Ruleset *rules)
 {
-	return _regionChances.choose();
+	std::string chosen = _regionChances.choose();
+	if (chosen == "")
+	{
+		init(rules);
+		chosen = _regionChances.choose();
+	}
+	assert ("" != chosen);
+	return chosen;
 }
 
 /**
@@ -131,7 +133,7 @@ const std::string &AlienStrategy::chooseRandomRegion() const
  * @param region The region id.
  * @return The mission id.
  */
-const std::string &AlienStrategy::chooseRandomMission(const std::string &region) const
+const std::string AlienStrategy::chooseRandomMission(const std::string &region) const
 {
 	MissionsByRegion::const_iterator found = _regionMissions.find(region);
 	assert(found != _regionMissions.end());

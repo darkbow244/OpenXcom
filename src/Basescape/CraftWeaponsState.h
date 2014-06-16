@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -33,8 +33,8 @@ class TextList;
 class RuleCraftWeapon;
 
 /**
- * Select Armament window that allows to
- * change the weapon equipped on a craft.
+ * Select Armament window for
+ * changing the weapon equipped on a craft.
  */
 class CraftWeaponsState : public State
 {
@@ -44,7 +44,7 @@ private:
 
 	TextButton *_btnCancel;
 	Window *_window;
-	Text *_txtTitle, *_txtArmament, *_txtQuantity, *_txtAmmunition, *_txtAvailable;
+	Text *_txtTitle, *_txtArmament, *_txtQuantity, *_txtAmmunition;
 	TextList *_lstWeapons;
 	std::vector<RuleCraftWeapon*> _weapons;
 public:

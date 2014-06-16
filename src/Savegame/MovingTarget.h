@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -39,15 +39,15 @@ protected:
 
 	/// Calculates a new speed vector to the destination.
 	virtual void calculateSpeed();
-public:
 	/// Creates a moving target.
 	MovingTarget();
+public:
 	/// Cleans up the moving target.
 	virtual ~MovingTarget();
 	/// Loads the moving target from YAML.
-	virtual void load(const YAML::Node& node);
+	void load(const YAML::Node& node);
 	/// Saves the moving target to YAML.
-	virtual void save(YAML::Emitter& out) const;
+	virtual YAML::Node save() const;
 	/// Gets the moving target's destination.
 	Target *getDestination() const;
 	/// Sets the moving target's destination.

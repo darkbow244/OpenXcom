@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -24,6 +24,9 @@
 namespace OpenXcom
 {
 
+/**
+ * For adding a set of extra sprite data to the game.
+ */
 class ExtraSprites
 {
 private:
@@ -36,20 +39,22 @@ public:
 	ExtraSprites();
 	/// Cleans up the external sprite set.
 	virtual ~ExtraSprites();
-	/// Loads the data from yaml
+	/// Loads the data from YAML.
 	void load(const YAML::Node &node, int modIndex);
-	/// Gets the list of sprites defined by this mod
+	/// Gets the list of sprites defined by this mod.
 	std::map<int, std::string> *getSprites();
-	/// get the width of the surfaces (used for single images and new spritesets)
-	const int getWidth() const;
-	/// get the height of the surfaces (used for single images and new spritesets)
-	const int getHeight() const;
-	/// is this a single surface, or a set of surfaces?
-	const bool getSingleImage() const;
-	/// get the mod index for this external sprite set.
-	const int getModIndex() const;
-	const int getSubX() const;
-	const int getSubY() const;
+	/// Gets the width of the surfaces (used for single images and new spritesets).
+	int getWidth() const;
+	/// Gets the height of the surfaces (used for single images and new spritesets).
+	int getHeight() const;
+	/// Checks if this is a single surface, or a set of surfaces.
+	bool getSingleImage() const;
+	/// Gets the mod index for this external sprite set.
+	int getModIndex() const;
+	/// Gets the x subdivision.
+	int getSubX() const;
+	/// Gets the y subdivision.
+	int getSubY() const;
 
 };
 

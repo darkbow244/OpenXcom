@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -30,6 +30,9 @@ class TextButton;
 class Window;
 class Text;
 class TextList;
+class NumberText;
+class Slider;
+class ComboBox;
 
 /**
  * A state purely for testing game functionality.
@@ -46,7 +49,10 @@ private:
 	TextButton *_button;
 	Window *_window;
 	Text *_text;
+	NumberText *_number;
 	TextList *_list;
+	Slider *_slider;
+	ComboBox *_comboBox;
 	int _i;
 
 	/// Creates a surface with every color in the palette.

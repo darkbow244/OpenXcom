@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -30,6 +30,7 @@ class InteractiveSurface;
 class Inventory;
 class SavedBattleGame;
 class BattlescapeState;
+class BattleUnit;
 
 /**
  * Screen which displays soldier's inventory.
@@ -43,7 +44,7 @@ private:
 	Surface *_selAmmo;
 	Inventory *_inv;
 	SavedBattleGame *_battleGame;
-	bool _tu, _showMoreStatsInInventoryView;
+	bool _tu;
 	BattlescapeState *_parent;
 public:
 	/// Creates the Inventory state.
@@ -70,7 +71,7 @@ public:
 	void btnRankClick(Action *action);
 	/// Handler for clicking the Unload button.
 	void invClick(Action *action);
-	/// Handle keypresses.
+	/// Handles keypresses.
 	void handle(Action *action);
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -39,16 +39,17 @@ protected:
 public:
 	/// Creates a new BattleState linked to the game.
 	BattleState(BattlescapeGame *parent, BattleAction action);
+	/// Creates a new BattleState linked to the game.
 	BattleState(BattlescapeGame *parent);
 	/// Cleans up the BattleState.
 	virtual ~BattleState();
 	/// Initializes the state.
 	virtual void init();
-	/// Handles a cancels request.
+	/// Handles a cancel request.
 	virtual void cancel();
 	/// Runs state functionality every cycle.
 	virtual void think();
-	/// Get a copy of the action.
+	/// Gets a copy of the action.
 	BattleAction getAction() const;
 };
 

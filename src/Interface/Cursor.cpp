@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -36,7 +36,6 @@ namespace OpenXcom
  */
 Cursor::Cursor(int width, int height, int x, int y) : Surface(width, height, x, y), _color(0)
 {
-	SDL_ShowCursor(SDL_DISABLE);
 }
 
 /**
@@ -44,7 +43,6 @@ Cursor::Cursor(int width, int height, int x, int y) : Surface(width, height, x, 
  */
 Cursor::~Cursor()
 {
-
 }
 
 /**
@@ -56,8 +54,8 @@ void Cursor::handle(Action *action)
 {
 	if (action->getDetails()->type == SDL_MOUSEMOTION)
 	{
-		setX((int)floor(action->getDetails()->motion.x / action->getXScale()));
-		setY((int)floor(action->getDetails()->motion.y / action->getYScale()));
+		setX((int)floor((action->getDetails()->motion.x - action->getLeftBlackBand()) / action->getXScale()));
+		setY((int)floor((action->getDetails()->motion.y - action->getTopBlackBand()) / action->getYScale()));
 	}
 }
 

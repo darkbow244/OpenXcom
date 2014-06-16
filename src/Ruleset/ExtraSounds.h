@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -24,6 +24,9 @@
 namespace OpenXcom
 {
 
+/**
+ * For adding a set of extra sound data to the game.
+ */
 class ExtraSounds
 {
 private:

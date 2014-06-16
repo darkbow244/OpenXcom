@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -45,15 +45,15 @@ private:
 	std::vector<RuleManufacture *> _possibleProductions;
 
 public:
-	/// Create the state
+	/// Creates the state.
 	NewManufactureListState(Game *game, Base *base);
-	/// Initialize state
-	void init ();
-	/// Handler for clicking the OK button
+	/// Initializes state.
+	void init();
+	/// Handler for clicking the OK button.
 	void btnOkClick(Action * action);
-	/// Handler for clicking on the list
+	/// Handler for clicking on the list.
 	void lstProdClick (Action * action);
-	/// Fill the list with Base production's
+	/// Fills the list of possible productions.
 	void fillProductionList();
 };
 }

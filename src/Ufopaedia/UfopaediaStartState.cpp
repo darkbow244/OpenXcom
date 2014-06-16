@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -23,6 +23,7 @@
 #include "../Ruleset/ArticleDefinition.h"
 #include "../Engine/Game.h"
 #include "../Engine/Action.h"
+#include "../Engine/Options.h"
 #include "../Engine/Palette.h"
 #include "../Engine/Surface.h"
 #include "../Engine/Language.h"
@@ -51,7 +52,7 @@ namespace OpenXcom
 		_window = new Window(this, 256, 180, 32, 10, POPUP_BOTH);
 
 		// set title
-		_txtTitle = new Text(224, 16, 48, 33);
+		_txtTitle = new Text(224, 17, 48, 33);
 
 		// set buttons
 		int y = 50;
@@ -63,7 +64,7 @@ namespace OpenXcom
 		_btnOk = new TextButton(224, 12, 48, y);
 
 		// Set palette
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
+		setPalette("PAL_GEOSCAPE", 0);
 
 		add(_window);
 		add(_txtTitle);
@@ -81,18 +82,20 @@ namespace OpenXcom
 		_txtTitle->setColor(Palette::blockOffset(8)+10);
 		_txtTitle->setBig();
 		_txtTitle->setAlign(ALIGN_CENTER);
-		_txtTitle->setText(_game->getLanguage()->getString("STR_UFOPAEDIA"));
+		_txtTitle->setText(tr("STR_UFOPAEDIA"));
 		
 		for (int i = 0; i < NUM_SECTIONS; ++i)
 		{
 			_btnSection[i]->setColor(Palette::blockOffset(8)+5);
-			_btnSection[i]->setText(_game->getLanguage()->getString(SECTIONS[i]));
+			_btnSection[i]->setText(tr(SECTIONS[i]));
 			_btnSection[i]->onMouseClick((ActionHandler)&UfopaediaStartState::btnSectionClick);
 		}		
 
 		_btnOk->setColor(Palette::blockOffset(8)+5);
-		_btnOk->setText(_game->getLanguage()->getString("STR_OK"));
+		_btnOk->setText(tr("STR_OK"));
 		_btnOk->onMouseClick((ActionHandler)&UfopaediaStartState::btnOkClick);
+		_btnOk->onKeyboardPress((ActionHandler)&UfopaediaStartState::btnOkClick, Options::keyCancel);
+		_btnOk->onKeyboardPress((ActionHandler)&UfopaediaStartState::btnOkClick, Options::keyGeoUfopedia);
 	}
 
 	UfopaediaStartState::~UfopaediaStartState()
@@ -105,7 +108,6 @@ namespace OpenXcom
 	void UfopaediaStartState::btnOkClick(Action *)
 	{
 		_game->popState();
-//		_game->quit();
 	}
 
 	/**

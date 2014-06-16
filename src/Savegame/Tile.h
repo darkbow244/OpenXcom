@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -54,15 +54,7 @@ public:
         Uint8 boolFields;
 		Uint32 totalBytes; // per structure, including any data not mentioned here and accounting for all array members!
 	} serializationKey;
-
-    // scratch variables for AI, regarding how many soldiers are visible from a square and how close is the closest one:
-	int closestSoldierDSqr;
-	Position closestSoldierPos;
-	int meanSoldierDSqr;
-	int soldiersVisible;
-	int closestAlienDSqr;
-	int totalExposure;
-
+	
 	static const int NOT_CALCULATED = -1;
 
 protected:
@@ -85,6 +77,7 @@ protected:
 	int _preview;
 	int _TUMarker;
 	int _overlaps;
+	bool _danger;
 public:
 	/// Creates a tile.
 	Tile(const Position& pos);
@@ -95,11 +88,24 @@ public:
 	/// Load the tile from binary buffer in memory
 	void loadBinary(Uint8 *buffer, Tile::SerializationKey& serializationKey);
 	/// Saves the tile to yaml
-	void save(YAML::Emitter &out) const;
+	YAML::Node save() const;
 	/// Saves the tile to binary
 	void saveBinary(Uint8** buffer) const;
-	/// Gets a pointer to the mapdata for a specific part of the tile.
-	MapData *getMapData(int part) const;
+
+	/**
+	 * Get the MapData pointer of a part of the tile.
+	 * @param part the part 0-3.
+	 * @return pointer to mapdata
+	 */
+	MapData *getMapData(int part) const
+	{
+		if (0 > part || 3 < part)
+		{
+			return NULL;
+		}
+		return _objects[part];
+	}
+
 	/// Sets the pointer to the mapdata for a specific part of the tile
 	void setMapData(MapData *dat, int mapDataID, int mapDataSetID, int part);
 	/// Gets the IDs to the mapdata for a specific part of the tile
@@ -114,14 +120,32 @@ public:
 	bool isBigWall() const;
 	/// Get terrain level.
 	int getTerrainLevel() const;
-	/// Gets the tile's position.
-	const Position& getPosition() const;
+
+	/**
+	 * Gets the tile's position.
+	 * @return position
+	 */
+	const Position& getPosition() const
+	{
+		return _pos;
+	}
+
 	/// Gets the floor object footstep sound.
 	int getFootstepSound(Tile *tileBelow) const;
 	/// Open a door, returns the ID, 0(normal), 1(ufo) or -1 if no door opened.
-	int openDoor(int part, BattleUnit *Unit = 0, bool debug = false);
-	/// Check if ufo door is open.
-	bool isUfoDoorOpen(int part) const;
+	int openDoor(int part, BattleUnit *Unit = 0, BattleActionType reserve = BA_NONE);
+
+	/**
+	 * Check if the ufo door is open or opening. Used for visibility/light blocking checks.
+	 * This function assumes that there never are 2 doors on 1 tile or a door and another wall on 1 tile.
+	 * @param part
+	 * @return bool
+	 */
+	bool isUfoDoorOpen(int part) const
+	{
+		return (_objects[part] && _objects[part]->isUFODoor() && _currentFrame[part] != 0);
+	}
+
 	/// Close ufo door.
 	int closeUfoDoor();
 	/// Sets the black fog of war status of this tile.
@@ -148,8 +172,14 @@ public:
 	Surface *getSprite(int part) const;
 	/// Set a unit on this tile.
 	void setUnit(BattleUnit *unit, Tile *tileBelow = 0);
-	/// Get the (alive) unit on this tile.
-	BattleUnit *getUnit() const;
+	/**
+	 * Get the (alive) unit on this tile.
+	 * @return BattleUnit.
+	 */
+	BattleUnit *getUnit() const
+	{
+		return _unit;
+	}
 	/// Set fire, does not increment overlaps.
 	void setFire(int fire);
 	/// Get fire.
@@ -163,7 +193,7 @@ public:
 	/// Get flammability.
 	int getFlammability() const;
 	/// Get turns to burn
-	const int getFuel() const;
+	int getFuel() const;
 	/// attempt to set the tile on fire, sets overlaps to one if successful.
 	void ignite(int power);
 	/// Get fire and smoke animation offset.
@@ -189,15 +219,20 @@ public:
 	/// set the direction (used for path previewing)
 	void setPreview(int dir);
 	/// retrieve the direction stored by the pathfinding.
-	const int getPreview() const;
+	int getPreview() const;
 	/// set the number to be displayed for pathfinding preview.
 	void setTUMarker(int tu);
 	/// get the number to be displayed for pathfinding preview.
-	const int getTUMarker() const;
+	int getTUMarker() const;
 	/// how many times has this tile been overlapped with smoke/fire (runtime only)
-	const int getOverlaps() const;
+	int getOverlaps() const;
 	/// increment the overlap value on this tile.
 	void addOverlap();
+	/// set the danger flag on this tile (so the AI will avoid it).
+	void setDangerous();
+	/// check the danger flag on this tile.
+	bool getDangerous();
+
 };
 
 }

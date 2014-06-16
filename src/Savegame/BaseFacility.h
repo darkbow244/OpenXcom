@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -27,6 +27,7 @@ namespace OpenXcom
 class RuleBaseFacility;
 class Base;
 class Ruleset;
+class Craft;
 
 /**
  * Represents a base facility placed in a base.
@@ -40,6 +41,7 @@ private:
 	RuleBaseFacility *_rules;
 	Base *_base;
 	int _x, _y, _buildTime;
+	Craft *_craftForDrawing;	// craft, used for drawing facility
 public:
 	/// Creates a base facility of the specified type.
 	BaseFacility(RuleBaseFacility *rules, Base *base);
@@ -48,7 +50,7 @@ public:
 	/// Loads the base facility from YAML.
 	void load(const YAML::Node& node);
 	/// Saves the base facility to YAML.
-	void save(YAML::Emitter& out) const;
+	YAML::Node save() const;
 	/// Gets the facility's ruleset.
 	RuleBaseFacility *getRules() const;
 	/// Gets the facility's X position.
@@ -67,6 +69,10 @@ public:
 	void build();
 	/// Checks if the facility is currently in use.
 	bool inUse() const;
+	/// Gets craft, used for drawing facility.
+	Craft *getCraft() const;
+	/// Sets craft, used for drawing facility.
+	void setCraft(Craft *craft);
 };
 
 }

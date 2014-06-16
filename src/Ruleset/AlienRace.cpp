@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -25,7 +25,7 @@ namespace OpenXcom
  * Creates a blank alien race.
  * @param id String defining the id.
  */
-AlienRace::AlienRace(const std::string &id): _id(id), _members()
+AlienRace::AlienRace(const std::string &id) : _id(id), _members(), _retaliation(true)
 {
 }
 
@@ -39,31 +39,9 @@ AlienRace::~AlienRace()
  */
 void AlienRace::load(const YAML::Node &node)
 {
-	for (YAML::Iterator i = node.begin(); i != node.end(); ++i)
-	{
-		std::string key;
-		i.first() >> key;
-		if (key == "id")
-		{
-			i.second() >> _id;
-		}
-		else if (key == "members")
-		{
-			i.second() >> _members;
-		}
-	}
-}
-
-/**
- * Saves the alien race to a YAML file.
- * @param out YAML emitter.
- */
-void AlienRace::save(YAML::Emitter &out) const
-{
-	out << YAML::BeginMap;
-	out << YAML::Key << "id" << YAML::Value << _id;
-	out << YAML::Key << "members" << YAML::Value << _members;
-	out << YAML::EndMap;
+	_id = node["id"].as<std::string>(_id);
+	_members = node["members"].as< std::vector<std::string> >(_members);
+	_retaliation = node["retaliation"].as<bool>(_retaliation);
 }
 
 /**
@@ -78,12 +56,21 @@ std::string AlienRace::getId() const
 
 /**
  * Gets a certain member of this alien race family.
- * @param id The members id.
- * @return The members name.
+ * @param id The member's id.
+ * @return The member's name.
  */
 std::string AlienRace::getMember(int id) const
 {
 	return _members[id];
+}
+
+/**
+ * Returns if the race can participate in retaliation missions.
+ * @return True if it can retaliate.
+ */
+bool AlienRace::canRetaliate() const
+{
+	return _retaliation;
 }
 
 }

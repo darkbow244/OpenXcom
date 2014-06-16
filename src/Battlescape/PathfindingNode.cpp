@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,7 +17,6 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "PathfindingNode.h"
-#include "Position.h"
 #include <math.h>
 
 namespace OpenXcom
@@ -27,7 +26,7 @@ namespace OpenXcom
  * Sets up a PathfindingNode.
  * @param pos Position.
  */
-PathfindingNode::PathfindingNode(Position pos) : _pos(pos), _openentry(0)
+PathfindingNode::PathfindingNode(Position pos) : _pos(pos), _checked(0), _tuCost(0), _prevNode(0), _prevDir(0), _tuGuess(0), _openentry(0)
 {
 
 }
@@ -41,15 +40,16 @@ PathfindingNode::~PathfindingNode()
 }
 
 /**
-* Get the node position
-* @return node position
-*/
+ * Gets the node position.
+ * @return Node position.
+ */
 const Position &PathfindingNode::getPosition() const
 {
 	return _pos;
 }
+
 /**
- * Reset node.
+ * Resets the node.
  */
 void PathfindingNode::reset()
 {
@@ -58,17 +58,18 @@ void PathfindingNode::reset()
 }
 
 /**
-* Is checked?
-* @return bool
-*/
+ * Gets the checked status of this node.
+ * @return True, if this node was checked.
+ */
 bool PathfindingNode::isChecked() const
 {
 	return _checked;
 }
 
 /**
- * Get TU cost.
- * @return cost
+ * Gets the TU cost.
+ * @param missile Is this a missile?
+ * @return The TU cost.
  */
 int PathfindingNode::getTUCost(bool missile) const
 {
@@ -79,8 +80,8 @@ int PathfindingNode::getTUCost(bool missile) const
 }
 
 /**
- * Get previous node
- * @return pointer to previous node
+ * Gets the previous node.
+ * @return Pointer to the previous node.
  */
 PathfindingNode* PathfindingNode::getPrevNode() const
 {
@@ -88,8 +89,8 @@ PathfindingNode* PathfindingNode::getPrevNode() const
 }
 
 /**
- * Get previous walking direction how we got on this node.
- * @return previous vector
+ * Gets the previous walking direction for how we got on this node.
+ * @return Previous vector.
  */
 int PathfindingNode::getPrevDir() const
 {
@@ -97,7 +98,7 @@ int PathfindingNode::getPrevDir() const
 }
 
 /**
- * Connect node. This will connect the node to the previous node along the path to @a target
+ * Connects the node. This will connect the node to the previous node along the path to @a target
  * and update the pathfinding information.
  * @param tuCost The total cost of the path so far.
  * @param prevNode The previous node along the path.
@@ -118,7 +119,7 @@ void PathfindingNode::connect(int tuCost, PathfindingNode* prevNode, int prevDir
 }
 
 /**
- * Connect node. This will connect the node to the previous node along the path.
+ * Connects the node. This will connect the node to the previous node along the path.
  * @param tuCost The total cost of the path so far.
  * @param prevNode The previous node along the path.
  * @param prevDir The direction FROM the previous node.

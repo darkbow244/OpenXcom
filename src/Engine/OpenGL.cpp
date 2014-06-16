@@ -8,14 +8,18 @@
   license: public domain
 */
 
+#ifndef __NO_OPENGL
+
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
 
 #include "OpenGL.h"
 #include "Logger.h"
+#include "Surface.h"
 
 namespace OpenXcom 
 {
@@ -57,9 +61,23 @@ std::string strGLError(GLenum glErr)
 	return err;
 }
 
-
 #define SDL_ColorOrder GL_RGBA //color odrer compatybile with SDL_Color struct
-#define glGetProcAddress(name) SDL_GL_GetProcAddress(name)
+
+/* Helper types to convert between object pointers and function pointers.
+   Although ignored by some compilers, this conversion is an extension
+   and not guaranteed to be sane for every architecture.
+ */
+typedef void (*GenericFunctionPointer)();
+typedef union {
+    GenericFunctionPointer FunctionPointer;
+    void *ObjectPointer;
+} UnsafePointerContainer;
+
+inline static GenericFunctionPointer glGetProcAddress(const char *name) {
+    UnsafePointerContainer pc;
+    pc.ObjectPointer = SDL_GL_GetProcAddress(name);
+    return pc.FunctionPointer;
+}
 
 #ifndef __APPLE__
 PFNGLCREATEPROGRAMPROC glCreateProgram = 0;
@@ -89,8 +107,8 @@ Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
     if(gltexture == 0) glGenTextures(1, &gltexture);
 	glErrorCheck();
 	
-    iwidth  = SDL_max(width,  iwidth );
-    iheight = SDL_max(height, iheight);
+	iwidth = width;
+	iheight = height;
     if(buffer_surface) delete buffer_surface;
     buffer_surface = new Surface(iwidth, iheight, 0, 0, ibpp); // use OpenXcom's Surface class to get an aligned buffer with bonus SDL_Surface
 	buffer = (uint32_t*) buffer_surface->getSurface()->pixels;
@@ -116,15 +134,17 @@ Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
   }
 
   void OpenGL::clear() {
-    memset(buffer, 0, iwidth * iheight * ibpp);
+    //memset(buffer, 0, iwidth * iheight * ibpp);
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     glFlush();
+	glErrorCheck();
   }
 
-  void OpenGL::refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight) {
+  void OpenGL::refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight, int topBlackBand, int bottomBlackBand, int leftBlackBand, int rightBlackBand) {
     while (glGetError() != GL_NO_ERROR); // clear possible error from who knows where
-    if(shader_support && (fragmentshader || vertexshader)) {
+	clear();
+    if(shader_support && (fragmentshader || vertexshader)) {    
       glUseProgram(glprogram);
       GLint location;
 
@@ -176,14 +196,16 @@ Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
     //vertex range = x1:0, y1:0, x2:width, y2:height
     double w = double(inwidth)  / double(iwidth);
     double h = double(inheight) / double(iheight);
-    int u = outwidth;
-    int v = outheight;
+    int u1 = leftBlackBand;
+    int u2 = outwidth - rightBlackBand;
+    int v1 = outheight - topBlackBand;
+    int v2 = bottomBlackBand;
 	
     glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(0, 0); glVertex3i(0, v, 0);
-    glTexCoord2f(w, 0); glVertex3i(u, v, 0);
-    glTexCoord2f(0, h); glVertex3i(0, 0, 0);
-    glTexCoord2f(w, h); glVertex3i(u, 0, 0);
+    glTexCoord2f(0, 0); glVertex3i(u1, v1, 0);
+    glTexCoord2f(w, 0); glVertex3i(u2, v1, 0);
+    glTexCoord2f(0, h); glVertex3i(u1, v2, 0);
+    glTexCoord2f(w, h); glVertex3i(u2, v2, 0);
     glEnd();
 	glErrorCheck();
 
@@ -211,23 +233,16 @@ Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
     }
 
     if(source_yaml_filename && strlen(source_yaml_filename)) {
-      std::ifstream fin(source_yaml_filename);
-      YAML::Parser parser(fin);
-      YAML::Node document;
-	  parser.GetNextDocument(document);
+      YAML::Node document = YAML::LoadFile(source_yaml_filename);
 
       bool is_glsl;
-	  std::string s;
-
-	  document["language"] >> s;
-	  is_glsl = (s == "GLSL");
+	  std::string language = document["language"].as<std::string>();
+	  is_glsl = (language == "GLSL");
 
 
-      document["linear"] >> linear; // some shaders want texture linear interpolation and some don't
-      std::string fragment_source;
-      std::string vertex_source;
-	  if (const YAML::Node *pFrag = document.FindValue("fragment")) *pFrag >> fragment_source;
-	  if (const YAML::Node *pVert = document.FindValue("vertex")) *pVert >> vertex_source;
+      linear = document["linear"].as<bool>(false); // some shaders want texture linear interpolation and some don't
+      std::string fragment_source = document["fragment"].as<std::string>("");
+	  std::string vertex_source = document["vertex"].as<std::string>("");
 
       if(is_glsl) {
         if(fragment_source != "") set_fragment_shader(fragment_source.c_str());
@@ -325,26 +340,23 @@ Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
     }
 
     if(buffer) {
-      delete[] buffer;
       buffer = 0;
       iwidth = 0;
       iheight = 0;
     }
+
+    delete buffer_surface;
   }
 
-  OpenGL::OpenGL() {
-    gltexture = 0;
-    glprogram = 0;
-    fragmentshader = 0;
-    linear = 0;
-    vertexshader = 0;
+  OpenGL::OpenGL() : gltexture(0), glprogram(0), fragmentshader(0), linear(false), vertexshader(0),
+                     buffer(NULL), buffer_surface(NULL), iwidth(0), iheight(0),
+                     iformat(GL_UNSIGNED_INT_8_8_8_8_REV), // this didn't seem to be set anywhere before...
+                     ibpp(32)                              // ...nor this
+  { }
 
-    buffer = 0;
-    iwidth = 0;
-    iheight = 0;
-	ibpp = 32; // this didn't seem to be set anywhere before...
-	iformat = GL_UNSIGNED_INT_8_8_8_8_REV; // nor this
-	buffer_surface = 0;
+  OpenGL::~OpenGL() {
+    term();
   }
-
 }
+
+#endif

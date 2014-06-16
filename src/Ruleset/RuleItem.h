@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -23,15 +23,14 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
-enum ItemDamageType { DT_NONE, DT_AP, DT_IN, DT_HE, DT_LASER, DT_PLASMA, DT_STUN, DT_MELEE, DT_ACID, DT_SMOKE };
-enum BattleType { BT_NONE, BT_FIREARM, BT_AMMO, BT_MELEE, BT_GRENADE, BT_PROXIMITYGRENADE, BT_MEDIKIT, BT_SCANNER, BT_MINDPROBE, BT_PSIAMP, BT_FLARE, BT_CORPSE };
-
 namespace OpenXcom
 {
 
+enum ItemDamageType { DT_NONE, DT_AP, DT_IN, DT_HE, DT_LASER, DT_PLASMA, DT_STUN, DT_MELEE, DT_ACID, DT_SMOKE };
+enum BattleType { BT_NONE, BT_FIREARM, BT_AMMO, BT_MELEE, BT_GRENADE, BT_PROXIMITYGRENADE, BT_MEDIKIT, BT_SCANNER, BT_MINDPROBE, BT_PSIAMP, BT_FLARE, BT_CORPSE };
+
 class SurfaceSet;
 class Surface;
-class RuleManufacture;
 
 /**
  * Represents a specific type of item.
@@ -44,7 +43,7 @@ class RuleItem
 private:
 	std::string _type, _name; // two types of objects can have the same name
 	std::vector<std::string> _requires;
-	float _size;
+	double _size;
 	int _costBuy, _costSell, _transferTime, _weight;
 	int _bigSprite, _floorSprite, _handSprite, _bulletSprite;
 	int _fireSound, _hitSound, _hitAnimation;
@@ -57,8 +56,7 @@ private:
 	bool _twoHanded, _waypoint, _fixedWeapon;
 	int _invWidth, _invHeight;
 	int _painKiller, _heal, _stimulant;
-	int _healAmount, _healthAmount;
-	int _stun, _energy;
+	int _woundRecovery, _healthRecovery, _stunRecovery, _energyRecovery;
 	int _tuUse;
 	int _recoveryPoints;
 	int _armor;
@@ -66,7 +64,10 @@ private:
 	bool _recover, _liveAlien;
 	int _blastRadius, _attraction;
 	bool _flatRate, _arcingShot;
-	int _listOrder, _range, _bulletSpeed;
+	int _listOrder, _maxRange, _aimRange, _snapRange, _autoRange, _minRange, _dropoff, _bulletSpeed, _explosionSpeed, _autoShots, _shotgunPellets;
+	std::string _zombieUnit;
+	bool _strengthApplied, _skillApplied, _LOSRequired;
+	int _meleeSound, _meleePower, _meleeAnimation, _meleeHitSound;
 public:
 	/// Creates a blank item ruleset.
 	RuleItem(const std::string &type);
@@ -74,8 +75,6 @@ public:
 	~RuleItem();
 	/// Loads item data from YAML.
 	void load(const YAML::Node& node, int modIndex, int listIndex);
-	/// Saves the item data to YAML.
-	void save(YAML::Emitter& out) const;
 	/// Gets the item's type.
 	std::string getType() const;
 	/// Gets the item's name.
@@ -83,7 +82,7 @@ public:
 	/// Gets the item's requirements.
 	const std::vector<std::string> &getRequirements() const;
 	/// Gets the item's size.
-	float getSize() const;
+	double getSize() const;
 	/// Gets the item's purchase cost.
 	int getBuyCost() const;
 	/// Gets the item's sale cost.
@@ -144,47 +143,82 @@ public:
 	int getClipSize() const;
 	/// Draws the item's hand sprite onto a surface.
 	void drawHandSprite(SurfaceSet *texture, Surface *surface) const;
-	/// Get medikit heal quantity
+	/// Gets the medikit heal quantity.
 	int getHealQuantity () const;
-	/// Get medikit pain killer quantity
+	/// Gets the medikit pain killer quantity.
 	int getPainKillerQuantity () const;
-	/// Get medikit stimulant quantity
+	/// Gets the medikit stimulant quantity.
 	int getStimulantQuantity () const;
-	/// Get medikit heal amount per shot
-	int getHealAmount () const;
-	/// Get medikit health amount per shot
-	int getHealthAmount () const;
-	/// Get medikit energy amount per shot
-	int getEnergy () const;
-	/// Get medikit stun amount per shot
-	int getStun () const;
-	/// Get use Time Unit use
+	/// Gets the medikit wound healed per shot.
+	int getWoundRecovery () const;
+	/// Gets the medikit health recovered per shot.
+	int getHealthRecovery () const;
+	/// Gets the medikit energy recovered per shot.
+	int getEnergyRecovery () const;
+	/// Gets the medikit stun recovered per shot.
+	int getStunRecovery () const;
+	/// Gets the Time Unit use.
 	int getTUUse() const;
-	/// Gets the max explosion radius
+	/// Gets the max explosion radius.
 	int getExplosionRadius() const;
 	/// Gets the recovery points score
 	int getRecoveryPoints() const;
-	/// Gets the item's armor
+	/// Gets the item's armor.
 	int getArmor() const;
 	/// Gets the item's recoverability.
 	bool isRecoverable() const;
-	/// Gets the item's turret type
+	/// Gets the item's turret type.
 	int getTurretType() const;
-	/// is this a live alien?
+	/// Checks if this a live alien.
 	bool getAlien() const;
-	/// should we charge a flat rate?
+	/// Should we charge a flat rate?
 	bool getFlatRate() const;
-	/// should this weapon arc?
+	/// Should this weapon arc?
 	bool getArcingShot() const;
-	/// how much do aliens want this thing?
+	/// How much do aliens want this thing?
 	int getAttraction() const;
-	/// get the list weight for this item.
+	/// Get the list weight for this item.
 	int getListOrder() const;
-	/// get the max range of this weapon.
-	int getRange() const;
-	/// how fast does a projectile fired from this weapon travel?
+	/// How fast does a projectile fired from this weapon travel?
 	int getBulletSpeed() const;
-
+	/// How fast does the explosion animation play?
+	int getExplosionSpeed() const;
+	/// How many auto shots does this weapon fire.
+	int getAutoShots() const;
+	/// is this item a 2 handed weapon?
+	bool isRifle() const;
+	/// is this item a single handed weapon?
+	bool isPistol() const;
+	/// Get the max range of this weapon.
+	int getMaxRange() const;
+	/// Get the max range of aimed shots with this weapon.
+	int getAimRange() const;
+	/// Get the max range of snap shots with this weapon.
+	int getSnapRange() const;
+	/// Get the max range of auto shots with this weapon.
+	int getAutoRange() const;
+	/// Get the minimum effective range of this weapon.
+	int getMinRange() const;
+	/// Get the accuracy dropoff of this weapon.
+	int getDropoff() const;
+	/// Get the number of projectiles to trace.
+	int getShotgunPellets() const;
+	/// Gets the weapon's zombie unit.
+	std::string getZombieUnit() const;
+	/// Is strength applied to the damage of this weapon?
+	bool isStrengthApplied() const;
+	/// Is skill applied to the accuracy of this weapon?
+	bool isSkillApplied() const;
+	/// What sound does this weapon make when you swing this at someone?
+	int getMeleeAttackSound() const;
+	/// What sound does this weapon make when you punch someone in the face with it?
+	int getMeleeHitSound() const;
+	/// Ok, so this isn't a melee type weapon but we're using it for melee... how much damage should it do?
+	int getMeleePower() const;
+	/// Get the melee animation starting frame (comes from hit.pck).
+	int getMeleeAnimation() const;
+	/// Check if LOS is required to use this item (only applies to psionic type items)
+	bool isLOSRequired() const;
 };
 
 }

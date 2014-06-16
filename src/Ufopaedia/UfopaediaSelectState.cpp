@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -22,6 +22,7 @@
 #include "../Ruleset/ArticleDefinition.h"
 #include "ArticleState.h"
 #include "../Engine/Game.h"
+#include "../Engine/Options.h"
 #include "../Engine/Palette.h"
 #include "../Engine/Surface.h"
 #include "../Engine/Language.h"
@@ -30,7 +31,6 @@
 #include "../Interface/TextButton.h"
 #include "../Interface/TextList.h"
 #include "../Resource/ResourcePack.h"
-#include "../Savegame/SavedGame.h"
 
 namespace OpenXcom
 {
@@ -42,14 +42,14 @@ namespace OpenXcom
 		_window = new Window(this, 256, 180, 32, 10, POPUP_NONE);
 
 		// set title
-		_txtTitle = new Text(224, 16, 48, 26);
+		_txtTitle = new Text(224, 17, 48, 26);
 
 		// set buttons
 		_btnOk = new TextButton(224, 16, 48, 166);
 		_lstSelection = new TextList(224, 104, 40, 50);
 
 		// Set palette
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
+		setPalette("PAL_GEOSCAPE", 0);
 
 		add(_window);
 		add(_txtTitle);
@@ -64,11 +64,12 @@ namespace OpenXcom
 		_txtTitle->setColor(Palette::blockOffset(8)+10);
 		_txtTitle->setBig();
 		_txtTitle->setAlign(ALIGN_CENTER);
-		_txtTitle->setText(_game->getLanguage()->getString("STR_SELECT_ITEM"));
+		_txtTitle->setText(tr("STR_SELECT_ITEM"));
 
 		_btnOk->setColor(Palette::blockOffset(15)-1);
-		_btnOk->setText(_game->getLanguage()->getString("STR_OK"));
+		_btnOk->setText(tr("STR_OK"));
 		_btnOk->onMouseClick((ActionHandler)&UfopaediaSelectState::btnOkClick);
+		_btnOk->onKeyboardPress((ActionHandler)&UfopaediaSelectState::btnOkClick,Options::keyCancel);
 
 		_lstSelection->setColor(Palette::blockOffset(8)+5);
 		_lstSelection->setArrowColor(Palette::blockOffset(15)-1);
@@ -108,19 +109,11 @@ namespace OpenXcom
 		ArticleDefinitionList::iterator it;
 
 		_article_list.clear();
-		Ufopaedia::list(_game, _section, _article_list);
+		Ufopaedia::list(_game->getSavedGame(), _game->getRuleset(), _section, _article_list);
 		for(it = _article_list.begin(); it!=_article_list.end(); ++it)
 		{
-			_lstSelection->addRow(1, Ufopaedia::buildText(_game, (*it)->title).c_str());
+			_lstSelection->addRow(1, tr((*it)->title).c_str());
 		}
-	}
-
-	void UfopaediaSelectState::init()
-	{
-		// Set palette
-		_game->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
-
-		State::init();
 	}
 
 }

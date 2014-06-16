@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,13 +17,9 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "PlaceStartFacilityState.h"
-#include <sstream>
 #include "../Engine/Game.h"
-#include "../Resource/ResourcePack.h"
 #include "../Engine/Language.h"
 #include "../Engine/Palette.h"
-#include "../Interface/TextButton.h"
-#include "../Interface/Window.h"
 #include "../Interface/Text.h"
 #include "BaseView.h"
 #include "../Savegame/Base.h"
@@ -31,7 +27,6 @@
 #include "../Ruleset/RuleBaseFacility.h"
 #include "../Savegame/SavedGame.h"
 #include "../Menu/ErrorMessageState.h"
-#include "BasescapeState.h"
 #include "SelectStartFacilityState.h"
 
 namespace OpenXcom
@@ -47,8 +42,8 @@ namespace OpenXcom
 PlaceStartFacilityState::PlaceStartFacilityState(Game *game, Base *base, SelectStartFacilityState *select, RuleBaseFacility *rule) : PlaceFacilityState(game, base, rule), _select(select)
 {
 	_view->onMouseClick((ActionHandler)&PlaceStartFacilityState::viewClick);
-	_numCost->setText(_game->getLanguage()->getString("STR_NONE"));
-	_numTime->setText(_game->getLanguage()->getString("STR_NONE"));
+	_numCost->setText(tr("STR_NONE"));
+	_numTime->setText(tr("STR_NONE"));
 }
 
 /**
@@ -68,7 +63,7 @@ void PlaceStartFacilityState::viewClick(Action *)
 	if (!_view->isPlaceable(_rule))
 	{
 		_game->popState();
-		_game->pushState(new ErrorMessageState(_game, "STR_CANNOT_BUILD_HERE", Palette::blockOffset(15)+1, "BACK01.SCR", 6));
+		_game->pushState(new ErrorMessageState(_game, "STR_CANNOT_BUILD_HERE", _palette, Palette::blockOffset(15)+1, "BACK01.SCR", 6));
 	}
 	else
 	{
@@ -77,7 +72,7 @@ void PlaceStartFacilityState::viewClick(Action *)
 		fac->setY(_view->getGridY());
 		_base->getFacilities()->push_back(fac);
 		_game->popState();
-		_select->FacilityBuilt();
+		_select->facilityBuilt();
 	}
 }
 

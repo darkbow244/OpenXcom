@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -18,9 +18,11 @@
  */
 #include "TextButton.h"
 #include <SDL.h>
+#include <SDL_mixer.h>
 #include "Text.h"
 #include "../Engine/Sound.h"
 #include "../Engine/Action.h"
+#include "ComboBox.h"
 
 namespace OpenXcom
 {
@@ -35,7 +37,7 @@ Sound *TextButton::soundPress = 0;
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-TextButton::TextButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _contrast(false)
+TextButton::TextButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _contrast(false), _comboBox(0)
 {
 	_text = new Text(width, height, 0, 0);
 	_text->setSmall();
@@ -52,6 +54,18 @@ TextButton::~TextButton()
 	delete _text;
 }
 
+bool TextButton::isButtonHandled(Uint8 button)
+{
+	if (_comboBox != 0)
+	{
+		return (button == SDL_BUTTON_LEFT);
+	}
+	else
+	{
+		return InteractiveSurface::isButtonHandled(button);
+	}
+}
+
 /**
  * Changes the color for the button and text.
  * @param color Color value.
@@ -59,7 +73,7 @@ TextButton::~TextButton()
 void TextButton::setColor(Uint8 color)
 {
 	_color = color;
-	_text->setColor(_color);
+	_text->setColor(color);
 	_redraw = true;
 }
 
@@ -73,15 +87,54 @@ Uint8 TextButton::getColor() const
 }
 
 /**
- * Changes the various fonts for the text label to use.
+* Changes the color for the text only.
+* @param color Color value.
+*/
+void TextButton::setTextColor(Uint8 color)
+{
+	_text->setColor(color);
+	_redraw = true;
+}
+
+/**
+* Changes the text to use the big-size font.
+*/
+void TextButton::setBig()
+{
+	_text->setBig();
+	_redraw = true;
+}
+
+/**
+* Changes the text to use the small-size font.
+*/
+void TextButton::setSmall()
+{
+	_text->setSmall();
+	_redraw = true;
+}
+
+/**
+* Returns the font currently used by the text.
+* @return Pointer to font.
+*/
+Font *TextButton::getFont() const
+{
+	return _text->getFont();
+}
+
+/**
+ * Changes the various resources needed for text rendering.
  * The different fonts need to be passed in advance since the
- * text size can change mid-text.
+ * text size can change mid-text, and the language affects
+ * how the text is rendered.
  * @param big Pointer to large-size font.
  * @param small Pointer to small-size font.
+ * @param lang Pointer to current language.
  */
-void TextButton::setFonts(Font *big, Font *small)
+void TextButton::initText(Font *big, Font *small, Language *lang)
 {
-	_text->setFonts(big, small);
+	_text->initText(big, small, lang);
 	_redraw = true;
 }
 
@@ -214,22 +267,32 @@ void TextButton::draw()
  */
 void TextButton::mousePress(Action *action, State *state)
 {
-	if (soundPress != 0 && _group == 0 &&
-		action->getDetails()->button.button != SDL_BUTTON_WHEELUP && action->getDetails()->button.button != SDL_BUTTON_WHEELDOWN)
-	{
-		soundPress->play();
-	}
-
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && _group != 0)
 	{
 		TextButton *old = *_group;
 		*_group = this;
 		if (old != 0)
 			old->draw();
+		draw();
 	}
-	draw();
+
+	if (isButtonHandled(action->getDetails()->button.button))
+	{		
+		if (soundPress != 0 && _group == 0 &&
+			action->getDetails()->button.button != SDL_BUTTON_WHEELUP && action->getDetails()->button.button != SDL_BUTTON_WHEELDOWN)
+		{
+			soundPress->play(Mix_GroupAvailable(0));
+		}
+
+		if (_comboBox)
+		{
+			_comboBox->toggle();
+		}
+
+		draw();
+		//_redraw = true;
+	}
 	InteractiveSurface::mousePress(action, state);
-	//_redraw = true;
 }
 
 /**
@@ -239,9 +302,30 @@ void TextButton::mousePress(Action *action, State *state)
  */
 void TextButton::mouseRelease(Action *action, State *state)
 {
-	draw();
+	if (isButtonHandled(action->getDetails()->button.button))
+	{	
+		draw();
+		//_redraw = true;
+	}
 	InteractiveSurface::mouseRelease(action, state);
-	//_redraw = true;
+}
+
+/**
+ * Hooks up the button to work as part of an existing combobox,
+ * toggling its state when it's pressed.
+ * @param comboBox Pointer to ComboBox.
+ */
+void TextButton::setComboBox(ComboBox *comboBox)
+{
+	_comboBox = comboBox;
+	if (_comboBox)
+	{
+		_text->setX(-6);
+	}
+	else
+	{
+		_text->setX(0);
+	}
 }
 
 }

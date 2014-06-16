@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -21,18 +21,16 @@
 #include "../Engine/SurfaceSet.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Action.h"
-#include "../Engine/CrossPlatform.h"
 #include "../Engine/Language.h"
 #include "../Engine/Palette.h"
 #include "../Savegame/BattleUnit.h"
 #include "../Interface/Text.h"
-#include "../Resource/ResourcePack.h"
 #include <iostream>
 
 namespace OpenXcom
 {
 /**
- * User interface string identifier of body parts
+ * User interface string identifier of body parts.
  */
 const std::string PARTS_STRING[6] =
 {
@@ -45,31 +43,32 @@ const std::string PARTS_STRING[6] =
 };
 
 /**
- * Initialize the Medikit view
- * @param w the MinikitView width
- * @param h the MinikitView height
- * @param x the MinikitView x origin
- * @param y the MinikitView y origin
+ * Initializes the Medikit view.
+ * @param w The MinikitView width.
+ * @param h The MinikitView height.
+ * @param x The MinikitView x origin.
+ * @param y The MinikitView y origin.
  * @param game Pointer to the core game.
- * @param unit the wounded unit
- * @param partTxt a pointer to a Text. Will be updated with selected body part
- * @param woundTxt a pointer to a Text. Will be updated with the amount of fatal wound
+ * @param unit The wounded unit.
+ * @param partTxt A pointer to a Text. Will be updated with the selected body part.
+ * @param woundTxt A pointer to a Text. Will be updated with the amount of fatal wound.
  */
 MedikitView::MedikitView (int w, int h, int x, int y, Game * game, BattleUnit *unit, Text *partTxt, Text *woundTxt) : InteractiveSurface(w, h, x, y), _game(game), _selectedPart(0), _unit(unit), _partTxt(partTxt), _woundTxt(woundTxt)
 {
+	updateSelectedPart();
 	_redraw = true;
 }
 
 /**
- * Draw the medikit view
+ * Draws the medikit view.
  */
 void MedikitView::draw()
 {
 	SurfaceSet *set = _game->getResourcePack()->getSurfaceSet("MEDIBITS.DAT");
 	int fatal_wound = _unit->getFatalWound(_selectedPart);
-	std::wstringstream ss, ss1;
+	std::wostringstream ss, ss1;
 	int red = 3;
-	
+
 	this->lock();
 	for (int i = 0; i < set->getTotalFrames(); i++)
 	{
@@ -92,7 +91,7 @@ void MedikitView::draw()
 }
 
 /**
- * Handle click on the medikit view
+ * Handles clicks on the medikit view.
  * @param action Pointer to an action.
  * @param state State that the action handlers belong to.
  */
@@ -114,11 +113,28 @@ void MedikitView::mouseClick (Action *action, State *)
 }
 
 /**
- * Get the selected body part
- * @return the selected body part
+ * Gets the selected body part.
+ * @return The selected body part.
  */
 int MedikitView::getSelectedPart() const
 {
 	return _selectedPart;
+}
+
+/**
+ * Updates the selected body part.
+ * If there is a wounded body part, selects that.
+ * Otherwise does not change the selected part.
+ */
+void MedikitView::updateSelectedPart()
+{
+	for (int i = 0; i < 6; ++i)
+	{
+		if (_unit->getFatalWound(i))
+		{
+			_selectedPart = i;
+			break;
+		}
+	}
 }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -44,36 +44,38 @@ TerrorSite::~TerrorSite()
 void TerrorSite::load(const YAML::Node &node)
 {
 	Target::load(node);
-	node["id"] >> _id;
-	node["secondsRemaining"] >> _secondsRemaining;
-	node["race"] >> _race;
-	node["inBattlescape"] >> _inBattlescape;
+	_id = node["id"].as<int>(_id);
+	_secondsRemaining = node["secondsRemaining"].as<size_t>(_secondsRemaining);
+	_race = node["race"].as<std::string>(_race);
+	_inBattlescape = node["inBattlescape"].as<bool>(_inBattlescape);
 }
 
 /**
  * Saves the terror site to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void TerrorSite::save(YAML::Emitter &out) const
+YAML::Node TerrorSite::save() const
 {
-	Target::save(out);
-	out << YAML::Key << "id" << YAML::Value << _id;
-	out << YAML::Key << "secondsRemaining" << YAML::Value << _secondsRemaining;
-	out << YAML::Key << "race" << YAML::Value << _race;
-	out << YAML::Key << "inBattlescape" << YAML::Value << _inBattlescape;
-	out << YAML::EndMap;
+	YAML::Node node = Target::save();
+	node["id"] = _id;
+	if (_secondsRemaining)
+		node["secondsRemaining"] = _secondsRemaining;
+	node["race"] = _race;
+	if (_inBattlescape)
+		node["inBattlescape"] = _inBattlescape;
+	return node;
 }
 
 /**
  * Saves the terror site's unique identifiers to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void TerrorSite::saveId(YAML::Emitter &out) const
+YAML::Node TerrorSite::saveId() const
 {
-	Target::saveId(out);
-	out << YAML::Key << "type" << YAML::Value << "STR_TERROR_SITE";
-	out << YAML::Key << "id" << YAML::Value << _id;
-	out << YAML::EndMap;
+	YAML::Node node = Target::saveId();
+	node["type"] = "STR_TERROR_SITE";
+	node["id"] = _id;
+	return node;
 }
 
 /**
@@ -101,16 +103,14 @@ void TerrorSite::setId(int id)
  */
 std::wstring TerrorSite::getName(Language *lang) const
 {
-	std::wstringstream name;
-	name << lang->getString("STR_TERROR_SITE_UC") << _id;
-	return name.str();
+	return lang->getString("STR_TERROR_SITE").arg(_id);
 }
 
 /**
  * Returns the number of seconds remaining before the terror site expires.
  * @return Amount of seconds.
  */
-unsigned TerrorSite::getSecondsRemaining() const
+size_t TerrorSite::getSecondsRemaining() const
 {
 	return _secondsRemaining;
 }
@@ -119,7 +119,7 @@ unsigned TerrorSite::getSecondsRemaining() const
  * Changes the number of seconds before the terror site expires.
  * @param seconds Amount of seconds.
  */
-void TerrorSite::setSecondsRemaining(unsigned seconds)
+void TerrorSite::setSecondsRemaining(size_t seconds)
 {
 	_secondsRemaining = seconds;
 }

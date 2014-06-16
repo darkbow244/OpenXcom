@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,7 +20,6 @@
 #ifndef OPENXCOM_ARTICLESTATEUFO_H
 #define OPENXCOM_ARTICLESTATEUFO_H
 
-#include <string>
 #include "ArticleState.h"
 
 namespace OpenXcom
@@ -39,7 +38,7 @@ namespace OpenXcom
 	class ArticleStateUfo : public ArticleState
 	{
 	public:
-		ArticleStateUfo(Game *game, ArticleDefinitionUfo *article_defs, int palSwitch);
+		ArticleStateUfo(Game *game, ArticleDefinitionUfo *article_defs);
 		virtual ~ArticleStateUfo();
 
 	protected:

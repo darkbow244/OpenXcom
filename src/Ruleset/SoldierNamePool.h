@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -47,8 +47,8 @@ public:
 	void load(const std::string &filename);
 	/// Generates a new name from the pool.
 	std::wstring genName(SoldierGender *gender) const;
-	/// generates an int representing the index of the soldier's look, when passed the maximum index value.
-	int genLook(int numLooks);
+	/// Generates an int representing the index of the soldier's look, when passed the maximum index value.
+	size_t genLook(size_t numLooks);
 };
 
 }

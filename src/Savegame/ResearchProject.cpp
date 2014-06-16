@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -111,29 +111,23 @@ void ResearchProject::setCost(int f)
  */
 void ResearchProject::load(const YAML::Node& node)
 {
-	int assigned;
-	int spent;
-	int cost;
-	node["assigned"] >> assigned;
-	node["spent"] >> spent;
-	node["cost"] >> cost;
-	setAssigned(assigned);
-	setSpent(spent);
-	setCost(cost);
+	setAssigned(node["assigned"].as<int>(getAssigned()));
+	setSpent(node["spent"].as<int>(getSpent()));
+	setCost(node["cost"].as<int>(getCost()));
 }
 
 /**
  * Saves the research project to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void ResearchProject::save(YAML::Emitter& out) const
+YAML::Node ResearchProject::save() const
 {
-	out << YAML::BeginMap;
-	out << YAML::Key << "project" << YAML::Value << getRules ()->getName ();
-	out << YAML::Key << "assigned" << YAML::Value << getAssigned ();
-	out << YAML::Key << "spent" << YAML::Value << getSpent ();
-	out << YAML::Key << "cost" << YAML::Value << getCost ();
-	out << YAML::EndMap;
+	YAML::Node node;
+	node["project"] = getRules ()->getName ();
+	node["assigned"] = getAssigned ();
+	node["spent"] = getSpent ();
+	node["cost"] = getCost ();
+	return node;
 }
 
 /**

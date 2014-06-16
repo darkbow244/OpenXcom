@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,7 +17,6 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "NoContainmentState.h"
-#include <sstream>
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Language.h"
@@ -25,10 +24,6 @@
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
-#include "../Interface/TextList.h"
-#include "../Savegame/SavedGame.h"
-#include "../Savegame/Base.h"
-#include "../Savegame/Soldier.h"
 #include "../Engine/Options.h"
 
 namespace OpenXcom
@@ -46,7 +41,8 @@ NoContainmentState::NoContainmentState(Game *game) : State(game)
 	_txtTitle = new Text(220, 64, 50, 8);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(0)), Palette::backPos, 16);
+	setPalette("PAL_GEOSCAPE", 0);
+
 	add(_window);
 	add(_btnOk);
 	add(_txtTitle);
@@ -58,13 +54,13 @@ NoContainmentState::NoContainmentState(Game *game) : State(game)
 	_window->setBackground(_game->getResourcePack()->getSurface("BACK01.SCR"));
 
 	_btnOk->setColor(Palette::blockOffset(8)+5);
-	_btnOk->setText(_game->getLanguage()->getString("STR_OK"));
+	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&NoContainmentState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&NoContainmentState::btnOkClick, (SDLKey)Options::getInt("keyOk"));
-	_btnOk->onKeyboardPress((ActionHandler)&NoContainmentState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&NoContainmentState::btnOkClick, Options::keyOk);
+	_btnOk->onKeyboardPress((ActionHandler)&NoContainmentState::btnOkClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(8)+5);
-	_txtTitle->setText(_game->getLanguage()->getString("STR_ALIEN_DIES_NO_ALIEN_CONTAINMENT_FACILITY"));
+	_txtTitle->setText(tr("STR_ALIEN_DIES_NO_ALIEN_CONTAINMENT_FACILITY"));
 	_txtTitle->setAlign(ALIGN_CENTER);
 	_txtTitle->setBig();
 	_txtTitle->setWordWrap(true);

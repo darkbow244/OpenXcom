@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -21,10 +21,14 @@
 #include "../Engine/Language.h"
 #include "../Savegame/Craft.h"
 #include "../Savegame/EquipmentLayoutItem.h"
+#include "../Savegame/SoldierDeath.h"
 #include "../Ruleset/SoldierNamePool.h"
 #include "../Ruleset/RuleSoldier.h"
 #include "../Ruleset/Armor.h"
 #include "../Ruleset/Ruleset.h"
+#include "../Ruleset/StatString.h"
+#include "../Engine/Options.h"
+#include "SavedGame.h"
 
 namespace OpenXcom
 {
@@ -36,7 +40,7 @@ namespace OpenXcom
  * @param names List of name pools for soldier generation.
  * @param id Pointer to unique soldier id for soldier generation.
  */
-Soldier::Soldier(RuleSoldier *rules, Armor *armor, const std::vector<SoldierNamePool*> *names, int id) : _name(L""), _id(0), _improvement(0), _rules(rules), _initialStats(), _currentStats(), _rank(RANK_ROOKIE), _craft(0), _gender(GENDER_MALE), _look(LOOK_BLONDE), _missions(0), _kills(0), _recovery(0), _recentlyPromoted(false), _psiTraining(false), _armor(armor), _equipmentLayout()
+Soldier::Soldier(RuleSoldier *rules, Armor *armor, const std::vector<SoldierNamePool*> *names, int id) : _name(L""), _id(id), _improvement(0), _rules(rules), _initialStats(), _currentStats(), _rank(RANK_ROOKIE), _craft(0), _gender(GENDER_MALE), _look(LOOK_BLONDE), _missions(0), _kills(0), _recovery(0), _recentlyPromoted(false), _psiTraining(false), _armor(armor), _equipmentLayout(), _death(0)
 {
 	if (names != 0)
 	{
@@ -59,7 +63,7 @@ Soldier::Soldier(RuleSoldier *rules, Armor *armor, const std::vector<SoldierName
 
 		if (!names->empty())
 		{
-			int nationality = RNG::generate(0, names->size()-1);
+			size_t nationality = RNG::generate(0, names->size()-1);
 			_name = names->at(nationality)->genName(&_gender);
 			_look = (SoldierLook)names->at(nationality)->genLook(4); // Once we add the ability to mod in extra looks, this will need to reference the ruleset for the maximum amount of looks.
 		}
@@ -69,10 +73,6 @@ Soldier::Soldier(RuleSoldier *rules, Armor *armor, const std::vector<SoldierName
 			_gender = (SoldierGender)RNG::generate(0, 1);
 			_look = (SoldierLook)RNG::generate(0,3);
 		}
-	}
-	if (id != 0)
-	{
-		_id = id;
 	}
 }
 
@@ -85,89 +85,109 @@ Soldier::~Soldier()
 	{
 		delete *i;
 	}
+	delete _death;
 }
 
 /**
  * Loads the soldier from a YAML file.
  * @param node YAML node.
  * @param rule Game ruleset.
+ * @param save Pointer to savegame.
  */
-void Soldier::load(const YAML::Node &node, const Ruleset *rule)
+void Soldier::load(const YAML::Node& node, const Ruleset *rule, SavedGame *save)
 {
-	int a = 0;
-	node["id"] >> _id;
-	std::string name;
-	node["name"] >> name;
-	_name = Language::utf8ToWstr(name);
-	node["initialStats"] >> _initialStats;
-	node["currentStats"] >> _currentStats;
-	node["rank"] >> a;
-	_rank = (SoldierRank)a;
-	node["gender"] >> a;
-	_gender = (SoldierGender)a;
-	node["look"] >> a;
-	_look = (SoldierLook)a;
-	node["missions"] >> _missions;
-	node["kills"] >> _kills;
-	node["recovery"] >> _recovery;
-	std::string armor;
-	node["armor"] >> armor;
-	_armor = rule->getArmor(armor);
-	node["psiTraining"] >> _psiTraining;
-	try {
-		node["improvement"] >> _improvement;
+	_id = node["id"].as<int>(_id);
+	_name = Language::utf8ToWstr(node["name"].as<std::string>());
+	_initialStats = node["initialStats"].as<UnitStats>(_initialStats);
+	_currentStats = node["currentStats"].as<UnitStats>(_currentStats);
+	_rank = (SoldierRank)node["rank"].as<int>();
+	_gender = (SoldierGender)node["gender"].as<int>();
+	_look = (SoldierLook)node["look"].as<int>();
+	_missions = node["missions"].as<int>(_missions);
+	_kills = node["kills"].as<int>(_kills);
+	_recovery = node["recovery"].as<int>(_recovery);
+	Armor *armor = rule->getArmor(node["armor"].as<std::string>());
+	if (armor == 0)
+	{
+		armor = rule->getArmor("STR_NONE_UC");
 	}
-	catch (YAML::Exception &e) {
-		_improvement = 0;
-	}
-	if (const YAML::Node *layoutNode = node.FindValue("equipmentLayout"))
-		for (YAML::Iterator i = layoutNode->begin(); i != layoutNode->end(); ++i)
+	_armor = armor;
+	_psiTraining = node["psiTraining"].as<bool>(_psiTraining);
+	_improvement = node["improvement"].as<int>(_improvement);
+	if (const YAML::Node &layout = node["equipmentLayout"])
+	{
+		for (YAML::const_iterator i = layout.begin(); i != layout.end(); ++i)
 			_equipmentLayout.push_back(new EquipmentLayoutItem(*i));
+	}
+	if (node["death"])
+	{
+		_death = new SoldierDeath();
+		_death->load(node["death"]);
+	}
+	calcStatString(rule->getStatStrings(), (Options::psiStrengthEval && save->isResearched(rule->getPsiRequirements())));
 }
 
 /**
  * Saves the soldier to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void Soldier::save(YAML::Emitter &out) const
+YAML::Node Soldier::save() const
 {
-	out << YAML::BeginMap;
-	out << YAML::Key << "id" << YAML::Value << _id;
-	out << YAML::Key << "name" << YAML::Value << Language::wstrToUtf8(_name);
-	out << YAML::Key << "initialStats" << YAML::Value << _initialStats;
-	out << YAML::Key << "currentStats" << YAML::Value << _currentStats;
-	out << YAML::Key << "rank" << YAML::Value << _rank;
+	YAML::Node node;
+	node["id"] = _id;
+	node["name"] = Language::wstrToUtf8(_name);
+	node["initialStats"] = _initialStats;
+	node["currentStats"] = _currentStats;
+	node["rank"] = (int)_rank;
 	if (_craft != 0)
 	{
-		out << YAML::Key << "craft" << YAML::Value;
-		_craft->saveId(out);
+		node["craft"] = _craft->saveId();
 	}
-	out << YAML::Key << "gender" << YAML::Value << _gender;
-	out << YAML::Key << "look" << YAML::Value << _look;
-	out << YAML::Key << "missions" << YAML::Value << _missions;
-	out << YAML::Key << "kills" << YAML::Value << _kills;
-	out << YAML::Key << "recovery" << YAML::Value << _recovery;
-	out << YAML::Key << "armor" << YAML::Value << _armor->getType();
-	out << YAML::Key << "psiTraining" << YAML::Value << _psiTraining;
-	out << YAML::Key << "improvement" << YAML::Value << _improvement;
+	node["gender"] = (int)_gender;
+	node["look"] = (int)_look;
+	node["missions"] = _missions;
+	node["kills"] = _kills;
+	if (_recovery > 0)
+		node["recovery"] = _recovery;
+	node["armor"] = _armor->getType();
+	if (_psiTraining)
+		node["psiTraining"] = _psiTraining;
+	node["improvement"] = _improvement;
 	if (!_equipmentLayout.empty())
 	{
-		out << YAML::Key << "equipmentLayout" << YAML::Value;
-		out << YAML::BeginSeq;
-		for (std::vector<EquipmentLayoutItem*>::const_iterator j = _equipmentLayout.begin(); j != _equipmentLayout.end(); ++j)
-			(*j)->save(out);
-		out << YAML::EndSeq;
+		for (std::vector<EquipmentLayoutItem*>::const_iterator i = _equipmentLayout.begin(); i != _equipmentLayout.end(); ++i)
+			node["equipmentLayout"].push_back((*i)->save());
 	}
-	out << YAML::EndMap;
+	if (_death != 0)
+	{
+		node["death"] = _death->save();
+	}
+	return node;
 }
 
 /**
- * Returns the soldier's full name.
+ * Returns the soldier's full name (and, optionally, statString).
+ * @param statstring Add stat string?
+ * @param maxLength Restrict length to a certain value.
  * @return Soldier name.
  */
-std::wstring Soldier::getName() const
+std::wstring Soldier::getName(bool statstring, unsigned int maxLength) const
 {
-	return _name;
+	if (statstring && !_statString.empty())
+	{
+		if (_name.length() + _statString.length() > maxLength)
+		{
+			return _name.substr(0, maxLength - _statString.length()) + L"/" + _statString;
+		}
+		else
+		{
+			return _name + L"/" + _statString;
+		}
+	}
+	else
+	{
+		return _name;
+	}
 }
 
 /**
@@ -233,24 +253,19 @@ std::string Soldier::getRankString() const
 	{
 	case RANK_ROOKIE:
 		return "STR_ROOKIE";
-		break;
 	case RANK_SQUADDIE:
 		return "STR_SQUADDIE";
-		break;
 	case RANK_SERGEANT:
 		return "STR_SERGEANT";
-		break;
 	case RANK_CAPTAIN:
 		return "STR_CAPTAIN";
-		break;
 	case RANK_COLONEL:
 		return "STR_COLONEL";
-		break;
 	case RANK_COMMANDER:
 		return "STR_COMMANDER";
-		break;
+	default:
+		return "";
 	}
-	return "";
 }
 
 /**
@@ -445,7 +460,7 @@ std::vector<EquipmentLayoutItem*> *Soldier::getEquipmentLayout()
 }
 
 /**
- * Trains a soldier's Psychic abilities
+ * Trains a soldier's Psychic abilities after 1 month.
  */
 void Soldier::trainPsi()
 {
@@ -469,7 +484,8 @@ void Soldier::trainPsi()
 }
 
 /**
- * Trains a soldier's Psychic abilities (anytimePsiTraining option)
+ * Trains a soldier's Psychic abilities after 1 day.
+ * (anytimePsiTraining option)
  */
 void Soldier::trainPsi1Day()
 {
@@ -501,6 +517,7 @@ void Soldier::trainPsi1Day()
 
 /**
  * returns whether or not the unit is in psi training
+ * @return true/false
  */
 bool Soldier::isInPsiTraining()
 {
@@ -508,7 +525,7 @@ bool Soldier::isInPsiTraining()
 }
 
 /**
- * changes whether or not the unit is in psi training
+ * toggles whether or not the unit is in psi training
  */
 void Soldier::setPsiTraining()
 {
@@ -517,9 +534,51 @@ void Soldier::setPsiTraining()
 
 /**
  * returns this soldier's psionic improvement score for this month.
+ * @return score
  */
 int Soldier::getImprovement()
 {
 	return _improvement;
 }
+
+/**
+ * Returns the soldier's death details.
+ * @return Pointer to death data. NULL if no death has occured.
+ */
+SoldierDeath *Soldier::getDeath() const
+{
+	return _death;
+}
+
+/**
+ * Kills the soldier in the Geoscape.
+ * @param death Pointer to death data.
+ */
+void Soldier::die(SoldierDeath *death)
+{
+	delete _death;
+	_death = death;
+
+	// Clean up associations
+	_craft = 0;
+	_psiTraining = false;
+	_recentlyPromoted = false;
+	_recovery = 0;
+	for (std::vector<EquipmentLayoutItem*>::iterator i = _equipmentLayout.begin(); i != _equipmentLayout.end(); ++i)
+	{
+		delete *i;
+	}
+	_equipmentLayout.clear();
+}
+
+/**
+ * Calculates the soldier's statString.
+ * @param statStrings List of statString rules.
+ * @param psiStrengthEval Are psi stats available?
+ */
+void Soldier::calcStatString(const std::vector<StatString *> &statStrings, bool psiStrengthEval)
+{
+	_statString = StatString::calcStatString(_currentStats, statStrings, psiStrengthEval);
+}
+
 }

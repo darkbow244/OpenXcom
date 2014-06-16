@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -21,6 +21,7 @@
 
 #include <string>
 #include <yaml-cpp/yaml.h>
+#include "../Savegame/CraftWeaponProjectile.h"
 
 namespace OpenXcom
 {
@@ -35,7 +36,8 @@ class RuleCraftWeapon
 {
 private:
 	std::string _type;
-	int _sprite, _sound, _damage, _range, _accuracy, _reloadCautious, _reloadStandard, _reloadAggressive, _ammoMax, _rearmRate, _projectileType, _projectileSpeed;
+	int _sprite, _sound, _damage, _range, _accuracy, _reloadCautious, _reloadStandard, _reloadAggressive, _ammoMax, _rearmRate, _projectileSpeed;
+	CraftWeaponProjectileType _projectileType;
 	std::string _launcher, _clip;
 public:
 	/// Creates a blank craft weapon ruleset.
@@ -44,8 +46,6 @@ public:
 	~RuleCraftWeapon();
 	/// Loads craft weapon data from YAML.
 	void load(const YAML::Node& node, int modIndex);
-	/// Saves the craft weapon data to YAML.
-	void save(YAML::Emitter& out) const;
 	/// Gets the craft weapon's type.
 	std::string getType() const;
 	/// Gets the craft weapon's sprite.
@@ -73,7 +73,7 @@ public:
 	/// Gets the craft weapon's clip item.
 	std::string getClipItem() const;
 	/// Gets the craft weapon's projectile's type.
-	int getProjectileType() const;
+	CraftWeaponProjectileType getProjectileType() const;
 	/// Gets the craft weapon's projectile speed.
 	int getProjectileSpeed() const;
 };

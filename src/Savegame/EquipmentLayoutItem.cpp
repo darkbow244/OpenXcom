@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -37,9 +37,9 @@ EquipmentLayoutItem::EquipmentLayoutItem(const YAML::Node &node)
  * @param slotX Position-X in the occupied slot.
  * @param slotY Position-Y in the occupied slot.
  * @param ammoItem The ammo has to be loaded into the item. (it's type)
- * @param explodeTurn The turn when the item explodes. (if it's an activated grenade-type)
+ * @param fuseTimer The turn until explosion of the item. (if it's an activated grenade-type)
  */
-EquipmentLayoutItem::EquipmentLayoutItem(std::string itemType, std::string slot, int slotX, int slotY, std::string ammoItem, int explodeTurn) : _itemType(itemType), _slot(slot), _slotX(slotX), _slotY(slotY), _ammoItem(ammoItem), _explodeTurn(explodeTurn)
+EquipmentLayoutItem::EquipmentLayoutItem(std::string itemType, std::string slot, int slotX, int slotY, std::string ammoItem, int fuseTimer) : _itemType(itemType), _slot(slot), _slotX(slotX), _slotY(slotY), _ammoItem(ammoItem), _fuseTimer(fuseTimer)
 {
 }
 
@@ -96,12 +96,12 @@ std::string EquipmentLayoutItem::getAmmoItem() const
 }
 
 /**
- * Returns the turn when the item explodes. (if it's an activated grenade-type)
+ * Returns the turn until explosion of the item. (if it's an activated grenade-type)
  * @return turn count.
  */
-int EquipmentLayoutItem::getExplodeTurn() const
+int EquipmentLayoutItem::getFuseTimer() const
 {
-	return _explodeTurn;
+	return _fuseTimer;
 }
 
 /**
@@ -110,28 +110,41 @@ int EquipmentLayoutItem::getExplodeTurn() const
  */
 void EquipmentLayoutItem::load(const YAML::Node &node)
 {
-	node["itemType"] >> _itemType;
-	node["slot"] >> _slot;
-	node["slotX"] >> _slotX;
-	node["slotY"] >> _slotY;
-	node["ammoItem"] >> _ammoItem;
-	node["explodeTurn"] >> _explodeTurn;
+	_itemType = node["itemType"].as<std::string>(_itemType);
+	_slot = node["slot"].as<std::string>(_slot);
+	_slotX = node["slotX"].as<int>(0);
+	_slotY = node["slotY"].as<int>(0);
+	_ammoItem = node["ammoItem"].as<std::string>("NONE");
+	_fuseTimer = node["fuseTimer"].as<int>(-1);
 }
 
 /**
  * Saves the soldier-equipment layout item to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void EquipmentLayoutItem::save(YAML::Emitter &out) const
+YAML::Node EquipmentLayoutItem::save() const
 {
-	out << YAML::BeginMap;
-	out << YAML::Key << "itemType" << YAML::Value << _itemType;
-	out << YAML::Key << "slot" << YAML::Value << _slot;
-	out << YAML::Key << "slotX" << YAML::Value << _slotX;
-	out << YAML::Key << "slotY" << YAML::Value << _slotY;
-	out << YAML::Key << "ammoItem" << YAML::Value << _ammoItem;
-	out << YAML::Key << "explodeTurn" << YAML::Value << _explodeTurn;
-	out << YAML::EndMap;
+	YAML::Node node;
+	node["itemType"] = _itemType;
+	node["slot"] = _slot;
+	// only save this info if it's needed, reduce clutter in saves
+	if (_slotX != 0)
+	{
+		node["slotX"] = _slotX;
+	}
+	if (_slotY != 0)
+	{
+		node["slotY"] = _slotY;
+	}
+	if (_ammoItem != "NONE")
+	{
+		node["ammoItem"] = _ammoItem;
+	}
+	if (_fuseTimer >= 0)
+	{
+		node["fuseTimer"] = _fuseTimer;
+	}
+	return node;
 }
 
 }

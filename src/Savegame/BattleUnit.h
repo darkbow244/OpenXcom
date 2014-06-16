@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -35,7 +35,6 @@ class Tile;
 class BattleItem;
 class Unit;
 class BattleAIState;
-class BattlescapeState;
 class Node;
 class Surface;
 class RuleInventory;
@@ -43,8 +42,8 @@ class Soldier;
 class Armor;
 class SavedGame;
 class Language;
-class AggroBAIState;
-class PatrolBAIState;
+class AlienBAIState;
+class CivilianBAIState;
 
 enum UnitStatus {STATUS_STANDING, STATUS_WALKING, STATUS_FLYING, STATUS_TURNING, STATUS_AIMING, STATUS_COLLAPSING, STATUS_DEAD, STATUS_UNCONSCIOUS, STATUS_PANICKING, STATUS_BERSERK};
 enum UnitFaction {FACTION_PLAYER, FACTION_HOSTILE, FACTION_NEUTRAL};
@@ -85,12 +84,17 @@ private:
 	bool _cacheInvalid;
 	int _expBravery, _expReactions, _expFiring, _expThrowing, _expPsiSkill, _expMelee;
 	int improveStat(int exp);
-	int _turretType;
-	bool _needPainKiller;
 	int _motionPoints;
 	int _kills;
 	int _faceDirection; // used only during strafeing moves
-	
+	bool _hitByFire;
+	int _moraleRestored;
+	int _coverReserve;
+	BattleUnit *_charging;
+	int _turnsSinceSpotted;
+	std::string _spawnUnit;
+	std::string _activeHand;
+
 	// static data
 	std::string _type;
 	std::string _rank;
@@ -101,29 +105,24 @@ private:
 	int _value, _deathSound, _aggroSound, _moveSound;
 	int _intelligence, _aggression;
 	SpecialAbility _specab;
-	std::string _zombieUnit, _spawnUnit;
 	Armor *_armor;
 	SoldierGender _gender;
-	std::string _activeHand;
 	Soldier *_geoscapeSoldier;
-	BattleUnit *_charging;
-	int _turnsExposed;
 	std::vector<int> _loftempsSet;
 	Unit *_unitRules;
 	int _rankInt;
-	bool _hitByFire;
+	int _turretType;
 public:
 	static const int MAX_SOLDIER_ID = 1000000;
 	/// Creates a BattleUnit.
 	BattleUnit(Soldier *soldier, UnitFaction faction);
 	BattleUnit(Unit *unit, UnitFaction faction, int id, Armor *armor, int diff);
-	BattleUnit(BattleUnit&);
 	/// Cleans up the BattleUnit.
 	~BattleUnit();
 	/// Loads the unit from YAML.
 	void load(const YAML::Node& node);
 	/// Saves the unit to YAML.
-	void save(YAML::Emitter& out) const;
+	YAML::Node save() const;
 	/// Gets the BattleUnit's ID.
 	int getId() const;
 	/// Sets the unit's position
@@ -183,7 +182,7 @@ public:
 	/// Aim.
 	void aim(bool aiming);
 	/// Get direction to a certain point
-	int getDirectionTo(const Position &point) const;
+	int directionTo(const Position &point) const;
 	/// Gets the unit's time units.
 	int getTimeUnits() const;
 	/// Gets the unit's stamina.
@@ -193,11 +192,13 @@ public:
 	/// Gets the unit's bravery.
 	int getMorale() const;
 	/// Do damage to the unit.
-	int damage(Position position, int power, ItemDamageType type, bool ignoreArmor = false);
+	int damage(const Position &relative, int power, ItemDamageType type, bool ignoreArmor = false);
 	/// Heal stun level of the unit.
 	void healStun(int power);
 	/// Gets the unit's stun level.
 	int getStunlevel() const;
+	/// Knocks the unit out instantly.
+	void knockOut(BattlescapeGame *battle);
 	/// Start falling sequence.
 	void startFalling();
 	/// Increment the falling sequence.
@@ -227,9 +228,9 @@ public:
 	/// Clear visible tiles.
 	void clearVisibleTiles();
 	/// Calculate firing accuracy.
-	double getFiringAccuracy(BattleActionType actionType, BattleItem *item);
+	int getFiringAccuracy(BattleActionType actionType, BattleItem *item);
 	/// Calculate accuracy modifier.
-	double getAccuracyModifier();
+	int getAccuracyModifier(BattleItem *item = 0);
 	/// Calculate throwing accuracy.
 	double getThrowingAccuracy();
 	/// Set armor value.
@@ -246,6 +247,8 @@ public:
 	void moraleChange(int change);
 	/// Don't reselect this unit
 	void dontReselect();
+	/// Reselect this unit
+	void allowReselect();
 	/// Check whether reselecting this unit is allowed.
 	bool reselectAllowed() const;
 	/// Set fire.
@@ -294,6 +297,8 @@ public:
 	void addPsiExp();
 	/// Adds one to the melee exp counter.
 	void addMeleeExp();
+	/// Updates the stats of a Geoscape soldier.
+	void updateGeoscapeStats(Soldier *soldier);
 	/// Check if unit eligible for squaddie promotion.
 	bool postMissionProcedures(SavedGame *geoscape);
 	/// Get the sprite index for the minimap
@@ -305,7 +310,7 @@ public:
 	/// Get fatal wound amount of a body part
 	int getFatalWound(int part) const;
 	/// Heal one fatal wound
-	void heal(int part, int healAmount, int healthAmount);
+	void heal(int part, int woundAmount, int healthAmount);
 	/// Give pain killers to this unit
 	void painKillers ();
 	/// Give stimulant to this unit
@@ -358,8 +363,6 @@ public:
 	void convertToFaction(UnitFaction f);
 	/// Set health to 0 and set status dead
 	void instaKill();
-	/// Gets the unit's zombie unit.
-	std::string getZombieUnit() const;
 	/// Gets the unit's spawn unit.
 	std::string getSpawnUnit() const;
 	/// Sets the unit's spawn unit.
@@ -370,7 +373,7 @@ public:
 	void setEnergy(int energy);
 	/// Halve the unit's armor values.
 	void halveArmor();
-	/// Gets the unit's faction.
+	/// Get the faction that killed this unit.
 	UnitFaction killedBy() const;
 	/// Set the faction that killed this unit.
 	void killedBy(UnitFaction f);
@@ -381,21 +384,21 @@ public:
 	/// Get the carried weight in strength units.
 	int getCarriedWeight(BattleItem *draggingItem = 0) const;
 	/// Set how many turns this unit will be exposed for.
-	void setTurnsExposed (int turns);
+	void setTurnsSinceSpotted (int turns);
 	/// Set how many turns this unit will be exposed for.
-	int getTurnsExposed () const;
+	int getTurnsSinceSpotted () const;
 	/// Get this unit's original faction
 	UnitFaction getOriginalFaction() const;
 	/// call this after the default copy constructor deletes the cache?
 	void invalidateCache();
-	
+
 	Unit *getUnitRules() const { return _unitRules; }
 
 	/// scratch value for AI's left hand to tell its right hand what's up...
 	bool _hidingForTurn; // don't zone out and start patrolling again
 	Position lastCover;
 	/// get the vector of units we've seen this turn.
-	std::vector<BattleUnit *> getUnitsSpottedThisTurn();
+	std::vector<BattleUnit *> &getUnitsSpottedThisTurn();
 	/// set the rank integer
 	void setRankInt(int rank);
 	/// get the rank integer
@@ -410,6 +413,12 @@ public:
 	bool tookFireDamage() const;
 	/// switch the state of the fire damage tracker.
 	void toggleFireDamage();
+	void setCoverReserve(int reserve);
+	int getCoverReserve() const;
+	/// Is this unit selectable?
+	bool isSelectable(UnitFaction faction, bool checkReselect, bool checkInventory) const;
+	/// Does this unit have an inventory?
+	bool hasInventory() const;
 };
 
 }

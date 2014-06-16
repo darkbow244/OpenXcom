@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -50,89 +50,81 @@ SoldierNamePool::~SoldierNamePool()
 void SoldierNamePool::load(const std::string &filename)
 {
 	std::string s = CrossPlatform::getDataFile("SoldierName/" + filename + ".nam");
-	std::ifstream fin(s.c_str());
-	if (!fin)
-	{
-		throw Exception(filename + " not found");
-	}
-	YAML::Parser parser(fin);
-	YAML::Node doc;
-	parser.GetNextDocument(doc);
+	YAML::Node doc = YAML::LoadFile(s);
 
-	for (YAML::Iterator i = doc["maleFirst"].begin(); i != doc["maleFirst"].end(); ++i)
+	for (YAML::const_iterator i = doc["maleFirst"].begin(); i != doc["maleFirst"].end(); ++i)
 	{
-		std::string name;
-		*i >> name;
-		_maleFirst.push_back(Language::utf8ToWstr(name));
+		std::wstring name = Language::utf8ToWstr(i->as<std::string>());
+		_maleFirst.push_back(name);
 	}
-	for (YAML::Iterator i = doc["femaleFirst"].begin(); i != doc["femaleFirst"].end(); ++i)
+	for (YAML::const_iterator i = doc["femaleFirst"].begin(); i != doc["femaleFirst"].end(); ++i)
 	{
-		std::string name;
-		*i >> name;
-		_femaleFirst.push_back(Language::utf8ToWstr(name));
+		std::wstring name = Language::utf8ToWstr(i->as<std::string>());
+		_femaleFirst.push_back(name);
 	}
-	for (YAML::Iterator i = doc["maleLast"].begin(); i != doc["maleLast"].end(); ++i)
+	for (YAML::const_iterator i = doc["maleLast"].begin(); i != doc["maleLast"].end(); ++i)
 	{
-		std::string name;
-		*i >> name;
-		_maleLast.push_back(Language::utf8ToWstr(name));
+		std::wstring name = Language::utf8ToWstr(i->as<std::string>());
+		_maleLast.push_back(name);
 	}
-	if (const YAML::Node *pName = doc.FindValue("femaleLast"))
+	for (YAML::const_iterator i = doc["femaleLast"].begin(); i != doc["femaleLast"].end(); ++i)
 	{
-		for (YAML::Iterator i = pName->begin(); i != pName->end(); ++i)
-		{
-			std::string name;
-			*i >> name;
-			_femaleLast.push_back(Language::utf8ToWstr(name));
-		}
+		std::wstring name = Language::utf8ToWstr(i->as<std::string>());
+		_femaleLast.push_back(name);
 	}
-	else
+	if (_femaleLast.empty())
 	{
 		_femaleLast = _maleLast;
 	}
-	if (const YAML::Node *pName = doc.FindValue("lookWeights"))
+	_lookWeights = doc["lookWeights"].as< std::vector<int> >(_lookWeights);
+	_totalWeight = 0;
+	for (std::vector<int>::iterator i = _lookWeights.begin(); i != _lookWeights.end(); ++i)
 	{
-		for (YAML::Iterator i = pName->begin(); i != pName->end(); ++i)
-		{
-			int a;
-			*i >> a;
-			_totalWeight += a;
-			_lookWeights.push_back(a);
-		}
+		_totalWeight += (*i);
 	}
-	fin.close();
 }
 
 /**
  * Returns a new random name (first + last) from the
  * lists of names contained within.
  * @param gender Returned gender of the name.
- * @return Soldier name.
+ * @return The soldier's name.
  */
 std::wstring SoldierNamePool::genName(SoldierGender *gender) const
 {
-	std::wstringstream name;
+	std::wostringstream name;
 	int gen = RNG::generate(1, 10);
 	if (gen <= 5)
 	{
 		*gender = GENDER_MALE;
 		size_t first = RNG::generate(0, _maleFirst.size() - 1);
 		name << _maleFirst[first];
-		size_t last = RNG::generate(0, _maleLast.size() - 1);
-		name << " " << _maleLast[last];
+		if (!_maleLast.empty())
+		{
+			size_t last = RNG::generate(0, _maleLast.size() - 1);
+			name << " " << _maleLast[last];
+		}
 	}
 	else
 	{
 		*gender = GENDER_FEMALE;
 		size_t first = RNG::generate(0, _femaleFirst.size() - 1);
 		name << _femaleFirst[first];
-		size_t last = RNG::generate(0, _femaleLast.size() - 1);
-		name << " " << _femaleLast[last];
+		if (!_femaleLast.empty())
+		{
+			size_t last = RNG::generate(0, _femaleLast.size() - 1);
+			name << " " << _femaleLast[last];
+		}
 	}
 	return name.str();
 }
 
-int SoldierNamePool::genLook(int numLooks)
+/**
+ * Generates an int representing the index of the soldier's look, when passed the maximum index value.
+ * @param numLooks The maximum index.
+ * @return The index of the soldier's look.
+ */
+size_t SoldierNamePool::genLook(size_t numLooks)
 {
 	int look = 0;
 	const int minimumChance = 2;	// minimum chance of a look being selected if it isn't enumerated. This ensures that looks MUST be zeroed to not appear.
@@ -147,7 +139,7 @@ int SoldierNamePool::genLook(int numLooks)
 		_totalWeight -= _lookWeights.back();
 		_lookWeights.pop_back();
 	}
-	
+
 	int random = RNG::generate(0, _totalWeight);
 	for (std::vector<int>::iterator i = _lookWeights.begin(); i != _lookWeights.end(); ++i)
 	{

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -23,11 +23,12 @@
 
 namespace OpenXcom
 {
+
 class BattleUnit;
-class Text;
+class Game;
 
 /**
- * Display a view of units movement
+ * Displays a view of units movement.
  */
 class ScannerView : public InteractiveSurface
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -22,7 +22,6 @@
 #include <vector>
 #include "Position.h"
 #include "BattlescapeGame.h"
-#include "../Savegame/Tile.h"
 
 namespace OpenXcom
 {
@@ -31,10 +30,11 @@ class ResourcePack;
 class BattleItem;
 class SavedBattleGame;
 class Surface;
+class Tile;
 
 /**
- * A class that represents a projectile. Map is the owner of an instance of this class during it's short life.
- * It calculates it's own trajectory and then moves along this precalculated trajectory in voxel space.
+ * A class that represents a projectile. Map is the owner of an instance of this class during its short life.
+ * It calculates its own trajectory and then moves along this precalculated trajectory in voxel space.
  */
 class Projectile
 {
@@ -42,32 +42,38 @@ private:
 	ResourcePack *_res;
 	SavedBattleGame *_save;
 	BattleAction _action;
-	Position _origin;
+	Position _origin, _targetVoxel;
 	std::vector<Position> _trajectory;
-	unsigned int _position;
+	size_t _position;
 	Surface *_sprite;
-	void applyAccuracy(const Position& origin, Position *target, double accuracy, bool keepRange = false, Tile *targetTile = 0);
+	int _speed;
+	void applyAccuracy(const Position& origin, Position *target, double accuracy, bool keepRange, Tile *targetTile, bool extendLine);
 public:
 	/// Creates a new Projectile.
-	Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin);
+	Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position target);
 	/// Cleans up the Projectile.
 	~Projectile();
-	/// Calculates the trajectory for straight path.
+	/// Calculates the trajectory for a straight path.
 	int calculateTrajectory(double accuracy);
-	/// Calculates the trajectory for curved path.
-	bool calculateThrow(double accuracy);
-	/// Move the projectile one step in it's trajectory.
+	int calculateTrajectory(double accuracy, Position originVoxel);
+	/// Calculates the trajectory for a curved path.
+	int calculateThrow(double accuracy);
+	/// Moves the projectile one step in its trajectory.
 	bool move();
-	/// Get the current position in voxel space.
+	/// Gets the current position in voxel space.
 	Position getPosition(int offset = 0) const;
-	/// Get a particle from the particle array.
+	/// Gets a particle from the particle array.
 	int getParticle(int i) const;
-	/// Get the item
+	/// Gets the item.
 	BattleItem *getItem() const;
-	/// Get the sprite
+	/// Gets the sprite.
 	Surface *getSprite() const;
-	/// skip the bullet flight
+	/// Skips the bullet flight.
 	void skipTrajectory();
+	/// Gets the Position of origin for the projectile.
+	Position getOrigin();
+	/// Gets the targetted tile for the projectile.
+	Position getTarget();
 };
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -27,7 +27,11 @@ namespace OpenXcom
  * type of craft.
  * @param type String defining the type.
  */
-RuleCraft::RuleCraft(const std::string &type) : _type(type), _sprite(-1), _fuelMax(0), _damageMax(0), _speedMax(0), _accel(0), _weapons(0), _soldiers(0), _vehicles(0), _costBuy(0), _refuelItem(""), _repairRate(1), _refuelRate(1), _radarRange(600), _transferTime(0), _score(0), _battlescapeTerrainData(0), _spacecraft(false), _listOrder(0)
+RuleCraft::RuleCraft(const std::string &type) :
+    _type(type), _sprite(-1), _fuelMax(0), _damageMax(0), _speedMax(0), _accel(0),
+    _weapons(0), _soldiers(0), _vehicles(0), _costBuy(0), _costRent(0), _costSell(0),
+	_refuelItem(""), _repairRate(1), _refuelRate(1), _radarRange(600), _transferTime(0),
+	_score(0), _battlescapeTerrainData(0), _spacecraft(false), _listOrder(0)
 {
 
 }
@@ -44,99 +48,49 @@ RuleCraft::~RuleCraft()
  * Loads the craft from a YAML file.
  * @param node YAML node.
  * @param ruleset Ruleset for the craft.
- * @param modIndex offsets the sounds and sprite values to avoid conflicts.
- * @param listOrder the list weight for this craft.
+ * @param modIndex A value that offsets the sounds and sprite values to avoid conflicts.
+ * @param listOrder The list weight for this craft.
  */
 void RuleCraft::load(const YAML::Node &node, Ruleset *ruleset, int modIndex, int listOrder)
 {
-	for (YAML::Iterator i = node.begin(); i != node.end(); ++i)
+	_type = node["type"].as<std::string>(_type);
+	_requires = node["requires"].as< std::vector<std::string> >(_requires);
+	if (node["sprite"])
 	{
-		std::string key;
-		i.first() >> key;
-		if (key == "type")
+		_sprite = node["sprite"].as<int>(_sprite);
+		// this is an offset in BASEBITS.PCK, and two in INTICONS.PCK
+		if (_sprite > 4)
+			_sprite += modIndex;
+	}
+	_fuelMax = node["fuelMax"].as<int>(_fuelMax);
+	_damageMax = node["damageMax"].as<int>(_damageMax);
+	_speedMax = node["speedMax"].as<int>(_speedMax);
+	_accel = node["accel"].as<int>(_accel);
+	_weapons = node["weapons"].as<int>(_weapons);
+	_soldiers = node["soldiers"].as<int>(_soldiers);
+	_vehicles = node["vehicles"].as<int>(_vehicles);
+	_costBuy = node["costBuy"].as<int>(_costBuy);
+	_costRent = node["costRent"].as<int>(_costRent);
+	_costSell = node["costSell"].as<int>(_costSell);
+	_refuelItem = node["refuelItem"].as<std::string>(_refuelItem);
+	_repairRate = node["repairRate"].as<int>(_repairRate);
+	_refuelRate = node["refuelRate"].as<int>(_refuelRate);
+	_radarRange = node["radarRange"].as<int>(_radarRange);
+	_transferTime = node["transferTime"].as<int>(_transferTime);
+	_score = node["score"].as<int>(_score);
+	if (const YAML::Node &terrain = node["battlescapeTerrainData"])
+	{
+		RuleTerrain *rule = new RuleTerrain(terrain["name"].as<std::string>());
+		rule->load(terrain, ruleset);
+		_battlescapeTerrainData = rule;
+		
+		if (const YAML::Node &deployment = node["deployment"])
 		{
-			i.second() >> _type;
-		}
-		else if (key == "sprite")
-		{
-			i.second() >> _sprite;
-			// this is an offset in BASEBITS.PCK, and two in INTICONS.PCK
-			if (_sprite > 4)
-				_sprite += modIndex;
-		}
-		else if (key == "fuelMax")
-		{
-			i.second() >> _fuelMax;
-		}
-		else if (key == "damageMax")
-		{
-			i.second() >> _damageMax;
-		}
-		else if (key == "speedMax")
-		{
-			i.second() >> _speedMax;
-		}
-		else if (key == "accel")
-		{
-			i.second() >> _accel;
-		}
-		else if (key == "weapons")
-		{
-			i.second() >> _weapons;
-		}
-		else if (key == "soldiers")
-		{
-			i.second() >> _soldiers;
-		}
-		else if (key == "vehicles")
-		{
-			i.second() >> _vehicles;
-		}
-		else if (key == "costBuy")
-		{
-			i.second() >> _costBuy;
-		}
-		else if (key == "refuelItem")
-		{
-			i.second() >> _refuelItem;
-		}
-		else if (key == "repairRate")
-		{
-			i.second() >> _repairRate;
-		}
-		else if (key == "refuelRate")
-		{
-			i.second() >> _refuelRate;
-		}
-		else if (key == "radarRange")
-		{
-			i.second() >> _radarRange;
-		}
-		else if (key == "transferTime")
-		{
-			i.second() >> _transferTime;
-		}
-		else if (key == "score")
-		{
-			i.second() >> _score;
-		}
-		else if (key == "battlescapeTerrainData")
-		{
-			std::string name;
-			i.second()["name"] >> name;
-			RuleTerrain *rule = new RuleTerrain(name);
-			rule->load(i.second(), ruleset);
-			_battlescapeTerrainData = rule;
-		}
-		else if (key == "spacecraft")
-		{
-			i.second() >> _spacecraft;
-		}
-		else if (key == "listOrder")
-		{
-			i.second() >> _listOrder;
+			_deployment = deployment.as<std::vector<std::vector<int> > >(_deployment);
 		}
 	}
+	_spacecraft = node["spacecraft"].as<bool>(_spacecraft);
+	_listOrder = node["listOrder"].as<int>(_listOrder);
 	if (!_listOrder)
 	{
 		_listOrder = listOrder;
@@ -144,41 +98,9 @@ void RuleCraft::load(const YAML::Node &node, Ruleset *ruleset, int modIndex, int
 }
 
 /**
- * Saves the craft to a YAML file.
- * @param out YAML emitter.
- */
-void RuleCraft::save(YAML::Emitter &out) const
-{
-	out << YAML::BeginMap;
-	out << YAML::Key << "type" << YAML::Value << _type;
-	out << YAML::Key << "sprite" << YAML::Value << _sprite;
-	out << YAML::Key << "fuelMax" << YAML::Value << _fuelMax;
-	out << YAML::Key << "damageMax" << YAML::Value << _damageMax;
-	out << YAML::Key << "speedMax" << YAML::Value << _speedMax;
-	out << YAML::Key << "accel" << YAML::Value << _accel;
-	out << YAML::Key << "weapons" << YAML::Value << _weapons;
-	out << YAML::Key << "soldiers" << YAML::Value << _soldiers;
-	out << YAML::Key << "vehicles" << YAML::Value << _vehicles;
-	out << YAML::Key << "costBuy" << YAML::Value << _costBuy;
-	out << YAML::Key << "refuelItem" << YAML::Value << _refuelItem;
-	out << YAML::Key << "repairRate" << YAML::Value << _repairRate;
-	out << YAML::Key << "refuelRate" << YAML::Value << _refuelRate;
-	out << YAML::Key << "radarRange" << YAML::Value << _radarRange;
-	out << YAML::Key << "transferTime" << YAML::Value << _transferTime;
-	out << YAML::Key << "score" << YAML::Value << _score;
-	out << YAML::Key << "spacecraft" << YAML::Value << _spacecraft;
-	if (_battlescapeTerrainData != 0)
-	{
-		out << YAML::Key << "battlescapeTerrainData" << YAML::Value;
-		_battlescapeTerrainData->save(out);
-	}
-	out << YAML::EndMap;
-}
-
-/**
- * Returns the language string that names
+ * Gets the language string that names
  * this craft. Each craft type has a unique name.
- * @return Craft name.
+ * @return The craft's name.
  */
 std::string RuleCraft::getType() const
 {
@@ -186,9 +108,19 @@ std::string RuleCraft::getType() const
 }
 
 /**
- * Returns the ID of the sprite used to draw the craft
+ * Gets the list of research required to
+ * acquire this craft.
+ * @return The list of research IDs.
+ */
+const std::vector<std::string> &RuleCraft::getRequirements() const
+{
+	return _requires;
+}
+
+/**
+ * Gets the ID of the sprite used to draw the craft
  * in the Basescape and Equip Craft screens.
- * @return Sprite ID.
+ * @return The Sprite ID.
  */
 int RuleCraft::getSprite() const
 {
@@ -196,8 +128,8 @@ int RuleCraft::getSprite() const
 }
 
 /**
- * Returns the maximum fuel the craft can contain.
- * @return Fuel amount.
+ * Gets the maximum fuel the craft can contain.
+ * @return The fuel amount.
  */
 int RuleCraft::getMaxFuel() const
 {
@@ -205,9 +137,9 @@ int RuleCraft::getMaxFuel() const
 }
 
 /**
- * Returns the maximum damage (damage the craft can take)
+ * Gets the maximum damage (damage the craft can take)
  * of the craft.
- * @return Damage.
+ * @return The maximum damage.
  */
 int RuleCraft::getMaxDamage() const
 {
@@ -215,9 +147,9 @@ int RuleCraft::getMaxDamage() const
 }
 
 /**
- * Returns the maximum speed of the craft flying
+ * Gets the maximum speed of the craft flying
  * around the Geoscape.
- * @return Speed in knots.
+ * @return The speed in knots.
  */
 int RuleCraft::getMaxSpeed() const
 {
@@ -225,9 +157,9 @@ int RuleCraft::getMaxSpeed() const
 }
 
 /**
- * Returns the acceleration of the craft for
+ * Gets the acceleration of the craft for
  * taking off / stopping.
- * @return Acceleration.
+ * @return The acceleration.
  */
 int RuleCraft::getAcceleration() const
 {
@@ -235,9 +167,9 @@ int RuleCraft::getAcceleration() const
 }
 
 /**
- * Returns the maximum number of weapons that
+ * Gets the maximum number of weapons that
  * can be equipped onto the craft.
- * @return Weapon capacity.
+ * @return The weapon capacity.
  */
 int RuleCraft::getWeapons() const
 {
@@ -245,9 +177,9 @@ int RuleCraft::getWeapons() const
 }
 
 /**
- * Returns the maximum number of soldiers that
+ * Gets the maximum number of soldiers that
  * the craft can carry.
- * @return Soldier capacity.
+ * @return The soldier capacity.
  */
 int RuleCraft::getSoldiers() const
 {
@@ -255,9 +187,9 @@ int RuleCraft::getSoldiers() const
 }
 
 /**
- * Returns the maximum number of vehicles that
+ * Gets the maximum number of vehicles that
  * the craft can carry.
- * @return vehicle capacity.
+ * @return The vehicle capacity.
  */
 int RuleCraft::getVehicles() const
 {
@@ -265,9 +197,9 @@ int RuleCraft::getVehicles() const
 }
 
 /**
- * Returns the cost of this craft for
+ * Gets the cost of this craft for
  * purchase/rent (0 if not purchasable).
- * @return Cost.
+ * @return The cost.
  */
 int RuleCraft::getBuyCost() const
 {
@@ -275,9 +207,28 @@ int RuleCraft::getBuyCost() const
 }
 
 /**
- * Returns what item is required while
+ * Gets the cost of rent for a month.
+ * @return The cost.
+ */
+int RuleCraft::getRentCost() const
+{
+	return _costRent;
+}
+
+/**
+ * Gets the sell value of this craft
+ * Rented craft should use 0.
+ * @return The sell value.
+ */
+int RuleCraft::getSellCost() const
+{
+	return _costSell;
+}
+
+/**
+ * Gets what item is required while
  * the craft is refuelling.
- * @return Item ID or "" if none.
+ * @return The item ID or "" if none.
  */
 std::string RuleCraft::getRefuelItem() const
 {
@@ -285,9 +236,9 @@ std::string RuleCraft::getRefuelItem() const
 }
 
 /**
- * Returns how much damage is removed from the
+ * Gets how much damage is removed from the
  * craft while repairing.
- * @return Amount of damage.
+ * @return The amount of damage.
  */
 int RuleCraft::getRepairRate() const
 {
@@ -295,9 +246,9 @@ int RuleCraft::getRepairRate() const
 }
 
 /**
- * Returns how much fuel is added to the
+ * Gets how much fuel is added to the
  * craft while refuelling.
- * @return Amount of fuel.
+ * @return The amount of fuel.
  */
 int RuleCraft::getRefuelRate() const
 {
@@ -305,9 +256,9 @@ int RuleCraft::getRefuelRate() const
 }
 
 /**
- * Returns the craft's radar range
+ * Gets the craft's radar range
  * for detecting UFOs.
- * @return Range in nautical miles.
+ * @return The range in nautical miles.
  */
 int RuleCraft::getRadarRange() const
 {
@@ -315,9 +266,9 @@ int RuleCraft::getRadarRange() const
 }
 
 /**
- * Returns the amount of time this item
+ * Gets the amount of time this item
  * takes to arrive at a base.
- * @return Time in hours.
+ * @return The time in hours.
  */
 int RuleCraft::getTransferTime() const
 {
@@ -325,9 +276,9 @@ int RuleCraft::getTransferTime() const
 }
 
 /**
- * Returns the amount of score you lose
+ * Gets the number of points you lose
  * when this craft is destroyed.
- * @return Score in points.
+ * @return The score in points.
  */
 int RuleCraft::getScore() const
 {
@@ -335,8 +286,8 @@ int RuleCraft::getScore() const
 }
 
 /**
- * Returns the terrain data needed to draw the Craft in the battlescape.
- * @return Terrain.
+ * Gets the terrain data needed to draw the Craft in the battlescape.
+ * @return The terrain data.
  */
 RuleTerrain *RuleCraft::getBattlescapeTerrainData()
 {
@@ -344,7 +295,8 @@ RuleTerrain *RuleCraft::getBattlescapeTerrainData()
 }
 
 /**
- * @return if this ship is capable of going to mars.
+ * Checks if this ship is capable of going to mars.
+ * @return True if this ship is capable of going to mars.
  */
 bool RuleCraft::getSpacecraft() const
 {
@@ -352,11 +304,22 @@ bool RuleCraft::getSpacecraft() const
 }
 
 /**
- * @return the list weight for this research item.
+ * Gets the list weight for this research item.
+ * @return The list weight.
  */
 int RuleCraft::getListOrder() const
 {
 	 return _listOrder;
+}
+
+
+/**
+ * Gets the deployment layout for this craft.
+ * @return The deployment layout.
+ */
+std::vector<std::vector<int> > &RuleCraft::getDeployment()
+{
+	return _deployment;
 }
 }
 

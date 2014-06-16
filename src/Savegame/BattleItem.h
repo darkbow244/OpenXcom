@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -25,7 +25,6 @@
 namespace OpenXcom
 {
 
-class Item;
 class RuleItem;
 class RuleInventory;
 class BattleUnit;
@@ -48,7 +47,7 @@ private:
 	RuleInventory *_inventorySlot;
 	int _inventoryX, _inventoryY;
 	BattleItem *_ammoItem;
-	int _explodeTurn, _ammoQuantity;
+	int _fuseTimer, _ammoQuantity;
 	int _painKiller, _heal, _stimulant;
 	bool _XCOMProperty, _droppedOnAlienTurn;
 public:
@@ -59,17 +58,17 @@ public:
 	/// Loads the item from YAML.
 	void load(const YAML::Node& node);
 	/// Saves the item to YAML.
-	void save(YAML::Emitter& out) const;
+	YAML::Node save() const;
 	/// Gets the item's ruleset.
 	RuleItem *getRules() const;
 	/// Gets the item's ammo quantity
 	int getAmmoQuantity() const;
 	/// Sets the item's ammo quantity.
 	void setAmmoQuantity(int qty);
-	/// Gets the turn to explode on
-	int getExplodeTurn() const;
-	/// Sets the turn to explode on.
-	void setExplodeTurn(int turn);
+	/// Gets the turn until explosion
+	int getFuseTimer() const;
+	/// Sets the turns until explosion.
+	void setFuseTimer(int turns);
 	/// Spend one bullet.
 	bool spendBullet();
 	/// Gets the item's owner.
@@ -96,6 +95,7 @@ public:
 	bool occupiesSlot(int x, int y, BattleItem *item = 0) const;
 	/// Gets the item's ammo item.
 	BattleItem *getAmmoItem();
+	/// Determines if this item uses ammo.
 	bool needsAmmo() const;
 	/// Sets the item's ammo item.
 	int setAmmoItem(BattleItem *item);
@@ -129,6 +129,8 @@ public:
 	bool getTurnFlag() const;
 	/// set the flag representing "not dropped on player turn"
 	void setTurnFlag(bool flag);
+	/// Sets the item's ruleset.
+	void convertToCorpse(RuleItem *rules);
 
 };
 

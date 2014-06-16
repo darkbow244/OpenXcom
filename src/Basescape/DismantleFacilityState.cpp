@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -30,7 +30,6 @@
 #include "../Basescape/BaseView.h"
 #include "../Ruleset/RuleBaseFacility.h"
 #include "../Savegame/SavedGame.h"
-#include "../Engine/Options.h"
 
 namespace OpenXcom
 {
@@ -54,7 +53,7 @@ DismantleFacilityState::DismantleFacilityState(Game *game, Base *base, BaseView 
 	_txtFacility = new Text(142, 9, 25, 85);
 
 	// Set palette
-	_game->setPalette(_game->getResourcePack()->getPalette("BACKPALS.DAT")->getColors(Palette::blockOffset(6)), Palette::backPos, 16);
+	setPalette("PAL_BASESCAPE", 6);
 
 	add(_window);
 	add(_btnOk);
@@ -69,22 +68,22 @@ DismantleFacilityState::DismantleFacilityState(Game *game, Base *base, BaseView 
 	_window->setBackground(_game->getResourcePack()->getSurface("BACK13.SCR"));
 
 	_btnOk->setColor(Palette::blockOffset(15)+6);
-	_btnOk->setText(_game->getLanguage()->getString("STR_OK"));
+	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&DismantleFacilityState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&DismantleFacilityState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&DismantleFacilityState::btnOkClick, Options::keyOk);
 
 	_btnCancel->setColor(Palette::blockOffset(15)+6);
-	_btnCancel->setText(_game->getLanguage()->getString("STR_CANCEL_UC"));
+	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->onMouseClick((ActionHandler)&DismantleFacilityState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&DismantleFacilityState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&DismantleFacilityState::btnCancelClick, Options::keyCancel);
 
 	_txtTitle->setColor(Palette::blockOffset(13)+10);
 	_txtTitle->setAlign(ALIGN_CENTER);
-	_txtTitle->setText(_game->getLanguage()->getString("STR_DISMANTLE"));
+	_txtTitle->setText(tr("STR_DISMANTLE"));
 
 	_txtFacility->setColor(Palette::blockOffset(13)+10);
 	_txtFacility->setAlign(ALIGN_CENTER);
-	_txtFacility->setText(_game->getLanguage()->getString(_fac->getRules()->getType()));
+	_txtFacility->setText(tr(_fac->getRules()->getType()));
 }
 
 /**
@@ -104,6 +103,12 @@ void DismantleFacilityState::btnOkClick(Action *)
 {
 	if (!_fac->getRules()->isLift())
 	{
+		// Give refund if this is an unstarted, queued build.
+		if (_fac->getBuildTime() > _fac->getRules()->getBuildTime())
+		{
+			_game->getSavedGame()->setFunds(_game->getSavedGame()->getFunds() + _fac->getRules()->getBuildCost());
+		}
+
 		for (std::vector<BaseFacility*>::iterator i = _base->getFacilities()->begin(); i != _base->getFacilities()->end(); ++i)
 		{
 			if (*i == _fac)
@@ -111,7 +116,7 @@ void DismantleFacilityState::btnOkClick(Action *)
 				_base->getFacilities()->erase(i);
 				_view->resetSelectedFacility();
 				delete _fac;
-				if (Options::getBool("allowBuildingQueue")) _view->reCalcQueuedBuildings();
+				if (Options::allowBuildingQueue) _view->reCalcQueuedBuildings();
 				break;
 			}
 		}

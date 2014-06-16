@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,6 +17,12 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Ufo.h"
+#include <assert.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <sstream>
+#include <algorithm>
+#include "../fmath.h"
 #include "Craft.h"
 #include "AlienMission.h"
 #include "../Engine/Exception.h"
@@ -26,10 +32,6 @@
 #include "../Ruleset/UfoTrajectory.h"
 #include "SavedGame.h"
 #include "Waypoint.h"
-#include <assert.h>
-#include <cmath>
-#include <sstream>
-#include <algorithm>
 
 namespace OpenXcom
 {
@@ -39,10 +41,10 @@ namespace OpenXcom
  * @param rules Pointer to ruleset.
  */
 Ufo::Ufo(RuleUfo *rules)
-  : MovingTarget(), _rules(rules), _id(0), _damage(0), _direction("STR_NORTH")
+  : MovingTarget(), _rules(rules), _id(0), _crashId(0), _landId(0), _damage(0), _direction("STR_NORTH")
   , _altitude("STR_HIGH_UC"), _status(FLYING), _secondsRemaining(0)
   , _inBattlescape(false), _shotDownByCraftId(-1), _mission(0), _trajectory(0)
-  , _detected(false), _hyperDetected(false), _shootingAt(0)
+  , _trajectoryPoint(0), _detected(false), _hyperDetected(false), _shootingAt(0), _hitFrame(0)
 {
 }
 
@@ -103,29 +105,29 @@ private:
 void Ufo::load(const YAML::Node &node, const Ruleset &ruleset, SavedGame &game)
 {
 	MovingTarget::load(node);
-	node["id"] >> _id;
-	node["damage"] >> _damage;
-	node["altitude"] >> _altitude;
-	node["direction"] >> _direction;
-	node["detected"] >> _detected;
-	node["hyperDetected"] >> _hyperDetected;
-	node["secondsRemaining"] >> _secondsRemaining;
-	node["inBattlescape"] >> _inBattlescape;
+	_id = node["id"].as<int>(_id);
+	_crashId = node["crashId"].as<int>(_crashId);
+	_landId = node["landId"].as<int>(_landId);
+	_damage = node["damage"].as<int>(_damage);
+	_altitude = node["altitude"].as<std::string>(_altitude);
+	_direction = node["direction"].as<std::string>(_direction);
+	_detected = node["detected"].as<bool>(_detected);
+	_hyperDetected = node["hyperDetected"].as<bool>(_hyperDetected);
+	_secondsRemaining = node["secondsRemaining"].as<size_t>(_secondsRemaining);
+	_inBattlescape = node["inBattlescape"].as<bool>(_inBattlescape);
 	double lon = _lon;
 	double lat = _lat;
-	if (const YAML::Node *dest = node.FindValue("dest"))
+	if (const YAML::Node &dest = node["dest"])
 	{
-		(*dest)["lon"] >> lon;
-		(*dest)["lat"] >> lat;
+		lon = dest["lon"].as<double>();
+		lat = dest["lat"].as<double>();
 	}
 	_dest = new Waypoint();
 	_dest->setLongitude(lon);
 	_dest->setLatitude(lat);
-	if (const YAML::Node *status = node.FindValue("status"))
+	if (const YAML::Node &status = node["status"])
 	{
-		int a;
-		(*status) >> a;
-		_status = (UfoStatus)a;
+		_status = (UfoStatus)status.as<int>();
 	}
 	else
 	{
@@ -146,57 +148,73 @@ void Ufo::load(const YAML::Node &node, const Ruleset &ruleset, SavedGame &game)
 			_status = FLYING;
 		}
 	}
-	int missionID;
-	node["mission"] >> missionID;
-	std::vector<AlienMission *>::const_iterator found = std::find_if(game.getAlienMissions().begin(), game.getAlienMissions().end(), matchMissionID(missionID));
-	if (found == game.getAlienMissions().end())
+	if (game.getMonthsPassed() != -1)
 	{
-		// Corrupt save file.
-		throw Exception("Unknown mission, save file is corrupt.");
-	}
-	_mission = *found;
+		int missionID = node["mission"].as<int>();
+		std::vector<AlienMission *>::const_iterator found = std::find_if(game.getAlienMissions().begin(), game.getAlienMissions().end(), matchMissionID(missionID));
+		if (found == game.getAlienMissions().end())
+		{
+			// Corrupt save file.
+			throw Exception("Unknown mission, save file is corrupt.");
+		}
+		_mission = *found;
 
-	std::string tid;
-	node["trajectory"] >> tid;
-	_trajectory = ruleset.getUfoTrajectory(tid);
-	node["trajectoryPoint"] >> _trajectoryPoint;
+		std::string tid = node["trajectory"].as<std::string>();
+		_trajectory = ruleset.getUfoTrajectory(tid);
+		_trajectoryPoint = node["trajectoryPoint"].as<size_t>(_trajectoryPoint);
+	}
 	if (_inBattlescape)
 		setSpeed(0);
 }
 
 /**
  * Saves the UFO to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void Ufo::save(YAML::Emitter &out) const
+YAML::Node Ufo::save(bool newBattle) const
 {
-	MovingTarget::save(out);
-	out << YAML::Key << "type" << YAML::Value << _rules->getType();
-	out << YAML::Key << "id" << YAML::Value << _id;
-	out << YAML::Key << "damage" << YAML::Value << _damage;
-	out << YAML::Key << "altitude" << YAML::Value << _altitude;
-	out << YAML::Key << "direction" << YAML::Value << _direction;
-	out << YAML::Key << "status" << YAML::Value << _status;
-	out << YAML::Key << "detected" << YAML::Value << _detected;
-	out << YAML::Key << "hyperDetected" << YAML::Value << _hyperDetected;
-	out << YAML::Key << "secondsRemaining" << YAML::Value << _secondsRemaining;
-	out << YAML::Key << "inBattlescape" << YAML::Value << _inBattlescape;
-	out << YAML::Key << "mission" << YAML::Value << _mission->getId();
-	out << YAML::Key << "trajectory" << YAML::Value << _trajectory->getID();
-	out << YAML::Key << "trajectoryPoint" << YAML::Value << _trajectoryPoint;
-	out << YAML::EndMap;
+	YAML::Node node = MovingTarget::save();
+	node["type"] = _rules->getType();
+	node["id"] = _id;
+	if (_crashId)
+	{
+		node["crashId"] = _crashId;
+	}
+	else if (_landId)
+	{
+		node["landId"] = _landId;
+	}
+	node["damage"] = _damage;
+	node["altitude"] = _altitude;
+	node["direction"] = _direction;
+	node["status"] = (int)_status;
+	if (_detected)
+		node["detected"] = _detected;
+	if (_hyperDetected)
+		node["hyperDetected"] = _hyperDetected;
+	if (_secondsRemaining)
+		node["secondsRemaining"] = _secondsRemaining;
+	if (_inBattlescape)
+		node["inBattlescape"] = _inBattlescape;
+	if (!newBattle)
+	{
+		node["mission"] = _mission->getId();
+		node["trajectory"] = _trajectory->getID();
+		node["trajectoryPoint"] = _trajectoryPoint;
+	}
+	return node;
 }
 
 /**
  * Saves the UFO's unique identifiers to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void Ufo::saveId(YAML::Emitter &out) const
+YAML::Node Ufo::saveId() const
 {
-	MovingTarget::saveId(out);
-	out << YAML::Key << "type" << YAML::Value << "STR_UFO";
-	out << YAML::Key << "id" << YAML::Value << _id;
-	out << YAML::EndMap;
+	YAML::Node node = MovingTarget::saveId();
+	node["type"] = "STR_UFO";
+	node["id"] = _id;
+	return node;
 }
 
 /**
@@ -234,22 +252,21 @@ void Ufo::setId(int id)
  */
 std::wstring Ufo::getName(Language *lang) const
 {
-	std::wstringstream name;
 	switch (_status)
 	{
 	case FLYING:
 	case DESTROYED: // Destroyed also means leaving Earth.
-		name << lang->getString("STR_UFO_");
+		return lang->getString("STR_UFO_").arg(_id);
 		break;
 	case LANDED:
-		name << lang->getString("STR_LANDING_SITE_");
+		return lang->getString("STR_LANDING_SITE_").arg(_landId);
 		break;
 	case CRASHED:
-		name << lang->getString("STR_CRASH_SITE_");
+		return lang->getString("STR_CRASH_SITE_").arg(_crashId);
 		break;
+	default:
+		return L"";
 	}
-	name << _id;
-	return name.str();
 }
 
 /**
@@ -306,7 +323,7 @@ void Ufo::setDetected(bool detected)
  * crashed.
  * @return Amount of seconds.
  */
-int Ufo::getSecondsRemaining() const
+size_t Ufo::getSecondsRemaining() const
 {
 	return _secondsRemaining;
 }
@@ -317,7 +334,7 @@ int Ufo::getSecondsRemaining() const
  * crashed.
  * @param seconds Amount of seconds.
  */
-void Ufo::setSecondsRemaining(int seconds)
+void Ufo::setSecondsRemaining(size_t seconds)
 {
 	_secondsRemaining = seconds;
 }
@@ -384,46 +401,77 @@ bool Ufo::isDestroyed() const
 void Ufo::calculateSpeed()
 {
 	MovingTarget::calculateSpeed();
-	if (_speedLon > 0)
+
+	double x = _speedLon;
+	double y = -_speedLat;
+
+	// This section guards vs. divide-by-zero.
+	if (AreSame(x, 0.0) || AreSame(y, 0.0))
 	{
-		if (_speedLat > 0)
+		if (AreSame(x, 0.0) && AreSame(y, 0.0))
 		{
-			_direction = "STR_SOUTH_EAST";
+			_direction = "STR_NONE_UC";
 		}
-		else if (_speedLat < 0)
+		else if (AreSame(x, 0.0))
 		{
-			_direction = "STR_NORTH_EAST";
+			if (y > 0.f)
+			{
+				_direction = "STR_NORTH";
+			}
+			else if (y < 0.f)
+			{
+				_direction = "STR_SOUTH";
+			}
 		}
-		else
+		else if (AreSame(y, 0.0))
 		{
-			_direction = "STR_EAST";
+			if (x > 0.f)
+			{
+				_direction = "STR_EAST";
+			}
+			else if (x < 0.f)
+			{
+				_direction = "STR_WEST";
+			}
 		}
+
+		return;
 	}
-	else if (_speedLon < 0)
+
+	double theta = atan2(y, x); // radians
+	theta = theta * 180.f / M_PI; // +/- 180 deg.
+
+	if (22.5f > theta && theta > -22.5f)
 	{
-		if (_speedLat > 0)
-		{
-			_direction = "STR_SOUTH_WEST";
-		}
-		else if (_speedLat < 0)
-		{
-			_direction = "STR_NORTH_WEST";
-		}
-		else
-		{
-			_direction = "STR_WEST";
-		}
+		_direction = "STR_EAST";
+	}
+	else if (-22.5f > theta && theta > -67.5f)
+	{
+		_direction = "STR_SOUTH_EAST";
+	}
+	else if (-67.5f > theta && theta > -112.5f)
+	{
+		_direction = "STR_SOUTH";
+	}
+	else if (-112.5f > theta && theta > -157.5f)
+	{
+		_direction = "STR_SOUTH_WEST";
+	}
+	else if (-157.5f > theta || theta > 157.5f)
+	{
+		_direction = "STR_WEST";
+	}
+	else if (157.5f > theta && theta > 112.5f)
+	{
+		_direction = "STR_NORTH_WEST";
+	}
+	else if (112.5f > theta && theta > 67.5f)
+	{
+		_direction = "STR_NORTH";
 	}
 	else
 	{
-		if (_speedLat > 0)
-		{
-			_direction = "STR_SOUTH";
-		}
-		else if (_speedLat < 0)
-		{
-			_direction = "STR_NORTH";
-		}
+		_direction = "STR_NORTH_EAST";
 	}
 }
 
@@ -572,7 +620,7 @@ bool Ufo::getHyperDetected() const
 
 /**
  * Changes whether this UFO has been detected by hyper-wave.
- * @param detected Detection status.
+ * @param hyperdetected Detection status.
  */
 void Ufo::setHyperDetected(bool hyperdetected)
 {
@@ -590,7 +638,7 @@ void Ufo::setDestination(Target *dest)
 	delete old;
 }
 
-const int Ufo::getShootingAt() const
+int Ufo::getShootingAt() const
 {
 	return _shootingAt;
 }
@@ -598,5 +646,35 @@ const int Ufo::getShootingAt() const
 void Ufo::setShootingAt(int target)
 {
 	_shootingAt = target;
+}
+/// Gets the UFO's landing site ID.
+int Ufo::getLandId() const
+{
+	return _landId;
+}
+/// Sets the UFO's landing site ID.
+void Ufo::setLandId(int id)
+{
+	_landId = id;
+}
+/// Gets the UFO's crash site ID.
+int Ufo::getCrashId() const
+{
+	return _crashId;
+}
+/// Sets the UFO's crash site ID.
+void Ufo::setCrashId(int id)
+{
+	_crashId = id;
+}
+/// Sets the UFO's hit frame.
+void Ufo::setHitFrame(int frame)
+{
+	_hitFrame = frame;
+}
+/// Gets the UFO's hit frame.
+int Ufo::getHitFrame()
+{
+	return _hitFrame;
 }
 }

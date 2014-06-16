@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -21,6 +21,7 @@
 
 #include "BattleState.h"
 #include "Position.h"
+#include <string>
 
 namespace OpenXcom
 {
@@ -30,9 +31,10 @@ class BattleUnit;
 class BattleItem;
 class Tile;
 
-/* Explosion state not only handles explosions, but also bullet impacts! */
-/* Refactoring tip : ImpactBState */
-
+/**
+ * Explosion state not only handles explosions, but also bullet impacts!
+ * Refactoring tip : ImpactBState.
+ */
 class ExplosionBState : public BattleState
 {
 private:
@@ -41,20 +43,21 @@ private:
 	BattleItem *_item;
 	Tile *_tile;
 	int _power;
-	bool _areaOfEffect, _lowerWeapon;
+	bool _areaOfEffect, _lowerWeapon, _pistolWhip;
+	/// Calculates the effects of the explosion.
 	void explode();
 public:
-	/// Creates a new ExplosionBState class
+	/// Creates a new ExplosionBState class.
 	ExplosionBState(BattlescapeGame *parent, Position center, BattleItem *item, BattleUnit *unit, Tile *tile = 0, bool lowerWeapon = false);
 	/// Cleans up the ExplosionBState.
 	~ExplosionBState();
 	/// Initializes the state.
 	void init();
-	/// Handles a cancels request.
+	/// Handles a cancel request.
 	void cancel();
 	/// Runs state functionality every cycle.
 	void think();
-	/// Get the result of the state.
+	/// Gets the result of the state.
 	std::string getResult() const;
 
 };

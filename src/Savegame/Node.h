@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -59,7 +59,7 @@ public:
 	/// Loads the node from YAML.
 	void load(const YAML::Node& node);
 	/// Saves the node to YAML.
-	void save(YAML::Emitter& out) const;
+	YAML::Node save() const;
 	/// get the node's id
 	int getID() const;
 	/// get the node's paths

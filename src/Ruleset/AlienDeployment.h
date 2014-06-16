@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -45,7 +45,7 @@ struct DeploymentData
 /**
  * Represents a specific type of Alien Deployment.
  * Contains constant info about a Alien Deployment like
- * the number of aliens for each alien type and what items they carry 
+ * the number of aliens for each alien type and what items they carry
  * (itemset depends on alien technology advancement level 0, 1 or 2).
  * - deployment type can be a craft's name, but also alien base or cydonia.
  * - alienRank is used to check which nodeRanks can be used to deploy this unit
@@ -58,8 +58,7 @@ private:
 	std::string _type;
 	std::vector<DeploymentData> _data;
 	int _width, _length, _height, _civilians;
-	std::vector<int> _roadTypeOdds;
-	std::string _terrain;
+	std::vector<std::string> _terrains;
 	int _shade;
 	std::string _nextStage;
 public:
@@ -69,18 +68,16 @@ public:
 	~AlienDeployment();
 	/// Loads Alien Deployment data from YAML.
 	void load(const YAML::Node& node);
-	/// Saves the Alien Deployment data to YAML.
-	void save(YAML::Emitter& out) const;
 	/// Gets the Alien Deployment's type.
 	std::string getType() const;
 	/// Gets a pointer to the data.
 	std::vector<DeploymentData>* getDeploymentData();
-	/// Get dimensions.
+	/// Gets dimensions.
 	void getDimensions(int *width, int *length, int *height);
+	/// Gets civilians.
 	int getCivilians() const;
-	std::vector<int> getRoadTypeOdds() const;
 	/// Gets the terrain for battlescape generation.
-	std::string getTerrain() const;
+	std::vector<std::string> getTerrains() const;
 	/// Gets the shade level for battlescape generation.
 	int getShade() const;
 	/// Gets the next stage of the mission.
@@ -88,6 +85,29 @@ public:
 
 };
 
+}
+
+namespace YAML
+{
+	template<>
+	struct convert<OpenXcom::ItemSet>
+	{
+		static Node encode(const OpenXcom::ItemSet& rhs)
+		{
+			Node node;
+			node = rhs.items;
+			return node;
+		}
+
+		static bool decode(const Node& node, OpenXcom::ItemSet& rhs)
+		{
+			if (!node.IsSequence())
+				return false;
+
+			rhs.items = node.as< std::vector<std::string> >(rhs.items);
+			return true;
+		}
+	};
 }
 
 #endif

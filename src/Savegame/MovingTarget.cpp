@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -19,7 +19,7 @@
 #define _USE_MATH_DEFINES
 #include "MovingTarget.h"
 #include <cmath>
-#include "../aresame.h"
+#include "../fmath.h"
 
 namespace OpenXcom
 {
@@ -36,7 +36,7 @@ MovingTarget::MovingTarget() : Target(), _dest(0), _speedLon(0.0), _speedLat(0.0
  */
 MovingTarget::~MovingTarget()
 {
-	if (_dest != 0 && _dest->getFollowers()->size() > 0)
+	if (_dest != 0 && !_dest->getFollowers()->empty())
 	{
 		for (std::vector<Target*>::iterator i = _dest->getFollowers()->begin(); i != _dest->getFollowers()->end(); ++i)
 		{
@@ -56,28 +56,28 @@ MovingTarget::~MovingTarget()
 void MovingTarget::load(const YAML::Node &node)
 {
 	Target::load(node);
-	node["speedLon"] >> _speedLon;
-	node["speedLat"] >> _speedLat;
-	node["speedRadian"] >> _speedRadian;
-	node["speed"] >> _speed;
+	_speedLon = node["speedLon"].as<double>(_speedLon);
+	_speedLat = node["speedLat"].as<double>(_speedLat);
+	_speedRadian = node["speedRadian"].as<double>(_speedRadian);
+	_speed = node["speed"].as<int>(_speed);
 }
 
 /**
  * Saves the moving target to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void MovingTarget::save(YAML::Emitter &out) const
+YAML::Node MovingTarget::save() const
 {
-	Target::save(out);
+	YAML::Node node = Target::save();
 	if (_dest != 0)
 	{
-		out << YAML::Key << "dest" << YAML::Value;
-		_dest->saveId(out);
+		node["dest"] = _dest->saveId();
 	}
-	out << YAML::Key << "speedLon" << YAML::Value << _speedLon;
-	out << YAML::Key << "speedLat" << YAML::Value << _speedLat;
-	out << YAML::Key << "speedRadian" << YAML::Value << _speedRadian;
-	out << YAML::Key << "speed" << YAML::Value << _speed;
+	node["speedLon"] = _speedLon;
+	node["speedLat"] = _speedLat;
+	node["speedRadian"] = _speedRadian;
+	node["speed"] = _speed;
+	return node;
 }
 
 /**
@@ -153,8 +153,8 @@ void MovingTarget::calculateSpeed()
 		dLon = sin(_dest->getLongitude() - _lon) * cos(_dest->getLatitude());
 		dLat = cos(_lat) * sin(_dest->getLatitude()) - sin(_lat) * cos(_dest->getLatitude()) * cos(_dest->getLongitude() - _lon);
 		length = sqrt(dLon * dLon + dLat * dLat);
-		_speedLon = dLon / length * _speedRadian / cos(_lat + _speedLat);
 		_speedLat = dLat / length * _speedRadian;
+		_speedLon = dLon / length * _speedRadian / cos(_lat + _speedLat);
 		// Check for invalid speeds when a division by zero occurs due to near-zero values
 		if (!(_speedLon == _speedLon) || !(_speedLat == _speedLat))
 		{

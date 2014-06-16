@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -46,7 +46,7 @@ public:
 	/// Loads the country from YAML.
 	void load(const YAML::Node& node);
 	/// Saves the country to YAML.
-	void save(YAML::Emitter& out) const;
+	YAML::Node save() const;
 	/// Gets the country's ruleset.
 	RuleCountry *getRules() const;
 	/// Gets the country's funding.

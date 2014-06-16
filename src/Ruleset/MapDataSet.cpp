@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -24,7 +24,6 @@
 #include "../Engine/Exception.h"
 #include "../Engine/SurfaceSet.h"
 #include "../Engine/CrossPlatform.h"
-#include "../Resource/ResourcePack.h"
 
 namespace OpenXcom
 {
@@ -33,15 +32,15 @@ MapData *MapDataSet::_blankTile = 0;
 MapData *MapDataSet::_scorchedTile = 0;
 
 /**
-* MapDataSet construction.
-*/
+ * MapDataSet construction.
+ */
 MapDataSet::MapDataSet(const std::string &name) : _name(name), _objects(), _surfaceSet(0), _loaded(false)
 {
 }
 
 /**
-* MapDataSet DESTRUCTION.
-*/
+ * MapDataSet destruction.
+ */
 MapDataSet::~MapDataSet()
 {
 	unloadData();
@@ -53,58 +52,50 @@ MapDataSet::~MapDataSet()
  */
 void MapDataSet::load(const YAML::Node &node)
 {
-	for (YAML::Iterator i = node.begin(); i != node.end(); ++i)
+	for (YAML::const_iterator i = node.begin(); i != node.end(); ++i)
 	{
-		*i >> _name;
+		_name = i->as<std::string>(_name);
 	}
 }
 
 /**
- * Saves the map data set to a YAML file.
- * @param out YAML emitter.
+ * Gets the MapDataSet name (string).
+ * @return The MapDataSet name.
  */
-void MapDataSet::save(YAML::Emitter &out) const
-{
-	out << _name;
-}
-
-/**
-* Gets the MapDataSet name (string).
-* @return name.
-*/
 std::string MapDataSet::getName() const
 {
 	return _name;
 }
 
 /**
-* Gets the MapDataSet size.
-* @return size in number of records.
-*/
-int MapDataSet::getSize() const
+ * Gets the MapDataSet size.
+ * @return The size in number of records.
+ */
+size_t MapDataSet::getSize() const
 {
 	return _objects.size();
 }
 
-
 /**
-* @return pointer to the objects
-*/
+ * Gets the objects in this dataset.
+ * @return Pointer to the objects.
+ */
 std::vector<MapData*> *MapDataSet::getObjects()
 {
 	return &_objects;
 }
 
 /**
-* @return pointer to the surfaceset
-*/
+ * Gets the surfaces in this dataset.
+ * @return Pointer to the surfaceset.
+ */
 SurfaceSet *MapDataSet::getSurfaceset() const
 {
 	return _surfaceSet;
 }
 
 /**
- * Loads terraindata in X-Com format (MCD & PCK files)
+ * Loads terrain data in XCom format (MCD & PCK files).
  * @sa http://www.ufopaedia.org/index.php?title=MCD
  */
 void MapDataSet::loadData()
@@ -116,6 +107,7 @@ void MapDataSet::loadData()
 	int objNumber = 0;
 
 	// the struct below helps to read the xcom file format
+	#pragma pack(push, 1)
 	struct MCD
 	{
 	unsigned char Frame[8];
@@ -139,8 +131,8 @@ void MapDataSet::loadData()
 	unsigned char Block_Smoke;
 	unsigned char u39;
 	unsigned char TU_Walk;
-	unsigned char TU_Fly;
 	unsigned char TU_Slide;
+	unsigned char TU_Fly;
 	unsigned char Armor;
 	unsigned char HE_Block;
 	unsigned char Die_MCD;
@@ -159,14 +151,15 @@ void MapDataSet::loadData()
 	unsigned char Fuel;
 	unsigned char Light_Source;
 	unsigned char Target_Type;
-	unsigned char u61;
+	unsigned char Xcom_Base;
 	unsigned char u62;
 	};
+	#pragma pack(pop)
 
 	MCD mcd;
 
 	// Load Terrain Data from MCD file
-	std::stringstream s;
+	std::ostringstream s;
 	s << "TERRAIN/" << _name << ".MCD";
 
 	// Load file
@@ -189,18 +182,19 @@ void MapDataSet::loadData()
 		to->setYOffset((int)mcd.P_Level);
 		to->setSpecialType((int)mcd.Target_Type, (int)mcd.Tile_Type);
 		to->setTUCosts((int)mcd.TU_Walk, (int)mcd.TU_Fly, (int)mcd.TU_Slide);
-		to->setFlags(mcd.UFO_Door != 0, mcd.Stop_LOS != 0, mcd.No_Floor != 0, (int)mcd.Big_Wall, mcd.Gravlift != 0, mcd.Door != 0, mcd.Block_Fire != 0, mcd.Block_Smoke != 0);
+		to->setFlags(mcd.UFO_Door != 0, mcd.Stop_LOS != 0, mcd.No_Floor != 0, (int)mcd.Big_Wall, mcd.Gravlift != 0, mcd.Door != 0, mcd.Block_Fire != 0, mcd.Block_Smoke != 0, mcd.Xcom_Base != 0);
 		to->setTerrainLevel((int)mcd.T_Level);
 		to->setFootstepSound((int)mcd.Footstep);
 		to->setAltMCD((int)(mcd.Alt_MCD));
 		to->setDieMCD((int)(mcd.Die_MCD));
-		to->setBlockValue((int)mcd.Light_Block, (int)mcd.Stop_LOS, (int)mcd.HE_Block, (int)mcd.Block_Smoke, (int)mcd.Block_Fire, (int)mcd.Block_Smoke);
+		to->setBlockValue((int)mcd.Light_Block, (int)mcd.Stop_LOS, (int)mcd.HE_Block, (int)mcd.Block_Smoke, (int)mcd.Flammable, (int)mcd.HE_Block);
 		to->setLightSource((int)mcd.Light_Source);
 		to->setArmor((int)mcd.Armor);
 		to->setFlammable((int)mcd.Flammable);
 		to->setFuel((int)mcd.Fuel);
 		to->setExplosive((int)mcd.HE_Strength);
-		to->setMiniMapIndex (mcd.ScanG);
+		mcd.ScanG = SDL_SwapLE16(mcd.ScanG);
+		to->setMiniMapIndex(mcd.ScanG);
 
 		for (int layer = 0; layer < 12; layer++)
 		{
@@ -232,16 +226,16 @@ void MapDataSet::loadData()
 	{
 		if ((*i)->getObjectType() == MapData::O_FLOOR && (*i)->getBlock(DT_HE) == 0)
 		{
-			(*i)->setBlockValue(1,1,(*i)->getArmor(),1,1,1);
+			(*i)->setBlockValue(1,1,(*i)->getArmor(),1,1,(*i)->getArmor());
 			if ((*i)->getDieMCD())
 			{
-				_objects.at((*i)->getDieMCD())->setBlockValue(1,1,(*i)->getArmor(),1,1,1);
+				_objects.at((*i)->getDieMCD())->setBlockValue(1,1,(*i)->getArmor(),1,1,(*i)->getArmor());
 			}
 		}
 	}
 
 	// Load terrain sprites/surfaces/PCK files into a surfaceset
-	std::stringstream s1,s2;
+	std::ostringstream s1,s2;
 	s1 << "TERRAIN/" << _name << ".PCK";
 	s2 << "TERRAIN/" << _name << ".TAB";
 	_surfaceSet = new SurfaceSet(32, 40);
@@ -249,23 +243,28 @@ void MapDataSet::loadData()
 
 }
 
+/**
+ * Unloads the terrain data.
+ */
 void MapDataSet::unloadData()
 {
 	if (_loaded)
 	{
-		for (std::vector<MapData*>::iterator i = _objects.begin(); i != _objects.end(); ++i)
+		for (std::vector<MapData*>::iterator i = _objects.begin(); i != _objects.end();)
 		{
 			delete *i;
+			i = _objects.erase(i);
 		}
 		delete _surfaceSet;
+		_loaded = false;
 	}
 }
 
 /**
-* loadLOFTEMPS loads the LOFTEMPS.DAT into the ruleset voxeldata
-* @param filename
-* @param voxelData
-*/
+ * Loads the LOFTEMPS.DAT into the ruleset voxeldata.
+ * @param filename Filename of the DAT file.
+ * @param voxelData The ruleset.
+ */
 void MapDataSet::loadLOFTEMPS(const std::string &filename, std::vector<Uint16> *voxelData)
 {
 	// Load file
@@ -291,11 +290,19 @@ void MapDataSet::loadLOFTEMPS(const std::string &filename, std::vector<Uint16> *
 	mapFile.close();
 }
 
+/**
+ * Gets a blank floor tile.
+ * @return Pointer to a blank tile.
+ */
 MapData *MapDataSet::getBlankFloorTile()
 {
 	return MapDataSet::_blankTile;
 }
 
+/**
+ * Gets a scorched earth tile.
+ * @return Pointer to a scorched earth tile.
+ */
 MapData *MapDataSet::getScorchedEarthTile()
 {
 	return MapDataSet::_scorchedTile;

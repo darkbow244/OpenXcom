@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -28,7 +28,7 @@ namespace OpenXcom
  * @param rules Pointer to ruleset.
  * @param base Pointer to base of origin.
  */
-BaseFacility::BaseFacility(RuleBaseFacility *rules, Base *base) : _rules(rules), _base(base), _x(-1), _y(-1), _buildTime(0)
+BaseFacility::BaseFacility(RuleBaseFacility *rules, Base *base) : _rules(rules), _base(base), _x(-1), _y(-1), _buildTime(0), _craftForDrawing(0)
 {
 }
 
@@ -45,23 +45,24 @@ BaseFacility::~BaseFacility()
  */
 void BaseFacility::load(const YAML::Node &node)
 {
-	node["x"] >> _x;
-	node["y"] >> _y;
-	node["buildTime"] >> _buildTime;
+	_x = node["x"].as<int>(_x);
+	_y = node["y"].as<int>(_y);
+	_buildTime = node["buildTime"].as<int>(_buildTime);
 }
 
 /**
  * Saves the base facility to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void BaseFacility::save(YAML::Emitter &out) const
+YAML::Node BaseFacility::save() const
 {
-	out << YAML::BeginMap;
-	out << YAML::Key << "type" << YAML::Value << _rules->getType();
-	out << YAML::Key << "x" << YAML::Value << _x;
-	out << YAML::Key << "y" << YAML::Value << _y;
-	out << YAML::Key << "buildTime" << YAML::Value << _buildTime;
-	out << YAML::EndMap;
+	YAML::Node node;
+	node["type"] = _rules->getType();
+	node["x"] = _x;
+	node["y"] = _y;
+	if (_buildTime != 0)
+		node["buildTime"] = _buildTime;
+	return node;
 }
 
 /**
@@ -159,6 +160,24 @@ bool BaseFacility::inUse() const
 			(_rules->getCrafts() > 0 && _base->getAvailableHangars() - _rules->getCrafts() < _base->getUsedHangars()) ||
 			(_rules->getPsiLaboratories() > 0 && _base->getAvailablePsiLabs() - _rules->getPsiLaboratories() < _base->getUsedPsiLabs()) ||
 			(_rules->getAliens() > 0 && _base->getAvailableContainment() - _rules->getAliens() < _base->getUsedContainment()));
+}
+
+/**
+ * Gets craft, used for drawing facility.
+ * @return craft
+ */
+Craft *BaseFacility::getCraft() const
+{
+	return _craftForDrawing;
+}
+
+/**
+ * Sets craft, used for drawing facility.
+ * @param craft for drawing hangar.
+ */
+void BaseFacility::setCraft(Craft *craft)
+{
+	_craftForDrawing = craft;
 }
 
 }

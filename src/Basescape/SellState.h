@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,11 +20,13 @@
 #define OPENXCOM_SELLSTATE_H
 
 #include "../Engine/State.h"
+#include "../Menu/OptionsBaseState.h"
 #include <vector>
 #include <string>
 
 namespace OpenXcom
 {
+enum SellType { SELL_SOLDIER, SELL_CRAFT, SELL_ITEM, SELL_SCIENTIST, SELL_ENGINEER };
 
 class TextButton;
 class Window;
@@ -45,24 +47,31 @@ private:
 	Base *_base;
 	TextButton *_btnOk, *_btnCancel;
 	Window *_window;
-	Text *_txtTitle, *_txtSales, *_txtFunds, *_txtItem, *_txtQuantity, *_txtSell, *_txtValue;
+	Text *_txtTitle, *_txtSales, *_txtFunds, *_txtItem, *_txtQuantity, *_txtSell, *_txtValue, *_txtSpaceUsed;
 	TextList *_lstItems;
 	std::vector<int> _qtys;
 	std::vector<Soldier*> _soldiers;
 	std::vector<Craft*> _crafts;
 	std::vector<std::string> _items;
-	unsigned int _sel;
-	int _total, _sOffset, _eOffset;
+	size_t _sel, _itemOffset;
+	int _total, _hasSci, _hasEng;
+	double _spaceChange;
 	Timer *_timerInc, *_timerDec;
-	int _changeValueByMouseWheel;
-	bool _allowChangeListValuesByMouseWheel;
+	Uint8 _color, _color2, _color3, _colorAmmo;
+	OptionsOrigin _origin;
 	/// Gets selected price.
 	int getPrice();
 	/// Gets selected quantity.
 	int getQuantity();
+	/// Gets the Type of the selected item.
+	enum SellType getType(size_t selected) const;
+	/// Gets the index of selected item.
+	size_t getItemIndex(size_t selected) const;
+	/// Gets the index of the selected craft.
+	size_t getCraftIndex(size_t selected) const;
 public:
 	/// Creates the Sell state.
-	SellState(Game *game, Base *base);
+	SellState(Game *game, Base *base, OptionsOrigin origin = OPT_GEOSCAPE);
 	/// Cleans up the Sell state.
 	~SellState();
 	/// Runs the timers.
@@ -87,12 +96,10 @@ public:
 	void lstItemsMousePress(Action *action);
 	/// Increases the quantity of an item by one.
 	void increase();
-	/// Increases the quantity of an item by the given value.
-	void increaseByValue(int change);
 	/// Decreases the quantity of an item by one.
 	void decrease();
-	/// Decreases the quantity of an item by the given value.
-	void decreaseByValue(int change);
+	/// Changes the quantity of an item by the given value.
+	void changeByValue(int change, int dir);
 	/// Updates the quantity-strings of the selected item.
 	void updateItemStrings();
 };

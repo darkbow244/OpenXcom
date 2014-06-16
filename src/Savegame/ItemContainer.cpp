@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -43,16 +43,18 @@ ItemContainer::~ItemContainer()
  */
 void ItemContainer::load(const YAML::Node &node)
 {
-	node >> _qty;
+	_qty = node.as< std::map<std::string, int> >(_qty);
 }
 
 /**
  * Saves the item container to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void ItemContainer::save(YAML::Emitter &out) const
+YAML::Node ItemContainer::save() const
 {
-	out << _qty;
+	YAML::Node node;
+	node = _qty;
+	return node;
 }
 
 /**

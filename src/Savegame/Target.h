@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -37,17 +37,17 @@ class Target
 protected:
 	double _lon, _lat;
 	std::vector<Target*> _followers;
-public:
 	/// Creates a target.
 	Target();
+public:
 	/// Cleans up the target.
 	virtual ~Target();
-	/// Loads the target from YAML.
-	virtual void load(const YAML::Node& node);
+	/// Loads the moving target from YAML.
+	void load(const YAML::Node& node);
 	/// Saves the target to YAML.
-	virtual void save(YAML::Emitter& out) const;
+	virtual YAML::Node save() const;
 	/// Saves the target's ID to YAML.
-	virtual void saveId(YAML::Emitter& out) const;
+	virtual YAML::Node saveId() const;
 	/// Gets the target's longitude.
 	double getLongitude() const;
 	/// Sets the target's longitude.

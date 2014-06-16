@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -27,15 +27,15 @@
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Sound.h"
 #include "../Engine/RNG.h"
-#include "../Engine/Language.h"
 #include "../Engine/Options.h"
-#include "../Ruleset/Armor.h"
 
 namespace OpenXcom
 {
 
 /**
  * Sets up an UnitTurnBState.
+ * @param parent Pointer to the Battlescape.
+ * @param action Pointer to an action.
  */
 UnitTurnBState::UnitTurnBState(BattlescapeGame *parent, BattleAction action) : BattleState(parent, action), _unit(0), _turret(false)
 {
@@ -50,16 +50,20 @@ UnitTurnBState::~UnitTurnBState()
 
 }
 
+/**
+ * Initializes the state.
+ */
 void UnitTurnBState::init()
 {
 	_unit = _action.actor;
+	_action.TU = 0;
 	if (_unit->getFaction() == FACTION_PLAYER)
-		_parent->setStateInterval(Options::getInt("battleXcomSpeed"));
+		_parent->setStateInterval(Options::battleXcomSpeed);
 	else
-		_parent->setStateInterval(Options::getInt("battleAlienSpeed"));
+		_parent->setStateInterval(Options::battleAlienSpeed);
 
 	// if the unit has a turret and we are turning during targeting, then only the turret turns
-	_turret = (_unit->getTurretType() != -1 && _action.targeting) || _action.strafe;
+	_turret = _unit->getTurretType() != -1 && (_action.targeting || _action.strafe);
 
 	_unit->lookAt(_action.target, _turret);
 
@@ -86,11 +90,14 @@ void UnitTurnBState::init()
 	}
 }
 
+/**
+ * Runs state functionality every cycle.
+ */
 void UnitTurnBState::think()
 {
 	const int tu = _unit->getFaction() == _parent->getSave()->getSide() ? 1 : 0; // one turn is 1 tu unless during reaction fire.
 
-	if (_parent->getPanicHandled() && _parent->checkReservedTU(_unit, tu) == false)
+	if (_unit->getFaction() == _parent->getSave()->getSide() && _parent->getPanicHandled() && !_action.targeting && !_parent->checkReservedTU(_unit, tu))
 	{
 		_unit->abortTurn();
 		_parent->popState();
@@ -104,7 +111,7 @@ void UnitTurnBState::think()
 		_parent->getTileEngine()->calculateFOV(_unit);
 		_unit->setCache(0);
 		_parent->getMap()->cacheUnit(_unit);
-		if (_parent->getPanicHandled() && _action.type == BA_NONE && _unit->getUnitsSpottedThisTurn().size() > unitSpotted)
+		if (_unit->getFaction() == _parent->getSave()->getSide() && _parent->getPanicHandled() && _action.type == BA_NONE && _unit->getUnitsSpottedThisTurn().size() > unitSpotted)
 		{
 			_unit->abortTurn();
 		}
@@ -121,7 +128,7 @@ void UnitTurnBState::think()
 	}
 }
 
-/*
+/**
  * Unit turning cannot be cancelled.
  */
 void UnitTurnBState::cancel()

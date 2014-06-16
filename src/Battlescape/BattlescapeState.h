@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -38,15 +38,12 @@ class NumberText;
 class BattleUnit;
 class SavedBattleGame;
 class BattleItem;
-class Window;
-class BattleState;
 class Timer;
-class ActionMenuItem;
 class WarningMessage;
 class BattlescapeGame;
 
 /**
- * Battlescape screen which shows the tactical battle
+ * Battlescape screen which shows the tactical battle.
  */
 class BattlescapeState : public State
 {
@@ -58,43 +55,48 @@ private:
 	InteractiveSurface *_btnInventory, *_btnCenter, *_btnNextSoldier, *_btnNextStop, *_btnShowLayers, *_btnHelp;
 	InteractiveSurface *_btnEndTurn, *_btnAbort, *_btnStats, *_btnLaunch, *_btnPsi;
 	ImageButton *_reserve;
-	ImageButton *_btnReserveNone, *_btnReserveSnap, *_btnReserveAimed, *_btnReserveAuto;
+	ImageButton *_btnReserveNone, *_btnReserveSnap, *_btnReserveAimed, *_btnReserveAuto, *_btnReserveKneel, *_btnZeroTUs;
 	InteractiveSurface *_btnLeftHandItem, *_btnRightHandItem;
-	InteractiveSurface *_btnVisibleUnit[10];
-	NumberText *_numVisibleUnit[10];
-	BattleUnit *_visibleUnit[10];
+	static const int VISIBLE_MAX = 10;
+	InteractiveSurface *_btnVisibleUnit[VISIBLE_MAX];
+	NumberText *_numVisibleUnit[VISIBLE_MAX];
+	BattleUnit *_visibleUnit[VISIBLE_MAX];
 	WarningMessage *_warning;
 	Text *_txtName;
 	NumberText *_numTimeUnits, *_numEnergy, *_numHealth, *_numMorale, *_numLayers, *_numAmmoLeft, *_numAmmoRight;
 	Bar *_barTimeUnits, *_barEnergy, *_barHealth, *_barMorale;
 	Timer *_animTimer, *_gameTimer;
 	SavedBattleGame *_save;
-	Text *_txtDebug;
+	Text *_txtDebug, *_txtTooltip;
 	std::vector<State*> _popups;
 	BattlescapeGame *_battleGame;
-	bool firstInit;
-	bool isMouseScrolling;
-	bool isMouseScrolled;
-	int xBeforeMouseScrolling, yBeforeMouseScrolling;
-	Position mapOffsetBeforeMouseScrolling;
-	Uint32 mouseScrollingStartTime;
-	int totalMouseMoveX, totalMouseMoveY;
-	bool mouseMovedOverThreshold;
+	bool _firstInit;
+	bool _isMouseScrolling, _isMouseScrolled;
+	int _xBeforeMouseScrolling, _yBeforeMouseScrolling;
+	Position _mapOffsetBeforeMouseScrolling;
+	Uint32 _mouseScrollingStartTime;
+	int _totalMouseMoveX, _totalMouseMoveY;
+	bool _mouseMovedOverThreshold;
 	bool _mouseOverIcons;
-
+	std::string _currentTooltip;
+	Position _cursorPosition;
+	/// Popups a context sensitive list of actions the user can choose from.
 	void handleItemClick(BattleItem *item);
+	/// Shifts the red colors of the visible unit buttons backgrounds.
 	void blinkVisibleUnitButtons();
 public:
-	void selectNextPlayerUnit(bool checkReselect, bool setReselect);
-	void selectPreviousPlayerUnit(bool checkReselect);
+	/// Selects the next soldier.
+	void selectNextPlayerUnit(bool checkReselect = false, bool setReselect = false, bool checkInventory = false);
+	/// Selects the previous soldier.
+	void selectPreviousPlayerUnit(bool checkReselect = false, bool setReselect = false, bool checkInventory = false);
 	static const int DEFAULT_ANIM_SPEED = 100;
 	/// Creates the Battlescape state.
 	BattlescapeState(Game *game);
 	/// Cleans up the Battlescape state.
 	~BattlescapeState();
-	/// init
+	/// Initilizes the battlescapestate.
 	void init();
-	/// think
+	/// Runs the timers and handles popups.
 	void think();
 	/// Handler for moving mouse over the map.
 	void mapOver(Action *action);
@@ -152,45 +154,64 @@ public:
 	void btnReloadClick(Action *action);
 	/// Handler for clicking the lighting button.
 	void btnPersonalLightingClick(Action *action);
-	// playable unit selected?
+	/// Determines whether a playable unit is selected.
 	bool playableUnitSelected();
-	/// updates soldier name/rank/tu/energy/health/morale
+	/// Updates soldier name/rank/tu/energy/health/morale.
 	void updateSoldierInfo();
-	/// Animate other stuff.
+	/// Animates map objects on the map, also smoke,fire, ...
 	void animate();
-	/// handlestates timer.
+	/// Handles the battle game state.
 	void handleState();
-	/// state timer interval.
+	/// Sets the state timer interval.
 	void setStateInterval(Uint32 interval);
-	/// Get game.
+	/// Gets game.
 	Game *getGame() const;
-	/// Get map.
+	/// Gets map.
 	Map *getMap() const;
 	/// Show debug message.
 	void debug(const std::wstring &message);
 	/// Show warning message.
 	void warning(const std::string &message);
-	/// Handle keypresses.
+	/// Handles keypresses.
 	void handle(Action *action);
 	/// Displays a popup window.
 	void popup(State *state);
 	/// Finishes a battle.
 	void finishBattle(bool abort, int inExitArea);
-	/// show launch button
+	/// Show the launch button.
 	void showLaunchButton(bool show);
-	/// show PSI button
+	/// Shows the PSI button.
 	void showPsiButton(bool show);
-	/// Clears mouse-scrolling state
+	/// Clears mouse-scrolling state.
 	void clearMouseScrollingState();
-	/// returns a pointer to the battlegame, in case we need it's functions.
+	/// Returns a pointer to the battlegame, in case we need its functions.
 	BattlescapeGame *getBattleGame();
-	void SaveAIMap();
-	void SaveVoxelMap();
-	void SaveVoxelView();
+	/// Saves a map as used by the AI.
+	void saveAIMap();
+	/// Saves each layer of voxels on the bettlescape as a png.
+	void saveVoxelMap();
+	/// Saves a first-person voxel view of the battlescape.
+	void saveVoxelView();
+	/// Handler for the mouse moving over the icons, disables the tile selection cube.
 	void mouseInIcons(Action *action);
+	/// Handler for the mouse going out of the icons, enabling the tile selection cube.
 	void mouseOutIcons(Action *action);
+	/// Checks if the mouse is over the icons.
 	bool getMouseOverIcons() const;
-	bool allowButtons() const;
+	/// Is the player allowed to press buttons?
+	bool allowButtons(bool allowSaving = false) const;
+	/// Handler for clicking the reserve TUs to kneel button.
+	void btnReserveKneelClick(Action *action);
+	/// Handler for clicking the expend all TUs button.
+	void btnZeroTUsClick(Action *action);
+	/// Handler for showing tooltip.
+	void txtTooltipIn(Action *action);
+	/// Handler for hiding tooltip.
+	void txtTooltipOut(Action *action);
+	/// Update the resolution settings, we just resized the window.
+	void resize(int &dX, int &dY);
+	/// Move the mouse back to where it started after we finish drag scrolling.
+	void stopScrolling(Action *action);
 };
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -51,27 +51,33 @@ Country::~Country()
  */
 void Country::load(const YAML::Node &node)
 {
-	node["funding"] >> _funding;
-	node["activityXcom"] >> _activityXcom;
-	node["activityAlien"] >> _activityAlien;
-	node["pact"] >> _pact;
-	node["newPact"] >> _newPact;
+	_funding = node["funding"].as< std::vector<int> >(_funding);
+	_activityXcom = node["activityXcom"].as< std::vector<int> >(_activityXcom);
+	_activityAlien = node["activityAlien"].as< std::vector<int> >(_activityAlien);
+	_pact = node["pact"].as<bool>(_pact);
+	_newPact = node["newPact"].as<bool>(_newPact);
 }
 
 /**
  * Saves the country to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
-void Country::save(YAML::Emitter &out) const
+YAML::Node Country::save() const
 {
-	out << YAML::BeginMap;
-	out << YAML::Key << "type" << YAML::Value << _rules->getType();
-	out << YAML::Key << "funding" << YAML::Value << _funding;
-	out << YAML::Key << "activityXcom" << YAML::Value << _activityXcom;
-	out << YAML::Key << "activityAlien" << YAML::Value << _activityAlien;
-	out << YAML::Key << "pact" << YAML::Value << _pact;
-	out << YAML::Key << "newPact" << YAML::Value << _newPact;
-	out << YAML::EndMap;
+	YAML::Node node;
+	node["type"] = _rules->getType();
+	node["funding"] = _funding;
+	node["activityXcom"] = _activityXcom;
+	node["activityAlien"] = _activityAlien;
+	if (_pact)
+	{
+		node["pact"] = _pact;
+	}
+	else if (_newPact)
+	{
+		node["newPact"] = _newPact;
+	}
+	return node;
 }
 
 /**
@@ -162,7 +168,8 @@ void Country::newMonth(int xcomTotal, int alienTotal)
 	int funding = getFunding().back();
 	int good = (xcomTotal / 10) + _activityXcom.back();
 	int bad = (alienTotal / 20) + _activityAlien.back();
-	int newFunding = (_funding.back()/100) * RNG::generate(5, 20);
+	int oldFunding = _funding.back() / 1000;
+	int newFunding = (oldFunding * RNG::generate(5, 20) / 100) * 1000;
 
 	if (bad <= good + 30)
 	{
