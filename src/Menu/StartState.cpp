@@ -59,8 +59,9 @@ StartState::StartState(Game *game) : State(game), _anim(0)
 	Options::newDisplayWidth = Options::displayWidth;
 	Options::newDisplayHeight = Options::displayHeight;
 #ifdef __ANDROID__
-	Options::baseXResolution = Screen::ORIGINAL_WIDTH;
-	Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
+	// Maybe try a higher resolution this time?
+	Options::baseXResolution = std::min(Screen::ORIGINAL_WIDTH * 2, Options::displayWidth);
+	Options::baseYResolution = std::min(Screen::ORIGINAL_HEIGHT * 2, Options::displayHeight);
 #else
 	Options::baseXResolution = Options::displayWidth;
 	Options::baseYResolution = Options::displayHeight;
