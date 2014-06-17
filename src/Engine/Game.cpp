@@ -194,25 +194,28 @@ void Game::run()
 
 #ifdef __ANDROID__
 		isTouched = false;
-		for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
+		if (!hadFingerUp)
 		{
-			if(SDL_GetNumTouchFingers(*i))
+			for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
 			{
-				isTouched = true;
-				break;
+				if(SDL_GetNumTouchFingers(*i))
+				{
+					isTouched = true;
+					break;
+				}
 			}
-		}
-		if ((!hadFingerUp) && (!isTouched))
-		{
-			// We shouldn't end up here, but whatever.
-			reservedMUpEvent.type = SDL_MOUSEBUTTONUP;
-			Action fakeAction = Action(&reservedMUpEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-			// I'm not sure if these care about our mouse actions anyway.
-			_screen->handle(&fakeAction);
-			_cursor->handle(&fakeAction);
-			_fpsCounter->handle(&fakeAction);
-			_states.back()->handle(&fakeAction);
-			hadFingerUp = true;
+			if (!isTouched)
+			{
+				// We shouldn't end up here, but whatever.
+				reservedMUpEvent.type = SDL_MOUSEBUTTONUP;
+				Action fakeAction = Action(&reservedMUpEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+				// I'm not sure if these care about our mouse actions anyway.
+				/*_screen->handle(&fakeAction);
+				_cursor->handle(&fakeAction);
+				_fpsCounter->handle(&fakeAction);*/
+				_states.back()->handle(&fakeAction);
+				hadFingerUp = true;
+			}
 		}
 #endif
 
