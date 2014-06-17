@@ -405,7 +405,7 @@ void Screen::resetDisplay(bool resetVideo)
 			_texture = NULL;
 		}
 		Log(LOG_INFO) << "Setting main texture size to " << _baseWidth << "x" << _baseHeight;
-		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888,
+		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ABGR8888,
 				SDL_TEXTUREACCESS_STREAMING, _baseWidth, _baseHeight);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
 		

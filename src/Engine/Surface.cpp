@@ -123,10 +123,10 @@ inline void DeleteAligned(void* buffer)
 } //namespace
 
 
-const int Surface::RMASK = 0xFF000000;
-const int Surface::GMASK = 0x00FF0000;
-const int Surface::BMASK = 0x0000FF00;
-const int Surface::AMASK = 0x000000FF;
+const int Surface::RMASK = 0x000000FF;
+const int Surface::GMASK = 0x0000FF00;
+const int Surface::BMASK = 0x00FF0000;
+const int Surface::AMASK = 0xFF000000;
 /**
  * Sets up a blank 8bpp surface with the specified size and position,
  * with pure black as the transparent color.
