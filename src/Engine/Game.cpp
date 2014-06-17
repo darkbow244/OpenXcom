@@ -149,9 +149,16 @@ void Game::run()
 	bool startupEvent = Options::allowResize;
 	
 #ifdef __ANDROID__
-	SDL_TouchID touchID = SDL_GetTouchDevice(0); // Default touch device, but what if we have more than one?
+	int numTouchDevices = SDL_GetNumTouchDevices();
+	std::vector<SDL_TouchID> touchDevices;
+	for(int i = 0; i < numTouchDevices; ++i)
+	{
+		touchDevices.push_back(SDL_GetTouchDevice(i));
+	}
 	bool hadFingerUp = true;
+	bool isTouched = false;
 	SDL_Event reservedMUpEvent;
+	Log(LOG_INFO) << "SDL reports this number of touch devices present: " << SDL_GetNumTouchDevices();
 #endif
 	
 	while (!_quit)
@@ -186,18 +193,26 @@ void Game::run()
 		// Now's as good a time as ever to send that fake event
 
 #ifdef __ANDROID__
-		if ((!hadFingerUp) && (!SDL_GetNumTouchFingers(touchID)))
+		isTouched = false;
+		for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
+		{
+			if(SDL_GetNumTouchFingers(*i))
+			{
+				isTouched = true;
+				break;
+			}
+		}
+		if ((!hadFingerUp) && (!isTouched))
 		{
 			// We shouldn't end up here, but whatever.
 			reservedMUpEvent.type = SDL_MOUSEBUTTONUP;
 			Action fakeAction = Action(&reservedMUpEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 			// I'm not sure if these care about our mouse actions anyway.
-			/* _screen->handle(&action);
-			_cursor->handle(&action);
-			_fpsCounter->handle(&action); */
+			_screen->handle(&fakeAction);
+			_cursor->handle(&fakeAction);
+			_fpsCounter->handle(&fakeAction);
 			_states.back()->handle(&fakeAction);
 			hadFingerUp = true;
-			
 		}
 #endif
 
@@ -302,6 +317,7 @@ void Game::run()
 					hadFingerUp = false;
 #endif
 				case SDL_FINGERUP:
+					// Okay, maybe we don't need to ask twice.
 				case SDL_FINGERMOTION:
 				{
 					// For now we're translating events from the first finger into mouse events.
