@@ -35,7 +35,7 @@ const SDL_Keycode InteractiveSurface::SDLK_ANY = (SDL_Keycode)-1; // using an un
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-InteractiveSurface::InteractiveSurface(int width, int height, int x, int y) : Surface(width, height, x, y), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _multiGesture(0), _wheel(NULL), _isHovered(false), _isFocused(true), _listButton(false)
+InteractiveSurface::InteractiveSurface(int width, int height, int x, int y, int bpp) : Surface(width, height, x, y, bpp), _buttonsPressed(0), _in(0), _over(0), _out(0), _fingerMotion(0), _multiGesture(0), _wheel(NULL), _isHovered(false), _isFocused(true), _listButton(false)
 {
 }
 

@@ -91,7 +91,7 @@ void Screen::makeVideoFlags()
 	// Handle display mode
 	if (Options::fullscreen)
 	{
-		_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		_flags |= SDL_FULLSCREEN;
 	}
 
 #if 0
@@ -106,7 +106,6 @@ void Screen::makeVideoFlags()
 	}
 #endif
 
-	//_bpp = (isHQXEnabled() || isOpenGLEnabled()) ? 32 : 8;
 	_bpp = 32;
 	_baseWidth = Options::baseXResolution;
 	_baseHeight = Options::baseYResolution;
@@ -193,6 +192,21 @@ void Screen::handle(Action *action)
 	}
 }
 
+namespace
+{
+
+/**
+ * Helper function swaping betwean SDL (RGB) and Windows (BGR) color formats
+ */
+struct SwapColors
+{
+	inline static void func(SDL_Color& src)
+	{
+		std::swap(src.b, src.r);
+	}
+};
+
+}
 
 /**
  * Renders the buffer's contents onto the screen, applying
@@ -254,16 +268,6 @@ void Screen::setPalette(SDL_Color* colors, int firstcolor, int ncolors, bool imm
 		_numColors = ncolors;
 		_firstColor = firstcolor;
 	}
-
-	_surface->setPalette(colors, firstcolor, ncolors);
-
-#if 0
-	// defer actual update of screen until SDL_Flip()
-	if (immediately && _screen->format->BitsPerPixel == 8 && SDL_SetColors(_screen, colors, firstcolor, ncolors) == 0)
-	{
-		Log(LOG_DEBUG) << "Display palette doesn't match requested palette";
-	}
-#endif
 
 	// Sanity check
 	/*
@@ -341,7 +345,6 @@ void Screen::resetDisplay(bool resetVideo)
 		//_surface = new Surface(_baseWidth, _baseHeight, 0, 0, Screen::isHQXEnabled() ? 32 : 8); // only HQX needs 32bpp for this surface; the OpenGL class has its own 32bpp buffer
 		/* So why exactly does the new surface have fixed size? */
 		_surface = new Surface(_baseWidth, _baseHeight, 0, 0, 32);
-		if (_surface->getSurface()->format->BitsPerPixel == 8) _surface->setPalette(deferredPalette);
 	}
 	SDL_SetColorKey(_surface->getSurface(), 0, 0); // turn off color key! 
 
@@ -572,7 +575,7 @@ void Screen::screenshot(const std::string &filename) const
 #if 0
 	SDL_Surface *screenshot = SDL_CreateRGBSurface(0, getWidth(), getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
 	SDL_Surface *screenshot = SDL_AllocSurface(0, getWidth() - getWidth()%4, getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
-
+	
 	if (isOpenGLEnabled())
 	{
 #ifndef __NO_OPENGL

@@ -46,7 +46,7 @@ namespace OpenXcom
 
 namespace
 {
-  
+
 /**
  * Helper function counting pitch in bytes with 16byte padding
  * @param bpp bytes per pixel
@@ -139,14 +139,10 @@ const int Surface::AMASK = 0xFF000000;
  * @param y Y position in pixels.
  * @param bpp Bits-per-pixel depth.
  */
-
 Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _alignedBuffer(0)
 {
 	_alignedBuffer = NewAligned(bpp, width, height);
-	if (bpp == 32)
-		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, 32, GetPitch(32, width), RMASK, GMASK, BMASK, AMASK);
-	else
-		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
+	_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
 
 	if (_surface == 0)
 	{
@@ -169,7 +165,7 @@ Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _
  * Performs a deep copy of an existing surface.
  * @param other Surface to copy from.
  */
-Surface::Surface(const Surface& other)
+Surface::Surface(const Surface& other) : _palette(other._palette)
 {
 	//if is native OpenXcom aligned surface
 	if(other._alignedBuffer)
@@ -208,6 +204,8 @@ Surface::Surface(const Surface& other)
 	_visible = other._visible;
 	_hidden = other._hidden;
 	_redraw = other._redraw;
+	_originalColors = other._originalColors;
+	_alignedBuffer = 0;
 }
 
 /**
@@ -601,6 +599,18 @@ void Surface::drawCircle(Sint16 x, Sint16 y, Sint16 r, Uint8 color)
 }
 
 /**
+ * Draws a filled circle on the 32bit surface.
+ * @param x X coordinate in pixels.
+ * @param y Y coordinate in pixels.
+ * @param r Radius in pixels.
+ * @param color Color of the circle.
+ */
+void Surface::drawCircle32bit(Sint16 x, Sint16 y, Sint16 r, Uint32 color)
+{
+	filledCircleColor(_surface, x, y, r, color);
+}
+
+/**
  * Draws a filled polygon on the surface.
  * @param x Array of x coordinates.
  * @param y Array of y coordinates.
@@ -705,7 +715,16 @@ SDL_Rect *Surface::getCrop()
 void Surface::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
 	if (_surface->format->BitsPerPixel == 8)
+	{
 		SDL_SetPaletteColors(_surface->format->palette, colors, firstcolor, ncolors);
+	}
+	else
+	{
+		for(int i = 0; i< ncolors; ++i)
+		{
+			_palette[firstcolor + i] = colors[firstcolor + i];
+		}
+	}
 }
 
 /**
@@ -754,7 +773,7 @@ struct ColorReplace
 	* @param shade value of shade of this surface
 	* @param newColor new color to set (it should be offseted by 4)
 	*/
-	static inline void func(Uint8& dest, const Uint8& src, const int& shade, const int& newColor, const int&)
+	static inline void func(Uint8& dest, const Uint8& src, const int& shade, const int& newColor)
 	{
 		if(src)
 		{
@@ -766,7 +785,30 @@ struct ColorReplace
 				dest = newColor | newShade;
 		}
 	}
-
+	
+	/**
+	 * Function used by ShaderDraw in Surface::blitNShade
+	 * set shade and replace color in that surface
+	 * 8bit -> 32bit version
+     * @param dest destination pixel
+     * @param src source pixel
+     * @param palette palette of source pixel
+     * @param shade value of shade of this surface
+     * @param newColor new color to set (it should be offseted by 4)
+     */
+	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade, const int& newColor)
+	{
+		if(src)
+		{
+			const int newShade = (src&15) + shade;
+			if (newShade > 15)
+				// so dark it would flip over to another color - make it black instead
+				dest = palette[15];
+			else
+				dest = palette[newColor | newShade];
+		}
+	}
+	
 };
 
 /**
@@ -783,7 +825,7 @@ struct StandartShade
 	* @param notused
 	* @param notused
 	*/
-	static inline void func(Uint8& dest, const Uint8& src, const int& shade, const int&, const int&)
+	static inline void func(Uint8& dest, const Uint8& src, const int& shade)
 	{
 		if(src)
 		{
@@ -795,7 +837,20 @@ struct StandartShade
 				dest = (src&(15<<4)) | newShade;
 		}
 	}
-
+	
+	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade)
+	{
+		if(src)
+		{
+			const int newShade = (src&15) + shade;
+			if (newShade > 15)
+				// so dark it would flip over to another color - make it black instead
+				dest = palette[15];
+			else
+				dest = palette[(src&(15<<4)) | newShade];
+		}
+	}
+	
 };
 
 
@@ -824,11 +879,20 @@ void Surface::blitNShade(Surface *surface, int x, int y, int off, bool half, int
 	{
 		--newBaseColor;
 		newBaseColor <<= 4;
-		ShaderDraw<ColorReplace>(ShaderSurface(surface), src, ShaderScalar(off), ShaderScalar(newBaseColor));
+		if(surface->_surface->format->BitsPerPixel != 32)
+			ShaderDraw<ColorReplace>(ShaderSurface(surface), src, ShaderScalar(off), ShaderScalar(newBaseColor));
+		else
+			ShaderDraw<ColorReplace>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(this->getPalette()), ShaderScalar(off), ShaderScalar(newBaseColor));
+			
 	}
 	else
-		ShaderDraw<StandartShade>(ShaderSurface(surface), src, ShaderScalar(off));
-
+	{
+		if(surface->_surface->format->BitsPerPixel != 32)
+			ShaderDraw<StandartShade>(ShaderSurface(surface), src, ShaderScalar(off));
+		else
+			ShaderDraw<StandartShade>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(this->getPalette()), ShaderScalar(off));
+	}
+		
 }
 
 /**

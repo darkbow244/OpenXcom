@@ -22,6 +22,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <string>
+#include <vector>
 
 namespace OpenXcom
 {
@@ -43,7 +44,10 @@ protected:
 	int _x, _y;
 	SDL_Rect _crop, _clear;
 	bool _visible, _hidden, _redraw;
+	SDL_Color *_originalColors;
 	void *_alignedBuffer;
+	int _dx, _dy;
+	std::vector<SDL_Color> _palette;
 	std::string _tooltip;
 
 	static const int RMASK;
@@ -91,6 +95,8 @@ public:
     void drawLine(Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 color);
     /// Draws a filled circle on the surface.
     void drawCircle(Sint16 x, Sint16 y, Sint16 r, Uint8 color);
+    /// Draws a filled circle on the 32 bit surface.
+    void drawCircle32bit(Sint16 x, Sint16 y, Sint16 r, Uint32 color);
     /// Draws a filled polygon on the surface.
     void drawPolygon(Sint16 *x, Sint16 *y, int n, Uint8 color);
     /// Draws a textured polygon on the surface.
@@ -105,14 +111,10 @@ public:
 	 */
 	SDL_Color *getPalette() const
 	{
-		if (_surface->format->palette)
-		{
+		if (_surface->format->BitsPerPixel != 32)
 			return _surface->format->palette->colors;
-		}
 		else
-		{
-			return NULL;
-		}
+			return (SDL_Color *)&(_palette[0]);
 	}
 	/// Sets the X position of the surface.
 	virtual void setX(int x);

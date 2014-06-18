@@ -77,7 +77,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param visibleMapHeight Current visible map height.
  */
-Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _projectile(0), _projectileInFOV(false), _explosionInFOV(false), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false), _smoothingEngaged(false)
+Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight, int bpp) : InteractiveSurface(width, height, x, y, bpp), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _projectile(0), _projectileInFOV(false), _explosionInFOV(false), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false), _smoothingEngaged(false)
 {
 	_previewSetting = Options::battleNewPreviewPath;
 	_smoothCamera = Options::battleSmoothCamera;
@@ -1420,7 +1420,7 @@ void Map::cacheUnits()
  */
 void Map::cacheUnit(BattleUnit *unit)
 {
-	UnitSprite *unitSprite = new UnitSprite(unit->getStatus() == STATUS_AIMING ? _spriteWidth * 2: _spriteWidth, _spriteHeight, 0, 0);
+	UnitSprite *unitSprite = new UnitSprite(unit->getStatus() == STATUS_AIMING ? _spriteWidth * 2: _spriteWidth, _spriteHeight, 0, 0, 8);
 	unitSprite->setPalette(this->getPalette());
 	bool invalid, dummy;
 	int numOfParts = unit->getArmor()->getSize() == 1?1:unit->getArmor()->getSize()*2;

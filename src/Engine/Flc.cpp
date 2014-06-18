@@ -20,7 +20,7 @@ grt,
                                                                   ----+
 */
 
-//#define version "0.2"
+#define version "0.2"
 /*
 */
 #include <stdio.h>
@@ -40,7 +40,6 @@ grt,
 #include "Surface.h"
 #include "Options.h"
 #include "../fmath.h"
-#include "Surface.h"
 
 namespace OpenXcom
 {
@@ -202,7 +201,7 @@ void COLORS256()
       flc.colors[i].b=*(pSrc++);
       i++;
     }
-	flc.realscreen->setPalette(flc.colors, NumColorsSkip, i);
+//	flc.realscreen->setPalette(flc.colors, NumColorsSkip, i);
 	SDL_SetPaletteColors(flc.mainscreen->format->palette, flc.colors, NumColorsSkip, i);
 	flc.realscreen->getSurface(); // force palette update to really happen
   }
@@ -363,7 +362,7 @@ void DECODE_COLOR()
       flc.colors[i].b=*(pSrc++)<<2;
       i++;
     }
-	flc.realscreen->setPalette(flc.colors, NumColorsSkip, i);
+//	flc.realscreen->setPalette(flc.colors, NumColorsSkip, i);
     SDL_SetPaletteColors(flc.mainscreen->format->palette, flc.colors, NumColorsSkip, i);
 	flc.realscreen->getSurface(); // force palette update to really happen
   }
@@ -553,6 +552,7 @@ void FlcMain(void (*frameCallBack)())
 		  switch(event.type) {
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_KEYDOWN:
+			  flc.realscreen->clear();
 			  return;
 			break;
 #if 0
