@@ -258,8 +258,7 @@ void ResourcePack::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 	}
 	for (std::map<std::string, SurfaceSet*>::iterator i = _sets.begin(); i != _sets.end(); ++i)
 	{
-		if (i->second->getFrame(0)->getSurface()->format->BitsPerPixel == 8)
-			i->second->setPalette(colors, firstcolor, ncolors);
+		i->second->setPalette(colors, firstcolor, ncolors);
 	}
 }
 

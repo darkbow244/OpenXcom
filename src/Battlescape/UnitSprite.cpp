@@ -450,7 +450,7 @@ void UnitSprite::drawRoutine0()
 	Surface *newLegs = new Surface(*legs);
 	Surface *newLeftArm = new Surface(*leftArm);
 	Surface *newRightArm = new Surface(*rightArm);
-	if (_unit->getGeoscapeSoldier() && Options::battleHairBleach)
+	if (_unit->getGeoscapeSoldier() && Options::battleHairBleach && torso->getSurface()->format->BitsPerPixel == 8)
 	{
 		SoldierLook look = _unit->getGeoscapeSoldier()->getLook();
 

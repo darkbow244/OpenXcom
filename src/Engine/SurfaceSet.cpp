@@ -271,7 +271,8 @@ void SurfaceSet::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
 	for (std::map<int, Surface*>::iterator i = _frames.begin(); i != _frames.end(); ++i)
 	{
-		(*i).second->setPalette(colors, firstcolor, ncolors);
+		if (i->second->getSurface()->format->BitsPerPixel == 8)
+			(*i).second->setPalette(colors, firstcolor, ncolors);
 	}
 }
 
