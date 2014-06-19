@@ -61,7 +61,7 @@ namespace OpenXcom
 		_txtTitle->setBig();
 		_txtTitle->setText(tr(defs->title));
 
-		_image = new Surface(320, 200, 0, 0);
+		_image = new Surface(320, 200, 0, 0, 32);
 		add(_image);
 
 		std::string look = armor->getSpriteInventory();

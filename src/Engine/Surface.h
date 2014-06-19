@@ -47,7 +47,7 @@ protected:
 	SDL_Color *_originalColors;
 	void *_alignedBuffer;
 	int _dx, _dy;
-	std::vector<SDL_Color> _palette;
+	SDL_Color *_palette;
 	std::string _tooltip;
 
 	void resize(int width, int height);
@@ -106,10 +106,10 @@ public:
 	 */
 	SDL_Color *getPalette() const
 	{
-		if (_surface->format->BitsPerPixel != 32)
+		if (_surface->format->BitsPerPixel == 8)
 			return _surface->format->palette->colors;
 		else
-			return (SDL_Color *)&(_palette[0]);
+			return _palette;
 	}
 	/// Sets the X position of the surface.
 	virtual void setX(int x);

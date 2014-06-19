@@ -224,11 +224,12 @@ Surface *SurfaceSet::getFrame(int i)
 /**
  * Creates and returns a particular frame in the surface set.
  * @param i Frame number in the set.
+ * @param bpp Bit depth of a frame.
  * @return Pointer to the respective surface.
  */
-Surface *SurfaceSet::addFrame(int i)
+Surface *SurfaceSet::addFrame(int i, Uint8 bpp)
 {
-	_frames[i] = new Surface(_width, _height);
+	_frames[i] = new Surface(_width, _height, 0, 0, bpp);
 	return _frames[i];
 }
 

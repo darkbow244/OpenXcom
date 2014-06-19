@@ -123,7 +123,7 @@ inline void DeleteAligned(void* buffer)
 } //namespace
 
 /**
- * Sets up a blank 8bpp surface with the specified size and position,
+ * Sets up a blank surface with the specified size and position,
  * with pure black as the transparent color.
  * @note Surfaces don't have to fill the whole size since their
  * background is transparent, specially subclasses with their own
@@ -712,8 +712,7 @@ void Surface::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 	if (_surface->format->BitsPerPixel == 8)
 		SDL_SetColors(_surface, colors, firstcolor, ncolors);
 	else
-		for(int i = 0; i< ncolors; ++i)
-			_palette[firstcolor + i] = colors[firstcolor + i];
+		_palette = colors;
 }
 
 /**

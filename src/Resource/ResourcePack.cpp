@@ -252,12 +252,14 @@ void ResourcePack::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 	}
 	for (std::map<std::string, Surface*>::iterator i = _surfaces.begin(); i != _surfaces.end(); ++i)
 	{
-		if(i->first.substr(i->first.length()-3, i->first.length()) != "LBM")
-			i->second->setPalette(colors, firstcolor, ncolors);
+		if (i->second->getSurface()->format->BitsPerPixel == 8)
+			if(i->first.substr(i->first.length()-3, i->first.length()) != "LBM")
+				i->second->setPalette(colors, firstcolor, ncolors);
 	}
 	for (std::map<std::string, SurfaceSet*>::iterator i = _sets.begin(); i != _sets.end(); ++i)
 	{
-		i->second->setPalette(colors, firstcolor, ncolors);
+		if (i->second->getFrame(0)->getSurface()->format->BitsPerPixel == 8)
+			i->second->setPalette(colors, firstcolor, ncolors);
 	}
 }
 
