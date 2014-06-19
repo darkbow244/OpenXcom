@@ -91,7 +91,7 @@ void Screen::makeVideoFlags()
 	// Handle display mode
 	if (Options::fullscreen)
 	{
-		_flags |= SDL_FULLSCREEN;
+		_flags |= SDL_WINDOW_FULLSCREEN;
 	}
 
 #if 0
@@ -408,7 +408,7 @@ void Screen::resetDisplay(bool resetVideo)
 			_texture = NULL;
 		}
 		Log(LOG_INFO) << "Setting main texture size to " << _baseWidth << "x" << _baseHeight;
-		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ABGR8888,
+		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
 				SDL_TEXTUREACCESS_STREAMING, _baseWidth, _baseHeight);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
 		

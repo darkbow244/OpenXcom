@@ -20,7 +20,7 @@ grt,
                                                                   ----+
 */
 
-#define version "0.2"
+//#define version "0.2"
 /*
 */
 #include <stdio.h>

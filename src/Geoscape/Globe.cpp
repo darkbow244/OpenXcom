@@ -1522,7 +1522,7 @@ void Globe::drawDetail()
 
 				_mkCity->setX(x - 1);
 				_mkCity->setY(y - 1);
-				_mkCity->setPalette(_game->getResourcePack()->getPalette("PALETTES.DAT_0")->getColors());
+				_mkCity->setPalette(getPalette());
 				_mkCity->blit(_countries);
 
 				label->setX(x - 40);
