@@ -1411,7 +1411,7 @@ void Map::cacheUnit(BattleUnit *unit)
 			Surface *cache = unit->getCache(&dummy, i);
 			if (!cache) // no cache created yet
 			{
-				cache = new Surface(_spriteWidth, _spriteHeight, 0, 0, 8);
+				cache = new Surface(_spriteWidth, _spriteHeight, 0, 0, 32);
 				cache->setPalette(this->getPalette());
 			}
 
