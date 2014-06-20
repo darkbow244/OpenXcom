@@ -9449,3 +9449,9 @@ extraSprites:
     subY: 48
     files:
       -4: Resources/Weapons/Terror.png
+  - type: WpnActive
+    width: 36
+    height: 52
+    singleImage: true
+    files:
+      0: Resources/UI/WpnActive.png

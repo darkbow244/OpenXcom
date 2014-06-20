@@ -92,6 +92,7 @@ private:
 	// Scalers for touchscreen
 	float _mouseXScale, _mouseYScale;
 	Texture *_overlay;
+	Surface *_leftWpnActive, *_rightWpnActive;
 #endif
 public:
 	/// Selects the next soldier.

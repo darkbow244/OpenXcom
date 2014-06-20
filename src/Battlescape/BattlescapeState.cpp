@@ -178,6 +178,10 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 
 	_txtDebug = new Text(300, 10, 20, 0);
 	_txtTooltip = new Text(300, 10, _icons->getX() + 2, _icons->getY() - 10);
+#ifdef __ANDROID__
+	_leftWpnActive = new Surface(36, 52, _icons->getX() + 6, _icons->getY() + 2);
+	_rightWpnActive = new Surface(36, 52, _icons->getX() + 278, _icons->getY() + 2);
+#endif
 
 	// Set palette
 	setPalette("PAL_BATTLESCAPE");
@@ -220,10 +224,15 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	add(_btnReserveAuto);
 	add(_btnReserveKneel);
 	add(_btnZeroTUs);
+#ifdef __ANDROID__
+	add(_leftWpnActive);
+	add(_rightWpnActive);
+#endif
 	add(_btnLeftHandItem);
 	add(_numAmmoLeft);
 	add(_btnRightHandItem);
 	add(_numAmmoRight);
+
 	for (int i = 0; i < VISIBLE_MAX; ++i)
 	{
 		add(_btnVisibleUnit[i]);
@@ -266,6 +275,13 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	// Add in custom reserve buttons
 	Surface *icons = _game->getResourcePack()->getSurface("ICONS.PCK");
 	Surface *tftdIcons = _game->getResourcePack()->getSurface("TFTDReserve");
+#ifdef __ANDROID__
+	Surface *wpnActive = _game->getResourcePack()->getSurface("WpnActive");
+	wpnActive->blit(_leftWpnActive);
+	wpnActive->blit(_rightWpnActive);
+	_leftWpnActive->setVisible(false);
+	_rightWpnActive->setVisible(false);
+#endif
 	tftdIcons->setX(48);
 	tftdIcons->setY(176);
 	tftdIcons->blit(icons);
@@ -1206,11 +1222,18 @@ void BattlescapeState::btnLeftHandItemClick(Action *)
 		if (_battleGame->getCurrentAction()->targeting)
 		{
 			_battleGame->cancelCurrentAction();
+#ifdef __ANDROID__
+			updateSoldierInfo();
+#endif
 			return;
 		}
 
 		_battleGame->cancelCurrentAction();
-
+		
+#ifdef __ANDROID__
+			updateSoldierInfo();
+#endif
+		
 		_save->getSelectedUnit()->setActiveHand("STR_LEFT_HAND");
 		_map->cacheUnits();
 		_map->draw();
@@ -1233,11 +1256,18 @@ void BattlescapeState::btnRightHandItemClick(Action *)
 		if (_battleGame->getCurrentAction()->targeting)
 		{
 			_battleGame->cancelCurrentAction();
+#ifdef __ANDROID__
+			updateSoldierInfo();
+#endif
 			return;
 		}
 
 		_battleGame->cancelCurrentAction();
 
+#ifdef __ANDROID__
+			updateSoldierInfo();
+#endif
+		
 		_save->getSelectedUnit()->setActiveHand("STR_RIGHT_HAND");
 		_map->cacheUnits();
 		_map->draw();
@@ -1425,6 +1455,16 @@ void BattlescapeState::updateSoldierInfo()
 	_numAmmoLeft->setVisible(false);
 	if (leftHandItem)
 	{
+#ifdef __ANDROID__
+		if ((_battleGame->getCurrentAction()->targeting) && (_battleGame->getCurrentAction()->weapon == leftHandItem))
+		{
+			_leftWpnActive->setVisible(true);
+		}
+		else
+		{
+			_leftWpnActive->setVisible(false);
+		}
+#endif
 		leftHandItem->getRules()->drawHandSprite(_game->getResourcePack()->getSurfaceSet("BIGOBS.PCK"), _btnLeftHandItem);
 		if (leftHandItem->getRules()->getBattleType() == BT_FIREARM && (leftHandItem->needsAmmo() || leftHandItem->getRules()->getClipSize() > 0))
 		{
@@ -1435,11 +1475,27 @@ void BattlescapeState::updateSoldierInfo()
 				_numAmmoLeft->setValue(0);
 		}
 	}
+#ifdef __ANDROID__
+	else
+	{
+		_leftWpnActive->setVisible(false);
+	}
+#endif
 	BattleItem *rightHandItem = battleUnit->getItem("STR_RIGHT_HAND");
 	_btnRightHandItem->clear();
 	_numAmmoRight->setVisible(false);
 	if (rightHandItem)
 	{
+#ifdef __ANDROID__
+		if ((_battleGame->getCurrentAction()->targeting) && (_battleGame->getCurrentAction()->weapon == rightHandItem))
+		{
+			_rightWpnActive->setVisible(true);
+		}
+		else
+		{
+			_rightWpnActive->setVisible(false);
+		}
+#endif
 		rightHandItem->getRules()->drawHandSprite(_game->getResourcePack()->getSurfaceSet("BIGOBS.PCK"), _btnRightHandItem);
 		if (rightHandItem->getRules()->getBattleType() == BT_FIREARM && (rightHandItem->needsAmmo() || rightHandItem->getRules()->getClipSize() > 0))
 		{
@@ -1450,6 +1506,12 @@ void BattlescapeState::updateSoldierInfo()
 				_numAmmoRight->setValue(0);
 		}
 	}
+#ifdef __ANDROID__
+	else
+	{
+		_rightWpnActive->setVisible(false);
+	}
+#endif
 
 	_save->getTileEngine()->calculateFOV(_save->getSelectedUnit());
 	int j = 0;
