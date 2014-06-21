@@ -202,6 +202,10 @@ void Screen::flip()
 {
 	if (getWidth() != _baseWidth || getHeight() != _baseHeight || isOpenGLEnabled())
 	{
+		//change swap colors, if colors is flicking someone probaby call flip without clear()
+		//because flip() leave screen colors in wrong state
+		if(!isOpenGLEnabled() && ( _surface->getSurface()->format->Rmask != _screen->format->Rmask ))
+			ShaderDraw<SwapColors>(ShaderMove<SDL_Color>(_surface));
 		Zoom::flipWithZoom(_surface->getSurface(), _screen, _topBlackBand, _bottomBlackBand, _leftBlackBand, _rightBlackBand, &glOutput);
 	}
 	else
