@@ -71,17 +71,6 @@ namespace OpenXcom
 {
 
 /**
- * Helper function swaping betwean SDL (RGB) and Windows (BGR) color formats
- */
-struct SwapColors
-{
-	inline static void func(SDL_Color& src)
-	{
-		std::swap(src.b, src.r);
-	}
-};
-
-/**
  * Sets up a map with the specified size and position.
  * @param game Pointer to the core game.
  * @param width Width in pixels.
