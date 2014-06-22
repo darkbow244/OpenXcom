@@ -120,6 +120,23 @@ inline void DeleteAligned(void* buffer)
 	}
 }
 
+inline SDL_Surface* CreateSDL(void *pixels, int width, int height, int depth, int pitch)
+{
+	assert(sizeof(SDL_Color) == 4);
+	SDL_Color red	= {255,   0,   0,   0};
+	SDL_Color green	= {  0, 255,   0,   0};
+	SDL_Color blue	= {  0,   0, 255,   0};
+	SDL_Color alpha	= {  0,   0,   0,   0}; //== 0x0
+	return SDL_CreateRGBSurfaceFrom(
+		pixels,
+		width, height, depth, pitch,
+		*reinterpret_cast<Uint32*>(&red),
+		*reinterpret_cast<Uint32*>(&green),
+		*reinterpret_cast<Uint32*>(&blue),
+		*reinterpret_cast<Uint32*>(&alpha));
+
+}
+
 } //namespace
 
 /**
@@ -137,7 +154,8 @@ inline void DeleteAligned(void* buffer)
 Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _originalColors(0), _alignedBuffer(0), _palette(0)
 {
 	_alignedBuffer = NewAligned(bpp, width, height);
-	_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
+
+	_surface = CreateSDL(_alignedBuffer, width, height, bpp, GetPitch(bpp, width));
 
 	if (_surface == 0)
 	{
@@ -170,7 +188,8 @@ Surface::Surface(const Surface& other) : _palette(other._palette)
 		int height = other.getHeight();
 		int pitch = GetPitch(bpp, width);
 		_alignedBuffer = NewAligned(bpp, width, height);
-		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, pitch, 0, 0, 0, 0);
+
+		_surface = CreateSDL(_alignedBuffer, width, height, bpp, pitch);
 		SDL_SetColorKey(_surface, SDL_SRCCOLORKEY, 0);
 		//cant call `setPalette` because its virtual function and it dont work correctly in constructor
 		SDL_SetColors(_surface, other.getPalette(), 0, 255);
@@ -773,7 +792,7 @@ struct ColorReplace
 				dest = newColor | newShade;
 		}
 	}
-	
+
 	/**
 	 * Function used by ShaderDraw in Surface::blitNShade
 	 * set shade and replace color in that surface
@@ -796,7 +815,6 @@ struct ColorReplace
 				dest = palette[newColor | newShade];
 		}
 	}
-	
 };
 
 /**
@@ -825,7 +843,7 @@ struct StandartShade
 				dest = (src&(15<<4)) | newShade;
 		}
 	}
-	
+
 	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade)
 	{
 		if(src)
@@ -838,7 +856,17 @@ struct StandartShade
 				dest = palette[(src&(15<<4)) | newShade];
 		}
 	}
-	
+
+	static inline void func(SDL_Color& dest, const SDL_Color& src, const int& shade)
+	{
+		if(src.r || src.g || src.b)
+		{
+			const int newShade = 15 - shade;
+			dest.r = src.r * newShade / 15;
+			dest.g = src.g * newShade / 15;
+			dest.b = src.b * newShade / 15;
+		}
+	}
 };
 
 
@@ -856,31 +884,50 @@ struct StandartShade
  */
 void Surface::blitNShade(Surface *surface, int x, int y, int off, bool half, int newBaseColor)
 {
-	ShaderMove<Uint8> src(this, x, y);
-	if(half)
+	const bool dest8 = surface->_surface->format->BitsPerPixel != 32;
+	if(this->_surface->format->BitsPerPixel == 32)
 	{
-		GraphSubset g = src.getDomain();
-		g.beg_x = g.end_x/2;
-		src.setDomain(g);
-	}
-	if(newBaseColor)
-	{
-		--newBaseColor;
-		newBaseColor <<= 4;
-		if(surface->_surface->format->BitsPerPixel != 32)
-			ShaderDraw<ColorReplace>(ShaderSurface(surface), src, ShaderScalar(off), ShaderScalar(newBaseColor));
+		ShaderMove<SDL_Color> src(this, x, y);
+
+		if(half)
+		{
+			GraphSubset g = src.getDomain();
+			g.beg_x = g.end_x/2;
+			src.setDomain(g);
+		}
+
+		if(dest8)
+			throw Exception("Cannot blit 32bit to 8bit");
 		else
-			ShaderDraw<ColorReplace>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(this->getPalette()), ShaderScalar(off), ShaderScalar(newBaseColor));
-			
+			ShaderDraw<StandartShade>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(off));
 	}
 	else
 	{
-		if(surface->_surface->format->BitsPerPixel != 32)
-			ShaderDraw<StandartShade>(ShaderSurface(surface), src, ShaderScalar(off));
+		ShaderMove<Uint8> src(this, x, y);
+
+		if(half)
+		{
+			GraphSubset g = src.getDomain();
+			g.beg_x = g.end_x/2;
+			src.setDomain(g);
+		}
+		if(newBaseColor)
+		{
+			--newBaseColor;
+			newBaseColor <<= 4;
+			if(dest8)
+				ShaderDraw<ColorReplace>(ShaderSurface(surface), src, ShaderScalar(off), ShaderScalar(newBaseColor));
+			else
+				ShaderDraw<ColorReplace>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(this->getPalette()), ShaderScalar(off), ShaderScalar(newBaseColor));
+		}
 		else
-			ShaderDraw<StandartShade>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(this->getPalette()), ShaderScalar(off));
+		{
+			if(dest8)
+				ShaderDraw<StandartShade>(ShaderSurface(surface), src, ShaderScalar(off));
+			else
+				ShaderDraw<StandartShade>(ShaderMove<SDL_Color>(surface), src, ShaderScalar(this->getPalette()), ShaderScalar(off));
+		}
 	}
-		
 }
 
 /**
@@ -924,8 +971,9 @@ void Surface::resize(int width, int height)
 	Uint8 bpp = _surface->format->BitsPerPixel;
 	int pitch = GetPitch(bpp, width);
 	void *alignedBuffer = NewAligned(bpp, width, height);
-	SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(alignedBuffer, width, height, bpp, pitch, 0, 0, 0, 0);
-	
+
+	SDL_Surface *surface = CreateSDL(alignedBuffer, width, height, bpp, pitch);
+
 	if (surface == 0)
 	{
 		throw Exception(SDL_GetError());

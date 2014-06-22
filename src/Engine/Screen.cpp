@@ -202,10 +202,8 @@ void Screen::flip()
 {
 	if (getWidth() != _baseWidth || getHeight() != _baseHeight || isOpenGLEnabled())
 	{
-		//change swap colors, if colors is flicking someone probaby call flip without clear()
-		//because flip() leave screen colors in wrong state
-		if(!isOpenGLEnabled() && ( _surface->getSurface()->format->Rmask != _screen->format->Rmask ))
-			ShaderDraw<SwapColors>(ShaderMove<SDL_Color>(_surface));
+//		if(!isOpenGLEnabled() && _surface->getSurface()->format->Rmask != _screen->format->Rmask)
+//			ShaderDraw<SwapColors>(ShaderMove<SDL_Color>(_surface));
 		Zoom::flipWithZoom(_surface->getSurface(), _screen, _topBlackBand, _bottomBlackBand, _leftBlackBand, _rightBlackBand, &glOutput);
 	}
 	else
@@ -312,15 +310,15 @@ void Screen::resetDisplay(bool resetVideo)
 #endif
 	makeVideoFlags();
 
-	if (!_surface || (_surface && 
-		(_surface->getSurface()->format->BitsPerPixel != _bpp || 
+	if (!_surface || (_surface &&
+		(_surface->getSurface()->format->BitsPerPixel != _bpp ||
 		_surface->getSurface()->w != _baseWidth ||
 		_surface->getSurface()->h != _baseHeight))) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
 	{
 		if (_surface) delete _surface;
 		_surface = new Surface(_baseWidth, _baseHeight, 0, 0, 32);
 	}
-	SDL_SetColorKey(_surface->getSurface(), 0, 0); // turn off color key! 
+	SDL_SetColorKey(_surface->getSurface(), 0, 0); // turn off color key!
 
 	if (resetVideo || _screen->format->BitsPerPixel != _bpp)
 	{
