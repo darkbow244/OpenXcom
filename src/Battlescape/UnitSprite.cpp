@@ -201,13 +201,13 @@ void UnitSprite::drawRoutine0()
 	if (_unit->getStatus() == STATUS_COLLAPSING)
 	{
 		torso = _unitSurface->getFrame(die + _unit->getFallingPhase());
-		torso->blit(this);
-		if (_unit->getGeoscapeSoldier() && Options::battleHairBleach)
+		if (_unit->getGeoscapeSoldier() && Options::battleHairBleach && torso->getSurface()->format->BitsPerPixel == 8)
 		{
 			SoldierLook look = _unit->getGeoscapeSoldier()->getLook();
 
 			if(look)
 			{
+				Surface temp = Surface(*torso);
 				Uint8 face_color = ColorFace::Face;
 				Uint8 hair_color = ColorFace::Hair;
 				switch(look)
@@ -226,11 +226,12 @@ void UnitSprite::drawRoutine0()
 						hair_color = (10<<4) + 6;
 						break;
 				}
-				lock();
-				ShaderDraw<ColorFace>(ShaderSurface(this), ShaderScalar(hair_color), ShaderScalar(face_color));
-				unlock();
+				ShaderDraw<ColorFace>(ShaderSurface(&temp), ShaderScalar(hair_color), ShaderScalar(face_color));
+				temp.blit(this);
+		return;
 			}
 		}
+		torso->blit(this);
 		return;
 	}
 

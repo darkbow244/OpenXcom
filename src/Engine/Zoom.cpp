@@ -665,15 +665,15 @@ void Zoom::flipWithZoom(SDL_Surface *src, SDL_Surface *dst, int topBlackBand, in
 	}
 	else
 	{
-		SDL_Surface *tmp = SDL_CreateRGBSurface(dst->flags, dst->w - leftBlackBand - rightBlackBand, dst->h - topBlackBand - bottomBlackBand, dst->format->BitsPerPixel, 0, 0, 0, 0);
-		_zoomSurfaceY(src, tmp, 0, 0);
+		Surface tmp = Surface(dst->w - leftBlackBand - rightBlackBand, dst->h - topBlackBand - bottomBlackBand, 0, 0, dst->format->BitsPerPixel);
+//		SDL_Surface *tmp = SDL_CreateRGBSurface(dst->flags, dst->w - leftBlackBand - rightBlackBand, dst->h - topBlackBand - bottomBlackBand, dst->format->BitsPerPixel, 0, 0, 0, 0);
+		_zoomSurfaceY(src, tmp.getSurface(), 0, 0);
 		if (src->format->palette != NULL)
 		{
-			SDL_SetPalette(tmp, SDL_LOGPAL|SDL_PHYSPAL, src->format->palette->colors, 0, src->format->palette->ncolors);
+			SDL_SetPalette(tmp.getSurface(), SDL_LOGPAL|SDL_PHYSPAL, src->format->palette->colors, 0, src->format->palette->ncolors);
 		}
-		SDL_Rect dstrect = {(Sint16)leftBlackBand, (Sint16)topBlackBand, (Uint16)tmp->w, (Uint16)tmp->h};
-		SDL_BlitSurface(tmp, NULL, dst, &dstrect);
-		SDL_FreeSurface(tmp);
+		SDL_Rect dstrect = {(Sint16)leftBlackBand, (Sint16)topBlackBand, (Uint16)tmp.getSurface()->w, (Uint16)tmp.getSurface()->h};
+		SDL_BlitSurface(tmp.getSurface(), NULL, dst, &dstrect);
 	}
 }
 

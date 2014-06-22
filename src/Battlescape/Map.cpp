@@ -469,7 +469,6 @@ void Map::drawTerrain(Surface *surface)
 								Position offset;
 								calculateWalkingOffset(bu, &offset);
 								tmpSurface->blitNShade(surface, screenPosition.x + offset.x + tileOffset.x, screenPosition.y + offset.y  + tileOffset.y, tileNorthShade);
-								tmpSurface->blit(surface);
 								// draw fire
 								if (bu->getFire() > 0)
 								{
@@ -620,7 +619,6 @@ void Map::drawTerrain(Surface *surface)
 									if (tmpSurface)
 									{
 										tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y + tileOffset.y + getTerrainLevel(westUnit->getPosition(), westUnit->getArmor()->getSize()), tileWestShade, true);
-										tmpSurface->blit(surface);
 										if (westUnit->getFire() > 0)
 										{
 											frameNumber = 4 + (_animFrame / 2);
@@ -795,7 +793,6 @@ void Map::drawTerrain(Surface *surface)
 							Position offset;
 							calculateWalkingOffset(unit, &offset);
 							tmpSurface->blitNShade(surface, screenPosition.x + offset.x, screenPosition.y + offset.y, tileShade);
-							tmpSurface->blit(surface);
 							if (unit->getFire() > 0)
 							{
 								frameNumber = 4 + (_animFrame / 2);
@@ -823,7 +820,6 @@ void Map::drawTerrain(Surface *surface)
 								calculateWalkingOffset(tunit, &offset);
 								offset.y += 24;
 								tmpSurface->blitNShade(surface, screenPosition.x + offset.x, screenPosition.y + offset.y, ttile->getShade());
-								tmpSurface->blit(surface);
 								if (tunit->getArmor()->getSize() > 1)
 								{
 									offset.y += 4;
