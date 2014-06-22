@@ -49,7 +49,7 @@ namespace OpenXcom
  * @param origin Position the projectile originates from.
  * @param targetVoxel Position the projectile is targeting.
  */
-Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position targetVoxel) : _res(res), _save(save), _action(action), _origin(origin), _targetVoxel(targetVoxel), _position(0)
+Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position targetVoxel, int bulletSprite) : _res(res), _save(save), _action(action), _origin(origin), _targetVoxel(targetVoxel), _position(0), _bulletSprite(bulletSprite), _reversed(false)
 {
 	// this is the number of pixels the sprite will move between frames
 	_speed = Options::battleFireSpeed;
@@ -71,6 +71,10 @@ Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction ac
 				_speed = std::max(1, _speed + _action.weapon->getAmmoItem()->getRules()->getBulletSpeed());
 			}
 		}
+	}
+	if ((targetVoxel.x - origin.x) + (targetVoxel.y - origin.y) >= 0)
+	{
+		_reversed = true;
 	}
 }
 
@@ -363,12 +367,10 @@ Position Projectile::getPosition(int offset) const
  */
 int Projectile::getParticle(int i) const
 {
-	if (_action.weapon->getAmmoItem() && _action.weapon->getAmmoItem()->getRules()->getBulletSprite() != -1)
-		return _action.weapon->getAmmoItem()->getRules()->getBulletSprite() + i;
-	else if (_action.weapon->getRules()->getBulletSprite() == -1)
-		return -1;
+	if (_bulletSprite != -1)
+		return _bulletSprite + i;
 	else
-		return _action.weapon->getRules()->getBulletSprite() + i;
+		return -1;
 }
 
 /**
@@ -421,5 +423,10 @@ Position Projectile::getOrigin()
 Position Projectile::getTarget()
 {
 	return _action.target;
+}
+
+bool Projectile::isReversed() const
+{
+	return _reversed;
 }
 }

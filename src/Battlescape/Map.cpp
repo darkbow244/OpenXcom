@@ -603,7 +603,7 @@ void Map::drawTerrain(Surface *surface)
 									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y - tileWest->getMapData(MapData::O_NORTHWALL)->getYOffset() + tileOffset.y, wallShade, true);
 								}
 								tmpSurface = tileWest->getSprite(MapData::O_OBJECT);
-								if (tmpSurface && tileWest->getMapData(MapData::O_OBJECT)->getBigWall() != 3)
+								if (tmpSurface && tileWest->getMapData(MapData::O_OBJECT)->getBigWall() < 6 && tileWest->getMapData(MapData::O_OBJECT)->getBigWall() != 3)
 								{
 									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y - tileWest->getMapData(MapData::O_OBJECT)->getYOffset() + tileOffset.y, tileWestShade, true);
 									// if the object in the tile to the west is a diagonal big wall, we need to cover up the black triangle at the bottom
@@ -660,6 +660,12 @@ void Map::drawTerrain(Surface *surface)
 									}
 									tmpSurface = _res->getSurfaceSet("SMOKE.PCK")->getFrame(frameNumber);
 									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y + tileOffset.y, 0, true);
+								}
+								// Draw object
+								if (tileWest->getMapData(MapData::O_OBJECT) && tileWest->getMapData(MapData::O_OBJECT)->getBigWall() >= 6)
+								{
+									tmpSurface = tileWest->getSprite(MapData::O_OBJECT);
+									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y - tileWest->getMapData(MapData::O_OBJECT)->getYOffset() + tileOffset.y, tileWestShade, true);
 								}
 							}
 						}
@@ -756,7 +762,17 @@ void Map::drawTerrain(Surface *surface)
 							// draw bullet on the correct tile
 							if (itX >= bulletLowX && itX <= bulletHighX && itY >= bulletLowY && itY <= bulletHighY)
 							{
-								for (int i = 0; i < BULLET_SPRITES; ++i)
+								int begin = 0;
+								int end = BULLET_SPRITES;
+								int direction = 1;
+								if (_projectile->isReversed())
+								{
+									begin = BULLET_SPRITES - 1;
+									end = -1;
+									direction = -1;
+								}
+
+								for (int i = begin; i != end; i += direction)
 								{
 									tmpSurface = _res->getSurfaceSet("Projectiles")->getFrame(_projectile->getParticle(i));
 									if (tmpSurface)
@@ -1220,9 +1236,7 @@ void Map::animate(bool redraw)
 	// animate certain units (large flying units have a propultion animation)
 	for (std::vector<BattleUnit*>::iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
 	{
-		if (((*i)->getArmor()->getSize() > 1 && (*i)->getArmor()->getMovementType() == MT_FLY) 
-			|| (*i)->getArmor()->getDrawingRoutine() == 8
-			|| (*i)->getArmor()->getDrawingRoutine() == 9)
+		if ((*i)->getArmor()->getConstantAnimation())
 		{
 			(*i)->setCache(0);
 			cacheUnit(*i);
@@ -1329,11 +1343,7 @@ void Map::calculateWalkingOffset(BattleUnit *unit, Position *offset)
 	{
 		offset->y += getTerrainLevel(unit->getPosition(), size);
 
-		if (unit->getArmor()->getDrawingRoutine() == 0 ||
-			unit->getArmor()->getDrawingRoutine() == 1 ||
-			unit->getArmor()->getDrawingRoutine() == 4 ||
-			unit->getArmor()->getDrawingRoutine() == 6 ||
-			unit->getArmor()->getDrawingRoutine() == 10)
+		if (unit->getArmor()->getCanHoldWeapon())
 		{
 			if (unit->getStatus() == STATUS_AIMING)
 			{
