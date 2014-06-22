@@ -1,11 +1,14 @@
 package org.libsdl.app;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.lang.reflect.Method;
 
 import android.app.*;
 import android.content.*;
@@ -315,6 +318,7 @@ public class SDLActivity extends Activity {
                                                int is_accelerometer, int nbuttons, 
                                                int naxes, int nhats, int nballs);
     public static native int nativeRemoveJoystick(int device_id);
+    public static native String nativeGetHint(String name);
 
     /**
      * This method is called by SDL using JNI.
@@ -550,7 +554,52 @@ public class SDLActivity extends Activity {
             mJoystickHandler.pollInputDevices();
         }
     }
-    
+
+    // APK extension files support
+
+    /** com.android.vending.expansion.zipfile.ZipResourceFile object or null. */
+    private Object expansionFile;
+
+    /** com.android.vending.expansion.zipfile.ZipResourceFile's getInputStream() or null. */
+    private Method expansionFileMethod;
+
+    public InputStream openAPKExtensionInputStream(String fileName) throws IOException {
+        // Get a ZipResourceFile representing a merger of both the main and patch files
+        if (expansionFile == null) {
+            Integer mainVersion = Integer.parseInt(nativeGetHint("SDL_ANDROID_APK_EXPANSION_MAIN_FILE_VERSION"));
+            Integer patchVersion = Integer.parseInt(nativeGetHint("SDL_ANDROID_APK_EXPANSION_PATCH_FILE_VERSION"));
+
+            try {
+                // To avoid direct dependency on Google APK extension library that is
+                // not a part of Android SDK we access it using reflection
+                expansionFile = Class.forName("com.android.vending.expansion.zipfile.APKExpansionSupport")
+                    .getMethod("getAPKExpansionZipFile", Context.class, int.class, int.class)
+                    .invoke(null, this, mainVersion, patchVersion);
+
+                expansionFileMethod = expansionFile.getClass()
+                    .getMethod("getInputStream", String.class);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                expansionFile = null;
+                expansionFileMethod = null;
+            }
+        }
+
+        // Get an input stream for a known file inside the expansion file ZIPs
+        InputStream fileStream;
+        try {
+            fileStream = (InputStream)expansionFileMethod.invoke(expansionFile, fileName);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            fileStream = null;
+        }
+
+        if (fileStream == null) {
+            throw new IOException();
+        }
+
+        return fileStream;
+    }
 }
 
 /**
@@ -804,6 +853,17 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
                 p = event.getPressure(i);
                 SDLActivity.onNativeTouch(touchDevId, pointerFingerId, action, x, y, p);
                 break;
+                
+            case MotionEvent.ACTION_CANCEL:
+                for (i = 0; i < pointerCount; i++) {
+                    pointerFingerId = event.getPointerId(i);
+                    x = event.getX(i) / mWidth;
+                    y = event.getY(i) / mHeight;
+                    p = event.getPressure(i);
+                    SDLActivity.onNativeTouch(touchDevId, pointerFingerId, MotionEvent.ACTION_UP, x, y, p);
+                }
+                break;
+
             
             default:
                 break;
@@ -1017,13 +1077,13 @@ class SDLJoystickHandler {
 /* Actual joystick functionality available for API >= 12 devices */
 class SDLJoystickHandler_API12 extends SDLJoystickHandler {
   
-    class SDLJoystick {
+    static class SDLJoystick {
         public int device_id;
         public String name;
         public ArrayList<InputDevice.MotionRange> axes;
         public ArrayList<InputDevice.MotionRange> hats;
     }
-    class RangeComparator implements Comparator<InputDevice.MotionRange>
+    static class RangeComparator implements Comparator<InputDevice.MotionRange>
     {
         @Override
         public int compare(InputDevice.MotionRange arg0, InputDevice.MotionRange arg1) {
