@@ -539,6 +539,7 @@ void FlcMain(void (*frameCallBack)())
       //SDL_UpdateRect(flc.mainscreen, 0, 0, 0, 0);
       if (flc.mainscreen != flc.realscreen->getSurface()->getSurface())
         SDL_BlitSurface(flc.mainscreen, 0, flc.realscreen->getSurface()->getSurface(), 0);
+      flc.realscreen->resetDisplay();
       flc.realscreen->flip();
     }
 
