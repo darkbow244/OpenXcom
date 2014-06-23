@@ -302,7 +302,7 @@ bool ProjectileFlyBState::createNewProjectile()
 	_projectileImpact = V_EMPTY;
 	if (_action.type == BA_THROW)
 	{
-		_projectileImpact = projectile->calculateThrow(_unit->getThrowingAccuracy());
+		_projectileImpact = projectile->calculateThrow(_unit->getThrowingAccuracy() / 100.0);
 		if (_projectileImpact == V_FLOOR || _projectileImpact == V_UNIT || _projectileImpact == V_OBJECT)
 		{
 			if (_unit->getFaction() != FACTION_PLAYER && _projectileItem->getRules()->getBattleType() == BT_GRENADE)
@@ -446,7 +446,7 @@ void ProjectileFlyBState::think()
 			{
 				_parent->getTileEngine()->checkReactionFire(_unit);
 			}
-			if (!_unit->isOut())
+			if (!_unit->isOut() && _action.type != BA_HIT)
 			{
 				_unit->abortTurn();
 			}
