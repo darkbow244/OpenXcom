@@ -178,7 +178,11 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popu
 
 	_txtDebug = new Text(300, 10, 20, 0);
 	_txtTooltip = new Text(300, 10, _icons->getX() + 2, _icons->getY() - 10);
-	
+#ifdef __ANDROID__
+	_leftWpnActive = new Surface(36, 52, _icons->getX() + 6, _icons->getY() + 2);
+	_rightWpnActive = new Surface(36, 52, _icons->getX() + 278, _icons->getY() + 2);
+#endif
+
 	// Set palette
 	setPalette("PAL_BATTLESCAPE");
 
@@ -220,10 +224,15 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popu
 	add(_btnReserveAuto);
 	add(_btnReserveKneel);
 	add(_btnZeroTUs);
+#ifdef __ANDROID__
+	add(_leftWpnActive);
+	add(_rightWpnActive);
+#endif
 	add(_btnLeftHandItem);
 	add(_numAmmoLeft);
 	add(_btnRightHandItem);
 	add(_numAmmoRight);
+
 	for (int i = 0; i < VISIBLE_MAX; ++i)
 	{
 		add(_btnVisibleUnit[i]);
@@ -260,12 +269,19 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popu
 	_game->getScreen()->addOverlay(_overlay);
 	_game->getScreen()->drawOverlays(true);
 #endif
-
+	
 #endif
 
 	// Add in custom reserve buttons
 	Surface *icons = _game->getResourcePack()->getSurface("ICONS.PCK");
 	Surface *tftdIcons = _game->getResourcePack()->getSurface("TFTDReserve");
+#ifdef __ANDROID__
+	Surface *wpnActive = _game->getResourcePack()->getSurface("WpnActive");
+	wpnActive->blit(_leftWpnActive);
+	wpnActive->blit(_rightWpnActive);
+	_leftWpnActive->setVisible(false);
+	_rightWpnActive->setVisible(false);
+#endif
 	tftdIcons->setX(48);
 	tftdIcons->setY(176);
 	tftdIcons->blit(icons);
@@ -1256,11 +1272,18 @@ void BattlescapeState::btnLeftHandItemClick(Action *)
 		if (_battleGame->getCurrentAction()->targeting)
 		{
 			_battleGame->cancelCurrentAction();
+#ifdef __ANDROID__
+			if (!_battleGame->getCurrentAction()->targeting)
+			{
+				_leftWpnActive->setVisible(false);
+				_rightWpnActive->setVisible(false);
+			}
+#endif
 			return;
 		}
 
 		_battleGame->cancelCurrentAction();
-
+		
 		_save->getSelectedUnit()->setActiveHand("STR_LEFT_HAND");
 		_map->cacheUnits();
 		_map->draw();
@@ -1283,11 +1306,18 @@ void BattlescapeState::btnRightHandItemClick(Action *)
 		if (_battleGame->getCurrentAction()->targeting)
 		{
 			_battleGame->cancelCurrentAction();
+#ifdef __ANDROID__
+			if (!_battleGame->getCurrentAction()->targeting)
+			{
+				_leftWpnActive->setVisible(false);
+				_rightWpnActive->setVisible(false);
+			}
+#endif
 			return;
 		}
 
 		_battleGame->cancelCurrentAction();
-
+		
 		_save->getSelectedUnit()->setActiveHand("STR_RIGHT_HAND");
 		_map->cacheUnits();
 		_map->draw();
@@ -1440,6 +1470,10 @@ void BattlescapeState::updateSoldierInfo()
 	_numAmmoRight->setVisible(playableUnit);
 	if (!playableUnit)
 	{
+#ifdef __ANDROID__
+		_leftWpnActive->setVisible(false);
+		_rightWpnActive->setVisible(false);
+#endif
 		_txtName->setText(L"");
 		showPsiButton(false);
 		return;
@@ -1469,10 +1503,10 @@ void BattlescapeState::updateSoldierInfo()
 	_numMorale->setValue(battleUnit->getMorale());
 	_barMorale->setMax(100);
 	_barMorale->setValue(battleUnit->getMorale());
-
 	BattleItem *leftHandItem = battleUnit->getItem("STR_LEFT_HAND");
 	_btnLeftHandItem->clear();
 	_numAmmoLeft->setVisible(false);
+	
 	if (leftHandItem)
 	{
 		leftHandItem->getRules()->drawHandSprite(_game->getResourcePack()->getSurfaceSet("BIGOBS.PCK"), _btnLeftHandItem);
@@ -1485,6 +1519,7 @@ void BattlescapeState::updateSoldierInfo()
 				_numAmmoLeft->setValue(0);
 		}
 	}
+
 	BattleItem *rightHandItem = battleUnit->getItem("STR_RIGHT_HAND");
 	_btnRightHandItem->clear();
 	_numAmmoRight->setVisible(false);
@@ -1500,6 +1535,26 @@ void BattlescapeState::updateSoldierInfo()
 				_numAmmoRight->setValue(0);
 		}
 	}
+
+#ifdef __ANDROID__
+	if (_battleGame->getCurrentAction()->targeting)
+	{
+		BattleItem *currentItem = _battleGame->getCurrentAction()->weapon;
+		if (currentItem == leftHandItem)
+		{
+			_leftWpnActive->setVisible(true);
+		}
+		else if (currentItem == rightHandItem)
+		{
+			_rightWpnActive->setVisible(true);
+		}
+	}
+	else
+	{
+		_leftWpnActive->setVisible(false);
+		_rightWpnActive->setVisible(false);
+	}
+#endif
 
 	_save->getTileEngine()->calculateFOV(_save->getSelectedUnit());
 	int j = 0;
@@ -1549,6 +1604,30 @@ void BattlescapeState::handleItemClick(BattleItem *item)
 		if (_game->getSavedGame()->isResearched(item->getRules()->getRequirements()) || _save->getSelectedUnit()->getOriginalFaction() == FACTION_HOSTILE)
 		{
 			_battleGame->getCurrentAction()->weapon = item;
+#ifdef __ANDROID__
+		BattleUnit *battleUnit = _save->getSelectedUnit();
+		if (battleUnit)
+		{
+			BattleItem *leftHandItem = battleUnit->getItem("STR_LEFT_HAND");
+			BattleItem *rightHandItem = battleUnit->getItem("STR_RIGHT_HAND");
+			if (item == leftHandItem)
+			{
+				_leftWpnActive->setVisible(true);
+			}
+			else
+			{
+				_leftWpnActive->setVisible(false);
+			}
+			if (item == rightHandItem)
+			{
+				_rightWpnActive->setVisible(true);
+			}
+			else
+			{
+				_rightWpnActive->setVisible(false);
+			}
+		}
+#endif
 			popup(new ActionMenuState(_game, _battleGame->getCurrentAction(), _icons->getX(), _icons->getY()+16));
 		}
 		else
