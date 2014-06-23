@@ -92,6 +92,8 @@ private:
 	// Scalers for touchscreen
 	float _mouseXScale, _mouseYScale;
 	Texture *_overlay;
+	// Timer for long-tapping the screen
+	Timer *_longPressTimer;
 #endif
 public:
 	/// Selects the next soldier.
@@ -120,6 +122,8 @@ public:
 #ifdef __ANDROID__
 	/// Handler for buttons
 	void mapKey(Action *action);
+	/// Handler for long presses
+	void mapLongPress();
 #endif
 	/// Handler for clicking the Unit Up button.
 	void btnUnitUpClick(Action *action);

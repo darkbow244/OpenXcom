@@ -178,7 +178,7 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popu
 
 	_txtDebug = new Text(300, 10, 20, 0);
 	_txtTooltip = new Text(300, 10, _icons->getX() + 2, _icons->getY() - 10);
-
+	
 	// Set palette
 	setPalette("PAL_BATTLESCAPE");
 
@@ -260,7 +260,7 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popu
 	_game->getScreen()->addOverlay(_overlay);
 	_game->getScreen()->drawOverlays(true);
 #endif
-	
+
 #endif
 
 	// Add in custom reserve buttons
@@ -509,6 +509,11 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popu
 
 	_gameTimer = new Timer(DEFAULT_ANIM_SPEED, true);
 	_gameTimer->onTimer((StateHandler)&BattlescapeState::handleState);
+	
+#ifdef __ANDROID__
+	_longPressTimer = new Timer(500, false);
+	_longPressTimer->onTimer((StateHandler)&BattlescapeState::mapLongPress);
+#endif
 
 	_battleGame = new BattlescapeGame(_save, this);
 
@@ -526,6 +531,9 @@ BattlescapeState::~BattlescapeState()
 {
 #if 0
 	delete _overlay;
+#endif
+#ifdef __ANDROID__
+	delete _longPressTimer;
 #endif
 	delete _animTimer;
 	delete _gameTimer;
@@ -592,6 +600,9 @@ void BattlescapeState::think()
 			_battleGame->think();
 			_animTimer->think(this, 0);
 			_gameTimer->think(this, 0);
+#ifdef __ANDROID__
+			_longPressTimer->think(this, 0);
+#endif
 			if (popped)
 			{
 				_battleGame->handleNonTargetAction();
@@ -658,6 +669,13 @@ void BattlescapeState::mapOver(Action *action)
 		{
 			_mouseMovedOverThreshold = ((std::abs(_totalMouseMoveX) > Options::dragScrollPixelTolerance) || (std::abs(_totalMouseMoveY) > Options::dragScrollPixelTolerance));
 		}
+#ifdef __ANDROID__
+		if (_mouseMovedOverThreshold)
+		{
+			_longPressTimer->stop();
+			Log(LOG_INFO) << "Stopping long press timer in BattlescapeState::mapOver";
+		}
+#endif
 
 		// Scrolling
 		if (Options::battleDragScrollInvert)
@@ -743,6 +761,8 @@ void BattlescapeState::mapPress(Action *action)
 	}
 
 #ifdef __ANDROID__
+	_longPressTimer->start();
+	Log(LOG_INFO) << "Starting long press timer in BattlescapeState::mapPress";
 	Position pos;
 	/* Avoid null pointer dereference */
 	BattleUnit *selectedUnit = _save->getSelectedUnit();
@@ -766,9 +786,16 @@ void BattlescapeState::mapPress(Action *action)
 #endif
 }
 
+/**
+ * Turns the soldier in the swipe direction.
+ * @param action Pointer to an action.
+ */
+
 void BattlescapeState::mapRelease(Action *action)
 {
 #ifdef __ANDROID__
+	_longPressTimer->stop();
+	Log(LOG_INFO) << "Stopping long press timer in BattlescapeState::mapRelease";
 	Position pos;
 	_map->getSelectorPosition(&pos);
 	if (_swipeFromSoldier)
@@ -779,6 +806,27 @@ void BattlescapeState::mapRelease(Action *action)
 	}
 #endif
 }
+
+#ifdef __ANDROID__
+/**
+ * Handles long presses to turn the soldier.
+ */
+void BattlescapeState::mapLongPress()
+{
+	Log(LOG_INFO) << "Handling long press in BattlescapeState::mapLongPress";
+	Position pos;
+	BattleUnit *selectedUnit = _save->getSelectedUnit();
+	_map->getSelectorPosition(&pos);
+	if (selectedUnit)
+	{
+		if (pos != selectedUnit->getPosition())
+		{
+			_battleGame->secondaryAction(pos);
+		}
+	}
+	_longPressTimer->stop();
+}
+#endif
 
 /**
  * Processes any clicks on the map to
@@ -878,6 +926,8 @@ void BattlescapeState::mapIn(Action *)
 
 void BattlescapeState::fingerMotion(Action *action)
 {
+	// Log(LOG_INFO) << "Stopping long press timer in BattlescapeState::fingerMotion";
+	// _longPressTimer->stop();
 	//don't scroll if we swipe from soldier, which is used to substitute right
 	//click in android
 	if (_swipeFromSoldier)
