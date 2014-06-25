@@ -207,6 +207,7 @@ public class SDLActivity extends Activity {
     public static void handleNativeExit() {
         SDLActivity.mSDLThread = null;
         mSingleton.finish();
+        System.exit(0);
     }
 
 
