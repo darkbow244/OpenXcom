@@ -25,6 +25,10 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include \
 
 LOCAL_ARM_MODE := arm
 
+OPENXCOM_VERSION := $(shell git -C $(LOCAL_PATH) describe | sed 's/.*-/-/' | sed 's/.*/\\\"&\\\"/')
+
+LOCAL_CFLAGS += -DOPENXCOM_VERSION_GIT="$(OPENXCOM_VERSION)"
+
 #LOCAL_ARM_NEON := true
 
 # Add your application source files here...
