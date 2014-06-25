@@ -236,7 +236,7 @@ OptionsVideoState::OptionsVideoState(Game *game, OptionsOrigin origin) : Options
 	}
 #endif
 	
-	int selFilter = 0;
+	size_t selFilter = 0;
 	if (Screen::isOpenGLEnabled())
 	{
 #ifndef __NO_OPENGL

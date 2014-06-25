@@ -8,6 +8,8 @@
   license: public domain
 */
 
+#ifndef __ANDROID__
+
 #ifndef __NO_OPENGL
 
 #include <SDL.h>
@@ -358,5 +360,7 @@ Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
     term();
   }
 }
+
+#endif
 
 #endif

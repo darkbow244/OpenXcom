@@ -356,7 +356,7 @@ void loadArgs(int argc, char *argv[])
 				else
 				{
 					//save this command line option for now, we will apply it later
-					_commandLine[argname]= argv[i+1];
+					_commandLine[argname] = argv[i+1];
 				}
 			}
 			else

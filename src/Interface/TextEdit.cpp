@@ -52,6 +52,8 @@ TextEdit::TextEdit(State *state, int width, int height, int x, int y) : Interact
  */
 TextEdit::~TextEdit()
 {
+	/* for good measure? */
+	_stopTextInput();
 	delete _text;
 	delete _caret;
 	delete _timer;

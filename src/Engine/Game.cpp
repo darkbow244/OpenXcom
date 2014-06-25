@@ -147,6 +147,20 @@ void Game::run()
 	static const ApplicationState stateRun[4] = { SLOWED, PAUSED, PAUSED, PAUSED };
 	// this will avoid processing SDL's resize event on startup, workaround for the heap allocation error it causes.
 	bool startupEvent = Options::allowResize;
+	
+#ifdef __ANDROID__
+	int numTouchDevices = SDL_GetNumTouchDevices();
+	std::vector<SDL_TouchID> touchDevices;
+	for(int i = 0; i < numTouchDevices; ++i)
+	{
+		touchDevices.push_back(SDL_GetTouchDevice(i));
+	}
+	bool hadFingerUp = true;
+	bool isTouched = false;
+	SDL_Event reservedMUpEvent;
+	Log(LOG_INFO) << "SDL reports this number of touch devices present: " << SDL_GetNumTouchDevices();
+#endif
+	
 	while (!_quit)
 	{
 		// Clean up states
@@ -175,6 +189,35 @@ void Game::run()
 			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 			_states.back()->handle(&action);
 		}
+		
+		// Now's as good a time as ever to send that fake event
+
+#ifdef __ANDROID__
+		isTouched = false;
+		if (!hadFingerUp)
+		{
+			for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
+			{
+				if(SDL_GetNumTouchFingers(*i))
+				{
+					isTouched = true;
+					break;
+				}
+			}
+			if (!isTouched)
+			{
+				// We shouldn't end up here, but whatever.
+				reservedMUpEvent.type = SDL_MOUSEBUTTONUP;
+				Action fakeAction = Action(&reservedMUpEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+				// I'm not sure if these care about our mouse actions anyway.
+				/*_screen->handle(&fakeAction);
+				_cursor->handle(&fakeAction);
+				_fpsCounter->handle(&fakeAction);*/
+				_states.back()->handle(&fakeAction);
+				hadFingerUp = true;
+			}
+		}
+#endif
 
 		// Process events
 		while (SDL_PollEvent(&_event))
@@ -272,7 +315,12 @@ void Game::run()
 					// Go on, feed the event to others
 
 				case SDL_FINGERDOWN:
+#ifdef __ANDROID__
+					// Begin tracking our finger.
+					hadFingerUp = false;
+#endif
 				case SDL_FINGERUP:
+					// Okay, maybe we don't need to ask twice.
 				case SDL_FINGERMOTION:
 				{
 					// For now we're translating events from the first finger into mouse events.
@@ -314,6 +362,9 @@ void Game::run()
 								}
 								else
 								{
+#ifdef __ANDROID__
+									hadFingerUp = true;
+#endif
 									fakeEvent.type = SDL_MOUSEBUTTONUP;
 								}
 								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
@@ -326,6 +377,10 @@ void Game::run()
 					// FIXME: An alternative to this code duplication is very welcome.
 					if (fakeEvent.type != SDL_FIRSTEVENT)
 					{
+#ifdef __ANDROID__
+						// Preserve current event, we might need it.
+						reservedMUpEvent = fakeEvent;
+#endif
 						Action fakeAction = Action(&fakeEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 						_screen->handle(&fakeAction);
 						_cursor->handle(&fakeAction);

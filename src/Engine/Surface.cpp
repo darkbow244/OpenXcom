@@ -846,7 +846,7 @@ struct StandartShade
 				dest = (src&(15<<4)) | newShade;
 		}
 	}
-
+	
 	static inline void func(SDL_Color& dest, const Uint8& src, SDL_Color* palette, const int& shade)
 	{
 		if(src)

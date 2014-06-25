@@ -219,6 +219,7 @@ struct SwapColors
  */
 void Screen::flip()
 {
+<<<<<<< Temporary merge branch 1
 	/* fuck it, let's do it the hard way */
 	SDL_UpdateTexture(_texture, NULL, _surface->getSurface()->pixels,
 			_surface->getSurface()->pitch);
