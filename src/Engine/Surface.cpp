@@ -861,7 +861,11 @@ struct StandartShade
 	{
 		if(src.r || src.g || src.b)
 		{
-			const int newShade = 15 - shade;
+			int newShade;
+			if (shade >= 16)
+				newShade = 0;
+			else
+				newShade = 15 - shade;
 			dest.r = src.r * newShade / 15;
 			dest.g = src.g * newShade / 15;
 			dest.b = src.b * newShade / 15;
