@@ -866,14 +866,44 @@ std::pair<std::wstring, std::wstring> timeToString(time_t time)
 	struct tm *timeinfo = localtime(&(time));
 #ifdef __ANDROID__
 	/* oh android, why do you have to be so broken...*/
-	char cLocalDate[25], cLocalTime[25];
+	std::wostringstream aLocalDate, aLocalTime;
+
+	/*char cLocalDate[25], cLocalTime[25];
 	strftime(cLocalDate, 25, "%Y-%m-%d", timeinfo);
 	strftime(cLocalTime, 25, "%H:%M", timeinfo);
 	for(int i=0; i < 25; ++i)
 	{
 		localDate[i] = cLocalDate[i];
 		localTime[i] = cLocalTime[i];
+	}*/
+	
+	aLocalDate << (1900 + timeinfo->tm_year);
+	aLocalDate << L"-";
+	if (timeinfo->tm_mon < 9) 
+	{ 
+		aLocalDate << L"0";
 	}
+	aLocalDate << timeinfo->tm_mon + 1;
+	aLocalDate << L"-";
+	if (timeinfo->tm_mday < 10)
+	{
+		aLocalDate << L"0";
+	}
+	aLocalDate << timeinfo->tm_mday;
+	
+	if (timeinfo->tm_hour < 10)
+	{
+		aLocalTime << L"0";
+	}
+	aLocalTime << timeinfo->tm_hour;
+	aLocalTime << L":";
+	if (timeinfo->tm_min < 10)
+	{
+		aLocalTime << L"0";
+	}
+	aLocalTime << timeinfo->tm_min;
+	return std::make_pair(aLocalDate.str(), aLocalTime.str());
+	
 #else
 	wcsftime(localDate, 25, L"%Y-%m-%d", timeinfo);
 	wcsftime(localTime, 25, L"%H:%M", timeinfo);
