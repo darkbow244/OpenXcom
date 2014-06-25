@@ -1224,9 +1224,13 @@ void GeoscapeState::time30Minutes()
 										   .arg((*i)->getName());
 						popup(new CraftErrorState(_game, this, msg));
 						if ((*j)->getFuel() > 0)
+						{
 							(*j)->setStatus("STR_READY");
+						}
 						else
+						{
 							(*j)->setLowFuel(true);
+						}
 					}
 				}
 			}
@@ -1600,8 +1604,11 @@ void GeoscapeState::time1Day()
 		// Handle psionic training
 		if ((*i)->getAvailablePsiLabs() > 0 && Options::anytimePsiTraining)
 		{
-			for(std::vector<Soldier*>::const_iterator s = (*i)->getSoldiers()->begin(); s != (*i)->getSoldiers()->end(); ++s)
+			for (std::vector<Soldier*>::const_iterator s = (*i)->getSoldiers()->begin(); s != (*i)->getSoldiers()->end(); ++s)
+			{
 				(*s)->trainPsi1Day();
+				(*s)->calcStatString(_game->getRuleset()->getStatStrings(), (Options::psiStrengthEval && _game->getSavedGame()->isResearched(_game->getRuleset()->getPsiRequirements())));
+			}
 		}
 	}
 	// handle regional and country points for alien bases
@@ -1715,6 +1722,7 @@ void GeoscapeState::time1Month()
 				if ((*s)->isInPsiTraining())
 				{
 					(*s)->trainPsi();
+					(*s)->calcStatString(_game->getRuleset()->getStatStrings(), (Options::psiStrengthEval && _game->getSavedGame()->isResearched(_game->getRuleset()->getPsiRequirements())));
 				}
 			}
 		}

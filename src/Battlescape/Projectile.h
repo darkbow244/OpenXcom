@@ -47,10 +47,12 @@ private:
 	size_t _position;
 	Surface *_sprite;
 	int _speed;
+	int _bulletSprite;
+	bool _reversed;
 	void applyAccuracy(const Position& origin, Position *target, double accuracy, bool keepRange, Tile *targetTile, bool extendLine);
 public:
 	/// Creates a new Projectile.
-	Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position target);
+	Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position target, int bulletSprite);
 	/// Cleans up the Projectile.
 	~Projectile();
 	/// Calculates the trajectory for a straight path.
@@ -74,6 +76,7 @@ public:
 	Position getOrigin();
 	/// Gets the targetted tile for the projectile.
 	Position getTarget();
+	bool isReversed() const;
 };
 
 }

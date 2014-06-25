@@ -149,6 +149,7 @@ void create()
 #endif
 	_info.push_back(OptionInfo("preferredMusic", (int*)&preferredMusic, MUSIC_AUTO));
 	_info.push_back(OptionInfo("preferredSound", (int*)&preferredSound, SOUND_AUTO));
+	_info.push_back(OptionInfo("musicAlwaysLoop", &musicAlwaysLoop, false));
 	// SDL2 scaler options
 	_info.push_back(OptionInfo("useNearestScaler", &useNearestScaler, false));
 	_info.push_back(OptionInfo("useLinearScaler", &useLinearScaler, true));
@@ -159,6 +160,7 @@ void create()
 	// advanced options
 	_info.push_back(OptionInfo("playIntro", &playIntro, true, "STR_PLAYINTRO", "STR_GENERAL"));
 	_info.push_back(OptionInfo("autosave", &autosave, true, "STR_AUTOSAVE", "STR_GENERAL"));
+	_info.push_back(OptionInfo("autosaveFrequency", &autosaveFrequency, 5, "STR_AUTOSAVE_FREQUENCY", "STR_GENERAL"));
 	_info.push_back(OptionInfo("newSeedOnLoad", &newSeedOnLoad, false, "STR_NEWSEEDONLOAD", "STR_GENERAL"));
 	_info.push_back(OptionInfo("mousewheelSpeed", &mousewheelSpeed, 3, "STR_MOUSEWHEEL_SPEED", "STR_GENERAL"));
 	_info.push_back(OptionInfo("changeValueByMouseWheel", &changeValueByMouseWheel, 0, "STR_CHANGEVALUEBYMOUSEWHEEL", "STR_GENERAL"));
@@ -291,6 +293,8 @@ void create()
 	_info.push_back(KeyOptionInfo("keyBattleCenterEnemy9", &keyBattleCenterEnemy9, SDLK_9, "STR_CENTER_ON_ENEMY_9", "STR_BATTLESCAPE"));
 	_info.push_back(KeyOptionInfo("keyBattleCenterEnemy10", &keyBattleCenterEnemy10, SDLK_0, "STR_CENTER_ON_ENEMY_10", "STR_BATTLESCAPE"));
 	_info.push_back(KeyOptionInfo("keyBattleVoxelView", &keyBattleVoxelView, SDLK_F10, "STR_SAVE_VOXEL_VIEW", "STR_BATTLESCAPE"));
+	_info.push_back(KeyOptionInfo("keyInvCreateTemplate", &keyInvCreateTemplate, SDLK_c, "STR_CREATE_INVENTORY_TEMPLATE", "STR_BATTLESCAPE"));
+	_info.push_back(KeyOptionInfo("keyInvApplyTemplate", &keyInvApplyTemplate, SDLK_v, "STR_APPLY_INVENTORY_TEMPLATE", "STR_BATTLESCAPE"));
 
 #ifdef __MORPHOS__
 	_info.push_back(OptionInfo("FPS", &FPS, 15));
@@ -345,6 +349,10 @@ void loadArgs(int argc, char *argv[])
 				{
 					_userFolder = CrossPlatform::endPath(argv[i+1]);
 				}
+				else if (argname == "cfg")
+				{
+					_configFolder = CrossPlatform::endPath(argv[i+1]);
+				}
 				else
 				{
 					//save this command line option for now, we will apply it later
@@ -373,6 +381,8 @@ bool showHelp(int argc, char *argv[])
 	help << "        use PATH as the default Data Folder instead of auto-detecting" << std::endl << std::endl;
 	help << "-user PATH" << std::endl;
 	help << "        use PATH as the default User Folder instead of auto-detecting" << std::endl << std::endl;
+	help << "-cfg PATH" << std::endl;
+	help << "        use PATH as the default Config Folder instead of auto-detecting" << std::endl << std::endl;
 	help << "-KEY VALUE" << std::endl;
 	help << "        set option KEY to VALUE instead of default/loaded value (eg. -displayWidth 640)" << std::endl << std::endl;
 	help << "-help" << std::endl;
@@ -486,7 +496,7 @@ void setFolders()
 }
 
 /**
- * Updates the game's options with those in the configuation
+ * Updates the game's options with those in the configuration
  * file, if it exists yet, and any supplied on the command line.
  */
 void updateOptions()
@@ -494,13 +504,13 @@ void updateOptions()
 	// Load existing options
 	if (CrossPlatform::folderExists(_configFolder))
 	{
-		try
+		if (CrossPlatform::fileExists(_configFolder + "options.cfg"))
 		{
 			load();
 		}
-		catch (YAML::Exception &e)
+		else
 		{
-			Log(LOG_ERROR) << e.what();
+			save();
 		}
 	}
 	// Create config folder and save options
@@ -559,19 +569,26 @@ void save(const std::string &filename)
 		Log(LOG_WARNING) << "Failed to save " << filename << ".cfg";
 		return;
 	}
-	YAML::Emitter out;
-
-	YAML::Node doc, node;
-	for (std::vector<OptionInfo>::iterator i = _info.begin(); i != _info.end(); ++i)
+	try
 	{
-		i->save(node);
-	}
-	doc["options"] = node;
-	doc["purchaseexclusions"] = purchaseExclusions;
-	doc["rulesets"] = rulesets;
-	out << doc;
+		YAML::Emitter out;
 
-	sav << out.c_str();
+		YAML::Node doc, node;
+		for (std::vector<OptionInfo>::iterator i = _info.begin(); i != _info.end(); ++i)
+		{
+			i->save(node);
+		}
+		doc["options"] = node;
+		doc["purchaseexclusions"] = purchaseExclusions;
+		doc["rulesets"] = rulesets;
+		out << doc;
+
+		sav << out.c_str();
+	}
+	catch (YAML::Exception e)
+	{
+		Log(LOG_WARNING) << e.what();
+	}
 	sav.close();
 }
 

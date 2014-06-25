@@ -27,6 +27,7 @@
 #include "Logger.h"
 #include "Options.h"
 #include "Screen.h"
+#include "Palette.h"
 
 // Scale2X
 #include "Scalers/scalebit.h"
@@ -665,15 +666,15 @@ void Zoom::flipWithZoom(SDL_Surface *src, SDL_Surface *dst, int topBlackBand, in
 	}
 	else
 	{
-		SDL_Surface *tmp = SDL_CreateRGBSurface(dst->flags, dst->w - leftBlackBand - rightBlackBand, dst->h - topBlackBand - bottomBlackBand, dst->format->BitsPerPixel, 0, 0, 0, 0);
-		_zoomSurfaceY(src, tmp, 0, 0);
+		Surface tmp = Surface(dst->w - leftBlackBand - rightBlackBand, dst->h - topBlackBand - bottomBlackBand, 0, 0, dst->format->BitsPerPixel);
+//		SDL_Surface *tmp = SDL_CreateRGBSurface(dst->flags, dst->w - leftBlackBand - rightBlackBand, dst->h - topBlackBand - bottomBlackBand, dst->format->BitsPerPixel, 0, 0, 0, 0);
+		_zoomSurfaceY(src, tmp.getSurface(), 0, 0);
 		if (src->format->palette != NULL)
 		{
-			SDL_SetPalette(tmp, SDL_LOGPAL|SDL_PHYSPAL, src->format->palette->colors, 0, src->format->palette->ncolors);
+			SDL_SetPalette(tmp.getSurface(), SDL_LOGPAL|SDL_PHYSPAL, src->format->palette->colors, 0, src->format->palette->ncolors);
 		}
-		SDL_Rect dstrect = {(Sint16)leftBlackBand, (Sint16)topBlackBand, (Uint16)tmp->w, (Uint16)tmp->h};
-		SDL_BlitSurface(tmp, NULL, dst, &dstrect);
-		SDL_FreeSurface(tmp);
+		SDL_Rect dstrect = {(Sint16)leftBlackBand, (Sint16)topBlackBand, (Uint16)tmp.getSurface()->w, (Uint16)tmp.getSurface()->h};
+		SDL_BlitSurface(tmp.getSurface(), NULL, dst, &dstrect);
 	}
 #endif
 }
@@ -697,9 +698,8 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 {
 	int x, y;
 	static Uint32 *sax, *say;
-	Uint32 *csax, *csay;
+	Uint32 *csax, *csay, *dp, *sp, *csp;
 	int csx, csy;
-	Uint8 *sp, *dp, *csp;
 	int dgap;
 	static bool proclaimed = false;
 
@@ -829,12 +829,12 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 	/*
 	* Pointer setup
 	*/
-	sp = csp = (Uint8 *) src->pixels;
-	dp = (Uint8 *) dst->pixels;
-	dgap = dst->pitch - dst->w;
+	sp = csp = (Uint32 *) src->pixels;
+	dp = (Uint32 *) dst->pixels;
+	dgap = dst->pitch / dst->format->BytesPerPixel - dst->w;
 
 	if (flipx) csp += (src->w-1);
-	if (flipy) csp  = ( (Uint8*)csp + src->pitch*(src->h-1) );
+	if (flipy) csp  = ( (Uint32*)csp + src->pitch*(src->h-1) );
 
 	/*
 	* Precalculate row increments
@@ -860,7 +860,7 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 			csy -= dst->h;
 			(*csay)++;
 		}
-		(*csay) *= src->pitch * (flipy ? -1 : 1);
+		(*csay) *= src->pitch / dst->format->BytesPerPixel * (flipy ? -1 : 1);
 		csay++;
 	}
 	/*

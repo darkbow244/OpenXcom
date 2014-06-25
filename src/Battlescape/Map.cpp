@@ -37,6 +37,8 @@
 #include "../Engine/RNG.h"
 #include "../Engine/Game.h"
 #include "../Engine/Screen.h"
+#include "../Engine/ShaderDraw.h"
+#include "../Engine/ShaderMove.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Savegame/Tile.h"
 #include "../Savegame/BattleUnit.h"
@@ -77,7 +79,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param visibleMapHeight Current visible map height.
  */
-Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _projectile(0), _projectileInFOV(false), _explosionInFOV(false), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false), _smoothingEngaged(false)
+Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight, int bpp) : InteractiveSurface(width, height, x, y, bpp), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _projectile(0), _projectileInFOV(false), _explosionInFOV(false), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false), _smoothingEngaged(false)
 {
 	_previewSetting = Options::battleNewPreviewPath;
 	_smoothCamera = Options::battleSmoothCamera;
@@ -590,7 +592,7 @@ void Map::drawTerrain(Surface *surface)
 									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y - tileWest->getMapData(MapData::O_NORTHWALL)->getYOffset() + tileOffset.y, wallShade, true);
 								}
 								tmpSurface = tileWest->getSprite(MapData::O_OBJECT);
-								if (tmpSurface && tileWest->getMapData(MapData::O_OBJECT)->getBigWall() != 3)
+								if (tmpSurface && tileWest->getMapData(MapData::O_OBJECT)->getBigWall() < 6 && tileWest->getMapData(MapData::O_OBJECT)->getBigWall() != 3)
 								{
 									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y - tileWest->getMapData(MapData::O_OBJECT)->getYOffset() + tileOffset.y, tileWestShade, true);
 									// if the object in the tile to the west is a diagonal big wall, we need to cover up the black triangle at the bottom
@@ -606,7 +608,7 @@ void Map::drawTerrain(Surface *surface)
 								if (sprite != -1)
 								{
 									tmpSurface = _res->getSurfaceSet("FLOOROB.PCK")->getFrame(sprite);
-									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y + tileWest->getTerrainLevel() + tileOffset.y, tileWestShade);
+									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y + tileWest->getTerrainLevel() + tileOffset.y, tileWestShade, true);
 								}
 								// Draw soldier
 								if (westUnit && westUnit->getStatus() != STATUS_WALKING && (!tileWest->getMapData(MapData::O_OBJECT) || tileWest->getMapData(MapData::O_OBJECT)->getBigWall() < 6) && (westUnit->getVisible() || _save->getDebugMode()))
@@ -623,7 +625,7 @@ void Map::drawTerrain(Surface *surface)
 										{
 											frameNumber = 4 + (_animFrame / 2);
 											tmpSurface = _res->getSurfaceSet("SMOKE.PCK")->getFrame(frameNumber);
-											tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y + tileOffset.y + getTerrainLevel(westUnit->getPosition(), westUnit->getArmor()->getSize()), 0);
+											tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y + tileOffset.y + getTerrainLevel(westUnit->getPosition(), westUnit->getArmor()->getSize()), 0, true);
 										}
 									}
 								}
@@ -646,7 +648,13 @@ void Map::drawTerrain(Surface *surface)
 										frameNumber += (_animFrame / 2) + tileWest->getAnimationOffset();
 									}
 									tmpSurface = _res->getSurfaceSet("SMOKE.PCK")->getFrame(frameNumber);
-									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y + tileOffset.y, 0);
+									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y + tileOffset.y, 0, true);
+								}
+								// Draw object
+								if (tileWest->getMapData(MapData::O_OBJECT) && tileWest->getMapData(MapData::O_OBJECT)->getBigWall() >= 6)
+								{
+									tmpSurface = tileWest->getSprite(MapData::O_OBJECT);
+									tmpSurface->blitNShade(surface, screenPosition.x - tileOffset.x, screenPosition.y - tileWest->getMapData(MapData::O_OBJECT)->getYOffset() + tileOffset.y, tileWestShade, true);
 								}
 							}
 						}
@@ -743,7 +751,17 @@ void Map::drawTerrain(Surface *surface)
 							// draw bullet on the correct tile
 							if (itX >= bulletLowX && itX <= bulletHighX && itY >= bulletLowY && itY <= bulletHighY)
 							{
-								for (int i = 0; i < BULLET_SPRITES; ++i)
+								int begin = 0;
+								int end = BULLET_SPRITES;
+								int direction = 1;
+								if (_projectile->isReversed())
+								{
+									begin = BULLET_SPRITES - 1;
+									end = -1;
+									direction = -1;
+								}
+
+								for (int i = begin; i != end; i += direction)
 								{
 									tmpSurface = _res->getSurfaceSet("Projectiles")->getFrame(_projectile->getParticle(i));
 									if (tmpSurface)
@@ -1226,9 +1244,7 @@ void Map::animate(bool redraw)
 	// animate certain units (large flying units have a propultion animation)
 	for (std::vector<BattleUnit*>::iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
 	{
-		if (((*i)->getArmor()->getSize() > 1 && (*i)->getArmor()->getMovementType() == MT_FLY) 
-			|| (*i)->getArmor()->getDrawingRoutine() == 8
-			|| (*i)->getArmor()->getDrawingRoutine() == 9)
+		if ((*i)->getArmor()->getConstantAnimation())
 		{
 			(*i)->setCache(0);
 			cacheUnit(*i);
@@ -1334,6 +1350,14 @@ void Map::calculateWalkingOffset(BattleUnit *unit, Position *offset)
 	else
 	{
 		offset->y += getTerrainLevel(unit->getPosition(), size);
+
+		if (unit->getArmor()->getCanHoldWeapon())
+		{
+			if (unit->getStatus() == STATUS_AIMING)
+			{
+				offset->x = -16;
+			}
+		}
 	}
 
 }
@@ -1402,7 +1426,7 @@ void Map::cacheUnits()
  */
 void Map::cacheUnit(BattleUnit *unit)
 {
-	UnitSprite *unitSprite = new UnitSprite(_spriteWidth, _spriteHeight, 0, 0);
+	UnitSprite *unitSprite = new UnitSprite(unit->getStatus() == STATUS_AIMING ? _spriteWidth * 2: _spriteWidth, _spriteHeight, 0, 0, 32);
 	unitSprite->setPalette(this->getPalette());
 	bool invalid, dummy;
 	int numOfParts = unit->getArmor()->getSize() == 1?1:unit->getArmor()->getSize()*2;
@@ -1416,9 +1440,12 @@ void Map::cacheUnit(BattleUnit *unit)
 			Surface *cache = unit->getCache(&dummy, i);
 			if (!cache) // no cache created yet
 			{
-				cache = new Surface(_spriteWidth, _spriteHeight);
+				cache = new Surface(_spriteWidth, _spriteHeight, 0, 0, 32);
 				cache->setPalette(this->getPalette());
 			}
+
+			cache->setWidth(unitSprite->getWidth());
+
 			unitSprite->setBattleUnit(unit, i);
 
 			BattleItem *rhandItem = unit->getItem("STR_RIGHT_HAND");

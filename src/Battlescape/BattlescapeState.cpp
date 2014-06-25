@@ -95,7 +95,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0)
+BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
@@ -118,7 +118,7 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _popups(), _xBefor
 	// Create the battlemap view
 	// the actual map height is the total height minus the height of the buttonbar
 	int visibleMapHeight = screenHeight - iconsHeight;
-	_map = new Map(_game, screenWidth, screenHeight, 0, 0, visibleMapHeight);
+	_map = new Map(_game, screenWidth, screenHeight, 0, 0, visibleMapHeight, 32);
 
 	_numLayers = new NumberText(3, 5, _icons->getX() + 232, _icons->getY() + 6);
 	_rank = new Surface(26, 23, _icons->getX() + 107, _icons->getY() + 33);

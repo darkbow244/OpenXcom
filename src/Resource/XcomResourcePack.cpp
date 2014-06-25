@@ -59,7 +59,7 @@ struct HairBleach
 
 	static const Uint8 Hair = 9 << 4;
 	static const Uint8 Face = 6 << 4;
-	static inline void func(Uint8& src, const Uint8& cutoff, int, int, int)
+	static inline void func(Uint8& src, const Uint8& cutoff)
 	{
 		if(src > cutoff && src <= Face + 15)
 		{
@@ -511,13 +511,13 @@ XcomResourcePack::XcomResourcePack(std::vector<std::pair<std::string, ExtraSprit
 			if (_surfaces.find(sheetName) == _surfaces.end())
 			{
 				Log(LOG_DEBUG) << "Creating new single image: " << sheetName;
-				_surfaces[sheetName] = new Surface(spritePack->getWidth(), spritePack->getHeight());
+				_surfaces[sheetName] = new Surface(spritePack->getWidth(), spritePack->getHeight(), 0, 0, 32);
 			}
 			else
 			{
 				Log(LOG_DEBUG) << "Adding/Replacing single image: " << sheetName;
 				delete _surfaces[sheetName];
-				_surfaces[sheetName] = new Surface(spritePack->getWidth(), spritePack->getHeight());
+				_surfaces[sheetName] = new Surface(spritePack->getWidth(), spritePack->getHeight(), 0, 0, 32);
 			}
 			s.str("");
 			s << CrossPlatform::getDataFile(spritePack->getSprites()->operator[](0));
@@ -580,12 +580,12 @@ XcomResourcePack::XcomResourcePack(std::vector<std::pair<std::string, ExtraSprit
 							{
 								if (adding)
 								{
-									_sets[sheetName]->addFrame(offset)->loadImage(s.str());
+									_sets[sheetName]->addFrame(offset, 32)->loadImage(s.str());
 								}
 								else
 								{
 									Log(LOG_DEBUG) << "Adding frame: " << offset + spritePack->getModIndex();
-									_sets[sheetName]->addFrame(offset + spritePack->getModIndex())->loadImage(s.str());
+									_sets[sheetName]->addFrame(offset + spritePack->getModIndex(), 32)->loadImage(s.str());
 								}
 							}
 							offset++;
@@ -609,12 +609,12 @@ XcomResourcePack::XcomResourcePack(std::vector<std::pair<std::string, ExtraSprit
 						else
 						{
 							Log(LOG_DEBUG) << "Adding frame: " << startFrame << ", using index: " << startFrame + spritePack->getModIndex();
-							_sets[sheetName]->addFrame(startFrame + spritePack->getModIndex())->loadImage(s.str());
+							_sets[sheetName]->addFrame(startFrame + spritePack->getModIndex(), 32)->loadImage(s.str());
 						}
 					}
 					else
 					{
-						Surface *temp = new Surface(spritePack->getWidth(), spritePack->getHeight());
+						Surface *temp = new Surface(spritePack->getWidth(), spritePack->getHeight(), 0, 0, 32);
 						s.str("");
 						s << CrossPlatform::getDataFile(spritePack->getSprites()->operator[](startFrame));
 						temp->loadImage(s.str());
@@ -638,13 +638,13 @@ XcomResourcePack::XcomResourcePack(std::vector<std::pair<std::string, ExtraSprit
 									if (adding)
 									{
 										// for some reason regular blit() doesn't work here how i want it, so i use this function instead.
-										temp->blitNShade(_sets[sheetName]->addFrame(offset), 0 - (x * spritePack->getSubX()), 0 - (y * spritePack->getSubY()), 0);
+										temp->blitNShade(_sets[sheetName]->addFrame(offset, 32), 0 - (x * spritePack->getSubX()), 0 - (y * spritePack->getSubY()), 0);
 									}
 									else
 									{
 										Log(LOG_DEBUG) << "Adding frame: " << offset + spritePack->getModIndex();
 										// for some reason regular blit() doesn't work here how i want it, so i use this function instead.
-										temp->blitNShade(_sets[sheetName]->addFrame(offset + spritePack->getModIndex()), 0 - (x * spritePack->getSubX()), 0 - (y * spritePack->getSubY()), 0);
+										temp->blitNShade(_sets[sheetName]->addFrame(offset + spritePack->getModIndex(), 32), 0 - (x * spritePack->getSubX()), 0 - (y * spritePack->getSubY()), 0);
 									}
 								}
 								++offset;

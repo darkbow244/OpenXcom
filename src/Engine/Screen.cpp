@@ -31,6 +31,8 @@
 #include "CrossPlatform.h"
 #include "Zoom.h"
 #include "Timer.h"
+#include "ShaderDraw.h"
+#include "ShaderMove.h"
 #include <SDL.h>
 
 
@@ -106,7 +108,6 @@ void Screen::makeVideoFlags()
 	}
 #endif
 
-	//_bpp = (isHQXEnabled() || isOpenGLEnabled()) ? 32 : 8;
 	_bpp = 32;
 	_baseWidth = Options::baseXResolution;
 	_baseHeight = Options::baseYResolution;
@@ -117,7 +118,7 @@ void Screen::makeVideoFlags()
  * Initializes a new display screen for the game to render contents to.
  * The screen is set up based on the current options.
  */
-Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL), _texture(NULL)
+Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _flags(0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL), _texture(NULL)
 	, _prevWidth(0), _prevHeight(0), _drawOverlays(false)
 {
 	// The default values for _window and _renderer are set to NULL so that we can check if there's a window already
@@ -193,6 +194,21 @@ void Screen::handle(Action *action)
 	}
 }
 
+namespace
+{
+
+/**
+ * Helper function swaping betwean SDL (RGB) and Windows (BGR) color formats
+ */
+struct SwapColors
+{
+	inline static void func(SDL_Color& src)
+	{
+		std::swap(src.b, src.r);
+	}
+};
+
+}
 
 /**
  * Renders the buffer's contents onto the screen, applying
@@ -254,16 +270,6 @@ void Screen::setPalette(SDL_Color* colors, int firstcolor, int ncolors, bool imm
 		_numColors = ncolors;
 		_firstColor = firstcolor;
 	}
-
-	_surface->setPalette(colors, firstcolor, ncolors);
-
-#if 0
-	// defer actual update of screen until SDL_Flip()
-	if (immediately && _screen->format->BitsPerPixel == 8 && SDL_SetColors(_screen, colors, firstcolor, ncolors) == 0)
-	{
-		Log(LOG_DEBUG) << "Display palette doesn't match requested palette";
-	}
-#endif
 
 	// Sanity check
 	/*
@@ -330,10 +336,8 @@ void Screen::resetDisplay(bool resetVideo)
 	// A kludge to make video resolution changing work
 	resetVideo = ( (_prevWidth != _baseWidth) || (_prevHeight != _baseHeight) ) || resetVideo;
 
-	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
-
-	if (!_surface || (_surface && 
-		(_surface->getSurface()->format->BitsPerPixel != _bpp || 
+	if (!_surface || (_surface &&
+		(_surface->getSurface()->format->BitsPerPixel != _bpp ||
 		_surface->getSurface()->w != _baseWidth ||
 		_surface->getSurface()->h != _baseHeight))) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
 	{

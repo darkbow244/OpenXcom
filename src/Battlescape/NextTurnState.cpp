@@ -33,6 +33,7 @@
 #include "../Interface/Cursor.h"
 #include "BattlescapeState.h"
 #include "../Menu/SaveGameState.h"
+#include "DelayedSaveState.h"
 #include "Map.h"
 
 namespace OpenXcom
@@ -163,16 +164,17 @@ void NextTurnState::close()
 	else
 	{
 		_state->btnCenterClick(0);
-		// Autosave every 5 turns
-		if (_battleGame->getTurn() % 5 == 0 && _battleGame->getSide() == FACTION_PLAYER)
+
+		// Autosave every set amount of turns
+		if (_battleGame->getTurn() % Options::autosaveFrequency == 0 && _battleGame->getSide() == FACTION_PLAYER)
 		{
 			if (_game->getSavedGame()->isIronman())
 			{
-				_game->pushState(new SaveGameState(_game, OPT_BATTLESCAPE, SAVE_IRONMAN));
+				_battleGame->getBattleGame()->statePushBack(new DelayedSaveState(_battleGame->getBattleGame(), _game, SAVE_IRONMAN));
 			}
 			else if (Options::autosave)
 			{
-				_game->pushState(new SaveGameState(_game, OPT_BATTLESCAPE, SAVE_AUTO_BATTLESCAPE));
+				_battleGame->getBattleGame()->statePushBack(new DelayedSaveState(_battleGame->getBattleGame(), _game, SAVE_AUTO_BATTLESCAPE));
 			}
 		}
 	}

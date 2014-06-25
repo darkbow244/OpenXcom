@@ -173,7 +173,7 @@ GlobeStaticData static_data;
 
 struct Ocean
 {
-	static inline void func(Uint8& dest, const int&, const int&, const int&, const int&)
+	static inline void func(Uint8& dest)
 	{
 		dest = Palette::blockOffset(12) + 0;
 	}
@@ -241,7 +241,7 @@ struct CreateShadow
 		}
 	}
 	
-	static inline void func(Uint8& dest, const Cord& earth, const Cord& sun, const Sint16& noise, const int&)
+	static inline void func(Uint8& dest, const Cord& earth, const Cord& sun, const Sint16& noise)
 	{
 		if(dest && earth.z)
 			dest = getShadowValue(dest, earth, sun, noise);
@@ -264,7 +264,7 @@ struct CreateShadow
  * @param y Y position in pixels.
  */
 Globe::Globe(Game *game, int cenX, int cenY, int width, int height, int x, int y):
-	InteractiveSurface(width, height, x, y),
+	InteractiveSurface(width, height, x, y, 8),
 	_rotLon(0.0), _rotLat(0.0),
 	_hoverLon(0.0), _hoverLat(0.0),
 	_cenX(cenX), _cenY(cenY), _game(game),
@@ -1009,7 +1009,7 @@ void Globe::cache(std::list<Polygon*> *polygons, std::list<Polygon*> *cache)
 void Globe::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
 	Surface::setPalette(colors, firstcolor, ncolors);
-	
+
 	_texture->setPalette(colors, firstcolor, ncolors);
 	
 	_countries->setPalette(colors, firstcolor, ncolors);

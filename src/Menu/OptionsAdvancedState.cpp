@@ -19,7 +19,6 @@
 #include "OptionsAdvancedState.h"
 #include <iostream>
 #include <sstream>
-#include <algorithm>
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Language.h"
@@ -244,6 +243,13 @@ void OptionsAdvancedState::lstOptionsClick(Action *action)
 			max = 5;
 		}
 #endif
+		else if (i == &Options::autosaveFrequency)
+		{
+			min = 1;
+			max = 5;
+		}
+
+
 		if (*i < min)
 		{
 			*i = max;
