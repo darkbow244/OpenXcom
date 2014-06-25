@@ -53,7 +53,9 @@ TextEdit::TextEdit(State *state, int width, int height, int x, int y) : Interact
 TextEdit::~TextEdit()
 {
 	/* for good measure? */
+#ifdef __ANDROID__
 	_stopTextInput();
+#endif
 	delete _text;
 	delete _caret;
 	delete _timer;
