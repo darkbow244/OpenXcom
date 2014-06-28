@@ -769,7 +769,6 @@ void BattlescapeState::mapPress(Action *action)
 
 #ifdef __ANDROID__
 	_longPressTimer->start();
-	Log(LOG_INFO) << "Starting long press timer in BattlescapeState::mapPress";
 	Position pos;
 	/* Avoid null pointer dereference */
 	BattleUnit *selectedUnit = _save->getSelectedUnit();
@@ -802,7 +801,6 @@ void BattlescapeState::mapRelease(Action *action)
 {
 #ifdef __ANDROID__
 	_longPressTimer->stop();
-	Log(LOG_INFO) << "Stopping long press timer in BattlescapeState::mapRelease";
 	Position pos;
 	_map->getSelectorPosition(&pos);
 	if (_swipeFromSoldier)
@@ -820,7 +818,6 @@ void BattlescapeState::mapRelease(Action *action)
  */
 void BattlescapeState::mapLongPress()
 {
-	Log(LOG_INFO) << "Handling long press in BattlescapeState::mapLongPress";
 	Position pos;
 	BattleUnit *selectedUnit = _save->getSelectedUnit();
 	_map->getSelectorPosition(&pos);
