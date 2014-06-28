@@ -181,15 +181,24 @@ void StartState::think()
 	switch (loading)
 	{
 	case LOADING_FAILED:
+	{
 		CrossPlatform::flashWindow();
 		addLine(L"");
 		addLine(L"ERROR: " + Language::utf8ToWstr(error));
 		addLine(L"Make sure you installed OpenXcom correctly.");
 		addLine(L"Check the wiki documentation for more details.");
 		addLine(L"");
+#ifdef __ANDROID__
+		std::wstring wsDataFolder(Language::utf8ToWstr(Options::getDataFolder()));
+		addLine(L"Android users: your data folder is located at:");
+		addLine(wsDataFolder);
+		addLine(L"(as reported by your system)");
+		addLine(L"");
+#endif
 		addLine(L"Press any key to continue.");
 		loading = LOADING_DONE;
 		break;
+	}
 	case LOADING_SUCCESSFUL:
 		CrossPlatform::flashWindow();
 		Log(LOG_INFO) << "OpenXcom started successfully!";
