@@ -38,6 +38,7 @@ int Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jstring 
     const char *localeString = (*env)->GetStringUTFChars(env, locale, 0);
     const char *gamePathString = (*env)->GetStringUTFChars(env, gamePath, 0);
     const char *gameDataString = (*env)->GetStringUTFChars(env, dataPath, 0);
+    __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Locale is: %s", localeString);
     __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Game path is: %s", gamePathString);
     __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Data path is: %s", gameDataString);
     argv[0] = SDL_strdup("SDL_app");
@@ -50,12 +51,12 @@ int Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jstring 
     argv[7] = SDL_strdup("-cfg");
     argv[8] = SDL_strdup(gamePathString);
     argv[9] = NULL;
-    
+    __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Paths injection finished!");
     (*env)->ReleaseStringUTFChars(env, locale, localeString);
     (*env)->ReleaseStringUTFChars(env, gamePath, gamePathString);
     (*env)->ReleaseStringUTFChars(env, dataPath, gameDataString);
     
-    status = SDL_main(10, argv);
+    status = SDL_main(9, argv);
 
     /* Do not issue an exit or the whole application will terminate instead of just the SDL thread */
     /* exit(status); */
