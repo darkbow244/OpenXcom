@@ -7,7 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Locale;
+//import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -18,9 +18,10 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+//import android.view.Menu;
+//import android.view.MenuItem;
 import android.widget.TextView;
 
 public class PreloaderActivity extends Activity {
@@ -30,6 +31,7 @@ public class PreloaderActivity extends Activity {
 	protected Context context;
 	private ProgressDialog pd;
 	
+	final String gamePath = Environment.getExternalStorageDirectory().getPath() + "/OpenXcom/";
 	
 	final String dataMarkerName = "openxcom_data_marker";
 	final String translationMarkerName = "openxcom_translation_marker";
@@ -91,19 +93,19 @@ public class PreloaderActivity extends Activity {
 							publishProgress("Checking data version...");
 							if (dataNeedsUpdating) {
 								publishProgress("Extracting data...");
-								extractFile("data.zip", "/sdcard/OpenXcom/");
+								extractFile("data.zip", gamePath);
 								copyMarker(dataMarkerName);
 							}
 							publishProgress("Checking translations version...");
 							if (translationNeedsUpdating) {
 								publishProgress("Extracting translations...");
-								extractFile("latest.zip", "/sdcard/OpenXcom/data/Language/");
+								extractFile("latest.zip", gamePath + "data/Language/");
 								copyMarker(translationMarkerName);
 							}
 							publishProgress("Checking patch version...");
 							if (needsPatch) {
 								publishProgress("Applying patch...");
-								extractFile("universal-patch.zip", "/sdcard/OpenXcom/data/");
+								extractFile("universal-patch.zip", gamePath + "data/");
 								copyMarker(patchMarkerName);
 							}
 						}
@@ -197,7 +199,7 @@ public class PreloaderActivity extends Activity {
 	 */
 	
 	protected boolean hasGameFiles() {
-		File checkFile = new File("/sdcard/OpenXcom/data/GEODATA/PALETTES.DAT");
+		File checkFile = new File(gamePath + "data/GEODATA/PALETTES.DAT");
 		if (checkFile.exists()) {
 			return true;
 		}
@@ -212,7 +214,7 @@ public class PreloaderActivity extends Activity {
 	 */
 	
 	protected boolean needsUpdating(String markerName) {
-		final String markerPath = "/sdcard/OpenXcom/data/";
+		final String markerPath = gamePath + "data/";
 		File checkFile = new File(markerPath + markerName);
 		// It's our first time here, by the looks of it.
 		if (!checkFile.exists()) {
@@ -265,7 +267,7 @@ public class PreloaderActivity extends Activity {
 	 */
 	
 	protected void copyMarker(String markerName) {
-		final String markerPath = "/sdcard/OpenXcom/data/";
+		final String markerPath = gamePath + "data/";
 	    InputStream in = null;
 	    OutputStream out = null;
 	    try {
