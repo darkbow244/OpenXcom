@@ -20,9 +20,6 @@
 #include "Action.h"
 #include "Options.h"
 
-#include "Game.h"
-#include "Screen.h"
-
 namespace OpenXcom
 {
 
@@ -122,12 +119,9 @@ void InteractiveSurface::handle(Action *action, State *state)
 	{
 		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
 		int mouseX, mouseY;
-		float scaleX, scaleY;
-		SDL_Renderer *r = state->getGame()->getScreen()->getRenderer();
 		SDL_GetMouseState(&mouseX, &mouseY);
-		SDL_RenderGetScale(r, &scaleX, &scaleY);
-		mouseX = mouseX / scaleX;
-		mouseY = mouseY / scaleY;
+		mouseX = mouseX / action->getXScale() + action->getLeftBlackBand();
+		mouseY = mouseY / action->getYScale() + action->getTopBlackBand();
 		action->setMouseAction(mouseX, mouseY, getX(), getY());
 		//action->setMouseAction(action->getDetails()->wheel.x, action->getDetails()->wheel.y, getX(), getY());
 	}

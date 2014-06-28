@@ -426,11 +426,11 @@ void Screen::resetDisplay(bool resetVideo)
 
 	Options::displayWidth = getWidth();
 	Options::displayHeight = getHeight();
-	//_scaleX = getWidth() / (double)_baseWidth;
-	//_scaleY = getHeight() / (double)_baseHeight;
-	_scaleX = 1;
-	_scaleY = 1;
-	_scale = std::min(getWidth() / (double) _baseWidth, getHeight() / (double) _baseHeight);
+	_scaleX = getWidth() / (double)_baseWidth;
+	_scaleY = getHeight() / (double)_baseHeight;
+	//_scale = std::min(getWidth() / (double) _baseWidth, getHeight() / (double) _baseHeight);
+	//_scaleX = _scale;
+	//_scaleY = _scale;
 #if 1
 	_clear.x = 0;
 	_clear.y = 0;

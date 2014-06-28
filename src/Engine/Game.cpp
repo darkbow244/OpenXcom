@@ -331,13 +331,7 @@ void Game::run()
 					// FIXME: Note that we're using SDL_FingerID of 0 to specify this "first finger".
 					// This will likely break with things like active styluses.
 					SDL_Event fakeEvent;
-					SDL_Rect viewport;
-					int offsetX, offsetY;
-					double scale = _screen->getScale(); // We're preserving the aspect ratio
-					
-					SDL_RenderGetViewport(_screen->getRenderer(), &viewport);
-					offsetX = viewport.x;
-					offsetY = viewport.y;
+
 					fakeEvent.type = SDL_FIRSTEVENT; // This one is used internally by SDL, for us it's an empty event we don't handle
 					if ((_event.type == SDL_FINGERMOTION) ||
 					    (_event.type == SDL_FINGERDOWN) ||
@@ -351,10 +345,10 @@ void Game::run()
 							if(_event.type == SDL_FINGERMOTION)
 							{
 								fakeEvent.type = SDL_MOUSEMOTION;
-								fakeEvent.motion.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
-								fakeEvent.motion.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
-								fakeEvent.motion.xrel = _event.tfinger.dx * Options::displayWidth / scale;
-								fakeEvent.motion.yrel = _event.tfinger.dy * Options::displayHeight / scale;
+								fakeEvent.motion.x = _event.tfinger.x * Options::displayWidth;
+								fakeEvent.motion.y = _event.tfinger.y * Options::displayHeight;
+								fakeEvent.motion.xrel = _event.tfinger.dx * Options::displayWidth;
+								fakeEvent.motion.yrel = _event.tfinger.dy * Options::displayHeight;
 								
 								fakeEvent.motion.state = SDL_BUTTON(1);		
 							}
@@ -371,8 +365,8 @@ void Game::run()
 #endif
 									fakeEvent.type = SDL_MOUSEBUTTONUP;
 								}
-								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth / scale - offsetX;
-								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight / scale - offsetY;
+								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth;
+								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight;
 								fakeEvent.button.button = SDL_BUTTON_LEFT;
 							}
 						}
