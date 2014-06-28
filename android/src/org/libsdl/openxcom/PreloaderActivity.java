@@ -124,11 +124,15 @@ public class PreloaderActivity extends Activity {
 					
 				}.execute((Void[]) null);	
 			}
-			else {
-				// We don't need to do anything, just pass execution further
+			else
+			{
 				passExecution();
 			}
-			
+		}
+		else
+		{
+			// We don't need to do anything, just pass execution further
+			passExecution();
 		}
 	}
 	
