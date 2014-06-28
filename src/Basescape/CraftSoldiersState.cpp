@@ -37,8 +37,6 @@
 #include "../Engine/LocalizedText.h"
 #include "SoldierInfoState.h"
 
-#include "../Engine/Screen.h"
-
 namespace OpenXcom
 {
 
@@ -48,7 +46,7 @@ namespace OpenXcom
  * @param base Pointer to the base to get info from.
  * @param craft ID of the selected craft.
  */
-CraftSoldiersState::CraftSoldiersState(Game *game, Base *base, size_t craft) : State(game), _base(base), _craft(craft)
+CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft) :  _base(base), _craft(craft)
 {
 	// Create objects
 	_window = new Window(this, 320, 200, 0, 0);
@@ -213,10 +211,7 @@ void CraftSoldiersState::moveSoldierUp(Action *action, int row, bool max)
 		if (row != _lstSoldiers->getScroll())
 		{
 			//assert (0 && "FIXME");
-			float scaleX, scaleY;
-			SDL_Renderer *r = _game->getScreen()->getRenderer();
-			SDL_RenderGetScale(r, &scaleX, &scaleY);
-			SDL_WarpMouseInWindow(NULL, scaleX * (action->getLeftBlackBand() + action->getXMouse()), scaleY * (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
+			SDL_WarpMouseInWindow(NULL, (action->getLeftBlackBand() + action->getXMouse()), (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
 		}
 		else
 		{
@@ -239,7 +234,6 @@ void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 		{
 			moveSoldierDown(action, row);
-			//SDL_WarpMouse(action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
 		}
 		else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 		{
@@ -263,7 +257,6 @@ void CraftSoldiersState::moveSoldierDown(Action *action, int row, bool max)
 		_base->getSoldiers()->insert(_base->getSoldiers()->end(), s);
 	}
 	else
-
 	{
 		_base->getSoldiers()->at(row) = _base->getSoldiers()->at(row + 1);
 		_base->getSoldiers()->at(row + 1) = s;
@@ -271,10 +264,7 @@ void CraftSoldiersState::moveSoldierDown(Action *action, int row, bool max)
 		if (row != _lstSoldiers->getVisibleRows() - 1 + _lstSoldiers->getScroll())
 		{
 			//assert (0 && "FIXME");
-		  float scaleX, scaleY;
-			SDL_Renderer *r = _game->getScreen()->getRenderer();
-			SDL_RenderGetScale(r, &scaleX, &scaleY);
-			SDL_WarpMouseInWindow(NULL, scaleX * (action->getLeftBlackBand() + action->getXMouse()), scaleY * (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
+			SDL_WarpMouseInWindow(NULL, action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
 		}
 		else
 		{
@@ -325,7 +315,7 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 	}
 	else if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
-		_game->pushState(new SoldierInfoState(_game, _base, row));
+		_game->pushState(new SoldierInfoState(_base, row));
 	}
 }
 

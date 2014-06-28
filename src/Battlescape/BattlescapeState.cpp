@@ -95,7 +95,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0)
+BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
@@ -104,14 +104,6 @@ BattlescapeState::BattlescapeState(Game *game) : State(game), _reserve(0), _popu
 	int iconsWidth = Map::ICON_WIDTH;
 	int iconsHeight = Map::ICON_HEIGHT;
 	_mouseOverIcons = false;
-	// Why not try and reset the display?
-	//_game->getScreen()->resetDisplay(false);
-
-#ifdef __ANDROID__
-	_mouseXScale = Options::baseXResolution / (float) Screen::ORIGINAL_WIDTH;
-	_mouseYScale = Options::baseYResolution / (float) Screen::ORIGINAL_HEIGHT;
-#endif
-
 	// Create buttonbar - this should be on the centerbottom of the screen
 	_icons = new InteractiveSurface(iconsWidth, iconsHeight, screenWidth/2 - iconsWidth/2, screenHeight - iconsHeight);
 
@@ -689,7 +681,6 @@ void BattlescapeState::mapOver(Action *action)
 		if (_mouseMovedOverThreshold)
 		{
 			_longPressTimer->stop();
-			Log(LOG_INFO) << "Stopping long press timer in BattlescapeState::mapOver";
 		}
 #endif
 
@@ -893,7 +884,6 @@ void BattlescapeState::mapClick(Action *action)
 	}
 
 	// right-click aborts walking state
-	// Maybe make it any button on Android?
 	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
 	{
 		if (_battleGame->cancelCurrentAction())
@@ -905,11 +895,13 @@ void BattlescapeState::mapClick(Action *action)
 	// don't handle mouseclicks over the buttons (it overlaps with map surface)
 	if (_mouseOverIcons) return;
 
+
 	// don't accept leftclicks if there is no cursor or there is an action busy
 	if (_map->getCursorType() == CT_NONE || _battleGame->isBusy()) return;
 
 	Position pos;
 	_map->getSelectorPosition(&pos);
+
 	if (_save->getDebugMode())
 	{
 		std::wostringstream ss;
@@ -942,36 +934,10 @@ void BattlescapeState::mapIn(Action *)
 
 void BattlescapeState::fingerMotion(Action *action)
 {
-	// Log(LOG_INFO) << "Stopping long press timer in BattlescapeState::fingerMotion";
-	// _longPressTimer->stop();
 	//don't scroll if we swipe from soldier, which is used to substitute right
 	//click in android
 	if (_swipeFromSoldier)
 		return;
-	// Let's just use the default scroller instead
-#if 0
-	_scrollAccumX += action->getDetails()->tfinger.dx *
-		Options::baseXResolution;
-	_scrollAccumY += action->getDetails()->tfinger.dy *
-		Options::baseYResolution;
-	int scrollIncX = 0;
-	int scrollIncY = 0;
-	if (std::abs(_scrollAccumX) > 1)
-	{
-		scrollIncX = (int)_scrollAccumX;
-		_scrollAccumX -= scrollIncX;
-	}
-	if (std::abs(_scrollAccumY) > 1)
-	{
-		scrollIncY = (int)_scrollAccumY;
-		_scrollAccumY -= scrollIncY;
-	}
-	if (scrollIncX || scrollIncY)
-	{
-		_map->getCamera()->scrollXY(scrollIncX, scrollIncY, false);
-		_hasScrolled = true;
-	}
-#endif
 }
 
 #ifdef __ANDROID__
@@ -1038,7 +1004,7 @@ void BattlescapeState::btnShowMapClick(Action *)
 {
 	//MiniMapState
 	if (allowButtons())
-		_game->pushState (new MiniMapState (_game, _map->getCamera(), _save));
+		_game->pushState (new MiniMapState (_map->getCamera(), _save));
 }
 
 /**
@@ -1095,7 +1061,7 @@ void BattlescapeState::btnInventoryClick(Action *)
 		_battleGame->getPathfinding()->removePreview();
 		_battleGame->cancelCurrentAction(true);
 
-		_game->pushState(new InventoryState(_game, !_save->getDebugMode(), this));
+		_game->pushState(new InventoryState(!_save->getDebugMode(), this));
 	}
 }
 
@@ -1196,7 +1162,7 @@ void BattlescapeState::btnShowLayersClick(Action *)
 void BattlescapeState::btnHelpClick(Action *)
 {
 	if (allowButtons(true))
-		_game->pushState(new PauseState(_game, OPT_BATTLESCAPE));
+		_game->pushState(new PauseState(OPT_BATTLESCAPE));
 }
 
 /**
@@ -1219,7 +1185,7 @@ void BattlescapeState::btnEndTurnClick(Action *)
 void BattlescapeState::btnAbortClick(Action *)
 {
 	if (allowButtons())
-		_game->pushState(new AbortMissionState(_game, _save, this));
+		_game->pushState(new AbortMissionState(_save, this));
 }
 
 /**
@@ -1254,7 +1220,7 @@ void BattlescapeState::btnStatsClick(Action *action)
 
 		_battleGame->cancelCurrentAction(true);
 
-		if (b) popup(new UnitInfoState(_game, _save->getSelectedUnit(), this, false, false));
+		if (b) popup(new UnitInfoState(_save->getSelectedUnit(), this, false, false));
 	}
 }
 
@@ -1283,7 +1249,7 @@ void BattlescapeState::btnLeftHandItemClick(Action *)
 		}
 
 		_battleGame->cancelCurrentAction();
-		
+
 		_save->getSelectedUnit()->setActiveHand("STR_LEFT_HAND");
 		_map->cacheUnits();
 		_map->draw();
@@ -1317,7 +1283,7 @@ void BattlescapeState::btnRightHandItemClick(Action *)
 		}
 
 		_battleGame->cancelCurrentAction();
-		
+
 		_save->getSelectedUnit()->setActiveHand("STR_RIGHT_HAND");
 		_map->cacheUnits();
 		_map->draw();
@@ -1503,10 +1469,10 @@ void BattlescapeState::updateSoldierInfo()
 	_numMorale->setValue(battleUnit->getMorale());
 	_barMorale->setMax(100);
 	_barMorale->setValue(battleUnit->getMorale());
+
 	BattleItem *leftHandItem = battleUnit->getItem("STR_LEFT_HAND");
 	_btnLeftHandItem->clear();
 	_numAmmoLeft->setVisible(false);
-	
 	if (leftHandItem)
 	{
 		leftHandItem->getRules()->drawHandSprite(_game->getResourcePack()->getSurfaceSet("BIGOBS.PCK"), _btnLeftHandItem);
@@ -1519,7 +1485,6 @@ void BattlescapeState::updateSoldierInfo()
 				_numAmmoLeft->setValue(0);
 		}
 	}
-
 	BattleItem *rightHandItem = battleUnit->getItem("STR_RIGHT_HAND");
 	_btnRightHandItem->clear();
 	_numAmmoRight->setVisible(false);
@@ -1628,7 +1593,7 @@ void BattlescapeState::handleItemClick(BattleItem *item)
 			}
 		}
 #endif
-			popup(new ActionMenuState(_game, _battleGame->getCurrentAction(), _icons->getX(), _icons->getY()+16));
+			popup(new ActionMenuState(_battleGame->getCurrentAction(), _icons->getX(), _icons->getY()+16));
 		}
 		else
 		{
@@ -1779,11 +1744,11 @@ inline void BattlescapeState::handle(Action *action)
 			{
 				if (action->getDetails()->key.keysym.sym == Options::keyQuickSave)
 				{
-					_game->pushState(new SaveGameState(_game, OPT_BATTLESCAPE, SAVE_QUICK));
+					_game->pushState(new SaveGameState(OPT_BATTLESCAPE, SAVE_QUICK));
 				}
 				else if (action->getDetails()->key.keysym.sym == Options::keyQuickLoad)
 				{
-					_game->pushState(new LoadGameState(_game, OPT_BATTLESCAPE, SAVE_QUICK));
+					_game->pushState(new LoadGameState(OPT_BATTLESCAPE, SAVE_QUICK));
 				}
 			}
 
@@ -2159,7 +2124,7 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 		bgen.setAlienRace("STR_MIXED");
 		bgen.nextStage();
 		_game->popState();
-		_game->pushState(new BriefingState(_game, 0, 0));
+		_game->pushState(new BriefingState(0, 0));
 	}
 	else
 	{
@@ -2173,11 +2138,11 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 			// this concludes to defeat when in mars or mars landing mission
 			if ((_save->getMissionType() == "STR_MARS_THE_FINAL_ASSAULT" || _save->getMissionType() == "STR_MARS_CYDONIA_LANDING") && _game->getSavedGame()->getMonthsPassed() > -1)
 			{
-				_game->pushState (new DefeatState(_game));
+				_game->pushState (new DefeatState);
 			}
 			else
 			{
-				_game->pushState(new DebriefingState(_game));
+				_game->pushState(new DebriefingState);
 			}
 		}
 		else
@@ -2186,11 +2151,11 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 			// this concludes to victory when in mars mission
 			if (_save->getMissionType() == "STR_MARS_THE_FINAL_ASSAULT" && _game->getSavedGame()->getMonthsPassed() > -1)
 			{
-				_game->pushState (new VictoryState(_game));
+				_game->pushState (new VictoryState);
 			}
 			else
 			{
-				_game->pushState(new DebriefingState(_game));
+				_game->pushState(new DebriefingState);
 			}
 		}
 		_game->getCursor()->setColor(Palette::blockOffset(15)+12);

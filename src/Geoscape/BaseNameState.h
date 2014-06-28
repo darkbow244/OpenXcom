@@ -52,7 +52,7 @@ private:
 	bool _first;
 public:
 	/// Creates the Base Name state.
-	BaseNameState(Game *game, Base *base, Globe *globe, bool first);
+	BaseNameState(Base *base, Globe *globe, bool first);
 	/// Cleans up the Base Name state.
 	~BaseNameState();
 	/// Handler for clicking the OK button.
