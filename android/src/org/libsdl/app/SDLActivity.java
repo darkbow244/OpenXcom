@@ -293,7 +293,7 @@ public class SDLActivity extends Activity {
     }
 
     // C functions we call
-    public static native int nativeInit(String localeCode);
+    public static native int nativeInit(String localeCode, String gamePath, String dataPath);
     public static native void nativeLowMemory();
     public static native void nativeQuit();
     public static native void nativePause();
@@ -610,7 +610,11 @@ class SDLMain implements Runnable {
     @Override
     public void run() {
         // Runs SDL_main()
-        SDLActivity.nativeInit(SDLActivity.getLocaleString());
+    	String gamePath = Environment.getExternalStorageDirectory().getPath() + "/OpenXcom/";
+    	String dataPath = gamePath + "data/";
+    	Log.i("OpenXcom", "Game path is: " + gamePath);
+    	Log.i("OpenXcom", "Data path is: " + dataPath);
+        SDLActivity.nativeInit(SDLActivity.getLocaleString(), gamePath, dataPath);
 
         //Log.v("SDL", "SDL thread terminated");
     }
