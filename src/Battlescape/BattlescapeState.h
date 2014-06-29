@@ -84,6 +84,7 @@ private:
 	Position _cursorPosition;
 	bool _hasScrolled;
 	bool _swipeFromSoldier;
+	bool _multiGestureProcess;
 	/// Popups a context sensitive list of actions the user can choose from.
 	void handleItemClick(BattleItem *item);
 	/// Shifts the red colors of the visible unit buttons backgrounds.
@@ -120,6 +121,7 @@ public:
 	/// Handler for entering with mouse to the map surface.
 	void mapIn(Action *action);
 	void fingerMotion(Action *action);
+	void multiGesture(Action *action);
 #ifdef __ANDROID__
 	/// Handler for buttons
 	void mapKey(Action *action);

@@ -95,7 +95,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0)
+BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _multiGestureProcess(false)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
@@ -248,6 +248,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
 	_map->onFingerMotion((ActionHandler)&BattlescapeState::fingerMotion);
+	_map->onMultiGesture((ActionHandler)&BattlescapeState::multiGesture);
 #ifdef __ANDROID__
 	_map->onKeyboardPress((ActionHandler)&BattlescapeState::mapKey, 0);
 #if 0	
@@ -641,6 +642,10 @@ void BattlescapeState::mapOver(Action *action)
 		return;
 	}
 #endif
+	if (_multiGestureProcess) 
+	{
+		return;
+	}
 	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
 	{
 		// The following is the workaround for a rare problem where sometimes
@@ -799,6 +804,7 @@ void BattlescapeState::mapPress(Action *action)
 
 void BattlescapeState::mapRelease(Action *action)
 {
+	_multiGestureProcess = false;
 #ifdef __ANDROID__
 	_longPressTimer->stop();
 	Position pos;
@@ -935,6 +941,41 @@ void BattlescapeState::fingerMotion(Action *action)
 	//click in android
 	if (_swipeFromSoldier)
 		return;
+}
+
+/**
+ * Handles multi-finger gestures on the battlefield.
+ * Currently it is used for changing elevation.
+ * @param action Pointer to an action.
+ */
+
+void BattlescapeState::multiGesture(Action *action)
+{
+	const double levelThreshold = 0.1; //Just an arbitrary number
+	static double delta;
+	static double prevPointY = 0;
+	if (!_multiGestureProcess)
+	{
+		_multiGestureProcess = true;
+		delta = 0;
+		prevPointY = action->getDetails()->mgesture.y;
+		_longPressTimer->stop();
+		return;
+	}
+	delta += action->getDetails()->mgesture.y - prevPointY;
+	prevPointY = action->getDetails()->mgesture.y;
+	if (std::abs(delta) > levelThreshold)
+	{
+		if (delta > 0) 
+		{
+		      btnMapUpClick(action);
+		}
+		else
+		{
+		      btnMapDownClick(action);
+		}
+		delta = 0;
+	}
 }
 
 #ifdef __ANDROID__
