@@ -182,7 +182,7 @@ void StartState::think()
 	{
 	case LOADING_FAILED:
 	{
-		CrossPlatform::flashWindow();
+		CrossPlatform::flashWindow(_game->getScreen()->getWindow());
 		addLine(L"");
 		addLine(L"ERROR: " + Language::utf8ToWstr(error));
 		addLine(L"Make sure you installed OpenXcom correctly.");
@@ -200,7 +200,7 @@ void StartState::think()
 		break;
 	}
 	case LOADING_SUCCESSFUL:
-		CrossPlatform::flashWindow();
+		CrossPlatform::flashWindow(_game->getScreen()->getWindow());
 		Log(LOG_INFO) << "OpenXcom started successfully!";
 		if (!Options::reload && Options::playIntro)
 		{

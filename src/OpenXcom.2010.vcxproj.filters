@@ -723,9 +723,6 @@
     <ClCompile Include="Engine\Scalers\scalebit.cpp">
       <Filter>Engine\Scalers</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\OpenGL.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="Interface\ToggleTextButton.cpp">
       <Filter>Interface</Filter>
     </ClCompile>
@@ -1580,9 +1577,6 @@
     </ClInclude>
     <ClInclude Include="Savegame\SerializationHelper.h">
       <Filter>Savegame</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\OpenGL.h">
-      <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Interface\ToggleTextButton.h">
       <Filter>Interface</Filter>
