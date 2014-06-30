@@ -204,10 +204,21 @@ void Screen::handle(Action *action)
 void Screen::flip()
 {
 	/* fuck it, let's do it the hard way */
+	SDL_Rect source, target;
+	source.x = 0;
+	source.y = 0;
+	source.w = _baseWidth;
+	source.h = _baseHeight;
+
+	target.x = _leftBlackBand;
+	target.y = _topBlackBand;
+	target.w = Options::displayWidth - _leftBlackBand - _rightBlackBand;
+	target.h = Options::displayHeight - _topBlackBand - _bottomBlackBand;
+
 	SDL_UpdateTexture(_texture, NULL, _surface->getSurface()->pixels,
 			_surface->getSurface()->pitch);
 	SDL_RenderClear(_renderer);
-	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
+	SDL_RenderCopy(_renderer, _texture, &source, &target);
 	if(_drawOverlays && (_overlays.size() > 0))
 	{
 		for(std::vector<Texture*>::iterator i = _overlays.begin(); i != _overlays.end(); ++i)
@@ -398,7 +409,7 @@ void Screen::resetDisplay(bool resetVideo)
 		}
 		/* I don't trust this next part anyway */
 		Log(LOG_INFO) << "Setting renderer logical size to " << _baseWidth << "x" << _baseHeight;
-		SDL_RenderSetLogicalSize(_renderer, _baseWidth, _baseHeight);
+		//SDL_RenderSetLogicalSize(_renderer, _baseWidth, _baseHeight);
 		if (_texture != NULL)
 		{
 			SDL_DestroyTexture(_texture);
