@@ -92,6 +92,8 @@
 #include "./Engine/GraphSubset.h"
 #include "./Engine/CrossPlatform.h"
 #include "./Engine/CatFile.h"
+#include "./Engine/Renderer.h"
+#include "./Engine/SDLRenderer.h"
 #include "./Engine/Screen.h"
 #include "./Engine/Game.h"
 #include "./Engine/SurfaceSet.h"

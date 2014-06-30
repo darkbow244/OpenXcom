@@ -29,7 +29,7 @@ namespace OpenXcom
 class Surface;
 class Action;
 
-class Texture;
+class Renderer;
 
 /**
  * A display screen, handles rendering onto the game window.
@@ -44,7 +44,7 @@ class Screen
 private:
 	//SDL_Surface *_screen;
 	SDL_Window *_window;
-	SDL_Renderer *_renderer;
+	Renderer *_renderer;
 	int _bpp;
 	int _baseWidth, _baseHeight;
 	double _scaleX, _scaleY, _scale;
@@ -62,16 +62,10 @@ private:
 	SDL_Texture *_texture;
 	int _prevWidth, _prevHeight;
 	
-	/// A list for our (possible) overlays.
-	std::vector<Texture*> _overlays;
-	/// A flag to show whether or not we want to draw our overlays
-	bool _drawOverlays;
 public:
 	static const int ORIGINAL_WIDTH;
 	static const int ORIGINAL_HEIGHT;
 	
-	SDL_Renderer * getRenderer() const;
-
 	/// Creates a new display screen.
 	Screen();
 	/// Cleans up the display screen.
@@ -118,15 +112,6 @@ public:
 	double getScale() const;
 	/// Get the pointer for our current window
 	SDL_Window *getWindow() const;
-	
-	/// Add a texture overlay
-	void addOverlay(Texture *overlay);
-	/// Set the overlay drawing flag
-	void drawOverlays(bool draw);
-	/// Removes the overlay from the drawing list
-	void removeOverlay(Texture *overlay);
-	
-	
 };
 
 }
