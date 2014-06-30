@@ -859,6 +859,9 @@
     <ClCompile Include="Engine\Renderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\OpenGLRenderer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -1738,6 +1741,9 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Renderer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\OpenGLRenderer.h">
       <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>

@@ -34,6 +34,7 @@
 #include <SDL.h>
 #include "Renderer.h"
 #include "SDLRenderer.h"
+#include "OpenGLRenderer.h"
 
 namespace OpenXcom
 {
@@ -368,7 +369,7 @@ void Screen::resetDisplay(bool resetVideo)
 		/* By this point we have a window and no renderer, so it's time to make one! */
 		if (!_renderer)
 		{
-			_renderer = new SDLRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+			_renderer = new OpenGLRenderer(_window/*, -1, SDL_RENDERER_ACCELERATED */);
 			_renderer->setPixelFormat(_surface->getSurface()->format->format);
 		}
 		SDL_Rect baseRect;
@@ -476,24 +477,14 @@ void Screen::resetDisplay(bool resetVideo)
 	outRect.w = getWidth() - _leftBlackBand - _rightBlackBand;
 	outRect.h = getHeight() - _topBlackBand - _bottomBlackBand;
 	_renderer->setOutputRect(&outRect);
-
-#if 0
-	if (isOpenGLEnabled()) 
+	// Special procedures for OpenGL renderer?
+	if (_renderer->getRendererType() == RENDERER_OPENGL)
 	{
-#ifndef __NO_OPENGL
-		glOutput.init(_baseWidth, _baseHeight);
-		glOutput.linear = Options::useOpenGLSmoothing; // setting from shader file will override this, though
-		glOutput.set_shader(CrossPlatform::getDataFile(Options::useOpenGLShader).c_str());
-		glOutput.setVSync(Options::vSyncForOpenGL);
-		OpenGL::checkErrors = Options::checkOpenGLErrors;
-#endif
+		OpenGLRenderer *oglRenderer = dynamic_cast<OpenGLRenderer*>(_renderer);
+		oglRenderer->setShader(CrossPlatform::getDataFile(Options::useOpenGLShader));
+		oglRenderer->setVSync(Options::vSyncForOpenGL);
+		OpenGLRenderer::checkErrors = Options::checkOpenGLErrors;
 	}
-
-	if (_screen->format->BitsPerPixel == 8)
-	{
-		setPalette(getPalette());
-	}
-#endif
 }
 
 /**

@@ -12,6 +12,12 @@
 namespace OpenXcom
 {
 
+enum RendererType
+{
+	RENDERER_SDL2,
+	RENDERER_OPENGL
+};
+
 class Renderer
 {
 public:
@@ -25,6 +31,7 @@ public:
 	virtual void setOutputRect(SDL_Rect *dstRect) = 0;
 	/// Blits the contents of the SDL_Surface to the screen.
 	virtual void flip(SDL_Surface *srcSurface) = 0; 
+	virtual RendererType getRendererType() = 0;
 
 };
 }
