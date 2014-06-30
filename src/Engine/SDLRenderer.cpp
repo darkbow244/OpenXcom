@@ -120,7 +120,7 @@ void SDLRenderer::listSDLRendererDrivers()
 		SDL_GetRenderDriverInfo(i, &info);
 		Log(LOG_INFO) << "[SDLRenderer]  Driver " << i << ": " << info.name;
 		Log(LOG_INFO) << "[SDLRenderer]    Number of texture formats: " << info.num_texture_formats;
-		for (int j = 0; j < info.num_texture_formats; ++j)
+		for (Uint32 j = 0; j < info.num_texture_formats; ++j)
 		{
 			Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << SDL_GetPixelFormatName(info.texture_formats[j]);
 		}
