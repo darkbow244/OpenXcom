@@ -32,9 +32,8 @@
 #include "Zoom.h"
 #include "Timer.h"
 #include <SDL.h>
-
-
-#include "Texture.h"
+#include "Renderer.h"
+#include "SDLRenderer.h"
 
 namespace OpenXcom
 {
@@ -118,7 +117,7 @@ void Screen::makeVideoFlags()
  * The screen is set up based on the current options.
  */
 Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL), _texture(NULL)
-	, _prevWidth(0), _prevHeight(0), _drawOverlays(false)
+	, _prevWidth(0), _prevHeight(0)
 {
 	// The default values for _window and _renderer are set to NULL so that we can check if there's a window already
 	resetDisplay();	
@@ -131,14 +130,7 @@ Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _sc
  */
 Screen::~Screen()
 {
-	if (_overlays.size() > 0)
-	{
-		for(std::vector<Texture*>::iterator i = _overlays.begin(); i != _overlays.end(); ++i)
-		{
-			delete *i;
-		}
-	}
-	
+	delete _renderer;	
 	delete _surface;
 }
 
@@ -203,19 +195,7 @@ void Screen::handle(Action *action)
  */
 void Screen::flip()
 {
-	/* fuck it, let's do it the hard way */
-	SDL_UpdateTexture(_texture, NULL, _surface->getSurface()->pixels,
-			_surface->getSurface()->pitch);
-	SDL_RenderClear(_renderer);
-	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
-	if(_drawOverlays && (_overlays.size() > 0))
-	{
-		for(std::vector<Texture*>::iterator i = _overlays.begin(); i != _overlays.end(); ++i)
-		{
-			(*i)->draw();
-		}
-	}
-	SDL_RenderPresent(_renderer); //TODO: check error?
+	_renderer->flip(_surface->getSurface());
 }
 
 /**
@@ -388,30 +368,14 @@ void Screen::resetDisplay(bool resetVideo)
 		/* By this point we have a window and no renderer, so it's time to make one! */
 		if (!_renderer)
 		{
-			if ((_renderer = SDL_CreateRenderer(_window, -1,
-					       SDL_RENDERER_ACCELERATED)) == NULL)
-			{
-				/* Looks like it's not our day. */
-				Log(LOG_ERROR) << SDL_GetError();
-				throw Exception(SDL_GetError());
-			}
+			_renderer = new SDLRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+			_renderer->setPixelFormat(_surface->getSurface()->format->format);
 		}
-		/* I don't trust this next part anyway */
-		Log(LOG_INFO) << "Setting renderer logical size to " << _baseWidth << "x" << _baseHeight;
-		SDL_RenderSetLogicalSize(_renderer, _baseWidth, _baseHeight);
-		if (_texture != NULL)
-		{
-			SDL_DestroyTexture(_texture);
-			_texture = NULL;
-		}
-		Log(LOG_INFO) << "Setting main texture size to " << _baseWidth << "x" << _baseHeight;
-		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
-				SDL_TEXTUREACCESS_STREAMING, _baseWidth, _baseHeight);
-		if (_texture == NULL) {
-			Log(LOG_ERROR) << "Could not create texture!";
-			Log(LOG_ERROR) << SDL_GetError();
-			throw Exception(SDL_GetError());
-		}
+		SDL_Rect baseRect;
+		baseRect.x = baseRect.y = 0;
+		baseRect.w = _baseWidth;
+		baseRect.h = _baseHeight;
+		_renderer->setInternalRect(&baseRect);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
 		
 		/* Save new baseWidth and baseHeight */
@@ -506,6 +470,12 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		_topBlackBand = _bottomBlackBand = _leftBlackBand = _rightBlackBand = _cursorTopBlackBand = _cursorLeftBlackBand = 0;
 	}
+	SDL_Rect outRect;
+	outRect.x = _leftBlackBand;
+	outRect.y = _topBlackBand;
+	outRect.w = getWidth() - _leftBlackBand - _rightBlackBand;
+	outRect.h = getHeight() - _topBlackBand - _bottomBlackBand;
+	_renderer->setOutputRect(&outRect);
 
 #if 0
 	if (isOpenGLEnabled()) 
@@ -711,41 +681,8 @@ void Screen::updateScale(int &type, int selection, int &width, int &height, bool
 	}
 }
 
-SDL_Renderer * Screen::getRenderer() const
-{
-	return _renderer;
-}
-
 SDL_Window * Screen::getWindow() const
 {
 	return _window;
 }
-
-void Screen::addOverlay(Texture *overlay)
-{
-	_overlays.push_back(overlay);
-}
-
-void Screen::drawOverlays(bool draw)
-{
-	_drawOverlays = draw;
-}
-/**
- * Removes overlay from the overlay list. Should be called whenever a texture gets destroyed.
- * @param overlay Pointer to a Texture object containing the overlaying texture.
- */
-
-void Screen::removeOverlay(Texture *overlay)
-{
-	assert(_overlays.size() != 0);
-	for(std::vector<Texture*>::iterator i = _overlays.begin(); i != _overlays.end(); ++i)
-	{
-		if ((*i) == overlay)
-		{
-			_overlays.erase(i);
-			break;
-		}
-	}
-}
-
 }

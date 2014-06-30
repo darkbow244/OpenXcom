@@ -43,7 +43,7 @@
 #include <SDL_endian.h>
 #include <SDL_gfxPrimitives.h>
 #include <SDL_image.h>
-#include <SDL_keysym.h>
+//#include <SDL_keysym.h>
 #include <SDL_mixer.h>
 #include <SDL.h>
 #include <SDL_syswm.h>
@@ -92,6 +92,8 @@
 #include "./Engine/GraphSubset.h"
 #include "./Engine/CrossPlatform.h"
 #include "./Engine/CatFile.h"
+#include "./Engine/Renderer.h"
+#include "./Engine/SDLRenderer.h"
 #include "./Engine/Screen.h"
 #include "./Engine/Game.h"
 #include "./Engine/SurfaceSet.h"
@@ -105,7 +107,7 @@
 #include "./Engine/ShaderRepeat.h"
 #include "./Engine/SoundSet.h"
 #include "./Engine/Action.h"
-#include "./Engine/OpenGL.h"
+//#include "./Engine/OpenGL.h"
 #include "./Engine/InteractiveSurface.h"
 #include "./Engine/ShaderDraw.h"
 #include "./Engine/Options.h"

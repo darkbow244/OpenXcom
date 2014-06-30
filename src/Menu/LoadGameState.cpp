@@ -187,7 +187,7 @@ void LoadGameState::init()
 		else
 			delete s;
 	}
-	CrossPlatform::flashWindow();
+	CrossPlatform::flashWindow(_game->getScreen()->getWindow());
 }
 
 }

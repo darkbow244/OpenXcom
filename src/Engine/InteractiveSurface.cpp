@@ -120,8 +120,8 @@ void InteractiveSurface::handle(Action *action, State *state)
 		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
 		int mouseX, mouseY;
 		SDL_GetMouseState(&mouseX, &mouseY);
-		mouseX = mouseX / action->getXScale() + action->getLeftBlackBand();
-		mouseY = mouseY / action->getYScale() + action->getTopBlackBand();
+		mouseX = mouseX;
+		mouseY = mouseY;
 		action->setMouseAction(mouseX, mouseY, getX(), getY());
 		//action->setMouseAction(action->getDetails()->wheel.x, action->getDetails()->wheel.y, getX(), getY());
 	}
