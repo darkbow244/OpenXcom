@@ -83,7 +83,7 @@ private:
 	void set_shader(const char *source);
 	void set_fragment_shader(const char *source);
 	void set_vertex_shader(const char *source);
-	void refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight, int topBlackBand, int bottomBlackBand, int leftBlackBand, int rightBlackBand);
+	void refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight);
 	void init(int width, int height);
 	void term();
 public:
