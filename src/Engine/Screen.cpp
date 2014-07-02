@@ -304,6 +304,19 @@ void Screen::resetDisplay(bool resetVideo)
 {
 	int width = Options::displayWidth;
 	int height = Options::displayHeight;
+	bool switchRenderer = false;
+	if (!_renderer)
+	{
+		switchRenderer = true;
+	}
+	else
+	{
+		if ( (Options::useOpenGL && _renderer->getRendererType() == RENDERER_SDL2)
+			|| (!Options::useOpenGL && _renderer->getRendererType() == RENDERER_OPENGL) )
+		{
+			switchRenderer = true;
+		}
+	}
 #ifdef __linux__
 	Uint32 oldFlags = _flags;
 #endif
@@ -367,9 +380,23 @@ void Screen::resetDisplay(bool resetVideo)
 		}
 
 		/* By this point we have a window and no renderer, so it's time to make one! */
+		if (switchRenderer)
+		{
+			delete _renderer;
+			_renderer = NULL;
+		}
+
 		if (!_renderer)
 		{
-			_renderer = new OpenGLRenderer(_window/*, -1, SDL_RENDERER_ACCELERATED */);
+			if (Options::useOpenGL)
+			{
+				_renderer = new OpenGLRenderer(_window);
+			}
+			else
+			{
+				_renderer = new SDLRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+			}
+			//_renderer = new OpenGLRenderer(_window/*, -1, SDL_RENDERER_ACCELERATED */);
 			_renderer->setPixelFormat(_surface->getSurface()->format->format);
 		}
 		SDL_Rect baseRect;
