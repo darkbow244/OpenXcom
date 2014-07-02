@@ -212,7 +212,7 @@ void OpenGLRenderer::clear() {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, Options::displayWidth/*outwidth*/, 0, Options::displayHeight/*outheight*/, -1.0, 1.0);
+    glOrtho(0, Options::displayWidth, 0, Options::displayHeight, -1.0, 1.0);
 	glViewport(0, 0, Options::displayWidth, Options::displayHeight);
 
     glMatrixMode(GL_MODELVIEW);
@@ -233,12 +233,12 @@ void OpenGLRenderer::clear() {
     //therefore, below vertices flip image to support top-left source.
     //texture range = x1:0.0, y1:0.0, x2:1.0, y2:1.0
     //vertex range = x1:0, y1:0, x2:width, y2:height
-    double w = 1.0 /*double(inwidth)  / double(iwidth)*/;
-    double h = 1.0 /*double(inheight) / double(iheight) */;
-	int u1 = _dstRect.x;//_dstRect.x;
-    int u2 = _dstRect.w + _dstRect.x/* + _dstRect.x */ /*outwidth - rightBlackBand*/;
-    int v1 = _dstRect.h + _dstRect.y/* + _dstRect.y */ /*outheight - topBlackBand*/;
-    int v2 = _dstRect.y;//_dstRect.y /*bottomBlackBand*/;
+    double w = 1.0;
+    double h = 1.0;
+	int u1 = _dstRect.x;;
+    int u2 = _dstRect.w + _dstRect.x;
+    int v1 = _dstRect.h + _dstRect.y;
+    int v2 = _dstRect.y;;
 	
     glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); glVertex2i(u1, v1);
