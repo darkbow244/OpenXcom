@@ -11,6 +11,8 @@
 #include "OpenGLRenderer.h"
 #include "Logger.h"
 #include "Surface.h"
+#include "Options.h"
+#include "CrossPlatform.h"
 
 namespace OpenXcom
 {
@@ -179,22 +181,22 @@ void OpenGLRenderer::clear() {
     glAttachShader(glprogram, vertexshader);
   }
 
- void OpenGLRenderer::refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight, int topBlackBand, int bottomBlackBand, int leftBlackBand, int rightBlackBand) {
+ void OpenGLRenderer::refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight) {
     while (glGetError() != GL_NO_ERROR); // clear possible error from who knows where
 	clear();
     if(shader_support && (fragmentshader || vertexshader)) {    
       glUseProgram(glprogram);
       GLint location;
 
-      float inputSize[2] = { (float)inwidth, (float)inheight };
+      float inputSize[2] = { (float)_srcRect.w, (float)_srcRect.h };
       location = glGetUniformLocation(glprogram, "rubyInputSize");
       glUniform2fv(location, 1, inputSize);
 
-      float outputSize[2] = { (float)outwidth, (float)outheight };
+	  float outputSize[2] = { (float)Options::displayWidth, (float)Options::displayHeight };
       location = glGetUniformLocation(glprogram, "rubyOutputSize");
       glUniform2fv(location, 1, outputSize);
 
-      float textureSize[2] = { (float)iwidth, (float)iheight };
+      float textureSize[2] = { (float)_srcRect.w, (float)_srcRect.h };
       location = glGetUniformLocation(glprogram, "rubyTextureSize");
       glUniform2fv(location, 1, textureSize);
     }
@@ -210,8 +212,8 @@ void OpenGLRenderer::clear() {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, outwidth, 0, outheight, -1.0, 1.0);
-    glViewport(0, 0, outwidth, outheight);
+    glOrtho(0, Options::displayWidth/*outwidth*/, 0, Options::displayHeight/*outheight*/, -1.0, 1.0);
+	glViewport(0, 0, Options::displayWidth, Options::displayHeight);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -231,18 +233,18 @@ void OpenGLRenderer::clear() {
     //therefore, below vertices flip image to support top-left source.
     //texture range = x1:0.0, y1:0.0, x2:1.0, y2:1.0
     //vertex range = x1:0, y1:0, x2:width, y2:height
-    double w = double(inwidth)  / double(iwidth);
-    double h = double(inheight) / double(iheight);
-    int u1 = leftBlackBand;
-    int u2 = outwidth - rightBlackBand;
-    int v1 = outheight - topBlackBand;
-    int v2 = bottomBlackBand;
+    double w = 1.0 /*double(inwidth)  / double(iwidth)*/;
+    double h = 1.0 /*double(inheight) / double(iheight) */;
+	int u1 = _dstRect.x;//_dstRect.x;
+    int u2 = _dstRect.w + _dstRect.x/* + _dstRect.x */ /*outwidth - rightBlackBand*/;
+    int v1 = _dstRect.h + _dstRect.y/* + _dstRect.y */ /*outheight - topBlackBand*/;
+    int v2 = _dstRect.y;//_dstRect.y /*bottomBlackBand*/;
 	
-    glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(0, 0); glVertex3i(u1, v1, 0);
-    glTexCoord2f(w, 0); glVertex3i(u2, v1, 0);
-    glTexCoord2f(0, h); glVertex3i(u1, v2, 0);
-    glTexCoord2f(w, h); glVertex3i(u2, v2, 0);
+    glBegin(GL_QUADS);
+		glTexCoord2f(0, 0); glVertex2i(u1, v1);
+		glTexCoord2f(w, 0); glVertex2i(u2, v1);
+		glTexCoord2f(w, h); glVertex2i(u2, v2);
+		glTexCoord2f(0, h); glVertex2i(u1, v2);
     glEnd();
 	glErrorCheck();
 
@@ -325,6 +327,9 @@ OpenGLRenderer::OpenGLRenderer(SDL_Window *window): _window(window), gltexture(0
 {
 	glContext = SDL_GL_CreateContext(_window);
 	init(0, 0);
+	setShader(CrossPlatform::getDataFile(Options::useOpenGLShader));
+	setVSync(Options::vSyncForOpenGL);
+	checkErrors = Options::checkOpenGLErrors;
 }
 
 
@@ -336,7 +341,7 @@ OpenGLRenderer::~OpenGLRenderer(void)
 
 void OpenGLRenderer::setPixelFormat(Uint32 format)
 {
-
+	// This should not be called, right?
 }
 void OpenGLRenderer::setInternalRect(SDL_Rect *srcRect)
 {
@@ -347,6 +352,11 @@ void OpenGLRenderer::setInternalRect(SDL_Rect *srcRect)
 	// defer actual resizing until a screen refresh
 	//resize(_srcRect.w, _srcRect.h);
 	_resizeRequested = true;
+	// Update shader while we're at it
+	setShader(CrossPlatform::getDataFile(Options::useOpenGLShader));
+	setVSync(Options::vSyncForOpenGL);
+	checkErrors = Options::checkOpenGLErrors;
+
 }
 
 void OpenGLRenderer::setOutputRect(SDL_Rect *dstRect)
@@ -365,7 +375,7 @@ void OpenGLRenderer::flip(SDL_Surface *srcSurface)
 	{
 		resize(_srcRect.w, _srcRect.h);
 	}
-	refresh(linear, _srcRect.w, _srcRect.h, _dstRect.w, _dstRect.h, _dstRect.y, _dstRect.y, _dstRect.x, _dstRect.x);
+	refresh(linear, _srcRect.w, _srcRect.h, _dstRect.w, _dstRect.h);
 	SDL_GL_SwapWindow(_window);
 }
 
