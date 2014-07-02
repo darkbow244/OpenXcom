@@ -477,14 +477,6 @@ void Screen::resetDisplay(bool resetVideo)
 	outRect.w = getWidth() - _leftBlackBand - _rightBlackBand;
 	outRect.h = getHeight() - _topBlackBand - _bottomBlackBand;
 	_renderer->setOutputRect(&outRect);
-	// Special procedures for OpenGL renderer?
-	if (_renderer->getRendererType() == RENDERER_OPENGL)
-	{
-		OpenGLRenderer *oglRenderer = dynamic_cast<OpenGLRenderer*>(_renderer);
-		oglRenderer->setShader(CrossPlatform::getDataFile(Options::useOpenGLShader));
-		oglRenderer->setVSync(Options::vSyncForOpenGL);
-		OpenGLRenderer::checkErrors = Options::checkOpenGLErrors;
-	}
 }
 
 /**
