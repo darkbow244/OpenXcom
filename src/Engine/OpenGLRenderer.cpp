@@ -1,6 +1,8 @@
 
 
 
+#ifndef __NO_OPENGL
+
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <yaml-cpp/yaml.h>
@@ -407,3 +409,5 @@ void OpenGLRenderer::setVSync(bool sync)
 
 
 }
+
+#endif //__NO_OPENGL
