@@ -6,6 +6,8 @@
 //#include <stdlib.h>
 //#include <crtdbg.h>
 
+#define NOMINMAX
+
 #ifndef __NO_OPENGL
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
