@@ -29,6 +29,10 @@ OPENXCOM_VERSION := $(shell git -C $(LOCAL_PATH) describe | sed 's/.*-/-/' | sed
 
 LOCAL_CFLAGS += -DOPENXCOM_VERSION_GIT="$(OPENXCOM_VERSION)"
 
+# Disable OpenGL renderer
+
+LOCAL_CFLAGS += -D__NO_OPENGL
+
 #LOCAL_ARM_NEON := true
 
 # Add your application source files here...
