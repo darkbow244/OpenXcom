@@ -42,6 +42,13 @@ else ( )
   find_package ( SDL2 REQUIRED mixer image )
   find_package ( SDL_gfx REQUIRED )
   find_package ( Yaml_cpp 0.5.0)
+  find_package ( OpenGL )
+
+  if ( NOT OPENGL_FOUND )
+	  message ( FATAL_ERROR "Can't find OpenGL; how does that even happen?" )
+  else ()
+	  include_directories ( ${OPENGL_INCLUDE_DIR} )
+  endif ()
 
   if ( NOT SDL2_FOUND )
     message ( FATAL_ERROR "Can't find SDL which is required" )
