@@ -86,8 +86,6 @@
 #include "../fmath.h"
 
 
-#include "../Engine/Texture.h"
-
 namespace OpenXcom
 {
 
@@ -251,18 +249,6 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 	_map->onMultiGesture((ActionHandler)&BattlescapeState::multiGesture);
 #ifdef __ANDROID__
 	_map->onKeyboardPress((ActionHandler)&BattlescapeState::mapKey, 0);
-#if 0	
-	_overlay = new Texture(_game->getScreen(), 320, 200);
-	std::ostringstream ss;
-	ss.str("");
-	ss << "/sdcard/openxcom/data/Resources/UI/overlay_sample.png";
-	_overlay->loadImage(ss.str());
-	_overlay->setSrcRect(0, 0, 320, 200);
-	_overlay->setDstRect(0, 0, 320, 200);
-	_game->getScreen()->addOverlay(_overlay);
-	_game->getScreen()->drawOverlays(true);
-#endif
-	
 #endif
 
 	// Add in custom reserve buttons
@@ -538,9 +524,6 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
  */
 BattlescapeState::~BattlescapeState()
 {
-#if 0
-	delete _overlay;
-#endif
 #ifdef __ANDROID__
 	delete _longPressTimer;
 #endif
@@ -959,7 +942,9 @@ void BattlescapeState::multiGesture(Action *action)
 		_multiGestureProcess = true;
 		delta = 0;
 		prevPointY = action->getDetails()->mgesture.y;
+#ifdef __ANDROID__
 		_longPressTimer->stop();
+#endif
 		return;
 	}
 	delta += action->getDetails()->mgesture.y - prevPointY;

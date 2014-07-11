@@ -41,7 +41,6 @@ class BattleItem;
 class Timer;
 class WarningMessage;
 class BattlescapeGame;
-class Texture;
 
 /**
  * Battlescape screen which shows the tactical battle.
@@ -92,7 +91,6 @@ private:
 #ifdef __ANDROID__
 	// Scalers for touchscreen
 	float _mouseXScale, _mouseYScale;
-	Texture *_overlay;
 	Surface *_leftWpnActive, *_rightWpnActive;
 	// Timer for long-tapping the screen
 	Timer *_longPressTimer;
