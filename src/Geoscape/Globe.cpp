@@ -1897,9 +1897,6 @@ void Globe::mouseOver(Action *action, State *state)
 		(action->getDetails()->motion.x != _xBeforeMouseScrolling ||
 		action->getDetails()->motion.y != _yBeforeMouseScrolling))
 	{
-#ifdef __ANDROID__
-		//Log(LOG_INFO) << "Globe.cpp: mouseOver(): setting mouse to " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;
-#endif
 		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
 		action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
 	}
