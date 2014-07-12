@@ -71,6 +71,7 @@ namespace OpenXcom
  * @param dst The zoomed surface (output).
  * @return 0 for success or -1 for error.
  */
+/*
 static int zoomSurface2X_64bit(SDL_Surface *src, SDL_Surface *dst)
 {
 	Uint64 dataSrc;
@@ -95,6 +96,7 @@ static int zoomSurface2X_64bit(SDL_Surface *src, SDL_Surface *dst)
 			dataSrc = *((Uint64*) pixelSrc);
 			// boo
 			(void)SDL_SwapLE64(dataSrc);
+*/
 /* expanded form of of data shift: 
 			dataDst = (dataSrc & 0xFF) | ((dataSrc & 0xFF) << 8) | 
 				((dataSrc & 0xFF00 ) << 8) | ((dataSrc & 0xFF00)) << 16)  | 
@@ -102,6 +104,7 @@ static int zoomSurface2X_64bit(SDL_Surface *src, SDL_Surface *dst)
 				((dataSrc & 0xFF000000) << 24) | ((dataSrc & 0xFF000000) << 32);
 */
 			// compact form, combining terms with equal multipliers (shifts)
+/*
 			dataDst = (dataSrc & 0xFF) | ((dataSrc & 0xFFFF) << 8) | 
 				((dataSrc & 0xFFFF00) << 16)  | 
 				((dataSrc & 0xFFFF0000) << 24) |
@@ -127,6 +130,7 @@ static int zoomSurface2X_64bit(SDL_Surface *src, SDL_Surface *dst)
 	
 	return 0;
 }
+*/
 
 
 #if defined(__WORDSIZE) && (__WORDSIZE == 64) || defined(SIZE_MAX) && (SIZE_MAX > 0xFFFFFFFF)
@@ -203,6 +207,7 @@ static int zoomSurface2X_32bit(SDL_Surface *src, SDL_Surface *dst)
  * @param dst The zoomed surface (output).
  * @return 0 for success or -1 for error.
  */
+/*
 static int zoomSurface4X_64bit(SDL_Surface *src, SDL_Surface *dst)
 {
 	Uint64 dataSrc;
@@ -227,12 +232,14 @@ static int zoomSurface4X_64bit(SDL_Surface *src, SDL_Surface *dst)
 			dataSrc = *((Uint64*) pixelSrc);
 			// boo
 			(void)SDL_SwapLE64(dataSrc);
+*/
 			/* expanded form of of data shift:
 			dataDst = (dataSrc & 0xFF) | ((dataSrc & 0xFF) << 8) | 
 				((dataSrc & 0xFF) << 16 | ((datasrc & 0xFF) << 24) |
 				((dataSrc & 0xFF00 ) << 24) | ((dataSrc & 0xFF00) << 32)  | 
 				((dataSrc & 0xFF00 ) << 40) | ((dataSrc & 0xFF00) << 48) ;
 				 */
+/*
 			for (int i = 0; i < 4; ++i)
 			{
 				// compact form, combining terms with equal multipliers (shifts)
@@ -253,6 +260,7 @@ static int zoomSurface4X_64bit(SDL_Surface *src, SDL_Surface *dst)
 	
 	return 0;
 }
+*/
 
 
 #if defined(__WORDSIZE) && (__WORDSIZE == 64) || defined(SIZE_MAX) && (SIZE_MAX > 0xFFFFFFFF)
@@ -326,6 +334,7 @@ static int zoomSurface4X_32bit(SDL_Surface *src, SDL_Surface *dst)
  * @param dst The zoomed surface (output).
  * @return 0 for success or -1 for error.
  */
+/*
 static int zoomSurface2X_XAxis_32bit(SDL_Surface *src, SDL_Surface *dst)
 {
 	Uint32 dataSrc;
@@ -400,6 +409,7 @@ static int zoomSurface2X_XAxis_32bit(SDL_Surface *src, SDL_Surface *dst)
 	
 	return 0;
 }
+*/
 
 
 /**
@@ -412,6 +422,7 @@ static int zoomSurface2X_XAxis_32bit(SDL_Surface *src, SDL_Surface *dst)
  * @param dst The zoomed surface (output).
  * @return 0 for success or -1 for error.
  */
+/*
 static int zoomSurface4X_XAxis_32bit(SDL_Surface *src, SDL_Surface *dst)
 {
 	Uint32 dataSrc;
@@ -486,6 +497,7 @@ static int zoomSurface4X_XAxis_32bit(SDL_Surface *src, SDL_Surface *dst)
 	
 	return 0;
 }
+*/
 
 #ifdef __SSE2__
 /**
@@ -499,6 +511,7 @@ static int zoomSurface4X_XAxis_32bit(SDL_Surface *src, SDL_Surface *dst)
  * @param dst The zoomed surface (output).
  * @return 0 for success or -1 for error.
  */
+/*
 static int zoomSurface4X_SSE2(SDL_Surface *src, SDL_Surface *dst)
 {
 	__m128i dataSrc;
@@ -526,13 +539,14 @@ static int zoomSurface4X_SSE2(SDL_Surface *src, SDL_Surface *dst)
 
 			__m128i halfDone = _mm_unpacklo_epi8(dataSrc, dataSrc); 
 			dataDst = _mm_unpacklo_epi8(halfDone, halfDone);
-
+*/
 /* #define WRITE_DST if ((char*)pixelDst4 + 128 > (char*)dst->pixels+(dst->w*dst->pitch)) { Log(LOG_ERROR) << "HELL"; exit(0); } \ */
 #define WRITE_DST			*(pixelDst++) = dataDst; \
 			*(pixelDst2++) = dataDst; \
 			*(pixelDst3++) = dataDst; \
 			*(pixelDst4++) = dataDst; \
 			
+/*
 			WRITE_DST;
 			
 			dataDst = _mm_unpackhi_epi8(halfDone, halfDone);
@@ -552,6 +566,7 @@ static int zoomSurface4X_SSE2(SDL_Surface *src, SDL_Surface *dst)
 
 	return 0;
 }
+*/
 
 /**
  * Optimized 8-bit zoomer for resizing by a factor of 2. Doesn't flip.
@@ -564,6 +579,7 @@ static int zoomSurface4X_SSE2(SDL_Surface *src, SDL_Surface *dst)
  * @param dst The zoomed surface (output).
  * @return 0 for success or -1 for error.
  */
+/*
 static int zoomSurface2X_SSE2(SDL_Surface *src, SDL_Surface *dst)
 {
 	__m128i dataSrc;
@@ -604,6 +620,7 @@ static int zoomSurface2X_SSE2(SDL_Surface *src, SDL_Surface *dst)
 	
 	return 0;
 }
+*/
 
 /**
  * Checks the SSE2 feature bit returned by the CPUID instruction
@@ -612,7 +629,7 @@ static int zoomSurface2X_SSE2(SDL_Surface *src, SDL_Surface *dst)
 bool Zoom::haveSSE2()
 {
 #ifdef __GNUC__
-	unsigned int CPUInfo[4];
+	unsigned int CPUInfo[4] = {0, 0, 0, 0};
 	__get_cpuid(1, CPUInfo, CPUInfo+1, CPUInfo+2, CPUInfo+3);
 #elif _WIN32
 	int CPUInfo[4];

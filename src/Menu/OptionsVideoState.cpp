@@ -219,7 +219,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	std::vector<std::wstring> filterNames;
 	filterNames.push_back(tr("STR_DISABLED"));
 	filterNames.push_back(L"Linear");
-	filterNames.push_back(L"Anisotropic (not really working)");
+	filterNames.push_back(L"Anisotropic (disabled)");
 	_filters.push_back("");
 	_filters.push_back("");
 	_filters.push_back("");

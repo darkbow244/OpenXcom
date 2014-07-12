@@ -59,7 +59,7 @@ namespace OpenXcom
  * @param base Pointer to the base to get info from.
  * @param craft ID of the selected craft.
  */
-CraftEquipmentState::CraftEquipmentState(Base *base, size_t craft) : _sel(0), _craft(craft), _base(base)
+CraftEquipmentState::CraftEquipmentState(Base *base, size_t craft) : _sel(0), _craft(craft), _base(base), _totalItems(0)
 {
 	Craft *c = _base->getCrafts()->at(_craft);
 	bool craftHasACrew = c->getNumSoldiers() > 0;
@@ -167,6 +167,7 @@ CraftEquipmentState::CraftEquipmentState(Base *base, size_t craft) : _sel(0), _c
 		else
 		{
 			cQty = c->getItems()->getItem(*i);
+			_totalItems += cQty;
 		}
 		if (rule->getBigSprite() > -1 && rule->getBattleType() != BT_NONE && rule->getBattleType() != BT_CORPSE &&
 			_game->getSavedGame()->isResearched(rule->getRequirements()) &&
@@ -494,6 +495,7 @@ void CraftEquipmentState::moveLeftByValue(int change)
 	else
 	{
 		c->getItems()->removeItem(_items[_sel], change);
+		_totalItems -= change;
 		if (_game->getSavedGame()->getMonthsPassed() > -1)
 		{
 			_base->getItems()->addItem(_items[_sel], change);
@@ -587,7 +589,15 @@ void CraftEquipmentState::moveRightByValue(int change)
 	}
 	else
 	{
+		if (c->getRules()->getMaxItems() > 0 && _totalItems + change > c->getRules()->getMaxItems())
+		{
+			_timerRight->stop();
+			LocalizedText msg(tr("STR_NO_MORE_EQUIPMENT_ALLOWED", c->getRules()->getMaxItems()));
+			_game->pushState(new ErrorMessageState(msg, _palette, Palette::blockOffset(15)+1, "BACK04.SCR", 2));
+			change = c->getRules()->getMaxItems() - _totalItems;
+		}
 		c->getItems()->addItem(_items[_sel],change);
+		_totalItems += change;
 		if (_game->getSavedGame()->getMonthsPassed() > -1)
 		{
 			_base->getItems()->removeItem(_items[_sel],change);

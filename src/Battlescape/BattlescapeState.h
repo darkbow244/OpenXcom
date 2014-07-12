@@ -41,6 +41,44 @@ class BattleItem;
 class Timer;
 class WarningMessage;
 class BattlescapeGame;
+/*
+enum BattleUI 
+{
+	// display surfaces
+	SURFACE_RANK,
+	ISURFACE_ICONS,
+	// buttons
+	BUTTON_UNIT_UP,
+	BUTTON_UNIT_DOWN,
+	BUTTON_MAP_UP,
+	BUTTON_MAP_DOWN,
+	BUTTON_SHOW_MAP,
+	BUTTON_KNEEL,
+	BUTTON_INVENTORY,
+	BUTTON_CENTER,
+	BUTTON_NEXT_SOLDIER,
+	BUTTON_NEXT_STOP,
+	BUTTON_SHOW_LAYERS,
+	BUTTON_HELP,
+	BUTTON_END_TURN,
+	BUTTON_ABORT,
+	BUTTON_STATS,
+	BUTTON_LAUNCH,
+	BUTTON_PSI,
+	BUTTON_RESERVE,
+	BUTTON_RESERVE_NONE,
+	BUTTON_RESERVE_SNAP,
+	BUTTON_RESERVE_AIMED,
+	BUTTON_RESERVE_AUTO,
+	BUTTON_RESERVE_KNEEL,
+	BUTTON_ZERO_TUS,
+	BUTTON_LEFT_ITEM,
+	BUTTON_RIGHT_ITEM,
+	// numbers for some items
+	NUM_AMMO_LEFT,
+	NUM_AMMO_RIGHT,
+	NUM_LAYERS
+};*/
 
 /**
  * Battlescape screen which shows the tactical battle.
@@ -48,12 +86,14 @@ class BattlescapeGame;
 class BattlescapeState : public State
 {
 private:
+	std::map<std::string, Surface*> _bUI;
 	Surface *_rank;
 	InteractiveSurface *_icons;
 	Map *_map;
-	InteractiveSurface *_btnUnitUp, *_btnUnitDown, *_btnMapUp, *_btnMapDown, *_btnShowMap, *_btnKneel;
-	InteractiveSurface *_btnInventory, *_btnCenter, *_btnNextSoldier, *_btnNextStop, *_btnShowLayers, *_btnHelp;
-	InteractiveSurface *_btnEndTurn, *_btnAbort, *_btnStats, *_btnLaunch, *_btnPsi;
+	//InteractiveSurface *_btnUnitUp, *_btnUnitDown, *_btnMapUp, *_btnMapDown, *_btnShowMap, *_btnKneel;
+	//InteractiveSurface *_btnInventory, *_btnCenter, *_btnNextSoldier, *_btnNextStop, *_btnShowLayers, *_btnHelp;
+	//InteractiveSurface *_btnEndTurn, *_btnAbort, *_btnStats, *_btnLaunch, *_btnPsi;
+	InteractiveSurface *_btnLaunch, *_btnPsi;
 	ImageButton *_reserve;
 	ImageButton *_btnReserveNone, *_btnReserveSnap, *_btnReserveAimed, *_btnReserveAuto, *_btnReserveKneel, *_btnZeroTUs;
 	InteractiveSurface *_btnLeftHandItem, *_btnRightHandItem;
