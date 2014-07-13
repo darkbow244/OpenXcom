@@ -40,6 +40,7 @@
 #include "WarningMessage.h"
 #include "../Savegame/Tile.h"
 #include "PrimeGrenadeState.h"
+#include "../Engine/Logger.h"
 
 namespace OpenXcom
 {
@@ -69,6 +70,13 @@ Inventory::Inventory(Game *game, int width, int height, int x, int y, bool base)
 	_animTimer = new Timer(125);
 	_animTimer->onTimer((SurfaceHandler)&Inventory::drawPrimers);
 	_animTimer->start();
+#ifdef __ANDROID__
+	_longPressTimer = new Timer(500, true);
+	_longPressTimer->onTimer((SurfaceHandler)&Inventory::longPressAction);
+	_longPressTimer->stop();
+
+	_longPressAction = NULL;
+#endif
 }
 
 /**
@@ -82,6 +90,13 @@ Inventory::~Inventory()
 	delete _warning;
 	delete _stackNumber;
 	delete _animTimer;
+#ifdef __ANDROID__
+	delete _longPressTimer;
+	if (_longPressAction)
+	{
+		delete _longPressAction;
+	}
+#endif
 }
 
 /**
@@ -444,6 +459,9 @@ void Inventory::think()
 {
 	_warning->think();
 	_animTimer->think(0,this);
+#ifdef __ANDROID__
+	_longPressTimer->think(NULL, this);
+#endif
 }
 
 /**
@@ -501,6 +519,7 @@ void Inventory::mouseOver(Action *action, State *state)
  */
 void Inventory::mouseClick(Action *action, State *state)
 {
+	Log(LOG_INFO) << "mouseClick called";
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 	{
 		if (_selUnit == 0)
@@ -1022,5 +1041,58 @@ void Inventory::drawPrimers()
 	}
 	_animFrame++;
 }
+#ifdef __ANDROID__
+void Inventory::mousePress(Action *action, State *state)
+{
+	Log(LOG_INFO) << "Long press timer started";
+	// Prepare our fake action
+	if (_longPressAction != NULL)
+	{
+		delete _longPressAction;
+	}
+	SDL_Event fakeEvent = *(action->getDetails());
+	Log(LOG_INFO) << "Event type: " << fakeEvent.type;
+	if (fakeEvent.type == SDL_MOUSEBUTTONDOWN)
+	{
+		Log(LOG_INFO) << "(it's MouseButtonDown)";
+	}
+	//fakeEvent.button.button = SDL_BUTTON_RIGHT;
+	_longPressAction = new Action(&fakeEvent, action->getXScale(), action->getYScale(), action->getTopBlackBand(), action->getLeftBlackBand());
+	_longPressAction->setMouseAction(action->getXMouse() + action->getLeftBlackBand(),
+					 action->getYMouse() + action->getTopBlackBand(),
+					 action->getSender()->getX(),
+					 action->getSender()->getY());
+	_longPressAction->setSender(action->getSender());
+	_longPressState = state;
+	// And start the timer
+	_longPressTimer->start();
+	// And don't pass the event!
+	//action->getDetails()->type = SDL_FIRSTEVENT;
+}
 
+void Inventory::mouseRelease(Action *action, State *state)
+{
+	Log(LOG_INFO) << "Long press timer stopped";
+	_longPressTimer->stop();
+	if (_longPressAction != NULL)
+	{
+		//mouseClick(_longPressAction, _longPressState);
+		delete _longPressAction;
+		_longPressAction = NULL;
+	}
+}
+
+void Inventory::longPressAction()
+{
+	Log(LOG_INFO) << "Long press action called";
+//	_longPressAction->getDetails()->button.button = SDL_BUTTON_LEFT;
+//	mouseClick(_longPressAction, _longPressState);
+	_longPressAction->getDetails()->button.button = SDL_BUTTON_RIGHT;
+	mouseClick(_longPressAction, _longPressState);
+	_longPressTimer->stop();
+	delete _longPressAction;
+	_longPressAction = NULL;
+}
+
+#endif
 }

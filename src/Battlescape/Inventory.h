@@ -53,6 +53,12 @@ private:
 	std::vector<std::pair<int, int> > _grenadeIndicators;
 	NumberText *_stackNumber;
 	Timer *_animTimer;
+#ifdef __ANDROID__
+	Timer *_longPressTimer;
+	// A fake Action pointer for long press events.
+	Action *_longPressAction;
+	State *_longPressState;
+#endif
 	/// Moves an item to a specified slot.
 	void moveItem(BattleItem *item, RuleInventory *slot, int x, int y);
 	/// Gets the slot in the specified position.
@@ -104,6 +110,14 @@ public:
 	void showWarning(const std::wstring &msg);
 	/// Show priming warnings on grenades.
 	void drawPrimers();
+#ifdef __ANDROID__
+	/// Start long press timer
+	void mousePress(Action *action, State *state);
+	/// Stop long press timer
+	void mouseRelease(Action *action, State *state);
+	/// Handle long press on grenade
+	void longPressAction();
+#endif
 };
 
 }
