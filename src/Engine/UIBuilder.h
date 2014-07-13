@@ -11,7 +11,7 @@
 
 #include <string>
 #include <map>
-#include <yaml.h>
+#include <yaml-cpp/yaml.h>
 #include "State.h"
 #include "InteractiveSurface.h"
 #include "../Resource/ResourcePack.h"
