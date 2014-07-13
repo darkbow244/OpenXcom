@@ -577,7 +577,7 @@ layout:
     type: InteractiveSurface
     width: 32
     height: 24
-    hAlign: left
+    hAlign: right
     vAlign: top
     relX: -32
     relY: 0
@@ -594,7 +594,7 @@ layout:
     type: InteractiveSurface
     width: 32
     height: 24
-    hAlign: left
+    hAlign: right
     vAlign: top
     relX: -32
     relY: 25
@@ -775,4 +775,29 @@ layout:
       colorOffset: 0
     scale: 1.0
 
+  - name: leftWpnActive
+    type: Surface
+    order: 55
+    width: 36
+    height: 52
+    hAlign: center
+    vAlign: bottom
+    relX: -154
+    relY: -54
+    hidden: false
+    graphic:
+      name: WpnActive
+
+  - name: rightWpnActive
+    type: Surface
+    order: 55
+    width: 36
+    height: 52
+    hAlign: center
+    vAlign: bottom
+    relX: 118
+    relY: -54
+    hidden: false
+    graphic:
+      name: WpnActive
 
