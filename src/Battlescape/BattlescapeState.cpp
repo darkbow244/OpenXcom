@@ -178,7 +178,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 	// we need to make sure map will be the first thing added.
 	add(_map);
 
-	// Load all the 
+	// Load all the listed UI elements from the file
 	_bUI = UIBuilder::buildUI(this, 
 				_game->getResourcePack(),
 				handlers,
@@ -187,6 +187,11 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 	_icons = dynamic_cast<InteractiveSurface*>(_bUI["icons"]);
 	_rank = _bUI["rank"];
 	// Assign those pointers that we'll need, ignore others.
+
+#ifdef __ANDROID__
+	_leftWpnActive = _bUI["leftWpnActive"];
+	_rightWpnActive = _bUI["rightWpnActive"];
+#endif
 	_btnLeftHandItem = dynamic_cast<InteractiveSurface*>(_bUI["btnLeftHandItem"]);
 	_btnRightHandItem = dynamic_cast<InteractiveSurface*>(_bUI["btnRightHandItem"]);
 
@@ -247,8 +252,10 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 	_map->init();
 	_map->onMouseOver((ActionHandler)&BattlescapeState::mapOver);
 	_map->onMousePress((ActionHandler)&BattlescapeState::mapPress);
+	_map->onMouseRelease((ActionHandler)&BattlescapeState::mapRelease);
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
+	_map->onFingerMotion((ActionHandler)&BattlescapeState::fingerMotion);
 
 	SDL_Keycode buttons[] = {Options::keyBattleCenterEnemy1,
 						Options::keyBattleCenterEnemy2,
