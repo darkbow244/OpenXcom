@@ -777,7 +777,7 @@ layout:
 
   - name: leftWpnActive
     type: Surface
-    order: 55
+    order: 49
     width: 36
     height: 52
     hAlign: center
@@ -790,7 +790,7 @@ layout:
 
   - name: rightWpnActive
     type: Surface
-    order: 55
+    order: 59
     width: 36
     height: 52
     hAlign: center
