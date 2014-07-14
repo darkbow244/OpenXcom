@@ -257,6 +257,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
 	_map->onFingerMotion((ActionHandler)&BattlescapeState::fingerMotion);
+	_map->onMultiGesture((ActionHandler)&BattlescapeState::multiGesture);
 
 	SDL_Keycode buttons[] = {Options::keyBattleCenterEnemy1,
 						Options::keyBattleCenterEnemy2,
@@ -540,14 +541,14 @@ void BattlescapeState::mapPress(Action *action)
 	{
 		_isMouseScrolling = true;
 		_isMouseScrolled = false;
-		//SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
-		_xBeforeMouseScrolling = action->getDetails()->button.x;
-		_yBeforeMouseScrolling = action->getDetails()->button.y;
+		SDL_GetMouseState(&_xBeforeMouseScrolling, &_yBeforeMouseScrolling);
+		//_xBeforeMouseScrolling = action->getDetails()->button.x;
+		//_yBeforeMouseScrolling = action->getDetails()->button.y;
 		_mapOffsetBeforeMouseScrolling = _map->getCamera()->getMapOffset();
 		if (!Options::battleDragScrollInvert && _cursorPosition.z == 0)
 		{
-			_cursorPosition.x = action->getDetails()->motion.x;
-			_cursorPosition.y = action->getDetails()->motion.y;
+			_cursorPosition.x = action->getDetails()->button.x;
+			_cursorPosition.y = action->getDetails()->button.y;
 			// the Z is irrelevant to our mouse position, but we can use it as a boolean to check if the position is set or not
 			_cursorPosition.z = 1;
 		}
@@ -2217,24 +2218,26 @@ bool BattlescapeState::hasScrolled() const
  */
 void BattlescapeState::stopScrolling(Action *action)
 {
+#ifndef __ANDROID__
 	if (Options::battleDragScrollInvert)
 	{
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
 		/* FIXME: Mouse warping still doesn't work as intended */
-		//SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
-#endif
+		SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+//#endif
 		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 		_battleGame->setupCursor();
 	}
 	else
 	{
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
 		/* FIXME: Mouse warping still doesn't work as intended */
-		//SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
-#endif
+		SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
+//#endif
 		action->setMouseAction(_cursorPosition.x/action->getXScale(), _cursorPosition.y/action->getYScale(), _game->getScreen()->getSurface()->getX(), _game->getScreen()->getSurface()->getY());
 		_map->setSelectorPosition(_cursorPosition.x / action->getXScale(), _cursorPosition.y / action->getYScale());
 	}
+#endif
 	// reset our "mouse position stored" flag
 	_cursorPosition.z = 0;
 }
