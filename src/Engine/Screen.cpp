@@ -424,6 +424,7 @@ void Screen::resetDisplay(bool resetVideo)
 	Options::displayHeight = getHeight();
 	_scaleX = getWidth() / (double)_baseWidth;
 	_scaleY = getHeight() / (double)_baseHeight;
+	Log(LOG_INFO) << "Pre-bar scales: _scaleX = " << _scaleX << ", _scaleY = " << _scaleY;
 	//_scale = std::min(getWidth() / (double) _baseWidth, getHeight() / (double) _baseHeight);
 	//_scaleX = _scale;
 	//_scaleY = _scale;
@@ -446,6 +447,7 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		cursorInBlackBands = false;
 	}
+#ifndef __ANDROID__
 	else if (Options::fullscreen)
 	{
 		cursorInBlackBands = Options::cursorInBlackBandsInFullscreen;
@@ -458,6 +460,12 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		cursorInBlackBands = Options::cursorInBlackBandsInBorderlessWindow;
 	}
+#else
+	else {
+	// Force the scales to be equal?
+		cursorInBlackBands = true;
+	}
+#endif
 
 	if (_scaleX > _scaleY && Options::keepAspectRatio)
 	{
@@ -511,6 +519,8 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		_topBlackBand = _bottomBlackBand = _leftBlackBand = _rightBlackBand = _cursorTopBlackBand = _cursorLeftBlackBand = 0;
 	}
+	Log(LOG_INFO) << "Scale (post-bar): scaleX = " << _scaleX << ", scaleY = " << _scaleY;
+	Log(LOG_INFO) << "Black bars: top: " << _topBlackBand << ", left: " << _leftBlackBand;
 	SDL_Rect outRect;
 	outRect.x = _leftBlackBand;
 	outRect.y = _topBlackBand;
