@@ -93,7 +93,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _multiGestureProcess(false)
+BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _swipeFromSoldier(false), _multiGestureProcess(false)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
