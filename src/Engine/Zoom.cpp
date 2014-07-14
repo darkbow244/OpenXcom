@@ -720,7 +720,7 @@ int Zoom::_zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int fli
 	int dgap;
 	static bool proclaimed = false;
 
-	if (Options::useHQXFilter)
+	if (Screen::isHQXEnabled())
 	{
 		static bool initDone = false;
 
