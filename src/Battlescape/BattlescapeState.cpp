@@ -1145,6 +1145,9 @@ void BattlescapeState::btnVisibleUnitClick(Action *action)
 	}
 
 	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+#ifdef __ANDROID__
+	_longPressTimer->stop();
+#endif
 }
 
 /**
@@ -1155,6 +1158,10 @@ void BattlescapeState::btnLaunchClick(Action *action)
 {
 	_battleGame->launchAction();
 	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+#ifdef __ANDROID__
+	// Seems we have an issue with a timer.
+	_longPressTimer->stop();
+#endif
 }
 
 /**
@@ -1165,6 +1172,9 @@ void BattlescapeState::btnPsiClick(Action *action)
 {
 	_battleGame->psiButtonAction();
 	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
+#ifdef __ANDROID__
+	_longPressTimer->stop();
+#endif
 }
 
 /**
