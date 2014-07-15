@@ -220,7 +220,7 @@ void OptionsBaseState::btnOkClick(Action *)
 	Options::switchDisplay();
 	Options::save();
 	_game->loadLanguage(Options::language);
-	//SDL_SetRelativeMouseMode((Options::captureMouse)?SDL_TRUE:SDL_FALSE); //Breaks stuff. Hard.
+	SDL_SetWindowGrab(_game->getScreen()->getWindow(), (Options::captureMouse)?SDL_TRUE:SDL_FALSE); //Breaks stuff. Hard.
 	_game->getScreen()->resetDisplay();
 	_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	if (Options::reload && _origin == OPT_MENU)
@@ -256,7 +256,8 @@ void OptionsBaseState::btnCancelClick(Action *)
 	Options::reload = false;
 	Options::load();
 	// Again, Android and stuff.
-	//SDL_WM_GrabInput(Options::captureMouse);
+	SDL_bool captureMouse = Options::captureMouse ? SDL_TRUE : SDL_FALSE;
+	SDL_SetWindowGrab(_game->getScreen()->getWindow(), captureMouse);
 	Screen::updateScale(Options::newBattlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, _origin == OPT_BATTLESCAPE);
 	Screen::updateScale(Options::newGeoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, _origin != OPT_BATTLESCAPE);
 	_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);

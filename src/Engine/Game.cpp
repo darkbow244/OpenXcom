@@ -76,7 +76,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 
 	// trap the mouse inside the window
 	//SDL_WM_GrabInput(Options::captureMouse);
-	
+
 	// Set the window icon
 	//CrossPlatform::setWindowIcon(103, "openxcom.png");
 
@@ -88,6 +88,10 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 
 	// Actually, you can create a window icon only after the screen is here
 	CrossPlatform::setWindowIcon(103, "openxcom.png", _screen->getWindow());
+
+	// And only then you can think about grabbing the mouse
+	SDL_bool captureMouse = Options::captureMouse? SDL_TRUE : SDL_FALSE;
+	SDL_SetWindowGrab(_screen->getWindow(), captureMouse);
 
 	// Create cursor
 	_cursor = new Cursor(9, 13);
@@ -399,12 +403,13 @@ void Game::run()
 						// "ctrl-g" grab input
 						// (Since we're on Android, we're having no ctrl-g
 
-						/* if (action.getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
+						if (action.getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
 						{
-							Options::captureMouse = (SDL_GrabMode)(!Options::captureMouse);
-							SDL_WM_GrabInput(Options::captureMouse);
+							Options::captureMouse = !Options::captureMouse;
+							SDL_bool captureMouse = Options::captureMouse ? SDL_TRUE : SDL_FALSE;
+							SDL_SetWindowGrab(_screen->getWindow(), captureMouse);
 						}
-						else */ if (Options::debug)
+						else if (Options::debug)
 						{
 							if (action.getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
 							{
