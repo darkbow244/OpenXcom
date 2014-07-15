@@ -38,6 +38,9 @@
 #include "Pathfinding.h"
 #include "TileEngine.h"
 #include "../Interface/Text.h"
+#ifdef __ANDROID__
+#include "../Engine/InteractiveSurface.h"
+#endif
 
 namespace OpenXcom
 {
@@ -55,7 +58,12 @@ ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(a
 
 	// Set palette
 	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
-
+#ifdef __ANDROID__
+	// Set an underlying InteractiveSurface to exit the menu
+	_outside = new InteractiveSurface(Options::baseXResolution, Options::baseYResolution, 0, 0);
+	_outside->onMouseClick((ActionHandler)&ActionMenuState::outsideClick);
+	add(_outside);
+#endif
 	for (int i = 0; i < 6; ++i)
 	{
 		_actionMenu[i] = new ActionMenuItem(i, _game, x, y);
@@ -311,6 +319,7 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 			_game->popState();
 		}
 	}
+	action->getDetails()->type = SDL_FIRSTEVENT;
 }
 
 /**
@@ -322,5 +331,11 @@ void ActionMenuState::resize(int &dX, int &dY)
 {
 	State::recenter(dX, dY * 2);
 }
+#ifdef __ANDROID__
+void ActionMenuState::outsideClick(Action *action)
+{
+	_game->popState();
+}
+#endif
 
 }
