@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.lang.reflect.Method;
 
 import android.app.*;
@@ -104,6 +106,39 @@ public class SDLActivity extends Activity {
         mLayout.addView(mSurface);
 
         setContentView(mLayout);
+        
+        if (Build.VERSION.SDK_INT >= 11) {
+	    final View rootView = getWindow().getDecorView();
+	    rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+	    rootView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+		@Override
+		public void onSystemUiVisibilityChange(int visibility) {
+		    /*if (visibility == View.SYSTEM_UI_FLAG_VISIBLE) {
+			rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+			rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+		    }*/
+		    Timer timer = new Timer();
+		    timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+			    SDLActivity.this.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+				      int systemUiFlags;
+				      if (Build.VERSION.SDK_INT < 14) {
+					  systemUiFlags = View.STATUS_BAR_HIDDEN;
+				      } else {
+				          systemUiFlags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
+				      }
+				      rootView.setSystemUiVisibility(systemUiFlags);
+				}
+			    });
+			}
+		    }, 1000);
+		}
+	    
+	    });
+        }
     }
 
     // Events
