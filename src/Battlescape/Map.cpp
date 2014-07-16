@@ -1005,7 +1005,24 @@ void Map::drawTerrain(Surface *surface)
 						{
 							if (waypXOff == 2 && waypYOff == 2)
 							{
-								tmpSurface = _res->getSurfaceSet("CURSOR.PCK")->getFrame(7);
+								// Treat aiming waypoints like cursor
+								BattleActionType currentBA = _save->getBattleGame()->getCurrentAction()->type;
+								BattleUnit *tileUnit = tile->getUnit();
+								if (currentBA != BA_LAUNCH)
+								{
+									if (unit && (unit->getVisible() || _save->getDebugMode()))
+									{
+										tmpSurface = _res->getSurfaceSet("CURSOR.PCK")->getFrame(7 + _animFrame / 2);
+									}
+									else
+									{
+										tmpSurface = _res->getSurfaceSet("CURSOR.PCK")->getFrame(6);
+									}
+								}
+								else
+								{
+									tmpSurface = _res->getSurfaceSet("CURSOR.PCK")->getFrame(7);
+								}
 								tmpSurface->blitNShade(surface, screenPosition.x, screenPosition.y, 0);
 							}
 							if (_save->getBattleGame()->getCurrentAction()->type == BA_LAUNCH)
