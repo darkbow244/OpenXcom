@@ -198,6 +198,10 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 
 	_btnLaunch = dynamic_cast<InteractiveSurface*>(_bUI["btnLaunch"]);
 	_btnPsi = dynamic_cast<InteractiveSurface*>(_bUI["btnPsi"]);
+	_btnLaunch->onMousePress((ActionHandler)&BattlescapeState::consumeEvent);
+	_btnLaunch->onMouseRelease((ActionHandler)&BattlescapeState::consumeEvent);
+	_btnPsi->onMousePress((ActionHandler)&BattlescapeState::consumeEvent);
+	_btnPsi->onMouseRelease((ActionHandler)&BattlescapeState::consumeEvent);
 
 	_btnReserveNone = dynamic_cast<ImageButton*>(_bUI["btnReserveNone"]);
 	_btnReserveSnap = dynamic_cast<ImageButton*>(_bUI["btnReserveSnap"]);
@@ -272,6 +276,8 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 	for (int i = 0; i < VISIBLE_MAX; ++i)
 	{
 		std::ostringstream tooltip;
+		_btnVisibleUnit[i]->onMousePress((ActionHandler)&BattlescapeState::consumeEvent);
+		_btnVisibleUnit[i]->onMouseRelease((ActionHandler)&BattlescapeState::consumeEvent);
 		_btnVisibleUnit[i]->onMouseClick((ActionHandler)&BattlescapeState::btnVisibleUnitClick);
 		_btnVisibleUnit[i]->onKeyboardPress((ActionHandler)&BattlescapeState::btnVisibleUnitClick, buttons[i]);
 		tooltip << "STR_CENTER_ON_ENEMY_" << (i+1);
@@ -2241,5 +2247,11 @@ void BattlescapeState::stopScrolling(Action *action)
 	// reset our "mouse position stored" flag
 	_cursorPosition.z = 0;
 }
+
+void BattlescapeState::consumeEvent(Action *action)
+{
+	action->getDetails()->type = SDL_FIRSTEVENT;
+}
+
 
 }

@@ -274,6 +274,8 @@ public:
 	bool hasScrolled() const;
 	/// Move the mouse back to where it started after we finish drag scrolling.
 	void stopScrolling(Action *action);
+	/// Don't do anything and consume the event.
+	void consumeEvent(Action *action);
 };
 
 }
