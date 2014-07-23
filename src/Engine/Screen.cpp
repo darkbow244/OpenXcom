@@ -360,6 +360,10 @@ void Screen::resetDisplay(bool resetVideo)
 		if (_window == NULL)
 		{
 			Log(LOG_INFO) << "Attempting to create a new window since we have none yet";
+			// Try fixing the Samsung devices - see https://bugzilla.libsdl.org/show_bug.cgi?id=2291
+#ifdef __ANDROID__
+			SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
+#endif
 			_window = SDL_CreateWindow("OpenXcom",
 						   SDL_WINDOWPOS_UNDEFINED,
 						   SDL_WINDOWPOS_UNDEFINED,
