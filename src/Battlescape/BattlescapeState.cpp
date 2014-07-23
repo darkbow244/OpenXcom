@@ -258,8 +258,11 @@ BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScro
 	_map->init();
 	_map->onMouseOver((ActionHandler)&BattlescapeState::mapOver);
 	_map->onMousePress((ActionHandler)&BattlescapeState::mapPress);
+	_map->onMouseRelease((ActionHandler)&BattlescapeState::mapRelease);
 	_map->onMouseClick((ActionHandler)&BattlescapeState::mapClick, 0);
 	_map->onMouseIn((ActionHandler)&BattlescapeState::mapIn);
+	_map->onMultiGesture((ActionHandler)&BattlescapeState::multiGesture);
+	_map->onFingerMotion((ActionHandler)&BattlescapeState::fingerMotion);
 
 	SDL_Keycode buttons[] = {Options::keyBattleCenterEnemy1,
 						Options::keyBattleCenterEnemy2,
