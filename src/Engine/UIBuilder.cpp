@@ -9,6 +9,7 @@
 #include "../Interface/ImageButton.h"
 #include "../Interface/NumberText.h"
 #include "../Interface/Bar.h"
+#include "../Interface/Text.h"
 #include <vector>
 #include <algorithm>
 #include "Logger.h"
@@ -85,16 +86,13 @@ namespace UIBuilder
 		absX += node["relX"].as<int>();
 		absY += node["relY"].as<int>();
 		out->setX(absX); out->setY(absY);
-		if (node["hidden"])
-		{
-			bool hidden = node["hidden"].as<bool>();
-			out->setHidden(hidden);
-		}
-		if (node["visible"])
-		{
-			bool visible = node["visible"].as<bool>();
-			out->setVisible(visible);
-		}
+		
+		bool hidden = node["hidden"].as<bool>(false);
+		out->setHidden(hidden);
+		
+		bool visible = node["visible"].as<bool>(true);
+		out->setVisible(visible);
+
 		// Always set a palette for the surfaces!
 		out->setPalette(_currentState->getPalette());
 		// A surface might be cropped; we must handle this too.
@@ -154,13 +152,8 @@ namespace UIBuilder
 		}
 
 		// Finally, some surfaces are actually helpful! We just need to load the tooltip.
-		if (node["tooltip"])
-		{
-			std::string tooltip = node["tooltip"].as<std::string>();
-			out->setTooltip(tooltip);
-		}
-
-
+		std::string tooltip = node["tooltip"].as<std::string>("");
+		out->setTooltip(tooltip);
 	}
 	/**
 	 * Set handlers for InteractiveSurface or InteractiveSurface-derived
@@ -174,68 +167,48 @@ namespace UIBuilder
 		// that set handlers for the interactive surfaces.
 		std::string hndlName;
 		std::string keyName;
-		if(node["onMouseClick"])
-		{
-			hndlName = node["onMouseClick"].as<std::string>();
-			Uint8 button = SDL_BUTTON_LEFT;
-			if(node["mouseClickRight"])
-			{
-				button = SDL_BUTTON_RIGHT;
-			}
-			out->onMouseClick(_handlers[hndlName], button);
-		}
-		if(node["onMousePress"])
-		{
-			hndlName = node["onMousePress"].as<std::string>();
-			out->onMousePress(_handlers[hndlName]);
-		}
-		if(node["onMouseRelease"])
-		{
-			hndlName = node["onMouseRelease"].as<std::string>();
-			out->onMouseRelease(_handlers[hndlName]);
-		}
-		if(node["onMouseIn"])
-		{
-			hndlName = node["onMouseIn"].as<std::string>();
-			out->onMouseIn(_handlers[hndlName]);
-		}
-		if(node["onMouseOver"])
-		{
-			hndlName = node["onMouseOver"].as<std::string>();
-			out->onMouseOver(_handlers[hndlName]);
-		}
-		if(node["onMouseOut"])
-		{
-			hndlName = node["onMouseOut"].as<std::string>();
-			out->onMouseOut(_handlers[hndlName]);
-		}
-		if(node["onKeyboardPress"])
-		{
-			hndlName = node["onKeyboardPress"].as<std::string>();
-			if (node["keyKeyboardPress"])
-			{
-				keyName = node["keyKeyboardPress"].as<std::string>();
-				out->onKeyboardPress(_handlers[hndlName], _kbShortcuts[keyName]);
-			}
-			else
-			{
-				out->onKeyboardPress(_handlers[hndlName]);
-			}
-		}
-		if(node["onKeyboardRelease"])
-		{
-			hndlName = node["onKeyboardRelease"].as<std::string>();
-			if (node["keyKeyboardRelease"])
-			{
-				keyName = node["keyKeyboardRelease"].as<std::string>();
-				out->onKeyboardRelease(_handlers[hndlName], _kbShortcuts[keyName]);
-			}
-			else
-			{
-				out->onKeyboardRelease(_handlers[hndlName]);
-			}
-		}
+		hndlName = node["onMouseClick"].as<std::string>("");
+		out->onMouseClick(_handlers[hndlName], SDL_BUTTON_LEFT);
 
+		hndlName = node["onMouseRightClick"].as<std::string>("");
+		out->onMouseClick(_handlers[hndlName], SDL_BUTTON_RIGHT);
+
+		hndlName = node["onMousePress"].as<std::string>("");
+		out->onMousePress(_handlers[hndlName]);
+
+		hndlName = node["onMouseRelease"].as<std::string>("");
+		out->onMouseRelease(_handlers[hndlName]);
+		
+		hndlName = node["onMouseIn"].as<std::string>("");
+		out->onMouseIn(_handlers[hndlName]);
+		
+		hndlName = node["onMouseOver"].as<std::string>("");
+		out->onMouseOver(_handlers[hndlName]);
+
+		hndlName = node["onMouseOut"].as<std::string>("");
+		out->onMouseOut(_handlers[hndlName]);
+
+		hndlName = node["onKeyboardPress"].as<std::string>("");
+		if (node["keyKeyboardPress"])
+		{
+			keyName = node["keyKeyboardPress"].as<std::string>();
+			out->onKeyboardPress(_handlers[hndlName], _kbShortcuts[keyName]);
+		}
+		else
+		{
+			out->onKeyboardPress(_handlers[hndlName]);
+		}
+		
+		hndlName = node["onKeyboardRelease"].as<std::string>("");
+		if (node["keyKeyboardRelease"])
+		{
+			keyName = node["keyKeyboardRelease"].as<std::string>();
+			out->onKeyboardRelease(_handlers[hndlName], _kbShortcuts[keyName]);
+		}
+		else
+		{
+			out->onKeyboardRelease(_handlers[hndlName]);
+		}
 	}
 
 	/**
@@ -290,8 +263,8 @@ namespace UIBuilder
 		}
 		// The image button needs a color from the palette.
 		const YAML::Node color = ibtnNode["palColor"];
-		int blockOffset = color["blockOffset"].as<int>();
-		int colorOffset = color["colorOffset"].as<int>();
+		int blockOffset = color["blockOffset"].as<int>(0);
+		int colorOffset = color["colorOffset"].as<int>(0);
 		out->setColor(Palette::blockOffset(blockOffset) + colorOffset);
 		return out;
 	}
@@ -310,10 +283,10 @@ namespace UIBuilder
 		setCommonParams(ntxtNode, out);
 
 		const YAML::Node &color = ntxtNode["palColor"];
-		int blockOffset = color["blockOffset"].as<int>();
-		int colorOffset = color["colorOffset"].as<int>();
+		int blockOffset = color["blockOffset"].as<int>(0);
+		int colorOffset = color["colorOffset"].as<int>(0);
 
-		unsigned int value = ntxtNode["value"].as<unsigned int>();
+		unsigned int value = ntxtNode["value"].as<unsigned int>(0);
 
 		out->setColor(Palette::blockOffset(blockOffset) + colorOffset);
 		out->setValue(value);
@@ -336,20 +309,38 @@ namespace UIBuilder
 		// Load the bar's colors
 		const YAML::Node &color1 = barNode["palColor"];
 		
-		int blockOffset1 = color1["blockOffset"].as<int>();
-		int colorOffset1 = color1["colorOffset"].as<int>();
+		int blockOffset1 = color1["blockOffset"].as<int>(0);
+		int colorOffset1 = color1["colorOffset"].as<int>(0);
 		out->setColor(Palette::blockOffset(blockOffset1) + colorOffset1);
 		if (barNode["palColor2"])
 		{
 			const YAML::Node &color2 = barNode["palColor2"];
-			int blockOffset2 = color2["blockOffset"].as<int>();
-			int colorOffset2 = color2["colorOffset"].as<int>();
+			int blockOffset2 = color2["blockOffset"].as<int>(0);
+			int colorOffset2 = color2["colorOffset"].as<int>(0);
 			out->setColor2(Palette::blockOffset(blockOffset2) + colorOffset2);
 		}
 		
 		// Load the bar's scale
 		double scale = barNode["scale"].as<double>();
 		out->setScale(scale);
+
+		return out;
+	}
+
+	static inline Text* createText(const YAML::Node &txtNode)
+	{
+		int width = txtNode["width"].as<int>();
+		int height = txtNode["height"].as<int>();
+		Text *out = new Text(width, height);
+		setCommonParams(txtNode, out);
+
+		const YAML::Node &color = txtNode["palColor"];
+		int blockOffset = color["blockOffset"].as<int>(0);
+		int colorOffset = color["colorOffset"].as<int>(0);
+		out->setColor(Palette::blockOffset(blockOffset) + colorOffset);
+
+		bool highContrast = txtNode["highContrast"].as<bool>(false);
+		out->setHighContrast(highContrast);
 
 		return out;
 	}
@@ -425,6 +416,10 @@ namespace UIBuilder
 			else if (typeString == "Bar")
 			{
 				sfc = createBar(*i);
+			}
+			else if (typeString == "Text")
+			{
+				sfc = createText(*i);
 			}
 
 			out[elementName] = sfc;
