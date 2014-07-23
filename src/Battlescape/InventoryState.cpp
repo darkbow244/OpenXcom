@@ -53,9 +53,8 @@ namespace OpenXcom
 {
 
 static const int _templateBtnX = 288;
-static const int _createTemplateBtnY = 67;
-static const int _applyTemplateBtnY  = 90;
-static const int _clearInventoryBtnY  = 113;
+static const int _createTemplateBtnY = 90;
+static const int _applyTemplateBtnY  = 113;
 
 /**
  * Initializes all the elements in the Inventory screen.
@@ -99,7 +98,6 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent) : _tu(tu), _pa
 	_btnRank = new InteractiveSurface(26, 23, 0, 0);
 	_btnCreateTemplate = new InteractiveSurface(32, 22, _templateBtnX, _createTemplateBtnY);
 	_btnApplyTemplate = new InteractiveSurface(32, 22, _templateBtnX, _applyTemplateBtnY);
-	_btnClearInventory = new InteractiveSurface(32, 22, _templateBtnX, _clearInventoryBtnY);
 	_selAmmo = new Surface(RuleInventory::HAND_W * RuleInventory::SLOT_W, RuleInventory::HAND_H * RuleInventory::SLOT_H, 272, 88);
 	_inv = new Inventory(_game, 320, 200, 0, 0, _parent == 0);
 
@@ -125,7 +123,6 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent) : _tu(tu), _pa
 	add(_btnRank);
 	add(_btnCreateTemplate);
 	add(_btnApplyTemplate);
-	add(_btnClearInventory);
 	add(_selAmmo);
 	add(_inv);
 
@@ -212,15 +209,10 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent) : _tu(tu), _pa
 
 	_btnApplyTemplate->onMouseClick((ActionHandler)&InventoryState::btnApplyTemplateClick);
 	_btnApplyTemplate->onKeyboardPress((ActionHandler)&InventoryState::btnApplyTemplateClick, Options::keyInvApplyTemplate);
+	_btnApplyTemplate->onKeyboardPress((ActionHandler)&InventoryState::onClearInventory, Options::keyInvClear);
 	_btnApplyTemplate->setTooltip("STR_APPLY_INVENTORY_TEMPLATE");
 	_btnApplyTemplate->onMouseIn((ActionHandler)&InventoryState::txtTooltipIn);
 	_btnApplyTemplate->onMouseOut((ActionHandler)&InventoryState::txtTooltipOut);
-
-	_btnClearInventory->onMouseClick((ActionHandler)&InventoryState::btnClearInventoryClick);
-	_btnClearInventory->onKeyboardPress((ActionHandler)&InventoryState::btnClearInventoryClick, Options::keyInvClear);
-	_btnClearInventory->setTooltip("STR_CLEAR_INVENTORY");
-	_btnClearInventory->onMouseIn((ActionHandler)&InventoryState::txtTooltipIn);
-	_btnClearInventory->onMouseOut((ActionHandler)&InventoryState::txtTooltipOut);
 
 
 	// only use copy/paste buttons in setup (i.e. non-tu) mode
@@ -228,7 +220,6 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent) : _tu(tu), _pa
 	{
 		_btnCreateTemplate->setVisible(false);
 		_btnApplyTemplate->setVisible(false);
-		_btnClearInventory->setVisible(false);
 	}
 	else
 	{
@@ -483,6 +474,17 @@ void InventoryState::btnOkClick(Action *)
 				_battleGame->setSelectedUnit(inventoryTile->getUnit());
 			}
 		}
+
+		// initialize xcom units for battle
+		for (std::vector<BattleUnit*>::iterator j = _battleGame->getUnits()->begin(); j != _battleGame->getUnits()->end(); ++j)
+		{
+			if ((*j)->getOriginalFaction() != FACTION_PLAYER || (*j)->isOut())
+			{
+				continue;
+			}
+
+			(*j)->prepareNewTurn();
+		}
 	}
 }
 
@@ -600,6 +602,7 @@ void InventoryState::btnCreateTemplateClick(Action *action)
 
 	// give audio feedback
 	_game->getResourcePack()->getSound("BATTLE.CAT", 38)->play();
+	_refreshMouse();
 }
 
 static void _clearInventory(Game *game, std::vector<BattleItem*> *unitInv, Tile *groundTile)
@@ -617,16 +620,19 @@ static void _clearInventory(Game *game, std::vector<BattleItem*> *unitInv, Tile 
 
 void InventoryState::btnApplyTemplateClick(Action *action)
 {
-	// don't accept clicks when moving items or when the template is empty
-	if (_inv->getSelectedItem() != 0 || _curInventoryTemplate.empty())
+	// don't accept clicks when moving items
+	// it's ok if the template is empty -- it will just result in clearing the
+	// unit's inventory
+	if (_inv->getSelectedItem() != 0)
 	{
 		return;
 	}
 
-	BattleUnit               *unit       = _battleGame->getSelectedUnit();
-	std::vector<BattleItem*> *unitInv    = unit->getInventory();
-	Tile                     *groundTile = unit->getTile();
-	std::vector<BattleItem*> *groundInv  = groundTile->getInventory();
+	BattleUnit               *unit          = _battleGame->getSelectedUnit();
+	std::vector<BattleItem*> *unitInv       = unit->getInventory();
+	Tile                     *groundTile    = unit->getTile();
+	std::vector<BattleItem*> *groundInv     = groundTile->getInventory();
+	RuleInventory            *groundRuleInv = _game->getRuleset()->getInventory("STR_GROUND");
 
 	_clearInventory(_game, unitInv, groundTile);
 
@@ -680,6 +686,7 @@ void InventoryState::btnApplyTemplateClick(Action *action)
 					(*groundItem)->setSlot(_game->getRuleset()->getInventory((*templateIt)->getSlot()));
 					(*groundItem)->setSlotX((*templateIt)->getSlotX());
 					(*groundItem)->setSlotY((*templateIt)->getSlotY());
+					(*groundItem)->setFuseTimer((*templateIt)->getFuseTimer());
 					unitInv->push_back(*groundItem);
 					groundInv->erase(groundItem);
 					found = true;
@@ -691,8 +698,6 @@ void InventoryState::btnApplyTemplateClick(Action *action)
 			// the right weapon, unload the target weapon, load the right ammo, and use it
 			if (!found && matchedWeapon && (!needsAmmo || matchedAmmo))
 			{
-				RuleInventory *groundRuleInv = _game->getRuleset()->getInventory("STR_GROUND");
-
 				// unload the existing ammo (if any) from the weapon
 				BattleItem *loadedAmmo = matchedWeapon->getAmmoItem();
 				if (loadedAmmo)
@@ -744,7 +749,7 @@ void InventoryState::_refreshMouse()
 	SDL_WarpMouseInWindow(NULL, x, y);
 }
 
-void InventoryState::btnClearInventoryClick(Action *action)
+void InventoryState::onClearInventory(Action *action)
 {
 	// don't accept clicks when moving items
 	if (_inv->getSelectedItem() != 0)
@@ -919,8 +924,6 @@ void InventoryState::_updateTemplateButtons(bool isVisible)
 {
 	if (isVisible)
 	{
-		_game->getResourcePack()->getSurface("InvClear")->blit(_btnClearInventory);
-
 		if (_curInventoryTemplate.empty())
 		{
 			// use "empty template" icons
@@ -938,7 +941,6 @@ void InventoryState::_updateTemplateButtons(bool isVisible)
 	{
 		_btnCreateTemplate->clear();
 		_btnApplyTemplate->clear();
-		_btnClearInventory->clear();
 	}
 }
 }
