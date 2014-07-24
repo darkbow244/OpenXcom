@@ -14,7 +14,7 @@ SDL_IMAGE_PATH := ../SDL2_image
 
 SDL_MIXER_PATH := ../SDL2_mixer
 
-YAMLCPP_PATH := ../yamlcpp
+YAMLCPP_PATH := ../yaml-cpp
 
 BOOST_PATH := ../boost
 
@@ -62,8 +62,8 @@ LOCAL_EXPORT_LDLIBS := -lSDL2
 
 # yaml-cpp
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(YAMLCPP_PATH)/include \
-					$(LOCAL_PATH)/$(BOOST_PATH)/include/boost-1_53
-LOCAL_CPP_INCLUDES += $(LOCAL_PATH)/$(BOOST_PATH)/include/boost-1_53
+					$(LOCAL_PATH)/$(BOOST_PATH)
+LOCAL_CPP_INCLUDES += $(LOCAL_PATH)/$(BOOST_PATH)
 
 LOCAL_SRC_FILES += \
 	$(subst $(LOCAL_PATH)/,, \
