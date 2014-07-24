@@ -1,0 +1,15 @@
+[submodule "android/jni/SDL"]
+	path = android/jni/SDL
+	url = https://github.com/sfalexrog/SDL.git
+[submodule "android/jni/SDL2_image"]
+	path = android/jni/SDL2_image
+	url = https://github.com/sfalexrog/SDL2_image.git
+[submodule "android/jni/SDL2_mixer"]
+	path = android/jni/SDL2_mixer
+	url = https://github.com/sfalexrog/SDL2_mixer.git
+[submodule "android/jni/SDL_gfx"]
+	path = android/jni/SDL_gfx
+	url = https://github.com/sfalexrog/SDL_gfx.git
+[submodule "android/jni/yaml-cpp"]
+	path = android/jni/yaml-cpp
+	url = https://github.com/sfalexrog/yaml-cpp.git
