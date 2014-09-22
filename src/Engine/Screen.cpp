@@ -204,7 +204,6 @@ void Screen::flip()
  */
 void Screen::clear()
 {
-	
 	_surface->clear();
 
 #if 0
@@ -584,7 +583,7 @@ void Screen::screenshot(const std::string &filename) const
 #if 0
 	SDL_Surface *screenshot = SDL_CreateRGBSurface(0, getWidth(), getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
 	SDL_Surface *screenshot = SDL_AllocSurface(0, getWidth() - getWidth()%4, getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
-
+	
 	if (isOpenGLEnabled())
 	{
 #ifndef __NO_OPENGL
@@ -614,26 +613,21 @@ void Screen::screenshot(const std::string &filename) const
 
 
 /** 
- * Check whether useHQXFilter is set in Options and a compatible resolution
- * has been selected.
- * @return if it is enabled.
+ * Check whether a 32bpp scaler has been selected.
+ * @return if it is enabled with a compatible resolution.
  */
-bool Screen::isHQXEnabled()
+bool Screen::is32bitEnabled()
 {
 	int w = Options::displayWidth;
 	int h = Options::displayHeight;
 	int baseW = Options::baseXResolution;
 	int baseH = Options::baseYResolution;
 
-	if (Options::useHQXFilter && (
-		(w == baseW * 2 && h == baseH * 2) || 
-		(w == baseW * 3 && h == baseH * 3) || 
-		(w == baseW * 4 && h == baseH * 4)))
-	{
-		return true;
-	}
-
-	return false;
+	return ((Options::useHQXFilter || Options::useXBRZFilter) && (
+			(w == baseW * 2 && h == baseH * 2) ||
+			(w == baseW * 3 && h == baseH * 3) ||
+			(w == baseW * 4 && h == baseH * 4) ||
+			(w == baseW * 5 && h == baseH * 5 && Options::useXBRZFilter)));
 }
 
 /**

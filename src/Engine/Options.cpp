@@ -87,6 +87,7 @@ void create()
 	_info.push_back(OptionInfo("battlescapeScale", &battlescapeScale, 0));
 	_info.push_back(OptionInfo("useScaleFilter", &useScaleFilter, false));
 	_info.push_back(OptionInfo("useHQXFilter", &useHQXFilter, false));
+	_info.push_back(OptionInfo("useXBRZFilter", &useXBRZFilter, false));
 	_info.push_back(OptionInfo("useOpenGL", &useOpenGL, false));
 	_info.push_back(OptionInfo("checkOpenGLErrors", &checkOpenGLErrors, false));
 	_info.push_back(OptionInfo("useOpenGLShader", &useOpenGLShader, "Shaders/Openxcom.OpenGL.shader"));
@@ -159,9 +160,6 @@ void create()
 	_info.push_back(OptionInfo("useAnisotropicScaler", &useAnisotropicScaler, false));	
 	
 
-
-	
-	
 	// advanced options
 	_info.push_back(OptionInfo("playIntro", &playIntro, true, "STR_PLAYINTRO", "STR_GENERAL"));
 	_info.push_back(OptionInfo("autosave", &autosave, true, "STR_AUTOSAVE", "STR_GENERAL"));
@@ -680,6 +678,7 @@ void backupDisplay()
 	Options::newScaleFilter = Options::useScaleFilter;
 	Options::newHQXFilter = Options::useHQXFilter;
 	Options::newOpenGLShader = Options::useOpenGLShader;
+	Options::newXBRZFilter = Options::useXBRZFilter;
 	Options::newNearestScaler = Options::useNearestScaler;
 	Options::newLinearScaler = Options::useLinearScaler;
 	Options::newAnisotropicScaler = Options::useAnisotropicScaler;
@@ -699,6 +698,7 @@ void switchDisplay()
 	std::swap(geoscapeScale, newGeoscapeScale);
 	std::swap(useHQXFilter, newHQXFilter);
 	std::swap(useOpenGLShader, newOpenGLShader);
+	std::swap(useXBRZFilter, newXBRZFilter);
 	std::swap(useNearestScaler, newNearestScaler);
 	std::swap(useLinearScaler, newLinearScaler);
 	std::swap(useAnisotropicScaler, newAnisotropicScaler);

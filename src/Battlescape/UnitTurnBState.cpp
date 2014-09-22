@@ -56,6 +56,11 @@ UnitTurnBState::~UnitTurnBState()
 void UnitTurnBState::init()
 {
 	_unit = _action.actor;
+	if (_unit->isOut())
+	{
+		_parent->popState();
+		return;
+	}
 	_action.TU = 0;
 	if (_unit->getFaction() == FACTION_PLAYER)
 		_parent->setStateInterval(Options::battleXcomSpeed);
@@ -75,11 +80,11 @@ void UnitTurnBState::init()
 			int door = _parent->getTileEngine()->unitOpensDoor(_unit, true);
 			if (door == 0)
 			{
-				_parent->getResourcePack()->getSound("BATTLE.CAT", 3)->play(); // normal door
+				_parent->getResourcePack()->getSoundByDepth(_parent->getDepth(), ResourcePack::DOOR_OPEN)->play(-1, _parent->getMap()->getSoundAngle(_unit->getPosition())); // normal door
 			}
 			if (door == 1)
 			{
-				_parent->getResourcePack()->getSound("BATTLE.CAT", RNG::generate(20,21))->play(); // ufo door
+				_parent->getResourcePack()->getSoundByDepth(_parent->getDepth(), ResourcePack::SLIDING_DOOR_OPEN)->play(-1, _parent->getMap()->getSoundAngle(_unit->getPosition())); // ufo door
 			}
 			if (door == 4)
 			{

@@ -31,6 +31,7 @@ namespace OpenXcom
 class ResourcePack;
 class SavedBattleGame;
 class Surface;
+class SurfaceSet;
 class BattleUnit;
 class Projectile;
 class Explosion;
@@ -70,10 +71,11 @@ private:
 	bool _unitDying, _smoothCamera, _smoothingEngaged;
 	PathPreview _previewSetting;
 	Text *_txtAccuracy;
+	SurfaceSet *_projectileSet;
 
 	void drawTerrain(Surface *surface);
 	int getTerrainLevel(Position pos, int size);
-	int _iconHeight, _iconWidth;
+	int _iconHeight, _iconWidth, _messageColor;
 public:
 	/// Creates a new map at the specified position and size.
 	Map(Game* game, int width, int height, int x, int y, int visibleMapHeight);
@@ -146,6 +148,10 @@ public:
 	const int getIconHeight();
 	/// Get the icon width.
 	const int getIconWidth();
+	/// Convert a map position to a sound angle.
+	const int getSoundAngle(Position pos);
+	/// Reset the camera smoothing bool.
+	void resetCameraSmoothing();
 };
 
 }

@@ -18,6 +18,7 @@
  */
 #define _USE_MATH_DEFINES
 #include "Base.h"
+#include "../fmath.h"
 #include <cmath>
 #include <stack>
 #include <algorithm>
@@ -139,11 +140,10 @@ void Base::load(const YAML::Node &node, SavedGame *save, bool newGame, bool newB
 		s->setCraft(0);
 		if (const YAML::Node &craft = (*i)["craft"])
 		{
-			std::string type = craft["type"].as<std::string>();
-			int id = craft["id"].as<int>();
+			CraftId craftId = Craft::loadId(craft);
 			for (std::vector<Craft*>::iterator j = _crafts.begin(); j != _crafts.end(); ++j)
 			{
-				if ((*j)->getRules()->getType() == type && (*j)->getId() == id)
+				if ((*j)->getUniqueId() == craftId)
 				{
 					s->setCraft(*j);
 					break;
@@ -283,6 +283,18 @@ std::wstring Base::getName(Language *) const
 void Base::setName(const std::wstring &name)
 {
 	_name = name;
+}
+
+/**
+ * Returns the globe marker for the base.
+ * @return Marker sprite, -1 if none.
+ */
+int Base::getMarker() const
+{
+	// Cheap hack to hide bases when they haven't been placed yet
+	if (AreSame(_lon, 0.0) && AreSame(_lat, 0.0))
+		return -1;
+	return 0;
 }
 
 /**
@@ -858,9 +870,12 @@ int Base::getDefenseValue() const
 int Base::getShortRangeDetection() const
 {
 	int total = 0;
+	int minRadarRange = _rule->getMinRadarRange();
+
+	if (minRadarRange == 0) return 0;
 	for (std::vector<BaseFacility*>::const_iterator i = _facilities.begin(); i != _facilities.end(); ++i)
 	{
-		if ((*i)->getBuildTime() == 0 && (*i)->getRules()->getRadarRange() > 0 && (*i)->getRules()->getRadarRange() <= 1700)
+		if ((*i)->getRules()->getRadarRange() == minRadarRange && (*i)->getBuildTime() == 0)
 		{
 			total++;
 		}
@@ -876,9 +891,11 @@ int Base::getShortRangeDetection() const
 int Base::getLongRangeDetection() const
 {
 	int total = 0;
+	int minRadarRange = _rule->getMinRadarRange();
+
 	for (std::vector<BaseFacility*>::const_iterator i = _facilities.begin(); i != _facilities.end(); ++i)
 	{
-		if ((*i)->getBuildTime() == 0 && (*i)->getRules()->getRadarRange() > 1700)
+		if ((*i)->getRules()->getRadarRange() > minRadarRange && (*i)->getBuildTime() == 0)
 		{
 			total++;
 		}

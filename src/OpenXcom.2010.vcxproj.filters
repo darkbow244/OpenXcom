@@ -865,6 +865,15 @@
     <ClCompile Include="Engine\Renderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Ruleset\Polyline.cpp">
+      <Filter>Ruleset</Filter>
+    </ClCompile>
+    <ClCompile Include="Ruleset\SoundDefinition.cpp">
+      <Filter>Ruleset</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Scalers\xbrz.cpp">
+      <Filter>Engine\Scalers</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\OpenGLRenderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -1118,12 +1127,6 @@
       <Filter>Geoscape</Filter>
     </ClInclude>
     <ClInclude Include="Geoscape\MultipleTargetsState.h">
-      <Filter>Geoscape</Filter>
-    </ClInclude>
-    <ClInclude Include="Geoscape\Polygon.h">
-      <Filter>Geoscape</Filter>
-    </ClInclude>
-    <ClInclude Include="Geoscape\Polyline.h">
       <Filter>Geoscape</Filter>
     </ClInclude>
     <ClInclude Include="Geoscape\SelectDestinationState.h">
@@ -1569,6 +1572,9 @@
     <ClInclude Include="Engine\Zoom.h">
       <Filter>Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Zoom.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\Scalers\scalebit.h">
       <Filter>Engine\Scalers</Filter>
     </ClInclude>
@@ -1589,6 +1595,9 @@
     </ClInclude>
     <ClInclude Include="Savegame\SerializationHelper.h">
       <Filter>Savegame</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\OpenGL.h">
+      <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Interface\ToggleTextButton.h">
       <Filter>Interface</Filter>
@@ -1742,21 +1751,6 @@
     </ClInclude>
     <ClInclude Include="Ruleset\RuleInterface.h">
       <Filter>Ruleset</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\UIBuilder.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\SDLRenderer.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Zoom.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Renderer.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\OpenGLRenderer.h">
-      <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -59,6 +59,7 @@ private:
 	Action *_longPressAction;
 	State *_longPressState;
 #endif
+	int _depth;
 	/// Moves an item to a specified slot.
 	void moveItem(BattleItem *item, RuleInventory *slot, int x, int y);
 	/// Gets the slot in the specified position.

@@ -248,6 +248,11 @@ DebriefingState::~DebriefingState()
 	{
 		delete *i;
 	}
+	for (std::map<int, RecoveryItem*>::iterator i = _recoveryStats.begin(); i != _recoveryStats.end(); ++i)
+	{
+		delete i->second;
+	}
+	_recoveryStats.clear();
 	_rounds.clear();
 }
 
@@ -366,6 +371,18 @@ void ClearAlienBase::operator()(AlienMission *am) const
  */
 void DebriefingState::prepareDebriefing()
 {
+
+	for (std::vector<std::string>::const_iterator i = _game->getRuleset()->getItemsList().begin(); i != _game->getRuleset()->getItemsList().end(); ++i)
+	{
+		if (_game->getRuleset()->getItem(*i)->getSpecialType() > 1)
+		{
+			RecoveryItem *item = new RecoveryItem();
+			item->name = *i;
+			item->value = _game->getRuleset()->getItem(*i)->getRecoveryPoints();
+			_recoveryStats[_game->getRuleset()->getItem(*i)->getSpecialType()] = item;
+		}
+	}
+
 	_stats.push_back(new DebriefingStat("STR_ALIENS_KILLED", false));
 	_stats.push_back(new DebriefingStat("STR_ALIEN_CORPSES_RECOVERED", false));
 	_stats.push_back(new DebriefingStat("STR_LIVE_ALIENS_RECOVERED", false));
@@ -379,15 +396,12 @@ void DebriefingState::prepareDebriefing()
 	_stats.push_back(new DebriefingStat("STR_XCOM_OPERATIVES_MISSING_IN_ACTION", false));
 	_stats.push_back(new DebriefingStat("STR_TANKS_DESTROYED", false));
 	_stats.push_back(new DebriefingStat("STR_XCOM_CRAFT_LOST", false));
-	_stats.push_back(new DebriefingStat("STR_UFO_POWER_SOURCE", true));
-	_stats.push_back(new DebriefingStat("STR_UFO_NAVIGATION", true));
-	_stats.push_back(new DebriefingStat("STR_UFO_CONSTRUCTION", true));
-	_stats.push_back(new DebriefingStat("STR_ALIEN_FOOD", true));
-	_stats.push_back(new DebriefingStat("STR_ALIEN_REPRODUCTION", true));
-	_stats.push_back(new DebriefingStat("STR_ALIEN_ENTERTAINMENT", true));
-	_stats.push_back(new DebriefingStat("STR_ALIEN_SURGERY", true));
-	_stats.push_back(new DebriefingStat("STR_EXAMINATION_ROOM", true));
-	_stats.push_back(new DebriefingStat("STR_ALIEN_ALLOYS", true));
+
+	for (std::map<int, RecoveryItem*>::const_iterator i = _recoveryStats.begin(); i != _recoveryStats.end(); ++i)
+	{
+		_stats.push_back(new DebriefingStat((*i).second->name, true));
+	}
+
 	_stats.push_back(new DebriefingStat(_game->getRuleset()->getAlienFuel(), true));
 
 	SavedGame *save = _game->getSavedGame();
@@ -719,13 +733,14 @@ void DebriefingState::prepareDebriefing()
 				{
 					corpseItem = _game->getRuleset()->getArmor(_game->getRuleset()->getUnit((*j)->getSpawnUnit())->getArmor())->getCorpseGeoscape();
 				}
-				// 10 points for recovery
-				addStat("STR_LIVE_ALIENS_RECOVERED", 1, 10);
+				if (base->getAvailableContainment())
+				{
+					// 10 points for recovery
+					addStat("STR_LIVE_ALIENS_RECOVERED", 1, 10);
+				}
 				RuleResearch *research = _game->getRuleset()->getResearch(type);
 				if (research != 0 && _game->getSavedGame()->isResearchAvailable(research, _game->getSavedGame()->getDiscoveredResearch(), _game->getRuleset()))
 				{
-					// more points if it's not researched
-					addStat("STR_LIVE_ALIENS_RECOVERED", 0, ((*j)->getValue() * 2) - 10);
 					if (base->getAvailableContainment() == 0)
 					{
 						_noContainment = true;
@@ -733,6 +748,8 @@ void DebriefingState::prepareDebriefing()
 					}
 					else
 					{
+						// more points if it's not researched
+						addStat("STR_LIVE_ALIENS_RECOVERED", 0, ((*j)->getValue() * 2) - 10);
 						base->getItems()->addItem(type, 1);
 						_manageContainment = base->getAvailableContainment() - (base->getUsedContainment() * _limitsEnforced) < 0;
 					}
@@ -825,32 +842,11 @@ void DebriefingState::prepareDebriefing()
 				{
 					if (battle->getTiles()[i]->getMapData(part))
 					{
-						switch (battle->getTiles()[i]->getMapData(part)->getSpecialType())
+						size_t specialType = battle->getTiles()[i]->getMapData(part)->getSpecialType();
+						if (_recoveryStats.find(specialType) != _recoveryStats.end())
 						{
-						case UFO_POWER_SOURCE:
-							addStat("STR_UFO_POWER_SOURCE", 1, 20); break;
-						case UFO_NAVIGATION:
-							addStat("STR_UFO_NAVIGATION", 1, 5); break;
-						case UFO_CONSTRUCTION:
-							addStat("STR_UFO_CONSTRUCTION", 1, 2); break;
-						case ALIEN_FOOD:
-							addStat("STR_ALIEN_FOOD", 1, 2); break;
-						case ALIEN_REPRODUCTION:
-							addStat("STR_ALIEN_REPRODUCTION", 1, 2); break;
-						case ALIEN_ENTERTAINMENT:
-							addStat("STR_ALIEN_ENTERTAINMENT", 1, 2); break;
-						case ALIEN_SURGERY:
-							addStat("STR_ALIEN_SURGERY", 1, 2); break;
-						case EXAM_ROOM:
-							addStat("STR_EXAMINATION_ROOM", 1, 2); break;
-						case ALIEN_ALLOYS:
-							addStat("STR_ALIEN_ALLOYS", 1, 1); break;
-						case ALIEN_HABITAT:
-							addStat("STR_ALIEN_HABITAT", 1, 1); break;
-						case MUST_DESTROY: break; // this is the brain
-						default: break;
+							addStat(_recoveryStats[specialType]->name, 1, _recoveryStats[specialType]->value);
 						}
-
 					}
 				}
 				// recover items from the floor
@@ -914,7 +910,7 @@ void DebriefingState::prepareDebriefing()
 		for (std::vector<DebriefingStat*>::iterator i = _stats.begin(); i != _stats.end(); ++i)
 		{
 			// alien alloys recovery values are divided by 10 or divided by 150 in case of an alien base
-			if ((*i)->item == "STR_ALIEN_ALLOYS")
+			if ((*i)->item == _recoveryStats[ALIEN_ALLOYS]->name)
 			{
 				(*i)->qty = (*i)->qty / aadivider;
 				(*i)->score = (*i)->score / aadivider;
@@ -1100,12 +1096,13 @@ void DebriefingState::recoverItems(std::vector<BattleItem*> *from, Base *base)
 				{
 					if ((*it)->getUnit()->getOriginalFaction() == FACTION_HOSTILE)
 					{
-						// 10 points for recovery
-						addStat("STR_LIVE_ALIENS_RECOVERED", 1, 10);
+						if (base->getAvailableContainment())
+						{
+							// 10 points for recovery
+							addStat("STR_LIVE_ALIENS_RECOVERED", 1, 10);
+						}
 						if (_game->getSavedGame()->isResearchAvailable(_game->getRuleset()->getResearch((*it)->getUnit()->getType()), _game->getSavedGame()->getDiscoveredResearch(), _game->getRuleset()))
 						{
-							// more points if it's not researched
-							addStat("STR_LIVE_ALIENS_RECOVERED", 0, ((*it)->getUnit()->getValue() * 2) - 10);
 							if (base->getAvailableContainment() == 0)
 							{
 								_noContainment = true;
@@ -1113,6 +1110,8 @@ void DebriefingState::recoverItems(std::vector<BattleItem*> *from, Base *base)
 							}
 							else
 							{
+								// more points if it's not researched
+								addStat("STR_LIVE_ALIENS_RECOVERED", 0, ((*it)->getUnit()->getValue() * 2) - 10);
 								base->getItems()->addItem((*it)->getUnit()->getType(), 1);
 								_manageContainment = (base->getAvailableContainment() - (base->getUsedContainment() * _limitsEnforced) < 0);
 							}

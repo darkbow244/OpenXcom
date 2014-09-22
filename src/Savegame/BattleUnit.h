@@ -112,6 +112,9 @@ private:
 	Unit *_unitRules;
 	int _rankInt;
 	int _turretType;
+	int _breathFrame;
+	bool _breathing;
+	bool _floorAbove;
 public:
 	static const int MAX_SOLDIER_ID = 1000000;
 	/// Creates a BattleUnit.
@@ -209,6 +212,7 @@ public:
 	bool isOut() const;
 	/// Get the number of time units a certain action takes.
 	int getActionTUs(BattleActionType actionType, BattleItem *item);
+	int getActionTUs(BattleActionType actionType, RuleItem *item);
 	/// Spend time units if it can.
 	bool spendTimeUnits(int tu);
 	/// Spend energy if it can.
@@ -421,6 +425,17 @@ public:
 	bool isSelectable(UnitFaction faction, bool checkReselect, bool checkInventory) const;
 	/// Does this unit have an inventory?
 	bool hasInventory() const;
+	/// Is this unit breathing and if so what frame?
+	int getBreathFrame() const;
+	/// Start breathing and/or update the breathing frame.
+	void breathe();
+	/// Set the flag for "floor above me" meaning stop rendering bubbles.
+	void setFloorAbove(bool floor);
+	/// Get the flag for "floor above me".
+	bool getFloorAbove();
+	/// Get the name of any melee weapon we may be carrying, or a built in one.
+	std::string getMeleeWeapon();
+
 };
 
 }

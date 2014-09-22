@@ -31,6 +31,7 @@ namespace OpenXcom
 class Surface;
 class Map;
 class ImageButton;
+class BattlescapeButton;
 class InteractiveSurface;
 class Text;
 class Bar;
@@ -48,16 +49,15 @@ class BattlescapeGame;
 class BattlescapeState : public State
 {
 private:
-	std::map<std::string, Surface*> _bUI;
+	//std::map<std::string, Surface*> _bUI;
 	Surface *_rank;
 	InteractiveSurface *_icons;
 	Map *_map;
-	InteractiveSurface *_btnUnitUp, *_btnUnitDown, *_btnMapUp, *_btnMapDown, *_btnShowMap, *_btnKneel;
-	InteractiveSurface *_btnInventory, *_btnCenter, *_btnNextSoldier, *_btnNextStop, *_btnShowLayers, *_btnHelp;
-	InteractiveSurface *_btnEndTurn, *_btnAbort, *_btnStats, *_btnLaunch, *_btnPsi;
-	//InteractiveSurface *_btnLaunch, *_btnPsi;
-	ImageButton *_reserve;
-	ImageButton *_btnReserveNone, *_btnReserveSnap, *_btnReserveAimed, *_btnReserveAuto, *_btnReserveKneel, *_btnZeroTUs;
+	BattlescapeButton *_btnUnitUp, *_btnUnitDown, *_btnMapUp, *_btnMapDown, *_btnShowMap, *_btnKneel;
+	BattlescapeButton *_btnInventory, *_btnCenter, *_btnNextSoldier, *_btnNextStop, *_btnShowLayers, *_btnHelp;
+	BattlescapeButton *_btnEndTurn, *_btnAbort, *_btnLaunch, *_btnPsi, *_reserve;
+	InteractiveSurface *_btnStats;
+	BattlescapeButton *_btnReserveNone, *_btnReserveSnap, *_btnReserveAimed, *_btnReserveAuto, *_btnReserveKneel, *_btnZeroTUs;
 	InteractiveSurface *_btnLeftHandItem, *_btnRightHandItem;
 	static const int VISIBLE_MAX = 10;
 	InteractiveSurface *_btnVisibleUnit[VISIBLE_MAX];
@@ -122,9 +122,9 @@ public:
 	void mapIn(Action *action);
 	void fingerMotion(Action *action);
 	void multiGesture(Action *action);
-#ifdef __ANDROID__
 	/// Handler for buttons
 	void mapKey(Action *action);
+#ifdef __ANDROID__
 	/// Handler for long presses
 	void mapLongPress();
 #endif
