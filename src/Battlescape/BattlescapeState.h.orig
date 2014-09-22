@@ -41,6 +41,7 @@ class BattleItem;
 class Timer;
 class WarningMessage;
 class BattlescapeGame;
+class Texture;
 
 /**
  * Battlescape screen which shows the tactical battle.
@@ -48,14 +49,12 @@ class BattlescapeGame;
 class BattlescapeState : public State
 {
 private:
-	std::map<std::string, Surface*> _bUI;
 	Surface *_rank;
 	InteractiveSurface *_icons;
 	Map *_map;
 	InteractiveSurface *_btnUnitUp, *_btnUnitDown, *_btnMapUp, *_btnMapDown, *_btnShowMap, *_btnKneel;
 	InteractiveSurface *_btnInventory, *_btnCenter, *_btnNextSoldier, *_btnNextStop, *_btnShowLayers, *_btnHelp;
 	InteractiveSurface *_btnEndTurn, *_btnAbort, *_btnStats, *_btnLaunch, *_btnPsi;
-	//InteractiveSurface *_btnLaunch, *_btnPsi;
 	ImageButton *_reserve;
 	ImageButton *_btnReserveNone, *_btnReserveSnap, *_btnReserveAimed, *_btnReserveAuto, *_btnReserveKneel, *_btnZeroTUs;
 	InteractiveSurface *_btnLeftHandItem, *_btnRightHandItem;
@@ -85,7 +84,6 @@ private:
 	Position _cursorPosition;
 	bool _hasScrolled;
 	bool _swipeFromSoldier;
-	bool _multiGestureProcess;
 	/// Popups a context sensitive list of actions the user can choose from.
 	void handleItemClick(BattleItem *item);
 	/// Shifts the red colors of the visible unit buttons backgrounds.
@@ -93,9 +91,13 @@ private:
 #ifdef __ANDROID__
 	// Scalers for touchscreen
 	float _mouseXScale, _mouseYScale;
-	Surface *_leftWpnActive, *_rightWpnActive;
+	Texture *_overlay;
+<<<<<<< HEAD
 	// Timer for long-tapping the screen
 	Timer *_longPressTimer;
+=======
+	Surface *_leftWpnActive, *_rightWpnActive;
+>>>>>>> android_wpn_highlight
 #endif
 public:
 	/// Selects the next soldier.
@@ -104,7 +106,7 @@ public:
 	void selectPreviousPlayerUnit(bool checkReselect = false, bool setReselect = false, bool checkInventory = false);
 	static const int DEFAULT_ANIM_SPEED = 100;
 	/// Creates the Battlescape state.
-	BattlescapeState();
+	BattlescapeState(Game *game);
 	/// Cleans up the Battlescape state.
 	~BattlescapeState();
 	/// Initilizes the battlescapestate.
@@ -121,7 +123,6 @@ public:
 	/// Handler for entering with mouse to the map surface.
 	void mapIn(Action *action);
 	void fingerMotion(Action *action);
-	void multiGesture(Action *action);
 #ifdef __ANDROID__
 	/// Handler for buttons
 	void mapKey(Action *action);
@@ -236,8 +237,6 @@ public:
 	bool hasScrolled() const;
 	/// Move the mouse back to where it started after we finish drag scrolling.
 	void stopScrolling(Action *action);
-	/// Don't do anything and consume the event.
-	void consumeEvent(Action *action);
 };
 
 }

@@ -1,0 +1,10 @@
+--- src/Battlescape/BattlescapeState.h
++++ src/Battlescape/BattlescapeState.h
+@@ -57,6 +57,7 @@
+ ImageButton *_reserve;
+ ImageButton *_btnReserveNone, *_btnReserveSnap, *_btnReserveAimed, *_btnReserveAuto, *_btnReserveKneel, *_btnZeroTUs;
+ InteractiveSurface *_btnLeftHandItem, *_btnRightHandItem;
++ Bar *_barRightActiveItem, *_barLeftActiveItem;
+ static const int VISIBLE_MAX = 10;
+ InteractiveSurface *_btnVisibleUnit[VISIBLE_MAX];
+ 
