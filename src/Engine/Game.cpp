@@ -304,7 +304,9 @@ void Game::run()
 							// it won't tell the new width and height.
 							// New width is in data1, new height is in data2.
 							// Otherwise the code is carbon-copied from SDL1.2 resize code.
-							if (Options::allowResize)
+
+							// Okay, if you got this event, this probably means that your window IS resizable.
+							//if (Options::allowResize)
 							{
 								Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, _event.window.data1);
 								Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, _event.window.data2);
