@@ -218,4 +218,22 @@ void BattlescapeButton::blit(Surface *surface)
 		Surface::blit(surface);
 	}
 }
+
+void BattlescapeButton::setX(int x)
+{
+	if (_altSurface)
+	{
+		_altSurface->setX(x);
+	}
+	Surface::setX(x);
+}
+
+void BattlescapeButton::setY(int y)
+{
+	if (_altSurface)
+	{
+		_altSurface->setY(y);
+	}
+	Surface::setY(y);
+}
 }

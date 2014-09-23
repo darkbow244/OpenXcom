@@ -68,6 +68,8 @@ public:
 	void initSurfaces();
 	/// Blits this surface onto another one.
 	void blit(Surface *surface);
+	void setX(int x);
+	void setY(int y);
 
 };
 
