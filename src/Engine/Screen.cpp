@@ -49,6 +49,11 @@ const int Screen::ORIGINAL_HEIGHT = 200;
 void Screen::makeVideoFlags()
 {
 	_flags = SDL_WINDOW_OPENGL;
+	if (Options::allowResize)
+	{
+		_flags |= SDL_WINDOW_RESIZABLE;
+	}
+
 #if 0
 	if (Options::asyncBlit)
 	{
@@ -63,29 +68,6 @@ void Screen::makeVideoFlags()
 		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	}
-	if (Options::allowResize)
-	{
-		_flags |= SDL_RESIZABLE;
-	}
-	
-	// Handle window positioning
-	if (Options::windowedModePositionX != -1 || Options::windowedModePositionY != -1)
-	{
-		std::ostringstream ss;
-		ss << "SDL_VIDEO_WINDOW_POS=" << std::dec << Options::windowedModePositionX << "," << Options::windowedModePositionY;
-		SDL_putenv(const_cast<char*>(ss.str().c_str()));
-		SDL_putenv(const_cast<char*>("SDL_VIDEO_CENTERED="));
-	}
-	else if (Options::borderless)
-	{
-		SDL_putenv(const_cast<char*>("SDL_VIDEO_WINDOW_POS="));
-		SDL_putenv(const_cast<char*>("SDL_VIDEO_CENTERED=center"));
-	}
-	else
-	{
-		SDL_putenv(const_cast<char*>("SDL_VIDEO_WINDOW_POS="));
-		SDL_putenv(const_cast<char*>("SDL_VIDEO_CENTERED="));
-	}
 #endif
 
 	// Handle display mode
@@ -94,17 +76,10 @@ void Screen::makeVideoFlags()
 		_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 
-#if 0
 	if (Options::borderless)
 	{
-		_flags |= SDL_NOFRAME;
-		SDL_putenv(const_cast<char*>("SDL_VIDEO_CENTERED=center"));
+		_flags |= SDL_WINDOW_BORDERLESS;
 	}
-	else
-	{
-		SDL_putenv(const_cast<char*>("SDL_VIDEO_CENTERED="));
-	}
-#endif
 
 	//_bpp = (isHQXEnabled() || isOpenGLEnabled()) ? 32 : 8;
 	_bpp = 32;
@@ -355,6 +330,20 @@ void Screen::resetDisplay(bool resetVideo)
 		{
 			SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 		}
+		// Hack: you have to destroy and recreate a window to make it resizable.
+		if (_window)
+		{
+			if ((SDL_GetWindowFlags(_window) & SDL_WINDOW_RESIZABLE) != (_flags & SDL_WINDOW_RESIZABLE))
+			{
+				if (_renderer)
+				{
+					delete _renderer;
+					_renderer = NULL;
+				}
+				SDL_DestroyWindow(_window);
+				_window = NULL;
+			}
+		}
 		/* Now, we only need to create a window AND a renderer when we have none*/
 		if (_window == NULL)
 		{
@@ -363,9 +352,28 @@ void Screen::resetDisplay(bool resetVideo)
 #ifdef __ANDROID__
 			SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 0);
 #endif
+			int winX, winY;
+			if (Options::borderless)
+			{
+				winX = SDL_WINDOWPOS_CENTERED;
+				winY = SDL_WINDOWPOS_CENTERED;
+			}
+			else
+			{
+				if ((Options::windowedModePositionX != -1) && (Options::windowedModePositionY != -1))
+				{
+					winX = Options::windowedModePositionX;
+					winY = Options::windowedModePositionY;
+				}
+				else
+				{
+					winX = SDL_WINDOWPOS_UNDEFINED;
+					winY = SDL_WINDOWPOS_UNDEFINED;
+				}
+			}
 			_window = SDL_CreateWindow("OpenXcom",
-						   SDL_WINDOWPOS_UNDEFINED,
-						   SDL_WINDOWPOS_UNDEFINED,
+						   winX,
+						   winY,
 						   width, height, _flags);
 			/* In case something went horribly wrong */
 			if (_window == NULL)
@@ -380,6 +388,8 @@ void Screen::resetDisplay(bool resetVideo)
 #ifndef __ANDROID__
 			SDL_SetWindowSize(_window, width, height);
 #endif
+			SDL_SetWindowBordered(_window, Options::borderless? SDL_FALSE : SDL_TRUE);
+			SDL_SetWindowFullscreen(_window, Options::fullscreen? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 		}
 
 		/* By this point we have a window and no renderer, so it's time to make one! */

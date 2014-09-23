@@ -296,6 +296,36 @@ void Game::run()
 					}
 					break;
 #endif
+				case SDL_WINDOWEVENT:
+					switch(_event.window.event)
+					{
+						case SDL_WINDOWEVENT_RESIZED:
+							// It should be better to handle SDL_WINDOWEVENT_SIZE_CHANGED, but
+							// it won't tell the new width and height.
+							// New width is in data1, new height is in data2.
+							// Otherwise the code is carbon-copied from SDL1.2 resize code.
+							if (Options::allowResize)
+							{
+								Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, _event.window.data1);
+								Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, _event.window.data2);
+								int dX = 0, dY = 0;
+								Screen::updateScale(Options::battlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, false);
+								Screen::updateScale(Options::geoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, false);
+								for (std::list<State*>::iterator i = _states.begin(); i != _states.end(); ++i)
+								{
+									(*i)->resize(dX, dY);
+								}
+								_screen->resetDisplay();
+							}
+							break;
+						case SDL_WINDOWEVENT_FOCUS_GAINED:
+							runningState = RUNNING;
+							break;
+						case SDL_WINDOWEVENT_FOCUS_LOST:
+							runningState = kbFocusRun[Options::pauseMode];
+							break;
+					}
+					break;
 				case SDL_MOUSEMOTION:
 					// With SDL2 we can have both events from a real mouse
 					// and events from a touch-emulated mouse.
@@ -436,8 +466,8 @@ void Game::run()
 			if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
 			{
 				// Update our FPS delay time based on the time of the last draw.
-				//int fps = SDL_GetAppState() & SDL_APPINPUTFOCUS ? Options::FPS : Options::FPSInactive;
-				int fps = Options::FPS;
+				int fps = SDL_GetWindowFlags(getScreen()->getWindow()) & SDL_WINDOW_INPUT_FOCUS ? Options::FPS : Options::FPSInactive;
+				//int fps = Options::FPS;
 
 				_timeUntilNextFrame = (1000.0f / fps) - (SDL_GetTicks() - _timeOfLastFrame);
 			}
