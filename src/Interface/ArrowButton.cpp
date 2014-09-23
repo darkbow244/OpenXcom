@@ -352,10 +352,13 @@ void ArrowButton::mouseWheel(Action *action, State *state)
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL) // FIXME: WHY DO WE EVEN GET NULL POINTERS?!
 	{
-		if (ev.wheel.y < 0)
-			_list->scrollUp(false);
-		else
-			_list->scrollDown(false);
+		if (_list)
+		{
+			if (ev.wheel.y < 0)
+				_list->scrollUp(false);
+			else
+				_list->scrollDown(false);
+		}
 	}
 }
 
