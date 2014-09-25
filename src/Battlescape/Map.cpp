@@ -1553,7 +1553,7 @@ void Map::cacheUnit(BattleUnit *unit)
 				unitSprite->setBattleItem(lhandItem);
 			}
 
-			if(!lhandItem && !rhandItem)
+			if (!lhandItem && !rhandItem)
 			{
 				unitSprite->setBattleItem(0);
 			}
@@ -1697,7 +1697,7 @@ const int Map::getMessageY()
  */
 const int Map::getIconHeight()
 {
-	return _iconWidth;
+	return _iconHeight;
 }
 
 /**
@@ -1705,7 +1705,7 @@ const int Map::getIconHeight()
  */
 const int Map::getIconWidth()
 {
-	return _iconHeight;
+	return _iconWidth;
 }
 
 /**

@@ -94,7 +94,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState() : _reserve(0), _popups(), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _swipeFromSoldier(false), _multiGestureProcess(false)
+BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _swipeFromSoldier(false), _multiGestureProcess(false)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
@@ -627,17 +627,6 @@ void BattlescapeState::think()
  */
 void BattlescapeState::mapOver(Action *action)
 {
-#ifdef __ANDROID__
-	/* Ignore dragging if we're just turning our unit */
-	if (_swipeFromSoldier)
-	{
-		return;
-	}
-#endif
-	if (_multiGestureProcess) 
-	{
-		return;
-	}
 	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
 	{
 		// The following is the workaround for a rare problem where sometimes
@@ -674,12 +663,6 @@ void BattlescapeState::mapOver(Action *action)
 		{
 			_mouseMovedOverThreshold = ((std::abs(_totalMouseMoveX) > Options::dragScrollPixelTolerance) || (std::abs(_totalMouseMoveY) > Options::dragScrollPixelTolerance));
 		}
-#ifdef __ANDROID__
-		if (_mouseMovedOverThreshold)
-		{
-			_longPressTimer->stop();
-		}
-#endif
 
 		// Scrolling
 		if (Options::battleDragScrollInvert)
@@ -1011,7 +994,7 @@ void BattlescapeState::btnUnitDownClick(Action *)
  */
 void BattlescapeState::btnMapUpClick(Action *)
 {
-	if(_save->getSide() == FACTION_PLAYER || _save->getDebugMode())
+	if (_save->getSide() == FACTION_PLAYER || _save->getDebugMode())
 		_map->getCamera()->up();
 }
 
@@ -1021,7 +1004,7 @@ void BattlescapeState::btnMapUpClick(Action *)
  */
 void BattlescapeState::btnMapDownClick(Action *)
 {
-	if(_save->getSide() == FACTION_PLAYER || _save->getDebugMode())
+	if (_save->getSide() == FACTION_PLAYER || _save->getDebugMode())
 		_map->getCamera()->down();
 }
 
@@ -2160,12 +2143,12 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 	{
 		_game->getResourcePack()->getSoundByDepth(0, _save->getAmbientSound())->stopLoop();
 	}
-	std::string nextStage = "";
+	std::string nextStage;
 	if (_save->getMissionType() != "STR_UFO_GROUND_ASSAULT" && _save->getMissionType() != "STR_UFO_CRASH_RECOVERY")
 	{
 		nextStage = _game->getRuleset()->getDeployment(_save->getMissionType())->getNextStage();
 	}
-	if (nextStage != "" && inExitArea)
+	if (!nextStage.empty() && inExitArea)
 	{
 		// if there is a next mission stage + we have people in exit area OR we killed all aliens, load the next stage
 		_popups.clear();

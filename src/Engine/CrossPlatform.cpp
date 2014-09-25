@@ -417,7 +417,7 @@ std::string getDataFile(const std::string &filename)
 
 	// Check current data path
 	std::string path = caseInsensitive(Options::getDataFolder(), name);
-	if (path != "")
+	if (!path.empty())
 	{
 		return path;
 	}
@@ -426,7 +426,7 @@ std::string getDataFile(const std::string &filename)
 	for (std::vector<std::string>::const_iterator i = Options::getDataList().begin(); i != Options::getDataList().end(); ++i)
 	{
 		std::string path = caseInsensitive(*i, name);
-		if (path != "")
+		if (!path.empty())
 		{
 			Options::setDataFolder(*i);
 			return path;
@@ -453,7 +453,7 @@ std::string getDataFolder(const std::string &foldername)
 
 	// Check current data path
 	std::string path = caseInsensitiveFolder(Options::getDataFolder(), name);
-	if (path != "")
+	if (!path.empty())
 	{
 		return path;
 	}
@@ -462,7 +462,7 @@ std::string getDataFolder(const std::string &foldername)
 	for (std::vector<std::string>::const_iterator i = Options::getDataList().begin(); i != Options::getDataList().end(); ++i)
 	{
 		std::string path = caseInsensitiveFolder(*i, name);
-		if (path != "")
+		if (!path.empty())
 		{
 			Options::setDataFolder(*i);
 			return path;
@@ -582,7 +582,7 @@ std::vector<std::string> getDataContents(const std::string &folder, const std::s
 
 	// Check current data path
 	std::string current = caseInsensitiveFolder(Options::getDataFolder(), folder);
-	if (current != "")
+	if (!current.empty())
 	{
 		std::vector<std::string> contents = getFolderContents(current, ext);
 		for (std::vector<std::string>::const_iterator file = contents.begin(); file != contents.end(); ++file)
@@ -599,7 +599,7 @@ std::vector<std::string> getDataContents(const std::string &folder, const std::s
 		{
 			continue;
 		}
-		if (path != "")
+		if (!path.empty())
 		{
 			std::vector<std::string> contents = getFolderContents(path, ext);
 			for (std::vector<std::string>::const_iterator file = contents.begin(); file != contents.end(); ++file)
@@ -624,7 +624,7 @@ bool folderExists(const std::string &path)
 	return (PathIsDirectoryA(path.c_str()) != FALSE);
 #elif __MORPHOS__
 	BPTR l = Lock( path.c_str(), SHARED_LOCK );
-	if( l != NULL )
+	if ( l != NULL )
 	{
 		UnLock( l );
 		return 1;
@@ -647,7 +647,7 @@ bool fileExists(const std::string &path)
 	return (PathFileExistsA(path.c_str()) != FALSE);
 #elif __MORPHOS__
 	BPTR l = Lock( path.c_str(), SHARED_LOCK );
-	if( l != NULL )
+	if ( l != NULL )
 	{
 		UnLock( l );
 		return 1;
