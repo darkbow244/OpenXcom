@@ -184,13 +184,6 @@ void ProjectileFlyBState::init()
 		return;
 	case BA_PANIC:
 	case BA_MINDCONTROL:
-		if (_parent->getTileEngine()->distance(_action.actor->getPosition(), _action.target) > weapon->getRules()->getMaxRange())
-		{
-			// out of range
-			_action.result = "STR_OUT_OF_RANGE";
-			_parent->popState();
-			return;
-		}
 		_parent->statePushFront(new ExplosionBState(_parent, Position((_action.target.x*16)+8,(_action.target.y*16)+8,(_action.target.z*24)+10), weapon, _action.actor));
 		return;
 	default:
@@ -288,6 +281,8 @@ bool ProjectileFlyBState::createNewProjectile()
 	++_action.autoShotCounter;
 	
 	int bulletSprite = -1;
+	int vaporColor = -1;
+	int vaporDensity = -1;
 	if (_action.type != BA_THROW)
 	{
 		bulletSprite = _ammo->getRules()->getBulletSprite();
@@ -295,9 +290,11 @@ bool ProjectileFlyBState::createNewProjectile()
 		{
 			bulletSprite = _action.weapon->getRules()->getBulletSprite();
 		}
+		vaporColor = _ammo->getRules()->getVaporColor();
+		vaporDensity = _ammo->getRules()->getVaporDensity();
 	}
 	// create a new projectile
-	Projectile *projectile = new Projectile(_parent->getResourcePack(), _parent->getSave(), _action, _origin, _targetVoxel, bulletSprite);
+	Projectile *projectile = new Projectile(_parent->getResourcePack(), _parent->getSave(), _action, _origin, _targetVoxel, bulletSprite, vaporColor, vaporDensity);
 
 	// add the projectile on the map
 	_parent->getMap()->setProjectile(projectile);
@@ -552,7 +549,7 @@ void ProjectileFlyBState::think()
 						while (i != _ammo->getRules()->getShotgunPellets())
 						{
 							// create a projectile
-							Projectile *proj = new Projectile(_parent->getResourcePack(), _parent->getSave(), _action, _origin, _targetVoxel, bulletSprite);
+							Projectile *proj = new Projectile(_parent->getResourcePack(), _parent->getSave(), _action, _origin, _targetVoxel, bulletSprite, _ammo->getRules()->getVaporColor(), _ammo->getRules()->getVaporDensity());
 							// let it trace to the point where it hits
 							_projectileImpact = proj->calculateTrajectory(std::max(0.0, (_unit->getFiringAccuracy(_action.type, _action.weapon) / 100.0) - i * 5.0));
 							if (_projectileImpact != V_EMPTY)

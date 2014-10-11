@@ -627,6 +627,10 @@ void BattlescapeState::think()
  */
 void BattlescapeState::mapOver(Action *action)
 {
+
+	if (_swipeFromSoldier || _multiGestureProcess)
+		return;
+
 	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
 	{
 		// The following is the workaround for a rare problem where sometimes
@@ -785,9 +789,9 @@ void BattlescapeState::mapRelease(Action *action)
 	if (_swipeFromSoldier)
 	{
 		if (pos != _save->getSelectedUnit()->getPosition())
-	_battleGame->secondaryAction(pos);
-	_swipeFromSoldier = false;
-}
+			_battleGame->secondaryAction(pos);
+		_swipeFromSoldier = false;
+	}
 #endif
 }
 
@@ -798,6 +802,15 @@ void BattlescapeState::mapRelease(Action *action)
 */
 void BattlescapeState::mapLongPress()
 {
+	// Stop the timer first.
+	_longPressTimer->stop();
+	// If the event fired while the camera was moving,
+	// then we don't want to handle it.
+	if (_mouseMovedOverThreshold)
+	{
+		return;
+	}
+	// Proceed with turning the unit.
 	Position pos;
 	BattleUnit *selectedUnit = _save->getSelectedUnit();
 	_map->getSelectorPosition(&pos);
@@ -808,7 +821,6 @@ void BattlescapeState::mapLongPress()
 			_battleGame->secondaryAction(pos);
 		}
 	}
-	_longPressTimer->stop();
 }
 #endif
 
@@ -925,6 +937,7 @@ void BattlescapeState::fingerMotion(Action *action)
 
 void BattlescapeState::multiGesture(Action *action)
 {
+	Log(LOG_INFO) << "Multigesture processing!";
 	const double levelThreshold = 0.1; //Just an arbitrary number
 	static double delta;
 	static double prevPointY = 0;

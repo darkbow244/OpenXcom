@@ -723,6 +723,9 @@
     <ClCompile Include="Engine\Scalers\scalebit.cpp">
       <Filter>Engine\Scalers</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\OpenGL.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Interface\ToggleTextButton.cpp">
       <Filter>Interface</Filter>
     </ClCompile>
@@ -858,10 +861,19 @@
     </ClCompile>
     <ClCompile Include="Engine\UIBuilder.cpp">
       <Filter>Engine</Filter>
+	</ClCompile>
+    <ClCompile Include="Interface\BattlescapeButton.cpp">
+      <Filter>Interface</Filter>
     </ClCompile>
+    <ClCompile Include="Ruleset\RuleGlobe.cpp">
+      <Filter>Ruleset</Filter>
+	</ClCompile>
     <ClCompile Include="Engine\SDLRenderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Ruleset\Polygon.cpp">
+      <Filter>Ruleset</Filter>
+	</ClCompile>
     <ClCompile Include="Engine\Renderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -876,6 +888,9 @@
     </ClCompile>
     <ClCompile Include="Engine\OpenGLRenderer.cpp">
       <Filter>Engine</Filter>
+	</ClCompile>
+    <ClCompile Include="Battlescape\Particle.cpp">
+      <Filter>Battlescape</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1751,6 +1766,30 @@
     </ClInclude>
     <ClInclude Include="Ruleset\RuleInterface.h">
       <Filter>Ruleset</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface\BattlescapeButton.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Ruleset\RuleGlobe.h">
+      <Filter>Ruleset</Filter>
+    </ClInclude>
+    <ClInclude Include="Ruleset\Polygon.h">
+      <Filter>Ruleset</Filter>
+    </ClInclude>
+    <ClInclude Include="Ruleset\Polyline.h">
+      <Filter>Ruleset</Filter>
+    </ClInclude>
+    <ClInclude Include="Ruleset\SoundDefinition.h">
+      <Filter>Ruleset</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Scalers\xbrz.h">
+      <Filter>Engine\Scalers</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Scalers\config.h">
+      <Filter>Engine\Scalers</Filter>
+    </ClInclude>
+    <ClInclude Include="Battlescape\Particle.h">
+      <Filter>Battlescape</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
