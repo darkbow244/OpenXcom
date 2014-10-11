@@ -194,6 +194,7 @@ void StartState::think()
 		addLine(wsDataFolder);
 		addLine(L"(as reported by your system)");
 		addLine(L"");
+		CrossPlatform::findDirDialog();
 #endif
 		addLine(L"Press any key to continue.");
 		loading = LOADING_DONE;
