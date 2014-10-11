@@ -62,6 +62,7 @@
 
 #ifdef __ANDROID__
 #include <android/log.h>
+#include <jni.h>
 #endif
 
 namespace OpenXcom
@@ -1033,6 +1034,26 @@ void setWindowIcon(int winResource, const std::string &unixPath, SDL_Window *win
 	{
 		SDL_SetWindowIcon(winPtr, icon);
 		SDL_FreeSurface(icon);
+	}
+#endif
+}
+
+void findDirDialog()
+{
+#ifdef __ANDROID__
+	JNIEnv *env = (JNIEnv*) SDL_AndroidGetJNIEnv();
+	Log(LOG_INFO) << "Got env pointer! It is " << env;
+	Log(LOG_INFO) << "JNIEnv reports version " << env->GetVersion();
+	jclass oxcJClass = env->FindClass("org/libsdl/openxcom/OpenXcom");
+	jmethodID showDirDialogMethod = env->GetStaticMethodID(oxcJClass, "showDirDialog", "()V");
+	if (showDirDialogMethod != NULL)
+	{
+		Log(LOG_INFO) << "Found candidate method ID: " << showDirDialogMethod;
+		env->CallStaticVoidMethod(oxcJClass, showDirDialogMethod);
+	}
+	else
+	{
+		Log(LOG_INFO) << "Could not find the requested method!";
 	}
 #endif
 }

@@ -83,6 +83,8 @@ namespace CrossPlatform
 	std::string getDosPath();
 	/// Sets the window icon.
 	void setWindowIcon(int winResource, const std::string &unixPath, SDL_Window *winPtr);
+	/// Displays the data finding dialog.
+	void findDirDialog();
 }
 
 }
