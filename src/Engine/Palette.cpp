@@ -157,7 +157,7 @@ void Palette::setColors(SDL_Color* pal, int ncolors)
 		_colors[i].b = pal[i].b;
 		_colors[i].a = 255;
 		// FIXME: Take a closer look at that.
-		if (i > 0 && _colors[i].r == _colors[0].r &&
+		if (i > 15 && _colors[i].r == _colors[0].r &&
 			_colors[i].g == _colors[0].g &&
 			_colors[i].b == _colors[0].b)
 		{
