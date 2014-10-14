@@ -317,7 +317,7 @@ namespace UIBuilder
 			const YAML::Node &color2 = barNode["palColor2"];
 			int blockOffset2 = color2["blockOffset"].as<int>(0);
 			int colorOffset2 = color2["colorOffset"].as<int>(0);
-			out->setColor2(Palette::blockOffset(blockOffset2) + colorOffset2);
+			out->setSecondaryColor(Palette::blockOffset(blockOffset2) + colorOffset2);
 		}
 		
 		// Load the bar's scale

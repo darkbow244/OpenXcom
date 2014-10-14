@@ -106,7 +106,7 @@ public:
 	virtual void recenter(int dX, int dY);
 	
 	/// Returns the pointer to the game object
-	Game *getGame() const;
+	static Game *getGame();
 };
 
 }

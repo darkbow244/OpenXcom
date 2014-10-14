@@ -63,6 +63,9 @@
 #ifdef __ANDROID__
 #include <android/log.h>
 #include <jni.h>
+#include "State.h"
+#include "Game.h"
+#include "../Menu/StartState.h"
 #endif
 
 namespace OpenXcom
@@ -1042,9 +1045,10 @@ void findDirDialog()
 {
 #ifdef __ANDROID__
 	JNIEnv *env = (JNIEnv*) SDL_AndroidGetJNIEnv();
-	Log(LOG_INFO) << "Got env pointer! It is " << env;
-	Log(LOG_INFO) << "JNIEnv reports version " << env->GetVersion();
-	jclass oxcJClass = env->FindClass("org/libsdl/openxcom/OpenXcom");
+	jobject instance = (jobject) SDL_AndroidGetActivity();
+	//jclass oxcJClass = env->FindClass("org/libsdl/openxcom/OpenXcom");
+	jclass oxcJClass = env->GetObjectClass(instance);
+
 	jmethodID showDirDialogMethod = env->GetStaticMethodID(oxcJClass, "showDirDialog", "()V");
 	if (showDirDialogMethod != NULL)
 	{
@@ -1055,8 +1059,38 @@ void findDirDialog()
 	{
 		Log(LOG_INFO) << "Could not find the requested method!";
 	}
+	env->DeleteLocalRef(instance);
+	Log(LOG_INFO) << "Returned to native code!";
 #endif
 }
+
+#ifdef __ANDROID__
+	// This loads up new paths for the game and
+	void Java_org_libsdl_openxcom_OpenXcom_nativeSetPaths(JNIEnv* env, jclass cls, jstring gamePath, jstring savePath, jstring confPath)
+	{
+		Log(LOG_INFO) << "Re-setting paths...";
+		const char *gamePathString = env->GetStringUTFChars(gamePath, 0);
+		const char *savePathString = env->GetStringUTFChars(savePath, 0);
+		const char *confPathString = env->GetStringUTFChars(confPath, 0);
+		std::string dataFolder(gamePathString);
+		std::string saveFolder(savePathString);
+		std::string confFolder(confPathString);
+		Log(LOG_INFO) << "Data folder is: " << dataFolder;
+		Log(LOG_INFO) << "User folder is: " << saveFolder;
+		Log(LOG_INFO) << "Conf folder is: " << confFolder;
+	    env->ReleaseStringUTFChars(gamePath, gamePathString);
+	    env->ReleaseStringUTFChars(savePath, savePathString);
+	    env->ReleaseStringUTFChars(confPath, confPathString);
+		Options::setDataFolder(endPath(dataFolder));
+		Options::setUserFolder(endPath(saveFolder));
+		Options::setConfFolder(endPath(confFolder));
+		Game *game = State::getGame();
+		game->setState(new StartState);
+
+	}
+
+
+#endif
 
 }
 }

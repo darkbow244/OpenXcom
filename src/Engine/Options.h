@@ -94,6 +94,10 @@ namespace Options
 	void backupDisplay();
 	/// Switches display options.
 	void switchDisplay();
+
+	void setUserFolder(const std::string &userFolder);
+
+	void setConfFolder(const std::string &confFolder);
 }
 
 }

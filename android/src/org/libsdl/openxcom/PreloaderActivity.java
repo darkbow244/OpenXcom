@@ -15,6 +15,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,12 +27,15 @@ import android.widget.TextView;
 
 public class PreloaderActivity extends Activity {
 
+	
+	SharedPreferences prefs;
+	
 	protected AssetManager assets = null;
 	protected TextView preloaderLog = null;
 	protected Context context;
 	private ProgressDialog pd;
 	
-	final String gamePath = Environment.getExternalStorageDirectory().getPath() + "/OpenXcom/";
+	String gamePath;
 	
 	final String dataMarkerName = "openxcom_data_marker";
 	final String translationMarkerName = "openxcom_translation_marker";
@@ -42,6 +46,22 @@ public class PreloaderActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_preloader);
 		context = this;
+		prefs = getSharedPreferences(DirsConfigActivity.PREFS_NAME, 0);
+		gamePath = prefs.getString(DirsConfigActivity.DATA_PATH_KEY, "");
+		if (gamePath == "") {
+			// Looks like we're running for the first time.
+			// We'll just make our best attempt at guessing where the game is.
+			// TODO: A better approach would be to launch a DirsConfigActivity
+			// to allow the user to select the appropriate directories on his own.
+			final String defaultGamePath = Environment.getExternalStorageDirectory().getPath() + "/OpenXcom/";
+			gamePath = defaultGamePath + "data/";
+			// We also should put some data into the preferences!
+			SharedPreferences.Editor prefsEditor = prefs.edit();
+			prefsEditor.putString(DirsConfigActivity.DATA_PATH_KEY, gamePath);
+			prefsEditor.putString(DirsConfigActivity.SAVE_PATH_KEY, defaultGamePath);
+			prefsEditor.putString(DirsConfigActivity.CONF_PATH_KEY, defaultGamePath);
+			prefsEditor.commit();
+		}
 		preloaderLog = (TextView) findViewById(R.id.preloaderLog);
 		assets = getAssets();
 	}
@@ -99,13 +119,13 @@ public class PreloaderActivity extends Activity {
 							publishProgress("Checking translations version...");
 							if (translationNeedsUpdating) {
 								publishProgress("Extracting translations...");
-								extractFile("latest.zip", gamePath + "data/Language/");
+								extractFile("latest.zip", gamePath + "Language/");
 								copyMarker(translationMarkerName);
 							}
 							publishProgress("Checking patch version...");
 							if (needsPatch) {
 								publishProgress("Applying patch...");
-								extractFile("universal-patch.zip", gamePath + "data/");
+								extractFile("universal-patch.zip", gamePath);
 								copyMarker(patchMarkerName);
 							}
 						}
@@ -214,7 +234,7 @@ public class PreloaderActivity extends Activity {
 	 */
 	
 	protected boolean needsUpdating(String markerName) {
-		final String markerPath = gamePath + "data/";
+		final String markerPath = gamePath;
 		File checkFile = new File(markerPath + markerName);
 		// It's our first time here, by the looks of it.
 		if (!checkFile.exists()) {
@@ -267,7 +287,7 @@ public class PreloaderActivity extends Activity {
 	 */
 	
 	protected void copyMarker(String markerName) {
-		final String markerPath = gamePath + "data/";
+		final String markerPath = gamePath;
 	    InputStream in = null;
 	    OutputStream out = null;
 	    try {

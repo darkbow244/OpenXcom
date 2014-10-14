@@ -12,6 +12,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.reflect.Method;
 
+import android.annotation.SuppressLint;
 import android.app.*;
 import android.content.*;
 import android.view.*;
@@ -25,6 +26,9 @@ import android.util.Log;
 import android.graphics.*;
 import android.media.*;
 import android.hardware.*;
+
+import org.libsdl.openxcom.DirsConfigActivity;
+import org.libsdl.openxcom.OpenXcom;
 
 
 /**
@@ -83,7 +87,8 @@ public class SDLActivity extends Activity {
     }
 
     // Setup
-    @Override
+    @SuppressLint("NewApi")
+	@Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v("SDL", "onCreate():" + mSingleton);
         super.onCreate(savedInstanceState);
@@ -108,36 +113,36 @@ public class SDLActivity extends Activity {
         setContentView(mLayout);
         
         if (Build.VERSION.SDK_INT >= 11) {
-	    final View rootView = getWindow().getDecorView();
-	    rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
-	    rootView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
-		@Override
-		public void onSystemUiVisibilityChange(int visibility) {
+        	final View rootView = getWindow().getDecorView();
+        	rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+        	rootView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+        		@Override
+        		public void onSystemUiVisibilityChange(int visibility) {
 		    /*if (visibility == View.SYSTEM_UI_FLAG_VISIBLE) {
 			rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
 			rootView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
 		    }*/
-		    Timer timer = new Timer();
-		    timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-			    SDLActivity.this.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-				      int systemUiFlags;
-				      if (Build.VERSION.SDK_INT < 14) {
-					  systemUiFlags = View.STATUS_BAR_HIDDEN;
-				      } else {
-				          systemUiFlags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
-				      }
-				      rootView.setSystemUiVisibility(systemUiFlags);
-				}
-			    });
-			}
-		    }, 1000);
-		}
+        			Timer timer = new Timer();
+        			timer.schedule(new TimerTask() {
+        				@Override
+        				public void run() {
+        					SDLActivity.this.runOnUiThread(new Runnable() {
+        						@Override
+        						public void run() {
+        							int systemUiFlags;
+        							if (Build.VERSION.SDK_INT < 14) {
+        								systemUiFlags = View.STATUS_BAR_HIDDEN;
+        							} else {
+        								systemUiFlags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
+        							}
+        							rootView.setSystemUiVisibility(systemUiFlags);
+        						}
+        					});
+        				}
+        			}, 1000);
+        		}
 	    
-	    });
+        	});
         }
     }
 
@@ -308,12 +313,12 @@ public class SDLActivity extends Activity {
      * to the native SDL thread.
      */
      public static String getLocaleString() {
-	final String localeLanguage = Locale.getDefault().getLanguage();
-	final String localeCountry = Locale.getDefault().getCountry();
-	String localeCode = localeLanguage;
-	localeCode = localeCode.concat("-");
-	localeCode = localeCode.concat(localeCountry);
-	return localeCode;
+    	 final String localeLanguage = Locale.getDefault().getLanguage();
+    	 final String localeCountry = Locale.getDefault().getCountry();
+    	 String localeCode = localeLanguage;
+    	 localeCode = localeCode.concat("-");
+    	 localeCode = localeCode.concat(localeCountry);
+    	 return localeCode;
      }
 
     // Handler for the messages
@@ -328,7 +333,7 @@ public class SDLActivity extends Activity {
     }
 
     // C functions we call
-    public static native int nativeInit(String localeCode, String gamePath, String dataPath);
+    public static native int nativeInit(String localeCode, String gamePath, String savePath, String confPath);
     public static native void nativeLowMemory();
     public static native void nativeQuit();
     public static native void nativePause();
@@ -651,11 +656,14 @@ class SDLMain implements Runnable {
     @Override
     public void run() {
         // Runs SDL_main()
-    	String gamePath = Environment.getExternalStorageDirectory().getPath() + "/OpenXcom/";
-    	String dataPath = gamePath + "data/";
-    	Log.i("OpenXcom", "Game path is: " + gamePath);
-    	Log.i("OpenXcom", "Data path is: " + dataPath);
-        SDLActivity.nativeInit(SDLActivity.getLocaleString(), gamePath, dataPath);
+    	SharedPreferences prefs = SDLActivity.getContext().getSharedPreferences(org.libsdl.openxcom.DirsConfigActivity.PREFS_NAME, 0); 
+    	String gamePath = prefs.getString(org.libsdl.openxcom.DirsConfigActivity.DATA_PATH_KEY, "");
+    	String savePath = prefs.getString(org.libsdl.openxcom.DirsConfigActivity.SAVE_PATH_KEY, "");
+    	String confPath = prefs.getString(org.libsdl.openxcom.DirsConfigActivity.CONF_PATH_KEY, "");
+    	Log.i("OpenXcom", "Data path is: " + gamePath);
+    	Log.i("OpenXcom", "Save path is: " + savePath);
+    	Log.i("OpenXcom", "Config path is: " + confPath);
+        SDLActivity.nativeInit(SDLActivity.getLocaleString(), gamePath, savePath, confPath);
 
         //Log.v("SDL", "SDL thread terminated");
     }

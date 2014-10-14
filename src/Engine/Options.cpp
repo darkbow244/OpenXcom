@@ -352,14 +352,17 @@ void loadArgs(int argc, char *argv[])
 				if (argname == "data")
 				{
 					_dataFolder = CrossPlatform::endPath(argv[i+1]);
+					Log(LOG_INFO) << "Data folder: " <<_dataFolder;
 				}
 				else if (argname == "user")
 				{
 					_userFolder = CrossPlatform::endPath(argv[i+1]);
+					Log(LOG_INFO) << "User folder: " << _userFolder;
 				}
 				else if (argname == "cfg")
 				{
 					_configFolder = CrossPlatform::endPath(argv[i+1]);
+					Log(LOG_INFO) << "Conf folder: " << _configFolder;
 				}
 				else if (argname == "locale")
 				{
@@ -438,7 +441,8 @@ bool init(int argc, char *argv[])
 	loadArgs(argc, argv);
 	setFolders();
 	updateOptions();
-
+#ifndef __ANDROID__
+	// This file is not used on Android, so we can safely skip it.
 	std::string s = getUserFolder();
 	s += "openxcom.log";
 	Logger::logFile() = s;
@@ -449,6 +453,7 @@ bool init(int argc, char *argv[])
 	}
 	fflush(file);
 	fclose(file);
+#endif
 	Log(LOG_INFO) << "Data folder is: " << _dataFolder;
 	Log(LOG_INFO) << "Data search is: ";
 	for (std::vector<std::string>::iterator i = _dataList.begin(); i != _dataList.end(); ++i)
@@ -623,6 +628,7 @@ std::string getDataFolder()
 void setDataFolder(const std::string &folder)
 {
 	_dataFolder = folder;
+	Log(LOG_INFO) << "Options::setDataFolder: data folder set to " << _dataFolder;
 }
 
 /**
@@ -702,6 +708,18 @@ void switchDisplay()
 	std::swap(useNearestScaler, newNearestScaler);
 	std::swap(useLinearScaler, newLinearScaler);
 	std::swap(useAnisotropicScaler, newAnisotropicScaler);
+}
+
+void setUserFolder(const std::string &userFolder)
+{
+	_userFolder = userFolder;
+	Log(LOG_INFO) << "Options::setUserFolder: user folder set to " << _userFolder;
+}
+
+void setConfFolder(const std::string &confFolder)
+{
+	_configFolder = confFolder;
+	Log(LOG_INFO) << "Options::setConfFolder: config folder set to " << _configFolder;
 }
 
 }

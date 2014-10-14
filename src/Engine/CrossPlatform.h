@@ -23,6 +23,9 @@
 #include <string>
 #include <vector>
 #include <utility>
+#ifdef __ANDROID__
+#include <jni.h>
+#endif
 
 namespace OpenXcom
 {
@@ -85,6 +88,16 @@ namespace CrossPlatform
 	void setWindowIcon(int winResource, const std::string &unixPath, SDL_Window *winPtr);
 	/// Displays the data finding dialog.
 	void findDirDialog();
+#ifdef __ANDROID__
+	/// This function is called from Java.
+#ifdef __cplusplus
+extern "C" {
+#endif
+	void Java_org_libsdl_openxcom_OpenXcom_nativeSetPaths(JNIEnv* env, jclass cls, jstring gamePath, jstring savePath, jstring confPath);
+#ifdef __cplusplus
+}
+#endif
+#endif
 }
 
 }
