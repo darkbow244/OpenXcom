@@ -25,6 +25,8 @@ import android.util.Log;
 //import android.view.MenuItem;
 import android.widget.TextView;
 
+import org.libsdl.openxcom.FilesystemHelper;
+
 public class PreloaderActivity extends Activity {
 
 	
@@ -53,8 +55,8 @@ public class PreloaderActivity extends Activity {
 			// We'll just make our best attempt at guessing where the game is.
 			// TODO: A better approach would be to launch a DirsConfigActivity
 			// to allow the user to select the appropriate directories on his own.
-			final String defaultGamePath = Environment.getExternalStorageDirectory().getPath() + "/OpenXcom/";
-			gamePath = defaultGamePath + "data/";
+			final String defaultGamePath = Environment.getExternalStorageDirectory().getPath() + "/OpenXcom";
+			gamePath = defaultGamePath + "/data";
 			// We also should put some data into the preferences!
 			SharedPreferences.Editor prefsEditor = prefs.edit();
 			prefsEditor.putString(DirsConfigActivity.DATA_PATH_KEY, gamePath);
@@ -113,19 +115,19 @@ public class PreloaderActivity extends Activity {
 							publishProgress("Checking data version...");
 							if (dataNeedsUpdating) {
 								publishProgress("Extracting data...");
-								extractFile("data.zip", gamePath);
+								extractFile("data.zip", gamePath + "/");
 								copyMarker(dataMarkerName);
 							}
 							publishProgress("Checking translations version...");
 							if (translationNeedsUpdating) {
 								publishProgress("Extracting translations...");
-								extractFile("latest.zip", gamePath + "Language/");
+								extractFile("latest.zip", gamePath + "/Language/");
 								copyMarker(translationMarkerName);
 							}
 							publishProgress("Checking patch version...");
 							if (needsPatch) {
 								publishProgress("Applying patch...");
-								extractFile("universal-patch.zip", gamePath);
+								extractFile("universal-patch.zip", gamePath + "/");
 								copyMarker(patchMarkerName);
 							}
 						}
@@ -160,12 +162,29 @@ public class PreloaderActivity extends Activity {
 	
 	/**
 	 * This method gets called by AsyncThread to execute the main activity.
+	 * Since this activity can actually be started by another activity,
+	 * we should also check the previous intent.
 	 */
 	
 	protected void passExecution() {
-		Intent intent = new Intent(this, OpenXcom.class);
-		startActivity(intent);
-		
+		Intent calledIntent = this.getIntent();
+		Bundle extParams = calledIntent.getExtras();
+		if (extParams != null)
+		{
+			Log.i("PreloaderActivity", "Got extra parameters!");
+			Log.i("PreloaderActivity", "calledFrom: " + extParams.getString("calledFrom"));
+			if (extParams.getString("calledFrom").equals("DirsConfigActivity")) {
+				// We were started from the file chooser dialog activity,
+				// so we should return to it.
+				Log.i("PreloaderActivity", "Called from DirsConfigActivity, returning");
+				setResult(0);
+				finish();
+			}
+		} else {
+			Log.i("PreloaderActivity", "Launching OpenXcom activity");
+			Intent intent = new Intent(this, OpenXcom.class);
+			startActivity(intent);
+		}
 	}
 	
 	
@@ -177,35 +196,9 @@ public class PreloaderActivity extends Activity {
 	
 	protected void extractFile(String assetName, String extractPath) {
 		InputStream is;
-		ZipInputStream zis;
 		try {
-			String filename;
 			is = assets.open(assetName);
-			zis = new ZipInputStream(new BufferedInputStream(is));
-			ZipEntry ze;
-			byte[] buffer = new byte[8192];
-			int count;
-			
-			while((ze = zis.getNextEntry()) != null) {
-				filename = ze.getName();
-				
-				if (ze.isDirectory()) {
-					File fmd = new File(extractPath + filename);
-					fmd.mkdirs();
-					continue;
-				}
-				
-				FileOutputStream fout = new FileOutputStream(extractPath + filename);
-				
-				while ((count = zis.read(buffer)) != -1) {
-					fout.write(buffer, 0, count);
-				}
-				
-				fout.close();
-				zis.closeEntry();
-			}
-			zis.close();
-			
+			FilesystemHelper.zipExtract(is, new File(extractPath));
 		}
 		catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -219,7 +212,7 @@ public class PreloaderActivity extends Activity {
 	 */
 	
 	protected boolean hasGameFiles() {
-		File checkFile = new File(gamePath + "data/GEODATA/PALETTES.DAT");
+		File checkFile = new File(gamePath + "/GEODATA/PALETTES.DAT");
 		if (checkFile.exists()) {
 			return true;
 		}
@@ -235,7 +228,7 @@ public class PreloaderActivity extends Activity {
 	
 	protected boolean needsUpdating(String markerName) {
 		final String markerPath = gamePath;
-		File checkFile = new File(markerPath + markerName);
+		File checkFile = new File(markerPath + "/" + markerName);
 		// It's our first time here, by the looks of it.
 		if (!checkFile.exists()) {
 			return true;
@@ -244,7 +237,7 @@ public class PreloaderActivity extends Activity {
 		try {
 			InputStream assetFileIS = assets.open(markerName);
 			InputStream checkFileIS = new FileInputStream (checkFile);
-			boolean areSame = sameContents(assetFileIS, checkFileIS);
+			boolean areSame = FilesystemHelper.sameContents(assetFileIS, checkFileIS);
 			assetFileIS.close();
 			checkFileIS.close();
 			if (areSame) {
@@ -258,29 +251,7 @@ public class PreloaderActivity extends Activity {
 		}
 		
 	}
-	
-	/**
-	 * Returns 0 if files are same, and a non-zero value if the files are different.
-	 * This function is very slow, so it will probably need a rewrite.
-	 * @param fileIS1 Input stream associated with the first file
-	 * @param fileIS2 Input stream associated with the second file
-	 * @return True if the files are the same, false otherwise.
-	 * @throws IOException 
-	 */
-	protected boolean sameContents(InputStream fileIS1, InputStream fileIS2) throws IOException {
-		int b1 = fileIS1.read();
-		int b2 = fileIS2.read();
-		while((b1 != -1) && (b2 != -1))
-		{
-			if (b1 != b2) {
-				return false;
-			}
-			b1 = fileIS1.read();
-			b2 = fileIS2.read();
-		}
-		return b1 == b2;
-	}
-	
+		
 	/**
 	 * Copies the marker from assets to data folder.
 	 * @param markerName Filename of the data marker.
@@ -292,9 +263,9 @@ public class PreloaderActivity extends Activity {
 	    OutputStream out = null;
 	    try {
 	    	in = assets.open(markerName);
-	        File outFile = new File(markerPath + markerName);
+	        File outFile = new File(markerPath + "/" + markerName);
 	        out = new FileOutputStream(outFile);
-	        copyFile(in, out);
+	        FilesystemHelper.copyStream(in, out);
 	        in.close();
 	        in = null;
 	        out.flush();
@@ -305,19 +276,7 @@ public class PreloaderActivity extends Activity {
 	            Log.e("OpenXcom", "Failed to copy asset file: " + markerName, e);
 	        }       
 	    }
-	/**
-	 * Actually copies the file contents.
-	 * @param in Stream we're copying from.
-	 * @param out Stream we're copying to.
-	 * @throws IOException
-	 */
-	protected void copyFile(InputStream in, OutputStream out) throws IOException {
-	    byte[] buffer = new byte[1024];
-	    int read;
-	    while((read = in.read(buffer)) != -1){
-	      out.write(buffer, 0, read);
-	    }
-	}
+
 	
 	
 }

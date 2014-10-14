@@ -127,8 +127,11 @@ public class DirsConfigActivity extends Activity {
 		useAppCacheConfCheck.setChecked(useAppCacheConf);
 		
 		dataPathText.setText(dataPath);
+		dataPathText.setInputType(0);
 		savePathText.setText(savePath);
+		savePathText.setInputType(0);
 		confPathText.setText(confPath);
+		confPathText.setInputType(0);
 		
 		saveBrowseButton.setEnabled(!useAppCacheSave);
 		confBrowseButton.setEnabled(!useAppCacheConf);
@@ -370,11 +373,22 @@ public class DirsConfigActivity extends Activity {
 		confDialog.dismiss();
 	}
 	
-	// This will restart the application, hopefully using the folders user has provided.
+	// This will start the preloader, which will update the directories.
 	public void applyButtonPress(View view) {
 		savePreferences();
+		Intent intent = new Intent(this, PreloaderActivity.class);
+		intent.putExtra("calledFrom", "DirsConfigActivity");
+		Log.i("DirsConfigActivity", "Launching Preloader to patch our files");
+		startActivityForResult(intent, 0);
+	}
+	
+	
+	// Pass execution to SDLActivity
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		Log.i("DirsConfigActivity", "onActivityResult: got back from Preloader, passing execution to OpenXcom");
 		setResult(0, new Intent());
 		finish();
-
 	}
 }
