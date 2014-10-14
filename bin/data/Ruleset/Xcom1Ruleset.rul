@@ -3849,6 +3849,7 @@ armors:
       - 1.0
       - 0.0
     loftempsSet: [ 3 ]
+    forcedTorso: 1
   - type: STR_FLYING_SUIT_UC
     spriteSheet: XCOM_2.PCK
     spriteInv: MAN_3
@@ -3872,6 +3873,7 @@ armors:
       - 1.0
       - 0.0
     loftempsSet: [ 3 ]
+    forcedTorso: 2
   - type: SECTOID_ARMOR0
     spriteSheet: SECTOID.PCK
     corpseBattle:
@@ -9276,6 +9278,8 @@ MCDPatches:
         LOFTS: [6,6,6,6,6,6,6,6,6,6,6,6]
       - MCDIndex: 51
         LOFTS: [6,6,6,6,6,6,6,6,6,6,6,6]
+      - MCDIndex: 62
+        bigWall: 0
   - type: U_EXT02
     data:
       - MCDIndex: 2
