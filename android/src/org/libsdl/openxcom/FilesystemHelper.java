@@ -11,6 +11,8 @@ import java.io.OutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import android.util.Log;
+
 
 /*
  * A collection of methods to be used by other classes.
@@ -57,29 +59,32 @@ public final class FilesystemHelper {
 	 * @throws IOException
 	 */
 	public static void copyFolder(File in_folder, File out_folder, boolean recursive) throws IOException {
+		if (!out_folder.exists()) {
+			if (!out_folder.mkdirs()) {
+				throw new IOException("Could not create target directory: " + out_folder.getAbsolutePath());
+			}
+		}
 		if (!in_folder.isDirectory()) {
 			throw new IOException("Source is not a directory: " + in_folder.getAbsolutePath());
 		}
 		if (!out_folder.isDirectory()) {
 			throw new IOException("Target is not a directory: " + out_folder.getAbsolutePath());
 		}
-		if (!out_folder.exists()) {
-			if (!out_folder.mkdirs()) {
-				throw new IOException("Could not create target directory: " + out_folder.getAbsolutePath());
-			}
-		}
+		Log.i("copyFolder", "Source folder: " + in_folder.getPath() + "; Target folder: " + out_folder.getPath());
 		File[] in_list = in_folder.listFiles();
 		for (File in_file : in_list) {
 			if (in_file.isDirectory())
 			{
 				if (recursive) {
 					File out_subfolder = new File(out_folder.getAbsolutePath() + "/" + in_file.getName());
-					copyFolder(in_file, out_folder, recursive);
-				} else {
-					File out_file = new File(out_folder.getAbsolutePath() + "/" + in_file.getName());
-					copyFile(in_file, out_file);
+					copyFolder(in_file, out_subfolder, recursive);
 				}
+			} else {
+				File out_file = new File(out_folder.getAbsolutePath() + "/" + in_file.getName());
+				Log.i("FileHelper", "Source: " + in_file.getPath() + "; Destination: " + out_file.getPath());
+				copyFile(in_file, out_file);
 			}
+			
 			
 		}
 	}

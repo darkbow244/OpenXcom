@@ -1,6 +1,7 @@
 package org.libsdl.openxcom;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.libsdl.openxcom.R;
 
@@ -9,10 +10,12 @@ import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -80,6 +83,8 @@ public class DirsConfigActivity extends Activity {
 	private FileChooserDialog saveDialog;
 	private FileChooserDialog confDialog;
 	
+	public Context context;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +92,7 @@ public class DirsConfigActivity extends Activity {
 			setTheme(android.R.style.Theme_DeviceDefault_DialogWhenLarge_NoActionBar); // Theme_DeviceDefault_Light_DialogWhenLarge_NoActionBar
 		}
 		super.onCreate(savedInstanceState);
+		context = this;
 		setContentView(R.layout.activity_dirs_config);
 		
 		// Initialize default paths
@@ -238,10 +244,12 @@ public class DirsConfigActivity extends Activity {
 	}
 	
 	public void saveButtonPress(View view) {
+		saveDialog.loadFolder(savePath);
 		saveDialog.show();
 	}
 	
 	public void confButtonPress(View view) {
+		confDialog.loadFolder(confPath);
 		confDialog.show();
 		
 	}
@@ -287,11 +295,13 @@ public class DirsConfigActivity extends Activity {
 		dataDialog = new FileChooserDialog(this);
 		dataDialog.loadFolder(dataPath_external);
 		if (useAppCache) {
+			dataDialog.setFilter(".*zip|.*ZIP");
+			dataDialog.setShowConfirmation(true, false);
 			dataDialog.setFolderMode(true);
 		} else {
-			//dataDialog.setFilter(".*zip|.*ZIP");
 			dataDialog.setFolderMode(true);
 		}
+		dataDialog.setShowOnlySelectable(true);
 		dataDialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
 			
 			@Override
@@ -303,7 +313,16 @@ public class DirsConfigActivity extends Activity {
 			public void onFileSelected(Dialog source, File file) {
 				source.hide();
 				if (useAppCache) {
-					// TODO: Add some copying/unzipping code here!
+					if (file.isDirectory()) {
+						copyData(file);
+					} else {
+						try {
+							FilesystemHelper.zipExtract(file, new File(dataPath_private));
+						}
+						catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
 				} else {
 					dataPath = file.getAbsolutePath();
 					dataPathText.setText(dataPath);
@@ -315,6 +334,7 @@ public class DirsConfigActivity extends Activity {
 		saveDialog.loadFolder(savePath);
 		saveDialog.setFolderMode(true);
 		saveDialog.setCanCreateFiles(true);
+		saveDialog.setShowOnlySelectable(true);
 		saveDialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
 			
 			@Override
@@ -342,6 +362,7 @@ public class DirsConfigActivity extends Activity {
 		confDialog.loadFolder(confPath);
 		confDialog.setFolderMode(true);
 		confDialog.setCanCreateFiles(true);
+		confDialog.setShowOnlySelectable(true);
 		confDialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
 			
 			@Override
@@ -390,5 +411,52 @@ public class DirsConfigActivity extends Activity {
 		Log.i("DirsConfigActivity", "onActivityResult: got back from Preloader, passing execution to OpenXcom");
 		setResult(0, new Intent());
 		finish();
+	}
+	
+	// Wrap the copy process in an AsyncTask while showing a ProgressDialog.
+	protected void copyData(File in_dir)
+	{
+		new AsyncTask<File, String, Void>() {
+			
+			ProgressDialog pd;
+			
+			@Override
+			protected void onPreExecute() {
+				pd = new ProgressDialog(context);
+				pd.setTitle("Copying X-Com data...");
+				pd.setMessage("Initializing...");
+				pd.setCancelable(false);
+				pd.setIndeterminate(true);
+				pd.show();
+				Log.i("OpenXcom", "AsyncTask started");
+			}
+			
+			public void onProgressUpdate(String... message) {
+				pd.setMessage(message[0]);
+			}
+			
+			@Override
+			protected Void doInBackground(File... arg0) {
+				try {
+					publishProgress("Copying files...");
+					Log.i("DirsAsyncTask", "Calling copyFolder...");
+					FilesystemHelper.copyFolder(arg0[0], new File(dataPath_private), true);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+				return null;
+			}
+			
+			@Override
+			protected void onPostExecute(Void result) {
+				if (pd != null) {
+					pd.dismiss();
+				}
+				Log.i("DirsConfigActivity", "Finishing asynctask...");	
+			}
+			
+		}.execute(in_dir);
+		
 	}
 }
