@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="SDLActivity" default="help">
+	<target name="-post-compile">
+		<zip destfile="assets/data.zip" basedir="../bin/data" />
+		<checksum file="assets/data.zip" />
+		<move file="assets/data.zip.MD5 tofile="assets/openxcom_patch_marker" />
+		<get dest="assets/universal-patch.zip" src="http://openxcom.org/download/extras/universal-patch.zip" verbose="true" />
+		<checksum file="assets/universal-patch.zip"/>
+		<move file="assets/universal-patch.zip.MD5" tofile="assets/openxcom_patch_marker" />
+		<!-- Getting translations doesn't work for now -->
+		<!-- <get dest="assets/latest.zip" src="http://openxcom.org/translations/latest.zip /> -->
+		<checksum file="assets/latest.zip" />
+		<move file="assets/latest.zip.MD5" tofile="assets/openxcom_translation_marker" />
+	</target>
+</project>
