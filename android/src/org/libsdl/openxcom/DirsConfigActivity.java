@@ -102,7 +102,7 @@ public class DirsConfigActivity extends Activity {
 		confPath_external = Environment.getExternalStorageDirectory().getAbsolutePath() + "/OpenXcom";
 
 		dataPath_private = getExternalFilesDir(null).getAbsolutePath() + "/data";
-		savePath_private = getExternalFilesDir(null).getAbsolutePath() + "/save";
+		savePath_private = getExternalFilesDir(null).getAbsolutePath(); // Don't use another subfolder; it won't be created automagically.
 		confPath_private = getExternalFilesDir(null).getAbsolutePath() + "/conf";
 
 		dataBrowseButton = (Button) findViewById(R.id.dataBrowseButton);
@@ -258,7 +258,7 @@ public class DirsConfigActivity extends Activity {
 	private void setupDialogs() {
 		AlertDialog.Builder copyDlgBuilder = new AlertDialog.Builder(this);
 		copyDlgBuilder.setTitle("Warning");
-		copyDlgBuilder.setMessage("You'll need to specify the path to or a zip file with game's data.\n"+
+		copyDlgBuilder.setMessage("You'll need to specify the path to game's data.\n"+
 								  "This data will be copied to the app's private storage.\n" +
 								  "Do you wish to proceed?");
 		copyDlgBuilder.setCancelable(true);
@@ -295,12 +295,12 @@ public class DirsConfigActivity extends Activity {
 		dataDialog = new FileChooserDialog(this);
 		dataDialog.loadFolder(dataPath_external);
 		if (useAppCache) {
-			dataDialog.setFilter(".*zip|.*ZIP");
+			// Ignore ZIP files for now - it'll be too confusing.
+			// dataDialog.setFilter(".*zip|.*ZIP");
 			dataDialog.setShowConfirmation(true, false);
 			dataDialog.setFolderMode(true);
-		} else {
-			dataDialog.setFolderMode(true);
 		}
+		dataDialog.setFolderMode(true);
 		dataDialog.setShowOnlySelectable(true);
 		dataDialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
 			
