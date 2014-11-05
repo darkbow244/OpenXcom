@@ -269,18 +269,18 @@ void CraftSoldiersState::moveSoldierDown(Action *action, unsigned int row, bool 
 	{
 		_base->getSoldiers()->at(row) = _base->getSoldiers()->at(row + 1);
 		_base->getSoldiers()->at(row + 1) = s;
-#ifndef __ANDROID__
 		if (row != _lstSoldiers->getVisibleRows() - 1 + _lstSoldiers->getScroll())
 		{
 			//assert (0 && "FIXME");
+#ifndef __ANDROID__
 			SDL_WarpMouseInWindow(NULL, action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
+#endif
 		}
 		else
 		{
 			_lstSoldiers->scrollDown(false);
 		}
 		initList(_lstSoldiers->getScroll());
-#endif
 	}
 }
 
