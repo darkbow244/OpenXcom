@@ -54,6 +54,14 @@ enum ScaleType
 	SCALE_SCREEN_DIV_2,
 	SCALE_SCREEN
 };
+
+// System-specific UI setting
+enum SystemUIStyle
+{
+	SYSTEMUI_ALWAYS_SHOWN,
+	SYSTEMUI_LOW_PROFILE,
+	SYSTEMUI_IMMERSIVE
+};
 /**
  * Container for all the various global game options
  * and customizable settings.

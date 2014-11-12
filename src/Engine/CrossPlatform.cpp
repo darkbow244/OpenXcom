@@ -1057,15 +1057,36 @@ void findDirDialog()
 	}
 	else
 	{
-		Log(LOG_INFO) << "Could not find the requested method!";
+		Log(LOG_INFO) << "Could not find showDirDialog method!";
 	}
 	env->DeleteLocalRef(instance);
 	Log(LOG_INFO) << "Returned to native code!";
 #endif
 }
 
+void setSystemUI()
+{
 #ifdef __ANDROID__
-	// This loads up new paths for the game and
+	JNIEnv *env = (JNIEnv*) SDL_AndroidGetJNIEnv();
+	jobject instance = (jobject) SDL_AndroidGetActivity();
+	jclass oxcJClass = env->GetObjectClass(instance);
+	jmethodID changeSystemUIMethod = env->GetMethodID(oxcJClass, "changeSystemUI", "(I)V");
+	jvalue SysUIArg;
+	SysUIArg.i = Options::systemUI;
+	if (changeSystemUIMethod != NULL)
+	{
+		env->CallVoidMethodA(instance, changeSytemUIMethod, &SysUIArg);
+	}
+	else
+	{
+		Log(LOG_INFO) << "Could not find changeSystemUI method!";
+	}
+	env->DeleteLocalRef(instance);
+#endif
+}
+
+#ifdef __ANDROID__
+	// This loads up new paths for the game and restarts. Called from Java.
 	void Java_org_libsdl_openxcom_OpenXcom_nativeSetPaths(JNIEnv* env, jclass cls, jstring gamePath, jstring savePath, jstring confPath)
 	{
 		Log(LOG_INFO) << "Re-setting paths...";
@@ -1086,7 +1107,6 @@ void findDirDialog()
 		Options::setConfFolder(endPath(confFolder));
 		Game *game = State::getGame();
 		game->setState(new StartState);
-
 	}
 
 

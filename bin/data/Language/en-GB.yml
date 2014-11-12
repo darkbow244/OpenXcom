@@ -1350,3 +1350,14 @@ en-GB:
   STR_NO_MORE_EQUIPMENT_ALLOWED:
     one: "NO MORE EQUIPMENT ALLOWED ON BOARD!{SMALLLINE}You are only allowed to take a maximum of {N} item of equipment on this craft."
     other: "NO MORE EQUIPMENT ALLOWED ON BOARD!{SMALLLINE}You are only allowed to take a maximum of {N} items of equipment on this craft."
+# Included for OpenXcom's Android port
+  STR_SYSTEM: "SYSTEM"
+  STR_TURNING_OPTIONS: "Soldier turning method"
+  STR_SWIPE: "Swipe to turn"
+  STR_HOLD: "Hold to turn"
+  STR_SYSTEM_UI: "Android UI display mode"
+  STR_ALWAYS_SHOWN: "Always shown"
+  STR_LOW_PROFILE: "Low profile"
+  STR_IMMERSIVE: "Immersive mode"
+  STR_RECONFIGURE_DIRS: "Set game folders (requires restart!)"
+  STR_RECONFIGURE_DIRS_BTN: "Set folders"

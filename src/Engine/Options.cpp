@@ -223,6 +223,11 @@ void create()
 	_info.push_back(OptionInfo("TFTDDamage", &TFTDDamage, false, "STR_TFTDDAMAGE", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo("noAlienPanicMessages", &noAlienPanicMessages, false, "STR_NOALIENPANICMESSAGES", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo("alienBleeding", &alienBleeding, false, "STR_ALIENBLEEDING", "STR_BATTLESCAPE"));
+
+	// System-specific
+	_info.push_back(OptionInfo("swipeToTurn", &swipeToTurn, true));
+	_info.push_back(OptionInfo("holdToTurn", &holdToTurn, true));
+	_info.push_back(OptionInfo("systemUI", (int*)&systemUI, SYSTEMUI_ALWAYS_SHOWN));
 	
 	// controls
 	_info.push_back(KeyOptionInfo("keyOk", &keyOk, SDLK_RETURN, "STR_OK", "STR_GENERAL"));

@@ -784,6 +784,11 @@ void BattlescapeState::mapRelease(Action *action)
 	_multiGestureProcess = false;
 #ifdef __ANDROID__
 	_longPressTimer->stop();
+	// Do nothing if this method of turning is disabled
+	if (!Options::swipeToTurn)
+	{
+		return;
+	}
 	Position pos;
 	_map->getSelectorPosition(&pos);
 	if (_swipeFromSoldier)
@@ -807,6 +812,11 @@ void BattlescapeState::mapLongPress()
 	// If the event fired while the camera was moving,
 	// then we don't want to handle it.
 	if (_mouseMovedOverThreshold)
+	{
+		return;
+	}
+	// Do nothing if this method of turning is disabled.
+	if (!Options::holdToTurn)
 	{
 		return;
 	}
