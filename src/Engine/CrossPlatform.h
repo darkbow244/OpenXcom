@@ -88,6 +88,8 @@ namespace CrossPlatform
 	void setWindowIcon(int winResource, const std::string &unixPath, SDL_Window *winPtr);
 	/// Displays the data finding dialog.
 	void findDirDialog();
+	/// Sets system UI visibility
+	void setSystemUI();
 #ifdef __ANDROID__
 	/// This function is called from Java.
 #ifdef __cplusplus

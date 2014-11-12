@@ -146,7 +146,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\deps\include;$(ProjectDir)..\deps\include\SDL;$(ProjectDir)..\deps\include\yaml-cpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>LODEPNG_NO_COMPILE_DECODER;LODEPNG_NO_COMPILE_ANCILLARY_CHUNKS;WIN32;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LODEPNG_NO_COMPILE_DECODER;LODEPNG_NO_COMPILE_ANCILLARY_CHUNKS;WIN32;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_CONSOLE;__PSEUDO_ANDROID__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -414,6 +414,7 @@
     <ClCompile Include="Menu\OptionsControlsState.cpp" />
     <ClCompile Include="Menu\OptionsModsState.cpp" />
     <ClCompile Include="Menu\OptionsNoAudioState.cpp" />
+    <ClCompile Include="Menu\OptionsSystemState.cpp" />
     <ClCompile Include="Menu\OptionsVideoState.cpp" />
     <ClCompile Include="Menu\PauseState.cpp" />
     <ClCompile Include="Menu\SaveGameState.cpp" />
@@ -723,6 +724,7 @@
     <ClInclude Include="Menu\OptionsControlsState.h" />
     <ClInclude Include="Menu\OptionsModsState.h" />
     <ClInclude Include="Menu\OptionsNoAudioState.h" />
+    <ClInclude Include="Menu\OptionsSystemState.h" />
     <ClInclude Include="Menu\OptionsVideoState.h" />
     <ClInclude Include="Menu\PauseState.h" />
     <ClInclude Include="Menu\SaveGameState.h" />

@@ -45,6 +45,8 @@
 #include "OptionsConfirmState.h"
 #include "StartState.h"
 
+#include "OptionsSystemState.h"
+
 namespace OpenXcom
 {
 
@@ -60,7 +62,12 @@ OptionsBaseState::OptionsBaseState(OptionsOrigin origin) : _origin(origin)
 
 	_btnVideo = new TextButton(80, 16, 8, 8);
 	_btnAudio = new TextButton(80, 16, 8, 28);
+#if defined (__ANDROID__) || defined (__PSEUDO_ANDROID__)
+	_btnSystem = new TextButton(80, 16, 8, 48);
+#else
 	_btnControls = new TextButton(80, 16, 8, 48);
+#endif
+	// TODO: Android
 	_btnGeoscape = new TextButton(80, 16, 8, 68);
 	_btnBattlescape = new TextButton(80, 16, 8, 88);
 	_btnAdvanced = new TextButton(80, 16, 8, 108);
@@ -86,7 +93,11 @@ OptionsBaseState::OptionsBaseState(OptionsOrigin origin) : _origin(origin)
 
 	add(_btnVideo);
 	add(_btnAudio);
+#if defined(__ANDROID__) || defined (__PSEUDO_ANDROID__)
+	add(_btnSystem);
+#else
 	add(_btnControls);
+#endif
 	add(_btnGeoscape);
 	add(_btnBattlescape);
 	add(_btnAdvanced);
@@ -109,11 +120,15 @@ OptionsBaseState::OptionsBaseState(OptionsOrigin origin) : _origin(origin)
 	_btnAudio->setColor(Palette::blockOffset(8)+5);
 	_btnAudio->setText(tr("STR_AUDIO"));
 	_btnAudio->onMousePress((ActionHandler)&OptionsBaseState::btnGroupPress, SDL_BUTTON_LEFT);
-
+#if defined(__ANDROID__) || defined(__PSEUDO_ANDROID__)
+	_btnSystem->setColor(Palette::blockOffset(8)+5);
+	_btnSystem->setText(tr("STR_SYSTEM"));
+	_btnSystem->onMousePress((ActionHandler)&OptionsBaseState::btnGroupPress, SDL_BUTTON_LEFT);
+#else
 	_btnControls->setColor(Palette::blockOffset(8)+5);
 	_btnControls->setText(tr("STR_CONTROLS"));
 	_btnControls->onMousePress((ActionHandler)&OptionsBaseState::btnGroupPress, SDL_BUTTON_LEFT);
-
+#endif
 	_btnGeoscape->setColor(Palette::blockOffset(8)+5);
 	_btnGeoscape->setText(tr("STR_GEOSCAPE_UC"));
 	_btnGeoscape->onMousePress((ActionHandler)&OptionsBaseState::btnGroupPress, SDL_BUTTON_LEFT);
@@ -197,7 +212,11 @@ void OptionsBaseState::setCategory(TextButton *button)
 	_group = button;
 	_btnVideo->setGroup(&_group);
 	_btnAudio->setGroup(&_group);
+#if defined(__ANDROID__ ) || defined(__PSEUDO_ANDROID__)
+	_btnSystem->setGroup(&_group);
+#else
 	_btnControls->setGroup(&_group);
+#endif
 	_btnGeoscape->setGroup(&_group);
 	_btnBattlescape->setGroup(&_group);
 	_btnAdvanced->setGroup(&_group);
@@ -294,10 +313,17 @@ void OptionsBaseState::btnGroupPress(Action *action)
 				_game->pushState(new OptionsNoAudioState(_origin));
 			}
 		}
+#if defined(__ANDROID__) || defined(__PSEUDO_ANDROID__)
+		else if (sender == _btnSystem)
+		{
+			_game->pushState(new OptionsSystemState(_origin));
+		}
+#else
 		else if (sender == _btnControls)
 		{
 			_game->pushState(new OptionsControlsState(_origin));
 		}
+#endif
 		else if (sender == _btnGeoscape)
 		{
 			_game->pushState(new OptionsGeoscapeState(_origin));

@@ -40,7 +40,9 @@ namespace OpenXcom
  */
 OptionsControlsState::OptionsControlsState(OptionsOrigin origin) : OptionsBaseState(origin), _selected(-1), _selKey(0)
 {
+#if !defined(__ANDROID__) && !defined(__PSEUDO_ANDROID__)
 	setCategory(_btnControls);
+#endif
 
 	// Create objects
 	_lstControls = new TextList(200, 136, 94, 8);	

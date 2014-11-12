@@ -245,12 +245,6 @@
     <ClCompile Include="Geoscape\MultipleTargetsState.cpp">
       <Filter>Geoscape</Filter>
     </ClCompile>
-    <ClCompile Include="Geoscape\Polygon.cpp">
-      <Filter>Geoscape</Filter>
-    </ClCompile>
-    <ClCompile Include="Geoscape\Polyline.cpp">
-      <Filter>Geoscape</Filter>
-    </ClCompile>
     <ClCompile Include="Geoscape\SelectDestinationState.cpp">
       <Filter>Geoscape</Filter>
     </ClCompile>
@@ -723,9 +717,6 @@
     <ClCompile Include="Engine\Scalers\scalebit.cpp">
       <Filter>Engine\Scalers</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\OpenGL.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="Interface\ToggleTextButton.cpp">
       <Filter>Interface</Filter>
     </ClCompile>
@@ -861,19 +852,19 @@
     </ClCompile>
     <ClCompile Include="Engine\UIBuilder.cpp">
       <Filter>Engine</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="Interface\BattlescapeButton.cpp">
       <Filter>Interface</Filter>
     </ClCompile>
     <ClCompile Include="Ruleset\RuleGlobe.cpp">
       <Filter>Ruleset</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="Engine\SDLRenderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Ruleset\Polygon.cpp">
       <Filter>Ruleset</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="Engine\Renderer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -888,9 +879,12 @@
     </ClCompile>
     <ClCompile Include="Engine\OpenGLRenderer.cpp">
       <Filter>Engine</Filter>
-	</ClCompile>
+    </ClCompile>
     <ClCompile Include="Battlescape\Particle.cpp">
       <Filter>Battlescape</Filter>
+    </ClCompile>
+    <ClCompile Include="Menu\OptionsSystemState.cpp">
+      <Filter>Menu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1611,9 +1605,6 @@
     <ClInclude Include="Savegame\SerializationHelper.h">
       <Filter>Savegame</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\OpenGL.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
     <ClInclude Include="Interface\ToggleTextButton.h">
       <Filter>Interface</Filter>
     </ClInclude>
@@ -1790,6 +1781,13 @@
     </ClInclude>
     <ClInclude Include="Battlescape\Particle.h">
       <Filter>Battlescape</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\OpenGLRenderer.h" />
+    <ClInclude Include="Engine\Renderer.h" />
+    <ClInclude Include="Engine\SDLRenderer.h" />
+    <ClInclude Include="Engine\UIBuilder.h" />
+    <ClInclude Include="Menu\OptionsSystemState.h">
+      <Filter>Menu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
