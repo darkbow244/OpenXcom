@@ -1,13 +1,15 @@
 package org.libsdl.openxcom;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.libsdl.app.SDLActivity;
 //import org.libsdl.openxcom.DirsConfigActivity;
 
-
-
-
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -24,7 +26,7 @@ public class OpenXcom extends SDLActivity {
 
 	public static int systemUIStyle;
 
-	protected final static string SYSTEM_UI_NAME = "SystemUIStyle";
+	protected final static String SYSTEM_UI_NAME = "SystemUIStyle";
 	protected final int SYSTEM_UI_ALWAYS_SHOWN = 0;
 	protected final int SYSTEM_UI_LOW_PROFILE = 1;
 	protected final int SYSTEM_UI_IMMERSIVE = 2;
@@ -34,12 +36,12 @@ public class OpenXcom extends SDLActivity {
 		super.onCreate(savedInstance);
 		SharedPreferences preferences = getSharedPreferences(DirsConfigActivity.PREFS_NAME, 0);
 		systemUIStyle = preferences.getInt(SYSTEM_UI_NAME, 0);
-		setSystemUI;
+		setSystemUI();
 	}
 
 	public void setSystemUI() {
 		final View rootView = getWindow().getDecorView();
-		int systemUIFlags;
+		int systemUIFlags = 0;
 
 		// Only set these flags if the device supports them
 		if (Build.VERSION.SDK_INT >= 11) {
@@ -57,7 +59,7 @@ public class OpenXcom extends SDLActivity {
 					if (Build.VERSION.SDK_INT < 14) {
 						systemUIFlags = View.STATUS_BAR_HIDDEN;
 					} else {
-						systemUIFlags = View.SYSTEM_UI_FLAG_LOW_PROFILE
+						systemUIFlags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
 					}
 					break;
 				case SYSTEM_UI_IMMERSIVE:
@@ -75,8 +77,9 @@ public class OpenXcom extends SDLActivity {
 					}
 			}
 			rootView.setSystemUiVisibility(systemUIFlags);
-			if (systemUIFlags & (View.STATUS_BAR_HIDDEN | SYSTEM_UI_FLAG_LOW_PROFILE)) {
+			if ((systemUIFlags & (View.STATUS_BAR_HIDDEN | View.SYSTEM_UI_FLAG_LOW_PROFILE)) != 0) {
 				// Set a listener to dim back navigation buttons
+				final int newSystemUiFlags = systemUIFlags;
 				rootView.setOnSystemUiVisibilityChangeListener(
 					new View.OnSystemUiVisibilityChangeListener(){
 						@Override
@@ -86,7 +89,9 @@ public class OpenXcom extends SDLActivity {
 								@Override
 								public void run() {
 									OpenXcom.this.runOnUiThread(new Runnable() {
-										rootView.setSystemUiVisibility(systemUiFlags);
+										public void run() {
+											rootView.setSystemUiVisibility(newSystemUiFlags);
+										}
 									}); // Runnable ends here
 								}
 							}, 1000); // TimerTask ends here
@@ -94,30 +99,6 @@ public class OpenXcom extends SDLActivity {
 
 					}); // listener ends here
 			}
-        	rootView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
-        		@Override
-        		public void onSystemUiVisibilityChange(int visibility) {
-        			Timer timer = new Timer();
-        			timer.schedule(new TimerTask() {
-        				@Override
-        				public void run() {
-        					SDLActivity.this.runOnUiThread(new Runnable() {
-        						@Override
-        						public void run() {
-        							int systemUiFlags;
-        							if (Build.VERSION.SDK_INT < 14) {
-        								systemUiFlags = View.STATUS_BAR_HIDDEN;
-        							} else {
-        								systemUiFlags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
-        							}
-        							rootView.setSystemUiVisibility(systemUiFlags);
-        						}
-        					});
-        				}
-        			}, 1000);
-        		}
-	    
-        	});
         }
 	}
 

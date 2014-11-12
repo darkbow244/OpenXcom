@@ -1075,7 +1075,7 @@ void setSystemUI()
 	SysUIArg.i = Options::systemUI;
 	if (changeSystemUIMethod != NULL)
 	{
-		env->CallVoidMethodA(instance, changeSytemUIMethod, &SysUIArg);
+		env->CallVoidMethodA(instance, changeSystemUIMethod, &SysUIArg);
 	}
 	else
 	{
