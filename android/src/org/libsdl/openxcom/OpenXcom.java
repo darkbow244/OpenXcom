@@ -38,6 +38,19 @@ public class OpenXcom extends SDLActivity {
 		systemUIStyle = preferences.getInt(SYSTEM_UI_NAME, 0);
 		setSystemUI();
 	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		// Set UI a bit later, so that SDL would get the resize event
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+			setSystemUI();
+			}
+		}, 500);
+	}
 
 	public void setSystemUI() {
 		final View rootView = getWindow().getDecorView();
