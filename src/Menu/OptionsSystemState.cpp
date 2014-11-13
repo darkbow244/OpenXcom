@@ -110,11 +110,11 @@ void OptionsSystemState::turnSettingChange(Action *action)
 void OptionsSystemState::cbxSystemUIChange(Action *action)
 {
 	Options::systemUI = (SystemUIStyle) _cbxSystemUI->getSelected();
-	CrossPlatform::setSystemUI();
 }
 
 void OptionsSystemState::btnReconfigureDirsClick(Action *action)
 {
+	Options::reload = true;
 	CrossPlatform::findDirDialog();
 }
 
