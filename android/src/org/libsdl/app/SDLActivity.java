@@ -660,6 +660,10 @@ class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     
         setFocusable(true);
         setFocusableInTouchMode(true);
+        // Workaround for Samsungs (yes, yet another one)
+        if (Build.MANUFACTURER.equals("Samsung")) {
+		getHolder().setFormat(PixelFormat.RGBA_8888);
+	}
         requestFocus();
         setOnKeyListener(this); 
         setOnTouchListener(this);   
