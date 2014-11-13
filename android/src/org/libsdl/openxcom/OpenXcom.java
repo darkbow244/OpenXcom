@@ -64,7 +64,7 @@ public class OpenXcom extends SDLActivity {
 					break;
 				case SYSTEM_UI_IMMERSIVE:
 					// Set flags to "Immersive", use "Low profile" otherwise
-					if (Build.VERSION.SDK_INT < 19) {
+					if (Build.VERSION.SDK_INT >= 19) {
 						systemUIFlags = View.SYSTEM_UI_FLAG_FULLSCREEN
 										| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
 										| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
@@ -76,29 +76,41 @@ public class OpenXcom extends SDLActivity {
 						}
 					}
 			}
-			rootView.setSystemUiVisibility(systemUIFlags);
-			if ((systemUIFlags & (View.STATUS_BAR_HIDDEN | View.SYSTEM_UI_FLAG_LOW_PROFILE)) != 0) {
-				// Set a listener to dim back navigation buttons
-				final int newSystemUiFlags = systemUIFlags;
-				rootView.setOnSystemUiVisibilityChangeListener(
-					new View.OnSystemUiVisibilityChangeListener(){
-						@Override
-						public void onSystemUiVisibilityChange(int visibility) {
-							Timer timer = new Timer();
-							timer.schedule(new TimerTask() {
-								@Override
-								public void run() {
-									OpenXcom.this.runOnUiThread(new Runnable() {
-										public void run() {
-											rootView.setSystemUiVisibility(newSystemUiFlags);
-										}
-									}); // Runnable ends here
-								}
-							}, 1000); // TimerTask ends here
-						}
+			final int newSystemUIFlags = systemUIFlags;
+			Log.i("OpenXcom", "UI flags are set to: " + newSystemUIFlags);
+			runOnUiThread(new Runnable() {
+				public void run() {
+					Log.i("OpenXcom", "Attempting to set UI flags");
+					rootView.setSystemUiVisibility(newSystemUIFlags);
+					Log.i("OpenXcom", "UI flags set!");
+					// God damn it, do I seriously have to put everything here?
+					if ((newSystemUIFlags & (View.STATUS_BAR_HIDDEN | View.SYSTEM_UI_FLAG_LOW_PROFILE)) != 0) {
+						// Set a listener to dim back navigation buttons
+						rootView.setOnSystemUiVisibilityChangeListener(
+						new View.OnSystemUiVisibilityChangeListener(){
+							@Override
+							public void onSystemUiVisibilityChange(int visibility) {
+								Timer timer = new Timer();
+								timer.schedule(new TimerTask() {
+									@Override
+									public void run() {
+										OpenXcom.this.runOnUiThread(new Runnable() {
+											public void run() {
+												rootView.setSystemUiVisibility(newSystemUIFlags);
+											}
+										}); // Runnable ends here
+									}
+								}, 1000); // TimerTask ends here
+							}
 
-					}); // listener ends here
-			}
+						}); // listener ends here
+					} else {
+						rootView.setOnSystemUiVisibilityChangeListener(null);
+					}
+				}
+			});
+			/*
+			*/
         }
 	}
 
@@ -111,11 +123,13 @@ public class OpenXcom extends SDLActivity {
 
 	public void changeSystemUI(int newSystemUIStyle) {
 		Log.i("OpenXcom", "Changing system UI");
+		Log.i("OpenXcom", "New style is: " + newSystemUIStyle);
 		systemUIStyle = newSystemUIStyle;
 		SharedPreferences preferences = getSharedPreferences(DirsConfigActivity.PREFS_NAME, 0);
 		SharedPreferences.Editor preferencesEditor = preferences.edit();
 		preferencesEditor.putInt(SYSTEM_UI_NAME, systemUIStyle);
 		preferencesEditor.apply();
+		setSystemUI();
 	}
 	
 	@Override
