@@ -50,7 +50,7 @@ public class PreloaderActivity extends Activity {
 		context = this;
 		prefs = getSharedPreferences(DirsConfigActivity.PREFS_NAME, 0);
 		gamePath = prefs.getString(DirsConfigActivity.DATA_PATH_KEY, "");
-		if (gamePath == "") {
+		if (gamePath.equals("")) {
 			// Looks like we're running for the first time.
 			// We'll just make our best attempt at guessing where the game is.
 			// TODO: A better approach would be to launch a DirsConfigActivity
@@ -169,11 +169,15 @@ public class PreloaderActivity extends Activity {
 	protected void passExecution() {
 		Intent calledIntent = this.getIntent();
 		Bundle extParams = calledIntent.getExtras();
-		if (extParams != null)
+		String calledFrom = null;
+		if (extParams != null) {
+			calledFrom = extParams.getString("calledFrom");
+		}
+		if (calledFrom != null)
 		{
 			Log.i("PreloaderActivity", "Got extra parameters!");
-			Log.i("PreloaderActivity", "calledFrom: " + extParams.getString("calledFrom"));
-			if (extParams.getString("calledFrom").equals("DirsConfigActivity")) {
+			Log.i("PreloaderActivity", "calledFrom: " + calledFrom);
+			if (calledFrom.equals("DirsConfigActivity")) {
 				// We were started from the file chooser dialog activity,
 				// so we should return to it.
 				Log.i("PreloaderActivity", "Called from DirsConfigActivity, returning");

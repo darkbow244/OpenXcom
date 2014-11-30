@@ -4,6 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.libsdl.app.SDLActivity;
+import org.libsdl.openxcom.UiVisibilityChanger;
 //import org.libsdl.openxcom.DirsConfigActivity;
 
 import android.os.Build;
@@ -17,7 +18,7 @@ import android.content.res.Configuration;
 import android.content.pm.ActivityInfo;
 
 /*
- * Just a wrapper, I guess
+ * OpenXcom-specific additions to SDLActivity.
  *
  */
 
@@ -31,11 +32,14 @@ public class OpenXcom extends SDLActivity {
 	protected final int SYSTEM_UI_LOW_PROFILE = 1;
 	protected final int SYSTEM_UI_IMMERSIVE = 2;
 
+	protected UiVisibilityChanger uiVisibilityChanger = null;
+	
 	@Override
 	protected void onCreate(Bundle savedInstance) {
 		super.onCreate(savedInstance);
 		SharedPreferences preferences = getSharedPreferences(DirsConfigActivity.PREFS_NAME, 0);
 		systemUIStyle = preferences.getInt(SYSTEM_UI_NAME, 0);
+		uiVisibilityChanger = new UiVisibilityChanger(this, systemUIStyle);
 		setSystemUI();
 	}
 	
@@ -49,82 +53,12 @@ public class OpenXcom extends SDLActivity {
 			public void run() {
 			setSystemUI();
 			}
-		}, 500);
+		}, 1000);
 	}
 
 	public void setSystemUI() {
-		final View rootView = getWindow().getDecorView();
-		int systemUIFlags = 0;
-
-		// Only set these flags if the device supports them
-		if (Build.VERSION.SDK_INT >= 11) {
-			switch(systemUIStyle) {
-				case SYSTEM_UI_ALWAYS_SHOWN:
-					// Set flags to "visible"
-					if (Build.VERSION.SDK_INT < 14) {
-						systemUIFlags = View.STATUS_BAR_VISIBLE;
-					} else {
-						systemUIFlags = View.SYSTEM_UI_FLAG_VISIBLE;
-					}
-					break;
-				case SYSTEM_UI_LOW_PROFILE:
-					// Set flags to "low profile"
-					if (Build.VERSION.SDK_INT < 14) {
-						systemUIFlags = View.STATUS_BAR_HIDDEN;
-					} else {
-						systemUIFlags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
-					}
-					break;
-				case SYSTEM_UI_IMMERSIVE:
-					// Set flags to "Immersive", use "Low profile" otherwise
-					if (Build.VERSION.SDK_INT >= 19) {
-						systemUIFlags = View.SYSTEM_UI_FLAG_FULLSCREEN
-										| View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-										| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-					} else {
-						if (Build.VERSION.SDK_INT < 14) {
-							systemUIFlags = View.STATUS_BAR_HIDDEN;
-						} else {
-							systemUIFlags = View.SYSTEM_UI_FLAG_LOW_PROFILE;
-						}
-					}
-			}
-			final int newSystemUIFlags = systemUIFlags;
-			Log.i("OpenXcom", "UI flags are set to: " + newSystemUIFlags);
-			runOnUiThread(new Runnable() {
-				public void run() {
-					Log.i("OpenXcom", "Attempting to set UI flags");
-					rootView.setSystemUiVisibility(newSystemUIFlags);
-					Log.i("OpenXcom", "UI flags set!");
-					// God damn it, do I seriously have to put everything here?
-					if ((newSystemUIFlags & (View.STATUS_BAR_HIDDEN | View.SYSTEM_UI_FLAG_LOW_PROFILE)) != 0) {
-						// Set a listener to dim back navigation buttons
-						rootView.setOnSystemUiVisibilityChangeListener(
-						new View.OnSystemUiVisibilityChangeListener(){
-							@Override
-							public void onSystemUiVisibilityChange(int visibility) {
-								Timer timer = new Timer();
-								timer.schedule(new TimerTask() {
-									@Override
-									public void run() {
-										OpenXcom.this.runOnUiThread(new Runnable() {
-											public void run() {
-												rootView.setSystemUiVisibility(newSystemUIFlags);
-											}
-										}); // Runnable ends here
-									}
-								}, 1000); // TimerTask ends here
-							}
-
-						}); // listener ends here
-					} else {
-						rootView.setOnSystemUiVisibilityChangeListener(null);
-					}
-				}
-			});
-			/*
-			*/
-        }
+		uiVisibilityChanger.setUiVisibilityFlags(systemUIStyle);
+		runOnUiThread(uiVisibilityChanger);			
 	}
 
 	public static void showDirDialog() {
@@ -168,3 +102,6 @@ public class OpenXcom extends SDLActivity {
 	}
 
 };
+
+
+
