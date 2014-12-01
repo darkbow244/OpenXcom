@@ -883,6 +883,30 @@
     <ClCompile Include="Battlescape\Particle.cpp">
       <Filter>Battlescape</Filter>
     </ClCompile>
+    <ClCompile Include="Ruleset\MapScript.cpp">
+      <Filter>Ruleset</Filter>
+    </ClCompile>
+    <ClCompile Include="Ufopaedia\ArticleStateTFTDFacility.cpp">
+      <Filter>Ufopaedia</Filter>
+    </ClCompile>
+    <ClCompile Include="Ufopaedia\ArticleStateTFTDCraft.cpp">
+      <Filter>Ufopaedia</Filter>
+    </ClCompile>
+    <ClCompile Include="Ufopaedia\ArticleStateTFTDUso.cpp">
+      <Filter>Ufopaedia</Filter>
+    </ClCompile>
+    <ClCompile Include="Ufopaedia\ArticleStateTFTDArmor.cpp">
+      <Filter>Ufopaedia</Filter>
+    </ClCompile>
+    <ClCompile Include="Ufopaedia\ArticleStateTFTDItem.cpp">
+      <Filter>Ufopaedia</Filter>
+    </ClCompile>
+    <ClCompile Include="Ufopaedia\ArticleStateTFTDCraftWeapon.cpp">
+      <Filter>Ufopaedia</Filter>
+    </ClCompile>
+    <ClCompile Include="Ufopaedia\ArticleStateTFTDVehicle.cpp">
+      <Filter>Ufopaedia</Filter>
+    </ClCompile>
     <ClCompile Include="Menu\OptionsSystemState.cpp">
       <Filter>Menu</Filter>
     </ClCompile>

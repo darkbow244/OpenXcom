@@ -45,7 +45,7 @@ class Language;
 class AlienBAIState;
 class CivilianBAIState;
 
-enum UnitStatus {STATUS_STANDING, STATUS_WALKING, STATUS_FLYING, STATUS_TURNING, STATUS_AIMING, STATUS_COLLAPSING, STATUS_DEAD, STATUS_UNCONSCIOUS, STATUS_PANICKING, STATUS_BERSERK};
+enum UnitStatus {STATUS_STANDING, STATUS_WALKING, STATUS_FLYING, STATUS_TURNING, STATUS_AIMING, STATUS_COLLAPSING, STATUS_DEAD, STATUS_UNCONSCIOUS, STATUS_PANICKING, STATUS_BERSERK, STATUS_TIME_OUT};
 enum UnitFaction {FACTION_PLAYER, FACTION_HOSTILE, FACTION_NEUTRAL};
 enum UnitSide {SIDE_FRONT, SIDE_LEFT, SIDE_RIGHT, SIDE_REAR, SIDE_UNDER};
 enum UnitBodyPart {BODYPART_HEAD, BODYPART_TORSO, BODYPART_RIGHTARM, BODYPART_LEFTARM, BODYPART_RIGHTLEG, BODYPART_LEFTLEG};
@@ -114,7 +114,7 @@ private:
 	int _turretType;
 	int _breathFrame;
 	bool _breathing;
-	bool _floorAbove;
+	bool _hidingForTurn, _floorAbove, _respawn;
 	MovementType _movementType;
 public:
 	static const int MAX_SOLDIER_ID = 1000000;
@@ -329,7 +329,7 @@ public:
 	/// Gets the unit's name.
 	std::wstring getName(Language *lang, bool debugAppendId = false) const;
 	/// Gets the unit's stats.
-	UnitStats *getStats();
+	UnitStats *getBaseStats();
 	/// Get the unit's stand height.
 	int getStandHeight() const;
 	/// Get the unit's kneel height.
@@ -352,8 +352,10 @@ public:
 	int getAggression() const;
 	/// Get the units's special ability.
 	int getSpecialAbility() const;
-	/// Set the units's special ability.
-	void setSpecialAbility(SpecialAbility specab);
+	/// Set the units's respawn flag.
+	void setRespawn(bool respawn);
+	/// Get the units's respawn flag.
+	bool getRespawn();
 	/// Get the units's rank string.
 	std::string getRankString() const;
 	/// Get the geoscape-soldier object.
@@ -401,8 +403,6 @@ public:
 
 	Unit *getUnitRules() const { return _unitRules; }
 
-	/// scratch value for AI's left hand to tell its right hand what's up...
-	bool _hidingForTurn; // don't zone out and start patrolling again
 	Position lastCover;
 	/// get the vector of units we've seen this turn.
 	std::vector<BattleUnit *> &getUnitsSpottedThisTurn();
@@ -438,6 +438,12 @@ public:
 	std::string getMeleeWeapon();
 	/// Use this function to check the unit's movement type.
 	MovementType getMovementType() const;
+	/// Checks if this unit is in hiding for a turn.
+	bool isHiding() {return _hidingForTurn; };
+	/// Sets this unit is in hiding for a turn (or not).
+	void setHiding(bool hiding) { _hidingForTurn = hiding; };
+	/// Puts the unit in the corner to think about what he's done.
+	void goToTimeOut();
 
 };
 

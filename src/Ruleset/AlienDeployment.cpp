@@ -31,6 +31,7 @@ namespace YAML
 			node["lowQty"] = rhs.lowQty;
 			node["highQty"] = rhs.highQty;
 			node["dQty"] = rhs.dQty;
+			node["extraQty"] = rhs.extraQty;
 			node["percentageOutsideUfo"] = rhs.percentageOutsideUfo;
 			node["itemSets"] = rhs.itemSets;
 			return node;
@@ -45,6 +46,7 @@ namespace YAML
 			rhs.lowQty = node["lowQty"].as<int>(rhs.lowQty);
 			rhs.highQty = node["highQty"].as<int>(rhs.highQty);
 			rhs.dQty = node["dQty"].as<int>(rhs.dQty);
+			rhs.extraQty = node["extraQty"].as<int>(0); // give this a default, as it's not 100% needed, unlike the others.
 			rhs.percentageOutsideUfo = node["percentageOutsideUfo"].as<int>(rhs.percentageOutsideUfo);
 			rhs.itemSets = node["itemSets"].as< std::vector<OpenXcom::ItemSet> >(rhs.itemSets);
 			return true;
@@ -86,6 +88,8 @@ void AlienDeployment::load(const YAML::Node &node)
 	_terrains = node["terrains"].as<std::vector<std::string> >(_terrains);
 	_shade = node["shade"].as<int>(_shade);
 	_nextStage = node["nextStage"].as<std::string>(_nextStage);
+	_race = node["race"].as<std::string>(_race);
+	_script = node["script"].as<std::string>(_script);
 }
 
 /**
@@ -156,4 +160,21 @@ std::string AlienDeployment::getNextStage() const
 	return _nextStage;
 }
 
+/**
+ * Gets the race to use on the next stage of the mission.
+ * @return The race for the next stage of the mission.
+ */
+std::string AlienDeployment::getRace() const
+{
+	return _race;
+}
+
+/**
+ * Gets the script to use to generate a mission of this type.
+ * @return The script to use to generate a mission of this type.
+ */
+std::string AlienDeployment::getScript() const
+{
+	return _script;
+}
 }
