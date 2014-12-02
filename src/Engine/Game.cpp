@@ -152,7 +152,7 @@ void Game::run()
 	// this will avoid processing SDL's resize event on startup, workaround for the heap allocation error it causes.
 	bool startupEvent = Options::allowResize;
 	
-#ifdef __ANDROID__
+//#ifdef __ANDROID__
 	int numTouchDevices = SDL_GetNumTouchDevices();
 	std::vector<SDL_TouchID> touchDevices;
 	for(int i = 0; i < numTouchDevices; ++i)
@@ -163,7 +163,7 @@ void Game::run()
 	bool isTouched = false;
 	SDL_Event reservedMUpEvent;
 	Log(LOG_INFO) << "SDL reports this number of touch devices present: " << SDL_GetNumTouchDevices();
-#endif
+//#endif
 	
 	while (!_quit)
 	{
@@ -195,33 +195,40 @@ void Game::run()
 		}
 		
 		// Now's as good a time as ever to send that fake event
-
-#ifdef __ANDROID__
+//#ifdef __ANDROID__
 		isTouched = false;
-		if (!hadFingerUp)
+		if (Options::fakeEvents)
 		{
-			for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
+			if (!hadFingerUp)
 			{
-				if(SDL_GetNumTouchFingers(*i))
+				for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
 				{
-					isTouched = true;
-					break;
+					if(SDL_GetNumTouchFingers(*i))
+					{
+						isTouched = true;
+						break;
+					}
+				}
+				if (!isTouched)
+				{
+					// NOTE: This code only sends ONE mousebuttonup event. May be a source of bugs.
+					// We shouldn't end up here, but whatever.
+					reservedMUpEvent.type = SDL_MOUSEBUTTONUP;
+					if (Options::logTouch)
+					{
+						Log(LOG_INFO) << "Sending fake mouseButtonUp event; event details: x: " << reservedMUpEvent.button.x << ", y: " << reservedMUpEvent.button.y;
+					}
+					Action fakeAction = Action(&reservedMUpEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+					// I'm not sure if these care about our mouse actions anyway.
+					/*_screen->handle(&fakeAction);
+					_cursor->handle(&fakeAction);
+					_fpsCounter->handle(&fakeAction);*/
+					_states.back()->handle(&fakeAction);
+					hadFingerUp = true;
 				}
 			}
-			if (!isTouched)
-			{
-				// We shouldn't end up here, but whatever.
-				reservedMUpEvent.type = SDL_MOUSEBUTTONUP;
-				Action fakeAction = Action(&reservedMUpEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-				// I'm not sure if these care about our mouse actions anyway.
-				/*_screen->handle(&fakeAction);
-				_cursor->handle(&fakeAction);
-				_fpsCounter->handle(&fakeAction);*/
-				_states.back()->handle(&fakeAction);
-				hadFingerUp = true;
-			}
 		}
-#endif
+//#endif
 
 		// Process events
 		while (SDL_PollEvent(&_event))
@@ -335,12 +342,20 @@ void Game::run()
 					// interfering with each other.
 					if (_event.motion.which == SDL_TOUCH_MOUSEID)
 					{
+						if (Options::logTouch)
+						{
+							Log(LOG_INFO) << "Got a spurious MouseID event; ignoring...";
+						}
 						break;
 					}
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
 					if (_event.button.which == SDL_TOUCH_MOUSEID)
 					{
+						if (Options::logTouch)
+						{
+							Log(LOG_INFO) << "Got a spurious MouseID event; ignoring...";
+						}
 						break;
 					}
 				case SDL_MOUSEWHEEL:
@@ -373,9 +388,31 @@ void Game::run()
 					    (_event.type == SDL_FINGERDOWN) ||
 					    (_event.type == SDL_FINGERUP))
 					{
+						if (Options::logTouch)
+						{
+							Log(LOG_INFO) << "Got a TouchFinger event; details: ";
+							switch (_event.type)
+							{
+							case SDL_FINGERMOTION:
+								Log(LOG_INFO) << " type: SDL_FINGERMOTION";
+								break;
+							case SDL_FINGERDOWN:
+								Log(LOG_INFO) << " type: SDL_FINGERDOWN";
+								break;
+							case SDL_FINGERUP:
+								Log(LOG_INFO) << " type: SDL_FINGERUP";
+								break;
+							default:
+								Log(LOG_INFO) << " type: UNKNOWN!";
+							}
+							Log(LOG_INFO) << " timestamp: " << _event.tfinger.timestamp << ", touchID: " << _event.tfinger.touchId << ", fingerID: " << _event.tfinger.fingerId;
+							Log(LOG_INFO) << " x: " << _event.tfinger.x << ", y: " << _event.tfinger.y << ", dx: " << _event.tfinger.dx << ", dy: " << _event.tfinger.dy;
+						}
 						// On Android, fingerId of 0 corresponds to the first finger on the screen.
-						// FIXME: This might be platform-dependent!
-						if(_event.tfinger.fingerId == 0)
+						// Finger index of 0 _should_ mean the first finger on the screen,
+						// but that might be platform-dependent as well.
+						SDL_Finger *finger = SDL_GetTouchFinger(_event.tfinger.touchId, 0);
+						if(finger && (finger->id == _event.tfinger.fingerId))
 						{
 							// Note that we actually handle fingermotion, so emulating it may cause bugs.
 							if(_event.type == SDL_FINGERMOTION)
@@ -423,6 +460,13 @@ void Game::run()
 					}
 				}
 				case SDL_MULTIGESTURE:
+					if (Options::logTouch)
+					{
+						Log(LOG_INFO) << "Got a MultiGesture event, details:";
+						Log(LOG_INFO) << " timestamp: " << _event.mgesture.timestamp << ", touchID: " << _event.mgesture.touchId;
+						Log(LOG_INFO) << " numFingers: " << _event.mgesture.numFingers << ", x: " << _event.mgesture.x << ", y: " << _event.mgesture.y;
+						Log(LOG_INFO) << " dDist: " << _event.mgesture.dDist << ", dTheta: " << _event.mgesture.dTheta;
+					}
 				default:
 
 					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());

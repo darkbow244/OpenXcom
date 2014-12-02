@@ -492,6 +492,9 @@ void NewBattleState::initSave()
 		save->addFinishedResearch(rule->getResearch(*i));
 	}
 
+	// Check depth and set it accordingly
+	cbxTerrainChange(0);
+
 	_game->setSavedGame(save);
 }
 

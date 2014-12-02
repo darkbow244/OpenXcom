@@ -100,6 +100,8 @@ extern "C" {
 }
 #endif
 #endif
+	/// Gets system version
+	int getSystemVersion();
 }
 
 }

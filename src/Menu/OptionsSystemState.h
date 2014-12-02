@@ -19,20 +19,31 @@ class ToggleTextButton;
 class OptionsSystemState : public OptionsBaseState
 {
 private:
-	Text *_txtTurningOptions;
+	//Text *_txtTurningOptions;
 	Text *_txtSystemUIControls;
 	Text *_txtReconfigureDirs;
-	ToggleTextButton *_btnSwipeToTurn;
-	ToggleTextButton *_btnHoldToTurn;
+	Text *_txtControls;
+	//ToggleTextButton *_btnSwipeToTurn;
+	//ToggleTextButton *_btnHoldToTurn;
+	Text *_txtLogDestination;
+	Text *_txtDebugOptions;
+	ToggleTextButton *_btnLogFile;
+	ToggleTextButton *_btnLogSystem;
+	ToggleTextButton *_btnLogTouchEvents;
+	ToggleTextButton *_btnFakeEvents;
+	ToggleTextButton *_btnForceGLMode;
 	ComboBox *_cbxSystemUI;
 	TextButton *_btnReconfigureDirs;
 public:
 	OptionsSystemState(OptionsOrigin origin);
 	~OptionsSystemState();
-	void turnSettingChange(Action *action);
 	void cbxSystemUIChange(Action *action);
 	void btnReconfigureDirsClick(Action *action);
 	void btnControlsClick(Action *action);
+	void btnLogClick(Action *action);
+	void btnLogTouchEventsClick(Action *action);
+	void btnFakeEventsClick(Action *action);
+	void btnForceGLModeClick(Action *action);
 };
 
 }

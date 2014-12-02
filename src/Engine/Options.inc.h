@@ -45,6 +45,7 @@ OPT SDL_Keycode keyBattleLeft, keyBattleRight, keyBattleUp, keyBattleDown, keyBa
 // System-specific options
 OPT bool swipeToTurn, holdToTurn;
 OPT SystemUIStyle systemUI;
+OPT bool logToFile, logToSystem, logTouch, fakeEvents, forceGLMode;
 
 // Flags and other stuff that don't need OptionInfo's.
 OPT bool mute, reload, newOpenGL, newScaleFilter, newHQXFilter, newXBRZFilter;

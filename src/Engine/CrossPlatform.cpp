@@ -1112,5 +1112,30 @@ void setSystemUI()
 
 #endif
 
+// Get system version (for Androids)
+int getSystemVersion() 
+{
+#ifdef __ANDROID__
+	static version;
+	if (version)
+	{
+		return version;
+	}
+	JNIEnv* env = (JNIEnv*) SDL_AndroidGetJNIEnv();
+	jclass versionClass = env->FindClass("android/os/Build/VERSION");
+	if (buildClass)
+	{
+		jfieldID = env->GetStaticFieldID(versionClass,
+					"SDK_INT",
+					"I");
+		version = env->GetStaticIntField(versionClass,
+					jfieldID);
+	}
+	return version;
+#else
+	return 10;
+#endif
+}
+
 }
 }

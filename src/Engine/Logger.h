@@ -73,6 +73,11 @@ public:
     static SeverityLevel& reportingLevel();
 	static std::string& logFile();
     static std::string toString(SeverityLevel level);
+	// These functions set whether we should write our log to a file and to the system log (where available)
+	static bool& logToFile();
+	static bool& logToSystem();
+	// Do you even log?
+	static bool logEnabled();
 protected:
     std::ostringstream os;
 private:
@@ -92,7 +97,7 @@ inline std::ostringstream& Logger::get(SeverityLevel level)
 
 inline Logger::~Logger()
 {
-    os << std::endl;
+	os << std::endl;
 	if (reportingLevel() == LOG_DEBUG)
 	{
 		fprintf(stderr, "%s", os.str().c_str());
@@ -101,13 +106,18 @@ inline Logger::~Logger()
 	std::ostringstream ss;
 	ss << "[" << now() << "]" << "\t" << os.str();
 #ifdef __ANDROID__
-	__android_log_print(ANDROID_LOG_INFO, "OpenXcom", "%s", ss.str().c_str());
-#else
-	FILE *file = fopen(logFile().c_str(), "a");
-	fprintf(file, "%s", ss.str().c_str());
-    fflush(file);
-	fclose(file);
+	if (Logger::logToSystem())
+	{
+		__android_log_print(ANDROID_LOG_INFO, "OpenXcom", "%s", ss.str().c_str());
+	}
 #endif
+	if (Logger::logToFile())
+	{
+		FILE *file = fopen(logFile().c_str(), "a");
+		fprintf(file, "%s", ss.str().c_str());
+		fflush(file);
+		fclose(file);
+	}
 }
 
 inline SeverityLevel& Logger::reportingLevel()
@@ -128,9 +138,26 @@ inline std::string Logger::toString(SeverityLevel level)
     return buffer[level];
 }
 
+inline bool& Logger::logToFile()
+{
+	static bool _logToFile = false;
+	return _logToFile;
+}
+
+inline bool& Logger::logToSystem()
+{
+	static bool _logToSystem = true;
+	return _logToSystem;
+}
+
+inline bool Logger::logEnabled()
+{
+	return logToFile() || logToSystem();
+}
+
 #define Log(level) \
-    if (level > Logger::reportingLevel()) ; \
-    else Logger().get(level)
+    if ((level > Logger::reportingLevel()) && Logger::logEnabled()) ; \
+	else Logger().get(level)
 
 inline std::string now()
 {

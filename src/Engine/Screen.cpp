@@ -80,14 +80,17 @@ void Screen::makeVideoFlags()
 	{
 		_flags |= SDL_WINDOW_BORDERLESS;
 	}
-	
+
 	// Try fixing the Samsung devices - see https://bugzilla.libsdl.org/show_bug.cgi?id=2291
 #ifdef __ANDROID__
-	Log(LOG_INFO) << "Setting GL format to RGBA8888";
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	if (Options::forceGLMode) 
+	{
+		Log(LOG_INFO) << "Setting GL format to RGB565";
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 6);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+		//SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	}
 #endif
 
 	//_bpp = (isHQXEnabled() || isOpenGLEnabled()) ? 32 : 8;
