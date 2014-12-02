@@ -411,8 +411,9 @@ void Game::run()
 						// On Android, fingerId of 0 corresponds to the first finger on the screen.
 						// Finger index of 0 _should_ mean the first finger on the screen,
 						// but that might be platform-dependent as well.
-						SDL_Finger *finger = SDL_GetTouchFinger(_event.tfinger.touchId, 0);
-						if(finger && (finger->id == _event.tfinger.fingerId))
+						//SDL_Finger *finger = SDL_GetTouchFinger(_event.tfinger.touchId, 0);
+						//if(finger && (finger->id == _event.tfinger.fingerId))
+						if (_event.tfinger.fingerId == 0)
 						{
 							// Note that we actually handle fingermotion, so emulating it may cause bugs.
 							if(_event.type == SDL_FINGERMOTION)
@@ -422,14 +423,16 @@ void Game::run()
 								fakeEvent.motion.y = _event.tfinger.y * Options::displayHeight;
 								fakeEvent.motion.xrel = _event.tfinger.dx * Options::displayWidth;
 								fakeEvent.motion.yrel = _event.tfinger.dy * Options::displayHeight;
-								
-								fakeEvent.motion.state = SDL_BUTTON(1);		
+								fakeEvent.motion.timestamp = _event.tfinger.timestamp;
+								fakeEvent.motion.state = SDL_BUTTON(1);
 							}
 							else
 							{
 								if (_event.type == SDL_FINGERDOWN)
 								{
 									fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+									fakeEvent.button.type = SDL_MOUSEBUTTONDOWN;
+									fakeEvent.button.state = SDL_PRESSED;
 								}
 								else
 								{
@@ -437,7 +440,10 @@ void Game::run()
 									hadFingerUp = true;
 #endif
 									fakeEvent.type = SDL_MOUSEBUTTONUP;
+									fakeEvent.button.type = SDL_MOUSEBUTTONUP;
+									fakeEvent.button.state = SDL_RELEASED;
 								}
+								fakeEvent.button.timestamp = _event.tfinger.timestamp;
 								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth;
 								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight;
 								fakeEvent.button.button = SDL_BUTTON_LEFT;
