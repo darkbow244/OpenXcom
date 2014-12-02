@@ -56,6 +56,10 @@ int main(int argc, char *argv[])
 #else
 		Logger::reportingLevel() = LOG_DEBUG;
 #endif
+		std::stringstream ss;
+		ss << argv[8] << "/openxcom.log";
+		Logger::logFile() = ss.str();
+
 		if (!Options::init(argc, argv))
 			return EXIT_SUCCESS;
 		std::ostringstream title;
