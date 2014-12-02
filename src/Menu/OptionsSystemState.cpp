@@ -132,7 +132,7 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_txtSystemUIControls->setText(tr("STR_SYSTEM_UI"));
 
 	_txtControls->setColor(Palette::blockOffset(8) + 10);
-	_txtControls->setText(tr("Customize controls"));
+	_txtControls->setText(tr("STR_CONTROLS_LABEL"));
 
 	std::vector<std::string> sysUI;
 	int sysVersion = CrossPlatform::getSystemVersion();
