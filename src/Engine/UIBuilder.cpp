@@ -423,7 +423,7 @@ namespace UIBuilder
 			}
 
 			out[elementName] = sfc;
-			uiElements.push_back(std::make_pair<int, Surface* >(order, sfc));
+			uiElements.push_back(std::pair<int, Surface* >(order, sfc));
 		}
 		std::sort(uiElements.begin(), uiElements.end(), cmp);
 		for (std::vector<std::pair<int, Surface*> >::iterator i = uiElements.begin(); i != uiElements.end(); ++i)
