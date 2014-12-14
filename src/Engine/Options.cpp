@@ -456,8 +456,9 @@ bool init(int argc, char *argv[])
 	loadArgs(argc, argv);
 	setFolders();
 	updateOptions();
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
 	// This file is not used on Android, so we can safely skip it.
+	// EDIT: Now that we have an option to write to a file, this thing IS relevant.
 	std::string s = getUserFolder();
 	s += "openxcom.log";
 	Logger::logFile() = s;
@@ -468,7 +469,11 @@ bool init(int argc, char *argv[])
 	}
 	fflush(file);
 	fclose(file);
+#ifdef __ANDROID__
+	Logger::logToFile() = Options::logToFile;
+	Logger::logToSystem() = Options::logToSystem;
 #endif
+//#endif
 	Log(LOG_INFO) << "Data folder is: " << _dataFolder;
 	Log(LOG_INFO) << "Data search is: ";
 	for (std::vector<std::string>::iterator i = _dataList.begin(); i != _dataList.end(); ++i)
