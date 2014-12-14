@@ -128,8 +128,9 @@ std::vector<std::string> findDataFolders()
 #endif
 
 #ifdef __ANDROID__
-	list.push_back("/sdcard/openxcom/data/");
-	list.push_back("/storage/extSdCard/openxcom/data/");
+	// Stop being smart about finding data - it frustrates the users.
+	//list.push_back("/sdcard/openxcom/data/");
+	//list.push_back("/storage/extSdCard/openxcom/data/");
 	return list;
 #endif
 	
