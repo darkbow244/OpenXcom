@@ -1508,7 +1508,7 @@ int TileEngine::verticalBlockage(Tile *startTile, Tile *endTile, ItemDamageType 
 			block += horizontalBlockage(startTile, _save->getTile(Position(x, y, z)), type, skipObject);
 			block += blockage(_save->getTile(Position(x, y, z)), MapData::O_FLOOR, type);
 			if (!skipObject)
-				block += blockage(_save->getTile(Position(x, y, z)), MapData::O_OBJECT, type);
+				block += blockage(_save->getTile(Position(x, y, z)), MapData::O_OBJECT, type, Pathfinding::DIR_DOWN);
 		}
 	}
 	else if (direction > 0) // up
@@ -1524,7 +1524,7 @@ int TileEngine::verticalBlockage(Tile *startTile, Tile *endTile, ItemDamageType 
 			block += horizontalBlockage(startTile, _save->getTile(Position(x, y, z)), type, skipObject);
 			block += blockage(_save->getTile(Position(x, y, z)), MapData::O_FLOOR, type);
 			if (!skipObject)
-				block += blockage(_save->getTile(Position(x, y, z)), MapData::O_OBJECT, type);
+				block += blockage(_save->getTile(Position(x, y, z)), MapData::O_OBJECT, type, Pathfinding::DIR_UP);
 		}
 	}
 
@@ -1743,14 +1743,16 @@ int TileEngine::blockage(Tile *tile, const int part, ItemDamageType type, int di
 			case 2: // east
 				if (wall == Pathfinding::BIGWALLNORTH ||
 					wall == Pathfinding::BIGWALLSOUTH ||
-					wall == Pathfinding::BIGWALLWEST)
+					wall == Pathfinding::BIGWALLWEST ||
+					wall == Pathfinding::BIGWALLWESTANDNORTH)
 				{
 					check = false;
 				}
 				break;
 			case 3: // south east
 				if (wall == Pathfinding::BIGWALLNORTH ||
-					wall == Pathfinding::BIGWALLWEST)
+					wall == Pathfinding::BIGWALLWEST ||
+					wall == Pathfinding::BIGWALLWESTANDNORTH)
 				{
 					check = false;
 				}
@@ -1758,7 +1760,8 @@ int TileEngine::blockage(Tile *tile, const int part, ItemDamageType type, int di
 			case 4: // south
 				if (wall == Pathfinding::BIGWALLWEST ||
 					wall == Pathfinding::BIGWALLEAST ||
-					wall == Pathfinding::BIGWALLNORTH)
+					wall == Pathfinding::BIGWALLNORTH ||
+					wall == Pathfinding::BIGWALLWESTANDNORTH)
 				{
 					check = false;
 				}
@@ -1796,6 +1799,18 @@ int TileEngine::blockage(Tile *tile, const int part, ItemDamageType type, int di
 				break;
 			default:
 				break;
+			}
+		}
+		else if (part == MapData::O_FLOOR &&
+					tile->getMapData(part)->getBlock(type) == 0)
+		{
+			if (type != DT_NONE)
+			{
+				blockage += tile->getMapData(part)->getArmor();
+			}
+			else if (!tile->getMapData(part)->isNoFloor())
+			{
+				return 256;
 			}
 		}
 
@@ -2483,7 +2498,7 @@ bool TileEngine::psiAttack(BattleAction *action)
 			if (moraleLoss > 0)
 			_save->getTile(action->target)->getUnit()->moraleChange(-moraleLoss);
 		}
-		else// if (action->type == BA_MINDCONTROL)
+		else if (action->type == BA_MINDCONTROL)
 		{
 			victim->convertToFaction(action->actor->getFaction());
 			calculateFOV(victim->getPosition());
@@ -2637,12 +2652,14 @@ bool TileEngine::validMeleeRange(BattleUnit *attacker, BattleUnit *target, int d
  * @param dest Destination position.
  * @return True when the range is valid.
  */
-bool TileEngine::validMeleeRange(Position pos, int direction, BattleUnit *attacker, BattleUnit *target, Position *dest)
+bool TileEngine::validMeleeRange(Position pos, int direction, BattleUnit *attacker, BattleUnit *target, Position *dest, bool preferEnemy)
 {
 	if (direction < 0 || direction > 7)
 	{
 		return false;
 	}
+	std::vector<BattleUnit*> potentialTargets;
+	BattleUnit *chosenTarget = 0;
 	Position p;
 	int size = attacker->getArmor()->getSize() - 1;
 	Pathfinding::directionToVector(direction, &p);
@@ -2678,14 +2695,44 @@ bool TileEngine::validMeleeRange(Position pos, int direction, BattleUnit *attack
 							{
 								*dest = targetTile->getPosition();
 							}
-							return true;
+							if (target != 0)
+							{
+								return true;
+							}
+							else
+							{
+								potentialTargets.push_back(targetTile->getUnit());
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-	return false;
+	
+	for (std::vector<BattleUnit*>::const_iterator i = potentialTargets.begin(); i != potentialTargets.end(); ++i)
+	{
+		// if there's actually something THERE, we'll chalk this up as a success.
+		if (!chosenTarget)
+		{
+			chosenTarget = *i;
+		}
+		// but if there's a target of a different faction, we'll prioritize them.
+		else if ((preferEnemy && (*i)->getFaction() != attacker->getFaction())
+		// or, if we're using a medikit, prioritize whichever friend is wounded the most.
+		|| (!preferEnemy && (*i)->getFaction() == attacker->getFaction() &&
+		(*i)->getFatalWounds() > chosenTarget->getFatalWounds()))
+		{
+			chosenTarget = *i;
+		}
+	}
+	
+	if (dest && chosenTarget)
+	{
+		*dest = chosenTarget->getPosition();
+	}
+
+	return chosenTarget != 0;
 }
 
 /**
