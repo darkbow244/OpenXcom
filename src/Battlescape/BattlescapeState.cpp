@@ -950,7 +950,7 @@ void BattlescapeState::fingerMotion(Action *action)
 
 void BattlescapeState::multiGesture(Action *action)
 {
-	Log(LOG_INFO) << "Multigesture processing!";
+	//Log(LOG_INFO) << "Multigesture processing!";
 	const double levelThreshold = 0.1; //Just an arbitrary number
 	static double delta;
 	static double prevPointY = 0;
