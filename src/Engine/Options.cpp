@@ -465,10 +465,21 @@ bool init(int argc, char *argv[])
 	FILE *file = fopen(Logger::logFile().c_str(), "w");
 	if (!file)
 	{
+#ifdef __ANDROID__
+		// Well, that's unfortunate, but that's not the end of the world.
+		// Disable logging to file, enable logging to system log and proceed as normal.
+		Logger::logToFile() = false;
+		Logger::logToSystem() = true;
+		Log(LOG_WARNING) << "Couldn't open the log file! (Maybe you don't have your paths set?)";
+#else
 		throw Exception(s + " not found");
+#endif
 	}
-	fflush(file);
-	fclose(file);
+	else
+	{
+		fflush(file);
+		fclose(file);
+	}
 #ifdef __ANDROID__
 	Logger::logToFile() = Options::logToFile;
 	Logger::logToSystem() = Options::logToSystem;
