@@ -408,12 +408,17 @@ void Game::run()
 							Log(LOG_INFO) << " timestamp: " << _event.tfinger.timestamp << ", touchID: " << _event.tfinger.touchId << ", fingerID: " << _event.tfinger.fingerId;
 							Log(LOG_INFO) << " x: " << _event.tfinger.x << ", y: " << _event.tfinger.y << ", dx: " << _event.tfinger.dx << ", dy: " << _event.tfinger.dy;
 						}
+						// FIXME: Better check the truthness of the following sentence!
 						// On Android, fingerId of 0 corresponds to the first finger on the screen.
 						// Finger index of 0 _should_ mean the first finger on the screen,
 						// but that might be platform-dependent as well.
-						//SDL_Finger *finger = SDL_GetTouchFinger(_event.tfinger.touchId, 0);
-						//if(finger && (finger->id == _event.tfinger.fingerId))
-						if (_event.tfinger.fingerId == 0)
+						SDL_Finger *finger = SDL_GetTouchFinger(_event.tfinger.touchId, 0);
+						// If the event was fired when the user lifted his finger, we might not get an SDL_Finger struct,
+						// because the finger's not even there. So we should also check if the corresponding touchscreen
+						// no longer registers any presses.
+						int numFingers = SDL_GetNumTouchFingers(_event.tfinger.touchId);
+						if((numFingers == 0) || (finger && (finger->id == _event.tfinger.fingerId)))
+						//if (_event.tfinger.fingerId == 0)
 						{
 							// Note that we actually handle fingermotion, so emulating it may cause bugs.
 							if(_event.type == SDL_FINGERMOTION)
