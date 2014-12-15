@@ -25,6 +25,8 @@ import android.content.pm.ActivityInfo;
 
 public class OpenXcom extends SDLActivity { 
 
+	private final static String TAG = "OpenXcom";
+
 	public static int systemUIStyle;
 
 	protected final static String SYSTEM_UI_NAME = "SystemUIStyle";
@@ -63,14 +65,14 @@ public class OpenXcom extends SDLActivity {
 
 	public static void showDirDialog() {
 		android.app.Activity context = (android.app.Activity) SDLActivity.getContext();
-		Log.i("OpenXcom", "Starting directory configuration dialog...");
+		Log.i(TAG, "Starting directory configuration dialog...");
 		Intent intent = new Intent(context, DirsConfigActivity.class);
 		context.startActivityForResult(intent, 0);
 	}
 
 	public void changeSystemUI(int newSystemUIStyle) {
-		Log.i("OpenXcom", "Changing system UI");
-		Log.i("OpenXcom", "New style is: " + newSystemUIStyle);
+		Log.i(TAG, "Changing system UI");
+		Log.i(TAG, "New style is: " + newSystemUIStyle);
 		systemUIStyle = newSystemUIStyle;
 		SharedPreferences preferences = getSharedPreferences(DirsConfigActivity.PREFS_NAME, 0);
 		SharedPreferences.Editor preferencesEditor = preferences.edit();

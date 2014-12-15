@@ -29,6 +29,7 @@ import org.libsdl.openxcom.FilesystemHelper;
 
 public class PreloaderActivity extends Activity {
 
+	private static final String TAG = "PreloaderActivity";
 	
 	SharedPreferences prefs;
 	
@@ -102,7 +103,7 @@ public class PreloaderActivity extends Activity {
 						pd.setCancelable(false);
 						pd.setIndeterminate(true);
 						pd.show();
-						Log.i("OpenXcom", "AsyncTask started");
+						Log.i(TAG, "Updating game data...");
 					}
 					
 					public void onProgressUpdate(String... message) {
@@ -115,18 +116,21 @@ public class PreloaderActivity extends Activity {
 							publishProgress("Checking data version...");
 							if (dataNeedsUpdating) {
 								publishProgress("Extracting data...");
+								Log.i(TAG, "Updating data files");
 								extractFile("data.zip", gamePath + "/");
 								copyMarker(dataMarkerName);
 							}
 							publishProgress("Checking translations version...");
 							if (translationNeedsUpdating) {
 								publishProgress("Extracting translations...");
+								Log.i(TAG, "Updating translations");
 								extractFile("latest.zip", gamePath + "/Language/");
 								copyMarker(translationMarkerName);
 							}
 							publishProgress("Checking patch version...");
 							if (needsPatch) {
 								publishProgress("Applying patch...");
+								Log.i(TAG, "Patching game files");
 								extractFile("universal-patch.zip", gamePath + "/");
 								copyMarker(patchMarkerName);
 							}
@@ -142,7 +146,7 @@ public class PreloaderActivity extends Activity {
 						if (pd != null) {
 							pd.dismiss();
 						}
-						Log.i("OpenXcom", "Finishing asynctask...");
+						Log.i(TAG, "Preloading finished.");
 						passExecution();	
 					}
 					
@@ -175,17 +179,17 @@ public class PreloaderActivity extends Activity {
 		}
 		if (calledFrom != null)
 		{
-			Log.i("PreloaderActivity", "Got extra parameters!");
-			Log.i("PreloaderActivity", "calledFrom: " + calledFrom);
+			Log.i(TAG, "Got extra parameters!");
+			Log.i(TAG, "calledFrom: " + calledFrom);
 			if (calledFrom.equals("DirsConfigActivity")) {
 				// We were started from the file chooser dialog activity,
 				// so we should return to it.
-				Log.i("PreloaderActivity", "Called from DirsConfigActivity, returning");
+				Log.i(TAG, "Called from DirsConfigActivity, returning");
 				setResult(0);
 				finish();
 			}
 		} else {
-			Log.i("PreloaderActivity", "Launching OpenXcom activity");
+			Log.i(TAG, "Launching OpenXcom activity");
 			Intent intent = new Intent(this, OpenXcom.class);
 			startActivity(intent);
 		}
@@ -217,6 +221,7 @@ public class PreloaderActivity extends Activity {
 	
 	protected boolean hasGameFiles() {
 		File checkFile = new File(gamePath + "/GEODATA/PALETTES.DAT");
+		Log.i(TAG, "Checking for game data at " + gamePath);
 		if (checkFile.exists()) {
 			return true;
 		}
@@ -250,7 +255,7 @@ public class PreloaderActivity extends Activity {
 			return true;
 		}
 		catch (IOException e) {
-			Log.e("OpenXcom", e.getMessage());
+			Log.e(TAG, e.getMessage());
 			return true;
 		}
 		
@@ -277,7 +282,7 @@ public class PreloaderActivity extends Activity {
 	        out = null;
 	    } 
 	    catch(IOException e) {
-	            Log.e("OpenXcom", "Failed to copy asset file: " + markerName, e);
+	            Log.e(TAG, "Failed to copy asset file: " + markerName, e);
 	        }       
 	    }
 
