@@ -279,6 +279,7 @@ void BattleUnit::load(const YAML::Node &node)
 	_spawnUnit = node["spawnUnit"].as<std::string>(_spawnUnit);
 	_motionPoints = node["motionPoints"].as<int>(0);
 	_respawn = node["respawn"].as<bool>(_respawn);
+	_activeHand = node["activeHand"].as<std::string>(_activeHand);
 }
 
 /**
@@ -336,6 +337,7 @@ YAML::Node BattleUnit::save() const
 		node["spawnUnit"] = _spawnUnit;
 	node["motionPoints"] = _motionPoints;
 	node["respawn"] = _respawn;
+	node["activeHand"] = _activeHand;
 
 	return node;
 }
@@ -1827,6 +1829,7 @@ BattleItem *BattleUnit::getMainHandWeapon(bool quickest) const
 	// otherwise pick the one with the least snapshot TUs
 	int tuRightHand = weaponRightHand->getRules()->getTUSnap();
 	int tuLeftHand = weaponLeftHand->getRules()->getTUSnap();
+	BattleItem *weaponCurrentHand = getItem(getActiveHand());
 	// if only one weapon has snapshot, pick that one
 	if (tuLeftHand <= 0 && tuRightHand > 0)
 		return weaponRightHand;
@@ -1836,9 +1839,35 @@ BattleItem *BattleUnit::getMainHandWeapon(bool quickest) const
 	else
 	{
 		if (tuLeftHand >= tuRightHand)
-			return quickest ? weaponRightHand : weaponLeftHand;
+		{
+			if (quickest)
+			{
+				return weaponRightHand;
+			}
+			else if (_faction == FACTION_PLAYER)
+			{
+				return weaponCurrentHand;
+			}
+			else
+			{
+				return weaponLeftHand;
+			}
+		}
 		else
-			return quickest ? weaponLeftHand : weaponRightHand;
+		{
+			if (quickest)
+			{
+				return weaponLeftHand;
+			}
+			else if (_faction == FACTION_PLAYER)
+			{
+				return weaponCurrentHand;
+			}
+			else
+			{
+				return weaponRightHand;
+			}
+		}
 	}
 }
 

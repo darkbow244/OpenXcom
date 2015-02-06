@@ -76,9 +76,7 @@
 #include "../Menu/LoadGameState.h"
 #include "../Menu/SaveGameState.h"
 #include "../Resource/ResourcePack.h"
-#include "../Ruleset/Ruleset.h"
 #include "../Ruleset/RuleItem.h"
-#include "../Ruleset/RuleInterface.h"
 #include "../Ruleset/AlienDeployment.h"
 #include "../Ruleset/Armor.h"
 #include "../Savegame/SavedGame.h"
@@ -87,7 +85,7 @@
 #include "../Savegame/BattleUnit.h"
 #include "../Savegame/Soldier.h"
 #include "../Savegame/BattleItem.h"
-#include "../Savegame/TerrorSite.h"
+#include "../Savegame/MissionSite.h"
 #include "../Savegame/AlienBase.h"
 
 namespace OpenXcom
@@ -186,10 +184,6 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	// Set palette
 	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
 
-	// Fix system colors
-	_game->getCursor()->setColor(Palette::blockOffset(9));
-	_game->getFpsCounter()->setColor(Palette::blockOffset(9));
-	
 	if (_game->getRuleset()->getInterface("battlescape")->getElement("pathfinding"))
 	{
 		Element *pathing = _game->getRuleset()->getInterface("battlescape")->getElement("pathfinding");
@@ -505,7 +499,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	_btnReserveAuto->setGroup(&_reserve);
 	
 	// Set music
-	_game->getResourcePack()->playMusic("GMTACTIC");
+	_game->getResourcePack()->playMusic("GMTACTIC", true);
 
 	_animTimer = new Timer(DEFAULT_ANIM_SPEED, true);
 	_animTimer->onTimer((StateHandler)&BattlescapeState::animate);
@@ -2221,8 +2215,6 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 				_game->pushState(new DebriefingState);
 			}
 		}
-		_game->getCursor()->setColor(Palette::blockOffset(15)+12);
-		_game->getFpsCounter()->setColor(Palette::blockOffset(15)+12);
 	}
 }
 
@@ -2454,6 +2446,10 @@ void BattlescapeState::stopScrolling(Action *action)
 //#endif
 		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 		_battleGame->setupCursor();
+		if (_battleGame->getCurrentAction()->actor == 0 && (_save->getSide() == FACTION_PLAYER || _save->getDebugMode()))
+		{
+			getMap()->setCursorType(CT_NORMAL);
+		}
 	}
 	else
 	{
