@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2015 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -169,9 +169,10 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_timeSpeed = _btn5Secs;
 	_gameTimer = new Timer(Options::geoClockSpeed);
 
-	_zoomInEffectTimer = new Timer(Options::dogfightSpeed+10);
-	_zoomOutEffectTimer = new Timer(Options::dogfightSpeed+10);
-	_dogfightStartTimer = new Timer(Options::dogfightSpeed+10);
+	_zoomInEffectTimer = new Timer(Options::dogfightSpeed);
+	_zoomOutEffectTimer = new Timer(Options::dogfightSpeed);
+	_dogfightStartTimer = new Timer(Options::dogfightSpeed);
+	_dogfightTimer = new Timer(Options::dogfightSpeed);
 
 	_txtDebug = new Text(200, 18, 0, 0);
 
@@ -365,6 +366,7 @@ GeoscapeState::GeoscapeState() : _pause(false), _zoomInEffectDone(false), _zoomO
 	_zoomInEffectTimer->onTimer((StateHandler)&GeoscapeState::zoomInEffect);
 	_zoomOutEffectTimer->onTimer((StateHandler)&GeoscapeState::zoomOutEffect);
 	_dogfightStartTimer->onTimer((StateHandler)&GeoscapeState::startDogfight);
+	_dogfightTimer->onTimer((StateHandler)&GeoscapeState::handleDogfights);
 
 	timeDisplay();
 }
@@ -378,6 +380,7 @@ GeoscapeState::~GeoscapeState()
 	delete _zoomInEffectTimer;
 	delete _zoomOutEffectTimer;
 	delete _dogfightStartTimer;
+	delete _dogfightTimer;
 	
 	std::list<DogfightState*>::iterator it = _dogfights.begin();
 	for (; it != _dogfights.end();)
@@ -486,6 +489,19 @@ void GeoscapeState::init()
 		}
 	}
 	_globe->unsetNewBaseHover();
+
+		// run once
+	if (_game->getSavedGame()->getMonthsPassed() == -1 &&
+		// as long as there's a base
+		!_game->getSavedGame()->getBases()->empty() &&
+		// and it has a name (THIS prevents it from running prior to the base being placed.)
+		_game->getSavedGame()->getBases()->front()->getName() != L"")
+	{
+		_game->getSavedGame()->addMonth();
+		determineAlienMissions(true);
+		setupTerrorMission();
+		_game->getSavedGame()->setFunds(_game->getSavedGame()->getFunds() - (_game->getSavedGame()->getBaseMaintenance() - _game->getSavedGame()->getBases()->front()->getPersonnelMaintenance()));
+	}
 }
 
 /**
@@ -499,13 +515,6 @@ void GeoscapeState::think()
 	_zoomOutEffectTimer->think(this, 0);
 	_dogfightStartTimer->think(this, 0);
 
-	if (_game->getSavedGame()->getMonthsPassed() == -1)
-	{
-		_game->getSavedGame()->addMonth();
-		determineAlienMissions(true);
-		setupTerrorMission();
-		_game->getSavedGame()->setFunds(_game->getSavedGame()->getFunds() - (_game->getSavedGame()->getBaseMaintenance() - _game->getSavedGame()->getBases()->front()->getPersonnelMaintenance()));
-	}
 	if (_popups.empty() && _dogfights.empty() && (!_zoomInEffectTimer->isRunning() || _zoomInEffectDone) && (!_zoomOutEffectTimer->isRunning() || _zoomOutEffectDone))
 	{
 		// Handle timers
@@ -515,7 +524,13 @@ void GeoscapeState::think()
 	{
 		if (!_dogfights.empty() || _minimizedDogfights != 0)
 		{
-			handleDogfights();
+			// If all dogfights are minimized rotate the globe, etc.
+			if (_dogfights.size() == _minimizedDogfights)
+			{
+				_pause = false;
+				_gameTimer->think(this, 0);
+			}
+			_dogfightTimer->think(this, 0);
 		}
 		if (!_popups.empty())
 		{
@@ -810,17 +825,19 @@ void GeoscapeState::time5Seconds()
 						}
 						if (!(*j)->isInDogfight() && !(*j)->getDistance(u))
 						{
-							_dogfightsToBeStarted.push_back(new DogfightState(_globe, (*j), u));
-
-							if (!_dogfightStartTimer->isRunning())
 							{
-								_pause = true;
-								timerReset();
-								_globe->center((*j)->getLongitude(), (*j)->getLatitude());
-								startDogfight();
-								_dogfightStartTimer->start();
+								_dogfightsToBeStarted.push_back(new DogfightState(_globe, (*j), u));
+
+								if (!_dogfightStartTimer->isRunning())
+								{
+									_pause = true;
+									timerReset();
+									_globe->center((*j)->getLongitude(), (*j)->getLatitude());
+									startDogfight();
+									_dogfightStartTimer->start();
+								}
+								_game->getResourcePack()->playMusic("GMINTER", true);
 							}
-							_game->getResourcePack()->playMusic("GMINTER", true);
 						}
 						break;
 					case Ufo::LANDED:
@@ -1965,15 +1982,15 @@ void GeoscapeState::zoomOutEffect()
  */
 void GeoscapeState::handleDogfights()
 {
-	// If all dogfights are minimized rotate the globe, etc.
-	if (_dogfights.size() == _minimizedDogfights)
-	{
-		_pause = false;
-		_gameTimer->think(this, 0);
-	}
 	// Handle dogfights logic.
 	_minimizedDogfights = 0;
+
 	std::list<DogfightState*>::iterator d = _dogfights.begin();
+	for (; d != _dogfights.end(); ++d)
+	{
+		(*d)->getUfo()->setInterceptionProcessed(false);
+	}
+	d = _dogfights.begin();
 	while (d != _dogfights.end())
 	{
 		if ((*d)->isMinimized())
@@ -2001,6 +2018,7 @@ void GeoscapeState::handleDogfights()
 	}
 	if (_dogfights.empty())
 	{
+		_dogfightTimer->stop();
 		_zoomOutEffectTimer->start();
 	}
 }
@@ -2040,6 +2058,7 @@ void GeoscapeState::startDogfight()
 	{
 		_dogfightStartTimer->stop();
 		_zoomInEffectTimer->stop();
+		_dogfightTimer->start();
 		timerReset();
 		while (!_dogfightsToBeStarted.empty())
 		{
