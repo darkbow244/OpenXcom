@@ -76,7 +76,7 @@ private:
 	bool _playerPanicHandled;
 	int _AIActionCounter;
 	BattleAction _currentAction;
-	bool _AISecondMove;
+	bool _AISecondMove, _endTurnProcessed;
 
 	/// Ends the turn.
 	void endTurn();
@@ -180,7 +180,7 @@ public:
 	BattleActionType getReservedAction();
 	/// Tallies the living units, converting them if necessary.
 	void tallyUnits(int &liveAliens, int &liveSoldiers);
-	void convertInfected();
+	bool convertInfected();
 	/// Sets the kneel reservation setting.
 	void setKneelReserved(bool reserved);
 	/// Checks the kneel reservation setting.
