@@ -139,7 +139,7 @@ InventoryState::InventoryState(bool tu, BattlescapeState *parent) : _tu(tu), _pa
 	centerAllSurfaces();
 
 
-	
+
 	_txtName->setBig();
 	_txtName->setHighContrast(true);
 

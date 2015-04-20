@@ -86,22 +86,7 @@ void ResearchInfoState::buildUi()
 	_surfaceScientists->onMouseWheel((ActionHandler)&ResearchInfoState::handleWheel);
 
 	// Set palette
-	std::string pal = "PAL_BASESCAPE";
-	Uint8 color = 1; // burgundy by default in ufo palette
-	Element *element = _game->getRuleset()->getInterface("researchMenu")->getElement("palette");
-	if (element)
-	{
-		if (element->TFTDMode)
-		{
-			pal = "PAL_GEOSCAPE";
-		}
-		if (element->color != INT_MAX)
-		{
-			color = element->color;
-		}
-	}
-	
-	setPalette(pal, color);
+	setInterface("allocateResearch");
 
 	add(_surfaceScientists);
 	add(_window, "window", "allocateResearch");

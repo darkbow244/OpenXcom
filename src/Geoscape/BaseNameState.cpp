@@ -72,7 +72,7 @@ BaseNameState::BaseNameState(Base *base, Globe *globe, bool first) : _base(base)
 	_edtName = new TextEdit(this, 127, 16, windowLeft + 27, windowTop + 34);
 
 	// Set palette
-	setPalette("PAL_GEOSCAPE", _game->getRuleset()->getInterface("baseNaming")->getElement("palette")->color);
+	setInterface("baseNaming");
 
 	add(_window, "window", "baseNaming");
 	add(_btnOk, "button", "baseNaming");
