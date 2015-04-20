@@ -451,7 +451,7 @@ void NewBattleState::initSave()
 	}
 
 	// Check depth and set it accordingly
-	cbxTerrainChange(0);
+//	cbxTerrainChange(0);
 
 	_game->setSavedGame(save);
 	cbxMissionChange(0);
