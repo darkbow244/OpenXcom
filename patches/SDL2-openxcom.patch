@@ -1,7 +1,8 @@
-diff -r 408b0d563b27 Android.mk
---- a/Android.mk	Thu Jun 05 15:37:33 2014 -0700
-+++ b/Android.mk	Fri Jun 20 18:45:12 2014 +0400
-@@ -8,10 +8,12 @@
+diff --git a/Android.mk b/Android.mk
+index 9d5b6e8..daf58ce 100755
+--- a/Android.mk
++++ b/Android.mk
+@@ -8,10 +8,18 @@ LOCAL_PATH := $(call my-dir)
  
  include $(CLEAR_VARS)
  
@@ -12,10 +13,16 @@ diff -r 408b0d563b27 Android.mk
  
 +LOCAL_ARM_MODE := arm
 +
++ifeq ($(TARGET_ARCH_ABI),armeabi)
++    LOCAL_ARM_NEON := false
++else
++    LOCAL_ARM_NEON := true
++endif
++
  LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
  
  LOCAL_SRC_FILES := \
-@@ -49,7 +51,7 @@
+@@ -49,7 +57,7 @@ LOCAL_SRC_FILES := \
  LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES
  LOCAL_LDLIBS := -ldl -lGLESv1_CM -lGLESv2 -llog -landroid
  
@@ -24,12 +31,12 @@ diff -r 408b0d563b27 Android.mk
  
  ###########################
  #
-@@ -61,7 +63,7 @@
+@@ -61,7 +69,7 @@ LOCAL_MODULE := SDL2_static
  
  LOCAL_MODULE_FILENAME := libSDL2
  
--LOCAL_SRC_FILES += $(LOCAL_PATH)/src/main/android/SDL_android_main.c
-+#LOCAL_SRC_FILES += $(LOCAL_PATH)/src/main/android/SDL_android_main.c
+-LOCAL_SRC_FILES += $(subst $(LOCAL_PATH)/,,$(LOCAL_PATH)/src/main/android/SDL_android_main.c)
++#LOCAL_SRC_FILES += $(subst $(LOCAL_PATH)/,,$(LOCAL_PATH)/src/main/android/SDL_android_main.c)
  
  LOCAL_LDLIBS := 
  LOCAL_EXPORT_LDLIBS := -Wl,--undefined=Java_org_libsdl_app_SDLActivity_nativeInit -ldl -lGLESv1_CM -lGLESv2 -llog -landroid
