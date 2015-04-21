@@ -1,11 +1,6 @@
 /*
     SDL_android_main.c, placed in the public domain by Sam Lantinga  3/13/14
 */
-
-/**
- * This file is a modified version of SDL_android_main.c from SDL2 source code distribution.
- * It is modified to feed locale string into the main application.
- */
 #include "../SDL/src/SDL_internal.h"
 
 #ifdef __ANDROID__
@@ -17,50 +12,60 @@
                  Functions called by JNI
 *******************************************************************************/
 #include <jni.h>
-#include <android/log.h>
 
 /* Called before SDL_main() to initialize JNI bindings in SDL library */
 extern void SDL_Android_Init(JNIEnv* env, jclass cls);
 
 /* Start up the SDL app */
-int Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jstring locale, jstring gamePath, jstring savePath, jstring confPath)
+int Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
 {
-    /* This interface could expand with ABI negotiation, calbacks, etc. */
+    int i;
+    int argc;
+    int status;
+
+    /* This interface could expand with ABI negotiation, callbacks, etc. */
     SDL_Android_Init(env, cls);
 
     SDL_SetMainReady();
 
-    /* Run the application code! */
-    int status;
-    char *argv[11];
-    
-    /* Process the locale string first */
-    const char *localeString = (*env)->GetStringUTFChars(env, locale, 0);
-    const char *gamePathString = (*env)->GetStringUTFChars(env, gamePath, 0);
-    const char *savePathString = (*env)->GetStringUTFChars(env, savePath, 0);
-    const char *confPathString = (*env)->GetStringUTFChars(env, confPath, 0);
-    __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Locale is: %s", localeString);
-    __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Data path is: %s", gamePathString);
-    __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Save path is: %s", savePathString);
-    __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Config path is: %s", confPathString);
-    argv[0] = SDL_strdup("SDL_app");
-    argv[1] = SDL_strdup("-locale");
-    argv[2] = SDL_strdup(localeString);
-    argv[3] = SDL_strdup("-data");
-    argv[4] = SDL_strdup(gamePathString);
-    argv[5] = SDL_strdup("-user");
-    argv[6] = SDL_strdup(savePathString);
-    argv[7] = SDL_strdup("-cfg");
-    argv[8] = SDL_strdup(confPathString);
-    argv[9] = SDL_strdup("");
-    argv[10] = NULL;
-    __android_log_print(ANDROID_LOG_INFO, "OpenXcom", "  Paths injection finished!");
-    (*env)->ReleaseStringUTFChars(env, locale, localeString);
-    (*env)->ReleaseStringUTFChars(env, gamePath, gamePathString);
-    (*env)->ReleaseStringUTFChars(env, savePath, savePathString);
-    (*env)->ReleaseStringUTFChars(env, confPath, confPathString);
-    
-    status = SDL_main(10, argv);
+    /* Prepare the arguments. */
+
+    int len = (*env)->GetArrayLength(env, array);
+    char* argv[1 + len + 1];
+    argc = 0;
+    /* Use the name "app_process" so PHYSFS_platformCalcBaseDir() works.
+       https://bitbucket.org/MartinFelis/love-android-sdl2/issue/23/release-build-crash-on-start
+     */
+    argv[argc++] = SDL_strdup("app_process");
+    for (i = 0; i < len; ++i) {
+        const char* utf;
+        char* arg = NULL;
+        jstring string = (*env)->GetObjectArrayElement(env, array, i);
+        if (string) {
+            utf = (*env)->GetStringUTFChars(env, string, 0);
+            if (utf) {
+                arg = SDL_strdup(utf);
+                (*env)->ReleaseStringUTFChars(env, string, utf);
+            }
+            (*env)->DeleteLocalRef(env, string);
+        }
+        if (!arg) {
+            arg = SDL_strdup("");
+        }
+        argv[argc++] = arg;
+    }
+    argv[argc] = NULL;
+
+
+    /* Run the application. */
+
+    status = SDL_main(argc, argv);
+
+    /* Release the arguments. */
+
+    for (i = 0; i < argc; ++i) {
+        SDL_free(argv[i]);
+    }
 
     /* Do not issue an exit or the whole application will terminate instead of just the SDL thread */
     /* exit(status); */

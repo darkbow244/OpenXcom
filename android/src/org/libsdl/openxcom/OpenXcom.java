@@ -2,6 +2,7 @@ package org.libsdl.openxcom;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Locale;
 
 import org.libsdl.app.SDLActivity;
 import org.libsdl.openxcom.UiVisibilityChanger;
@@ -36,13 +37,30 @@ public class OpenXcom extends SDLActivity {
 
 	protected UiVisibilityChanger uiVisibilityChanger = null;
 	
+	private String gamePath;
+	private String savePath;
+	private String confPath;
+
+	@Override
+	protected String[] getArguments() {
+		final String locale = Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
+		return new String[] {
+			"-locale", locale,
+			"-data",   gamePath,
+			"-user",   savePath,
+			"-cfg",    confPath};
+	}
 	@Override
 	protected void onCreate(Bundle savedInstance) {
-		super.onCreate(savedInstance);
 		SharedPreferences preferences = getSharedPreferences(DirsConfigActivity.PREFS_NAME, 0);
+		// Load paths
+		gamePath = preferences.getString(org.libsdl.openxcom.DirsConfigActivity.DATA_PATH_KEY, "");
+		savePath = preferences.getString(org.libsdl.openxcom.DirsConfigActivity.SAVE_PATH_KEY, "");
+		confPath = preferences.getString(org.libsdl.openxcom.DirsConfigActivity.CONF_PATH_KEY, "");
 		systemUIStyle = preferences.getInt(SYSTEM_UI_NAME, 0);
 		uiVisibilityChanger = new UiVisibilityChanger(this, systemUIStyle);
 		setSystemUI();
+		super.onCreate(savedInstance);
 	}
 	
 	@Override
