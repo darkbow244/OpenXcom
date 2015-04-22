@@ -102,6 +102,8 @@ extern "C" {
 #endif
 	/// Gets system version
 	int getSystemVersion();
+        /// Gets pointing device status (emulates SDL_GetMouseState)
+        int getPointerState(int *x, int *y);
 }
 
 }

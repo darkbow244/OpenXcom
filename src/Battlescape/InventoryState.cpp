@@ -733,7 +733,7 @@ void InventoryState::_refreshMouse()
 {
 	// send a mouse motion event to refresh any hover actions
 	int x, y;
-	SDL_GetMouseState(&x, &y);
+	CrossPlatform::getPointerState(&x, &y);
 	SDL_WarpMouseInWindow(NULL, x+1, y);
 	
 	// move the mouse back to avoid cursor creep
