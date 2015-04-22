@@ -324,7 +324,12 @@ public class DirsConfigActivity extends Activity {
 						}
 					}
 				} else {
-					dataPath = file.getAbsolutePath();
+					File dataCheck = new File(file.getAbsolutePath() + "/data");
+					if (dataCheck.exists()) {
+						dataPath = dataCheck.getAbsolutePath();
+					} else {
+						dataPath = file.getAbsolutePath();
+					}
 					dataPathText.setText(dataPath);
 				}
 			}
