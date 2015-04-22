@@ -19,6 +19,7 @@
 #include "InteractiveSurface.h"
 #include "Action.h"
 #include "Options.h"
+#include "CrossPlatform.h"
 
 namespace OpenXcom
 {
@@ -119,7 +120,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 	{
 		// wheel.x and wheel.y is the amount scrolled, not the coordinates... ouch.
 		int mouseX, mouseY;
-		SDL_GetMouseState(&mouseX, &mouseY);
+		CrossPlatform::getPointerState(&mouseX, &mouseY);
 		mouseX = mouseX;
 		mouseY = mouseY;
 		action->setMouseAction(mouseX, mouseY, getX(), getY());
@@ -142,7 +143,7 @@ void InteractiveSurface::handle(Action *action, State *state)
 			}
 				if (_listButton && action->getDetails()->type == SDL_MOUSEMOTION)
 				{
-					_buttonsPressed = SDL_GetMouseState(0, 0);
+					_buttonsPressed = CrossPlatform::getPointerState(0, 0);
 					for (Uint8 i = 1; i <= NUM_BUTTONS; ++i)
 					{
 						if (isButtonPressed(i))
