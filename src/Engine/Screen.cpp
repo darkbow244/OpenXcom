@@ -91,6 +91,7 @@ void Screen::makeVideoFlags()
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 		//SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 	}
+	CrossPlatform::setSystemUI();
 #endif
 
 	//_bpp = (isHQXEnabled() || isOpenGLEnabled()) ? 32 : 8;
