@@ -33,7 +33,11 @@ LOCAL_CFLAGS += -DOPENXCOM_VERSION_GIT="$(OPENXCOM_VERSION)"
 
 LOCAL_CFLAGS += -D__NO_OPENGL
 
-#LOCAL_ARM_NEON := true
+ifeq ($(TARGET_ARCH_ABI),armeabi)
+    LOCAL_ARM_NEON := false
+else
+    LOCAL_ARM_NEON := true
+endif
 
 # Add your application source files here...
 # deleted: $(SDL_PATH)/src/main/android/SDL_android_main.c
