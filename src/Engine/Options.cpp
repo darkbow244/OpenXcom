@@ -238,6 +238,7 @@ void create()
 	_info.push_back(OptionInfo("logTouch", &logTouch, false));
 	_info.push_back(OptionInfo("fakeEvents", &fakeEvents, true));
 	_info.push_back(OptionInfo("forceGLMode", &forceGLMode, true));
+        _info.push_back(OptionInfo("mouseMode", &mouseMode, 0));
 
 	// controls
 	_info.push_back(KeyOptionInfo("keyOk", &keyOk, SDLK_RETURN, "STR_OK", "STR_GENERAL"));

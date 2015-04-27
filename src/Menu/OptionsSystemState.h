@@ -34,6 +34,8 @@ private:
 	ToggleTextButton *_btnForceGLMode;
 	ComboBox *_cbxSystemUI;
 	TextButton *_btnReconfigureDirs;
+        Text *_txtMouseMode;
+        ComboBox *_cbxMouseMode;
 public:
 	OptionsSystemState(OptionsOrigin origin);
 	~OptionsSystemState();
@@ -44,6 +46,7 @@ public:
 	void btnLogTouchEventsClick(Action *action);
 	void btnFakeEventsClick(Action *action);
 	void btnForceGLModeClick(Action *action);
+        void cbxMouseModeChange(Action *action);
 };
 
 }

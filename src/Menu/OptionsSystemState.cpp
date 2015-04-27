@@ -40,6 +40,9 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnLogTouchEvents = new ToggleTextButton(104, 16, 94, 76);
 	_btnFakeEvents = new ToggleTextButton(104, 16, 94, 94);
 	_btnForceGLMode = new ToggleTextButton(104, 16, 94, 112);
+        
+        _txtMouseMode = new Text(104, 9, 206, 66);
+        _cbxMouseMode = new ComboBox(this, 104, 16, 206, 76);
 	
 	//add(_txtTurningOptions);
 	//add(_btnSwipeToTurn);
@@ -61,9 +64,12 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	add(_btnLogTouchEvents);
 	add(_btnFakeEvents);
 	add(_btnForceGLMode);
+        
+        add(_txtMouseMode);
 
 	// Combobox should be added last, because it will be overlapped by other elements otherwise
 	add(_cbxSystemUI);
+        add(_cbxMouseMode);
 
 	centerAllSurfaces();
 
@@ -146,6 +152,12 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 		sysUI.push_back("STR_IMMERSIVE");
 	}
 	
+	std::vector<std::string> mouseMode;
+        mouseMode.push_back("STR_MOUSE_BASIC");
+        if (sysVersion >= 14)
+        {
+                mouseMode.push_back("STR_MOUSE_EXTENDED");
+        }
 
 	_cbxSystemUI->setColor(Palette::blockOffset(15) - 1);
 	_cbxSystemUI->setOptions(sysUI);
@@ -154,6 +166,18 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_cbxSystemUI->setTooltip("STR_SYSTEM_UI_DESC");
 	_cbxSystemUI->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_cbxSystemUI->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
+        
+        
+        _txtMouseMode->setColor(Palette::blockOffset(8) + 10);
+        _txtMouseMode->setText(tr("STR_MOUSE_MODE"));
+        
+        _cbxMouseMode->setColor(Palette::blockOffset(15) - 1);
+        _cbxMouseMode->setOptions(mouseMode);
+        _cbxMouseMode->setSelected((int)Options::mouseMode);
+        _cbxMouseMode->onChange((ActionHandler)&OptionsSystemState::cbxMouseModeChange);
+        _cbxMouseMode->setTooltip("STR_MOUSE_MODE_DESC");
+        _cbxMouseMode->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
+        _cbxMouseMode->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
 	_txtReconfigureDirs->setColor(Palette::blockOffset(8) + 10);
 	_txtReconfigureDirs->setText(tr("STR_RECONFIGURE_DIRS"));
@@ -233,6 +257,12 @@ void OptionsSystemState::btnFakeEventsClick(Action *action)
 void OptionsSystemState::btnForceGLModeClick(Action *action)
 {
 	Options::forceGLMode = _btnForceGLMode->getPressed();
+}
+
+void OptionsSystemState::cbxMouseModeChange(Action *action)
+{
+        Options::mouseMode = _cbxMouseMode->getSelected();
+        SDL_SetHint(SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, Options::mouseMode == 0 ? "0" : "1");
 }
 
 }
