@@ -200,14 +200,17 @@ void Game::run()
 		{
 			if (!hadFingerUp)
 			{
-				for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
-				{
-					if(SDL_GetNumTouchFingers(*i))
-					{
-						isTouched = true;
-						break;
-					}
-				}
+
+//				for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
+//				{
+//					if(SDL_GetNumTouchFingers(*i))
+//					{
+//						isTouched = true;
+//						break;
+//					}
+//				}
+				// Now we have a better method for that.
+				isTouched = CrossPlatform::getPointerState(0, 0) > 0;
 				if (!isTouched)
 				{
 					// NOTE: This code only sends ONE mousebuttonup event. May be a source of bugs.
