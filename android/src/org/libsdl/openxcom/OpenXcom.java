@@ -48,7 +48,7 @@ public class OpenXcom extends SDLActivity {
 			"-locale", locale,
 			"-data",   gamePath,
 			"-user",   savePath,
-			"-cfg",    confPath};
+			"-cfg",    confPath, ""};
 	}
 	@Override
 	protected void onCreate(Bundle savedInstance) {
@@ -103,10 +103,10 @@ public class OpenXcom extends SDLActivity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		SharedPreferences preferences = getSharedPreferences(DirsConfigActivity.PREFS_NAME, 0);
-		String dataPath = preferences.getString(DirsConfigActivity.DATA_PATH_KEY, "");
-		String savePath = preferences.getString(DirsConfigActivity.SAVE_PATH_KEY, "");
-		String confPath = preferences.getString(DirsConfigActivity.CONF_PATH_KEY, "");
-		nativeSetPaths(dataPath, savePath, confPath);
+		gamePath = preferences.getString(DirsConfigActivity.DATA_PATH_KEY, "");
+		savePath = preferences.getString(DirsConfigActivity.SAVE_PATH_KEY, "");
+		confPath = preferences.getString(DirsConfigActivity.CONF_PATH_KEY, "");
+		nativeSetPaths(gamePath, savePath, confPath);
 	}
 	
 	public static native void nativeSetPaths(String dataPath, String savePath, String confPath);
