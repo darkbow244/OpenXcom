@@ -1380,3 +1380,7 @@ en-US:
   STR_FAKE_EVENTS_DESC: "Sends fake fingerUp touch events. Use this if you keep getting stuck buttons."
   STR_FORCE_GL_MODE: "Force GL mode"
   STR_FORCE_GL_MODE_DESC: "Forces texture format to RGB565. Use this setting if you're getting red-tinted screen. Applies after restart."
+  STR_MOUSE_MODE: "Mouse mode"
+  STR_MOUSE_BASIC: "Basic"
+  STR_MOUSE_EXTENDED: "Extended"
+  STR_MOUSE_MODE_DESC: "Extended mode enables native mouse events, providing near-desktop experience."
