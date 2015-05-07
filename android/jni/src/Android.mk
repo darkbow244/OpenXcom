@@ -33,6 +33,8 @@ LOCAL_CFLAGS += -DOPENXCOM_VERSION_GIT="$(OPENXCOM_VERSION)"
 
 LOCAL_CFLAGS += -D__NO_OPENGL
 
+LOCAL_CXXFLAGS += -std=c++11 -stdlib=libc++ -frtti
+
 ifeq ($(TARGET_ARCH_ABI),armeabi)
     LOCAL_ARM_NEON := false
 else
