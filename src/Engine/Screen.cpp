@@ -29,6 +29,7 @@
 #include "Action.h"
 #include "Options.h"
 #include "CrossPlatform.h"
+#include "FileMap.h"
 #include "Zoom.h"
 #include "Timer.h"
 #include <SDL.h>
