@@ -84,3 +84,7 @@ Dependencies/
 nbproject/
 #ctags index
 src/tags
+#android translations
+bin/translations/sources/*.yml
+bin/translations/output/*.yml
+
