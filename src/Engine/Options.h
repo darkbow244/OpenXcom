@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include "OptionInfo.h"
+#include "ModInfo.h"
 
 namespace OpenXcom
 {
@@ -102,9 +103,15 @@ namespace Options
 	void backupDisplay();
 	/// Switches display options.
 	void switchDisplay();
-
+	/// returns the id of the active master mod
+	std::string getActiveMaster();
+	/// Maps resources in active mods to the virtual file system
+	void mapResources();
+	/// Gets the map of mod ids to mod infos
+	const std::map<std::string, ModInfo> &getModInfos();
+	/// Sets the user folder (should be called from Java)
 	void setUserFolder(const std::string &userFolder);
-
+	/// Sets the config folder (should be called from Java)
 	void setConfFolder(const std::string &confFolder);
 }
 
