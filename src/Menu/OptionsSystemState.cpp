@@ -261,8 +261,10 @@ void OptionsSystemState::btnForceGLModeClick(Action *action)
 
 void OptionsSystemState::cbxMouseModeChange(Action *action)
 {
-        Options::mouseMode = _cbxMouseMode->getSelected();
-        SDL_SetHint(SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, Options::mouseMode == 0 ? "0" : "1");
+    Options::mouseMode = _cbxMouseMode->getSelected();
+#ifdef __ANDROID__
+    SDL_SetHint(SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, Options::mouseMode == 0 ? "0" : "1");
+#endif
 }
 
 }

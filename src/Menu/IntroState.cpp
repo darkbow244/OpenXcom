@@ -533,9 +533,10 @@ void IntroState::end()
 	Sound::stop();
 	Music::stop();
 #endif
-	// FIXME: This should go to the Game.cpp probably
-        SDL_SetHint(SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, Options::mouseMode == 0 ? "0" : "1");
 #ifdef __ANDROID__
+	// FIXME: This should go to the Game.cpp probably
+	SDL_SetHint(SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, Options::mouseMode == 0 ? "0" : "1");
+
 	// We don't need to process mouse events, so we can probably save some cycles on it
 //	SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 //	SDL_EventState(SDL_MOUSEBUTTONDOWN, SDL_IGNORE);
