@@ -239,7 +239,7 @@ void State::init()
 	_game->getCursor()->setPalette(_palette);
 	_game->getCursor()->setColor(_cursorColor);
 	_game->getCursor()->draw();
-	//_game->getFpsCounter()->setPalette(_palette);
+	_game->getFpsCounter()->setPalette(_palette);
 	_game->getFpsCounter()->setColor(_cursorColor);
 	_game->getFpsCounter()->draw();
 	if (_game->getResourcePack() != 0)
