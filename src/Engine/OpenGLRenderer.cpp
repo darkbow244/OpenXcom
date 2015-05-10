@@ -20,6 +20,7 @@
 #include "Surface.h"
 #include "Options.h"
 #include "CrossPlatform.h"
+#include "FileMap.h"
 
 namespace OpenXcom
 {
@@ -334,7 +335,7 @@ OpenGLRenderer::OpenGLRenderer(SDL_Window *window): _window(window), gltexture(0
 {
 	glContext = SDL_GL_CreateContext(_window);
 	init(0, 0);
-	setShader(CrossPlatform::getDataFile(Options::useOpenGLShader));
+	setShader(FileMap::getFilePath(Options::useOpenGLShader).c_str());
 	setVSync(Options::vSyncForOpenGL);
 	checkErrors = Options::checkOpenGLErrors;
 }
@@ -360,7 +361,7 @@ void OpenGLRenderer::setInternalRect(SDL_Rect *srcRect)
 	//resize(_srcRect.w, _srcRect.h);
 	_resizeRequested = true;
 	// Update shader while we're at it
-	setShader(CrossPlatform::getDataFile(Options::useOpenGLShader));
+	setShader(FileMap::getFilePath(Options::useOpenGLShader).c_str());
 	setVSync(Options::vSyncForOpenGL);
 	checkErrors = Options::checkOpenGLErrors;
 
