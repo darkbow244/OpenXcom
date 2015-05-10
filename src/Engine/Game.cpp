@@ -152,7 +152,6 @@ void Game::run()
 	// this will avoid processing SDL's resize event on startup, workaround for the heap allocation error it causes.
 	bool startupEvent = Options::allowResize;
 	
-//#ifdef __ANDROID__
 	int numTouchDevices = SDL_GetNumTouchDevices();
 	std::vector<SDL_TouchID> touchDevices;
 	for(int i = 0; i < numTouchDevices; ++i)
@@ -163,7 +162,6 @@ void Game::run()
 	bool isTouched = false;
 	SDL_Event reservedMUpEvent;
 	Log(LOG_INFO) << "SDL reports this number of touch devices present: " << SDL_GetNumTouchDevices();
-//#endif
 	
 	while (!_quit)
 	{
@@ -194,23 +192,17 @@ void Game::run()
 			_states.back()->handle(&action);
 		}
 		
-		// Now's as good a time as ever to send that fake event
-//#ifdef __ANDROID__
+		// This is a hack to check if we've missed the fingerUp event.
+		// Sometimes the fingerUp event doesn't get sent, which causes all sorts of
+		// fun things, like stuck buttons and whatnot. This code tries to check if
+		// there should have been such event (i.e. there's no fingers present on the
+		// touchscreen) and sends the appropriate event.
+		// Then again, if the fingerUp is not registered by SDL, then we're screwed.
 		isTouched = false;
 		if (Options::fakeEvents)
 		{
 			if (!hadFingerUp)
 			{
-
-//				for(std::vector<SDL_TouchID>::iterator i = touchDevices.begin(); i != touchDevices.end(); ++i)
-//				{
-//					if(SDL_GetNumTouchFingers(*i))
-//					{
-//						isTouched = true;
-//						break;
-//					}
-//				}
-				// Now we have a better method for that.
 				isTouched = CrossPlatform::getPointerState(0, 0) > 0;
 				if (!isTouched)
 				{
@@ -222,16 +214,13 @@ void Game::run()
 						Log(LOG_INFO) << "Sending fake mouseButtonUp event; event details: x: " << reservedMUpEvent.button.x << ", y: " << reservedMUpEvent.button.y;
 					}
 					Action fakeAction = Action(&reservedMUpEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-					// I'm not sure if these care about our mouse actions anyway.
-					/*_screen->handle(&fakeAction);
+					// Screen and fpsCounter don't care for our mouse events.
 					_cursor->handle(&fakeAction);
-					_fpsCounter->handle(&fakeAction);*/
 					_states.back()->handle(&fakeAction);
 					hadFingerUp = true;
 				}
 			}
 		}
-//#endif
 
 		// Process events
 		while (SDL_PollEvent(&_event))
@@ -243,10 +232,121 @@ void Game::run()
 				case SDL_QUIT:
 					quit();
 					break;
-#ifdef __ANDROID__
+				// Process touch-related events first, because it's all a terrible hack and I'm a terrible person. --sfalexrog
+				// OpenXcom is designed around using mouse as an input device, so it doesn't really care about finger events.
+				// But that shouldn't be a problem, since SDL2 already has mouse emulation built in! So what's all that code about?
+				// Well, actually the SDL2 code tries to be "smart" about the position of mouse pointer, and scales it to fit
+				// into the "virtual viewport". And OpenXcom, being based on SDL1.2, already does it itself, which causes all sorts
+				// of problems. Also, SDL2's code works fine while you have only one finger on the screen, less so when you're
+				// taking advantage of your multitouch display. This code only creates events for the first finger on the screen,
+				// ignoring all others (which also might be not a good thing, since if you're using multitouch, you probably don't
+				// want to have any single finger input anyway, but oh well.)
+				case SDL_FINGERDOWN:
+					// Begin tracking our finger.
+					hadFingerUp = false;
+				case SDL_FINGERUP:
+					// Okay, maybe we don't need to ask twice.
+					// We don't set hadFingerUp here because it's set down the path.
+				case SDL_FINGERMOTION:
+				{
+					// For now we're translating events from the first finger into mouse events.
+					// FIXME: Note that we're using SDL_FingerID of 0 to specify this "first finger".
+					// This will likely break with things like active styluses.
+					SDL_Event fakeEvent;
+
+					fakeEvent.type = SDL_FIRSTEVENT; // This one is used internally by SDL, for us it's an empty event we don't handle
+					if ((_event.type == SDL_FINGERMOTION) ||
+						(_event.type == SDL_FINGERDOWN) ||
+						(_event.type == SDL_FINGERUP))
+					{
+						if (Options::logTouch)
+						{
+							Log(LOG_INFO) << "Got a TouchFinger event; details: ";
+							switch (_event.type)
+							{
+								case SDL_FINGERMOTION:
+									Log(LOG_INFO) << " type: SDL_FINGERMOTION";
+									break;
+								case SDL_FINGERDOWN:
+									Log(LOG_INFO) << " type: SDL_FINGERDOWN";
+									break;
+								case SDL_FINGERUP:
+									Log(LOG_INFO) << " type: SDL_FINGERUP";
+									break;
+								default:
+									Log(LOG_INFO) << " type: UNKNOWN!";
+							}
+							Log(LOG_INFO) << " timestamp: " << _event.tfinger.timestamp << ", touchID: " << _event.tfinger.touchId << ", fingerID: " << _event.tfinger.fingerId;
+							Log(LOG_INFO) << " x: " << _event.tfinger.x << ", y: " << _event.tfinger.y << ", dx: " << _event.tfinger.dx << ", dy: " << _event.tfinger.dy;
+						}
+						// FIXME: Better check the truthness of the following sentence!
+						// On Android, fingerId of 0 corresponds to the first finger on the screen.
+						// Finger index of 0 _should_ mean the first finger on the screen,
+						// but that might be platform-dependent as well.
+						SDL_Finger *finger = SDL_GetTouchFinger(_event.tfinger.touchId, 0);
+						// If the event was fired when the user lifted his finger, we might not get an SDL_Finger struct,
+						// because the finger's not even there. So we should also check if the corresponding touchscreen
+						// no longer registers any presses.
+						int numFingers = SDL_GetNumTouchFingers(_event.tfinger.touchId);
+						if ((numFingers == 0) || (finger && (finger->id == _event.tfinger.fingerId)))
+						{
+							// Note that we actually handle fingermotion, so emulating it may cause bugs.
+							if (_event.type == SDL_FINGERMOTION)
+							{
+								fakeEvent.type = SDL_MOUSEMOTION;
+								fakeEvent.motion.x = _event.tfinger.x * Options::displayWidth;
+								fakeEvent.motion.y = _event.tfinger.y * Options::displayHeight;
+								fakeEvent.motion.xrel = _event.tfinger.dx * Options::displayWidth;
+								fakeEvent.motion.yrel = _event.tfinger.dy * Options::displayHeight;
+								fakeEvent.motion.timestamp = _event.tfinger.timestamp;
+								fakeEvent.motion.state = SDL_BUTTON(1);
+							}
+							else
+							{
+								if (_event.type == SDL_FINGERDOWN)
+								{
+									fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+									fakeEvent.button.type = SDL_MOUSEBUTTONDOWN;
+									fakeEvent.button.state = SDL_PRESSED;
+								}
+								else
+								{
+									hadFingerUp = true;
+									fakeEvent.type = SDL_MOUSEBUTTONUP;
+									fakeEvent.button.type = SDL_MOUSEBUTTONUP;
+									fakeEvent.button.state = SDL_RELEASED;
+								}
+								fakeEvent.button.timestamp = _event.tfinger.timestamp;
+								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth;
+								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight;
+								fakeEvent.button.button = SDL_BUTTON_LEFT;
+							}
+						}
+
+					}
+					// FIXME: An alternative to this code duplication is very welcome.
+					if (fakeEvent.type != SDL_FIRSTEVENT)
+					{
+						// Preserve current event, we might need it.
+						reservedMUpEvent = fakeEvent;
+						Action fakeAction = Action(&fakeEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
+						// Safely ignore _screen and _fpscounter
+						// Might want to update _cursor, though.
+						_cursor->handle(&fakeAction);
+						_states.back()->handle(&fakeAction);
+					}
+				}
+				case SDL_MULTIGESTURE:
+					if (Options::logTouch)
+					{
+						Log(LOG_INFO) << "Got a MultiGesture event, details:";
+						Log(LOG_INFO) << " timestamp: " << _event.mgesture.timestamp << ", touchID: " << _event.mgesture.touchId;
+						Log(LOG_INFO) << " numFingers: " << _event.mgesture.numFingers << ", x: " << _event.mgesture.x << ", y: " << _event.mgesture.y;
+						Log(LOG_INFO) << " dDist: " << _event.mgesture.dDist << ", dTheta: " << _event.mgesture.dTheta;
+					}
+
 				/* Don't pause/resume twice, let Music handle the music */
 				case SDL_APP_WILLENTERBACKGROUND:
-					//Mix_PauseMusic();
 					Music::pause();
 					// Workaround for SDL2_mixer bug https://bugzilla.libsdl.org/show_bug.cgi?id=2480
 					SDL_LockAudio();
@@ -254,7 +354,6 @@ void Game::run()
 					runningState = PAUSED;
 					break;
 				case SDL_APP_WILLENTERFOREGROUND:
-					//Mix_ResumeMusic();
 					runningState = RUNNING;
 					// Workaround for SDL2_mixer bug https://bugzilla.libsdl.org/show_bug.cgi?id=2480
 					SDL_UnlockAudio();
@@ -267,8 +366,9 @@ void Game::run()
 				case SDL_APP_TERMINATING:
 					Log(LOG_WARNING) << "The OS is not happy with us! We're gonna die!";
 					break;
-#endif
+				
 #if 0
+				// SDL2 handles things differently, so this is basically commented out for historical purposes.
 				case SDL_ACTIVEEVENT:
 					switch (reinterpret_cast<SDL_ActiveEvent*>(&_event)->state)
 					{
@@ -330,12 +430,20 @@ void Game::run()
 								_screen->resetDisplay();
 							}
 							break;
-						case SDL_WINDOWEVENT_FOCUS_GAINED:
-							runningState = RUNNING;
-							break;
 						case SDL_WINDOWEVENT_FOCUS_LOST:
 							runningState = kbFocusRun[Options::pauseMode];
 							break;
+						case SDL_WINDOWEVENT_FOCUS_GAINED:
+							runningState = RUNNING;
+							break;
+						case SDL_WINDOWEVENT_MINIMIZED:
+						case SDL_WINDOWEVENT_HIDDEN:
+							runningState = stateRun[Options::pauseMode];
+							break;
+						case SDL_WINDOWEVENT_SHOWN:
+						case SDL_WINDOWEVENT_EXPOSED:
+						case SDL_WINDOWEVENT_RESTORED:
+							runningState = RUNNING;
 					}
 					break;
 				case SDL_MOUSEMOTION:
@@ -372,115 +480,6 @@ void Game::run()
 					runningState = RUNNING;
 					// Go on, feed the event to others
 
-				case SDL_FINGERDOWN:
-#ifdef __ANDROID__
-					// Begin tracking our finger.
-					hadFingerUp = false;
-#endif
-				case SDL_FINGERUP:
-					// Okay, maybe we don't need to ask twice.
-				case SDL_FINGERMOTION:
-				{
-					// For now we're translating events from the first finger into mouse events.
-					// FIXME: Note that we're using SDL_FingerID of 0 to specify this "first finger".
-					// This will likely break with things like active styluses.
-					SDL_Event fakeEvent;
-
-					fakeEvent.type = SDL_FIRSTEVENT; // This one is used internally by SDL, for us it's an empty event we don't handle
-					if ((_event.type == SDL_FINGERMOTION) ||
-					    (_event.type == SDL_FINGERDOWN) ||
-					    (_event.type == SDL_FINGERUP))
-					{
-						if (Options::logTouch)
-						{
-							Log(LOG_INFO) << "Got a TouchFinger event; details: ";
-							switch (_event.type)
-							{
-							case SDL_FINGERMOTION:
-								Log(LOG_INFO) << " type: SDL_FINGERMOTION";
-								break;
-							case SDL_FINGERDOWN:
-								Log(LOG_INFO) << " type: SDL_FINGERDOWN";
-								break;
-							case SDL_FINGERUP:
-								Log(LOG_INFO) << " type: SDL_FINGERUP";
-								break;
-							default:
-								Log(LOG_INFO) << " type: UNKNOWN!";
-							}
-							Log(LOG_INFO) << " timestamp: " << _event.tfinger.timestamp << ", touchID: " << _event.tfinger.touchId << ", fingerID: " << _event.tfinger.fingerId;
-							Log(LOG_INFO) << " x: " << _event.tfinger.x << ", y: " << _event.tfinger.y << ", dx: " << _event.tfinger.dx << ", dy: " << _event.tfinger.dy;
-						}
-						// FIXME: Better check the truthness of the following sentence!
-						// On Android, fingerId of 0 corresponds to the first finger on the screen.
-						// Finger index of 0 _should_ mean the first finger on the screen,
-						// but that might be platform-dependent as well.
-						SDL_Finger *finger = SDL_GetTouchFinger(_event.tfinger.touchId, 0);
-						// If the event was fired when the user lifted his finger, we might not get an SDL_Finger struct,
-						// because the finger's not even there. So we should also check if the corresponding touchscreen
-						// no longer registers any presses.
-						int numFingers = SDL_GetNumTouchFingers(_event.tfinger.touchId);
-						if((numFingers == 0) || (finger && (finger->id == _event.tfinger.fingerId)))
-						//if (_event.tfinger.fingerId == 0)
-						{
-							// Note that we actually handle fingermotion, so emulating it may cause bugs.
-							if(_event.type == SDL_FINGERMOTION)
-							{
-								fakeEvent.type = SDL_MOUSEMOTION;
-								fakeEvent.motion.x = _event.tfinger.x * Options::displayWidth;
-								fakeEvent.motion.y = _event.tfinger.y * Options::displayHeight;
-								fakeEvent.motion.xrel = _event.tfinger.dx * Options::displayWidth;
-								fakeEvent.motion.yrel = _event.tfinger.dy * Options::displayHeight;
-								fakeEvent.motion.timestamp = _event.tfinger.timestamp;
-								fakeEvent.motion.state = SDL_BUTTON(1);
-							}
-							else
-							{
-								if (_event.type == SDL_FINGERDOWN)
-								{
-									fakeEvent.type = SDL_MOUSEBUTTONDOWN;
-									fakeEvent.button.type = SDL_MOUSEBUTTONDOWN;
-									fakeEvent.button.state = SDL_PRESSED;
-								}
-								else
-								{
-#ifdef __ANDROID__
-									hadFingerUp = true;
-#endif
-									fakeEvent.type = SDL_MOUSEBUTTONUP;
-									fakeEvent.button.type = SDL_MOUSEBUTTONUP;
-									fakeEvent.button.state = SDL_RELEASED;
-								}
-								fakeEvent.button.timestamp = _event.tfinger.timestamp;
-								fakeEvent.button.x = _event.tfinger.x * Options::displayWidth;
-								fakeEvent.button.y = _event.tfinger.y * Options::displayHeight;
-								fakeEvent.button.button = SDL_BUTTON_LEFT;
-							}
-						}
-						
-					}
-					// FIXME: An alternative to this code duplication is very welcome.
-					if (fakeEvent.type != SDL_FIRSTEVENT)
-					{
-#ifdef __ANDROID__
-						// Preserve current event, we might need it.
-						reservedMUpEvent = fakeEvent;
-#endif
-						Action fakeAction = Action(&fakeEvent, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-						_screen->handle(&fakeAction);
-						_cursor->handle(&fakeAction);
-						_fpsCounter->handle(&fakeAction);
-						_states.back()->handle(&fakeAction);
-					}
-				}
-				case SDL_MULTIGESTURE:
-					if (Options::logTouch)
-					{
-						Log(LOG_INFO) << "Got a MultiGesture event, details:";
-						Log(LOG_INFO) << " timestamp: " << _event.mgesture.timestamp << ", touchID: " << _event.mgesture.touchId;
-						Log(LOG_INFO) << " numFingers: " << _event.mgesture.numFingers << ", x: " << _event.mgesture.x << ", y: " << _event.mgesture.y;
-						Log(LOG_INFO) << " dDist: " << _event.mgesture.dDist << ", dTheta: " << _event.mgesture.dTheta;
-					}
 				default:
 
 					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
