@@ -5,11 +5,12 @@
 #include <assert.h>
 #include "Exception.h"
 #include "Logger.h"
+#include "../lodepng.h"
 
 namespace OpenXcom
 {
 
-SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _texture(NULL), _renderer(NULL), _format(SDL_PIXELFORMAT_ARGB8888)
+SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(window), _texture(NULL), _renderer(NULL), _format(SDL_PIXELFORMAT_ARGB8888)
 {
 	listSDLRendererDrivers();
 	_renderer = SDL_CreateRenderer(window, -1, flags);
@@ -125,6 +126,26 @@ void SDLRenderer::listSDLRendererDrivers()
 			Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << SDL_GetPixelFormatName(info.texture_formats[j]);
 		}
 	}
+}
+
+void SDLRenderer::screenshot(const std::string &filename) const
+{
+	int width, height;
+	SDL_GetWindowSize(_window, &width, &height);
+	unsigned char *pixels = new unsigned char[width * height * 4];
+	unsigned error = SDL_RenderReadPixels(_renderer, NULL, SDL_PIXELFORMAT_ABGR8888, (void*)pixels, width * 4);
+	if (error)
+	{
+		Log(LOG_ERROR) << "Acquiring pixels failed while trying to save screenshot: " << SDL_GetError();
+		delete[] pixels;
+		return;
+	}
+	error = lodepng::encode(filename, (const unsigned char*) pixels, width, height, LCT_RGBA);
+	if (error)
+	{
+		Log(LOG_ERROR) << "Saving to PNG failed: " << lodepng_error_text(error);
+	}
+	delete[] pixels;
 }
 
 }

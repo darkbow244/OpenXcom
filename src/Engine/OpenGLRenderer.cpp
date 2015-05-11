@@ -21,6 +21,7 @@
 #include "Options.h"
 #include "CrossPlatform.h"
 #include "FileMap.h"
+#include "../lodepng.h"
 
 namespace OpenXcom
 {
@@ -411,6 +412,26 @@ void OpenGLRenderer::setVSync(bool sync)
 		// Log(LOG_INFO) << "Made an attempt to set vsync via WGL.";
 	}
 
+}
+
+void OpenGLRenderer::screenshot(const std::string &filename) const
+{
+	int width, height;
+	SDL_GetWindowSize(_window, &width, &height);
+	unsigned char *pixels = new unsigned char[width * height * 3];
+	GLenum format = GL_RGB;
+	for (int y = 0; y < height + 2 * _dstRect.y; ++y)
+	{
+		glReadPixels(0, height - (y + 1), width, 1, format, GL_UNSIGNED_BYTE, (pixels) + y * width * 3);
+	}
+	glErrorCheck();
+	unsigned error = lodepng::encode(filename, (const unsigned char*)pixels, width, height, LCT_RGB);
+	if (error)
+	{
+		Log(LOG_ERROR) << "Saving to PNG failed: " << lodepng_error_text(error);
+	}
+	delete[] pixels;
+	//assert(0 && "Not yet!");
 }
 
 

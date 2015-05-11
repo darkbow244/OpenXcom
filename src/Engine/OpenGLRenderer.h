@@ -102,6 +102,7 @@ public:
 	void setShader(std::string shaderPath);
 	RendererType getRendererType() { return _rendererType; };
 	void setVSync(bool sync);
+	void screenshot(const std::string &filename) const;
 };
 }
 #endif //__NO_OPENGL

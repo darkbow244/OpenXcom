@@ -16,6 +16,7 @@ class SDLRenderer :
 {
 private:
 	static const RendererType _rendererType = RENDERER_SDL2;
+	SDL_Window *_window;
 	SDL_Renderer *_renderer;
 	SDL_Texture *_texture;
 	SDL_Rect _srcRect, _dstRect;
@@ -32,6 +33,7 @@ public:
 	void flip(SDL_Surface *srcSurface);
 	/// INTERNAL: List available renderer drivers
 	void listSDLRendererDrivers();
+	void screenshot(const std::string &filename) const;
 	RendererType getRendererType() { return _rendererType; };
 };
 
