@@ -232,6 +232,27 @@ void Game::run()
 				case SDL_QUIT:
 					quit();
 					break;
+				/* Don't pause/resume twice, let Music handle the music */
+				case SDL_APP_WILLENTERBACKGROUND:
+					Music::pause();
+					// Workaround for SDL2_mixer bug https://bugzilla.libsdl.org/show_bug.cgi?id=2480
+					SDL_LockAudio();
+					// Probably won't do a thing, but still
+					runningState = PAUSED;
+					break;
+				case SDL_APP_WILLENTERFOREGROUND:
+					runningState = RUNNING;
+					// Workaround for SDL2_mixer bug https://bugzilla.libsdl.org/show_bug.cgi?id=2480
+					SDL_UnlockAudio();
+					Music::resume();
+					break;
+				/* Watch for these messages for debugging purposes */
+				case SDL_APP_LOWMEMORY:
+					Log(LOG_WARNING) << "Warning! We're low on memory! Better make a backup!";
+					break;
+				case SDL_APP_TERMINATING:
+					Log(LOG_WARNING) << "The OS is not happy with us! We're gonna die!";
+					break;
 				// Process touch-related events first, because it's all a terrible hack and I'm a terrible person. --sfalexrog
 				// OpenXcom is designed around using mouse as an input device, so it doesn't really care about finger events.
 				// But that shouldn't be a problem, since SDL2 already has mouse emulation built in! So what's all that code about?
@@ -344,28 +365,6 @@ void Game::run()
 						Log(LOG_INFO) << " numFingers: " << _event.mgesture.numFingers << ", x: " << _event.mgesture.x << ", y: " << _event.mgesture.y;
 						Log(LOG_INFO) << " dDist: " << _event.mgesture.dDist << ", dTheta: " << _event.mgesture.dTheta;
 					}
-
-				/* Don't pause/resume twice, let Music handle the music */
-				case SDL_APP_WILLENTERBACKGROUND:
-					Music::pause();
-					// Workaround for SDL2_mixer bug https://bugzilla.libsdl.org/show_bug.cgi?id=2480
-					SDL_LockAudio();
-					// Probably won't do a thing, but still
-					runningState = PAUSED;
-					break;
-				case SDL_APP_WILLENTERFOREGROUND:
-					runningState = RUNNING;
-					// Workaround for SDL2_mixer bug https://bugzilla.libsdl.org/show_bug.cgi?id=2480
-					SDL_UnlockAudio();
-					Music::resume();
-					break;
-				/* Watch for these messages for debugging purposes */
-				case SDL_APP_LOWMEMORY:
-					Log(LOG_WARNING) << "Warning! We're low on memory! Better make a backup!";
-					break;
-				case SDL_APP_TERMINATING:
-					Log(LOG_WARNING) << "The OS is not happy with us! We're gonna die!";
-					break;
 				
 #if 0
 				// SDL2 handles things differently, so this is basically commented out for historical purposes.
@@ -445,7 +444,6 @@ void Game::run()
 						case SDL_WINDOWEVENT_RESTORED:
 							runningState = RUNNING;
 					}
-					break;
 				case SDL_MOUSEMOTION:
 					// With SDL2 we can have both events from a real mouse
 					// and events from a touch-emulated mouse.
@@ -479,9 +477,7 @@ void Game::run()
 					// re-gain focus on mouse-over or keypress.
 					runningState = RUNNING;
 					// Go on, feed the event to others
-
 				default:
-
 					Action action = Action(&_event, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
 					_screen->handle(&action);
 					_cursor->handle(&action);
