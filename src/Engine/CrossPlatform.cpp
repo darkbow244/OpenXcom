@@ -901,14 +901,12 @@ void findDirDialog()
 #ifdef __ANDROID__
 	JNIEnv *env = (JNIEnv*) SDL_AndroidGetJNIEnv();
 	jobject instance = (jobject) SDL_AndroidGetActivity();
-	//jclass oxcJClass = env->FindClass("org/libsdl/openxcom/OpenXcom");
 	jclass oxcJClass = env->GetObjectClass(instance);
-
-	jmethodID showDirDialogMethod = env->GetStaticMethodID(oxcJClass, "showDirDialog", "()V");
+	jmethodID showDirDialogMethod = env->GetMethodID(oxcJClass, "showDirDialog", "()V");
 	if (showDirDialogMethod != NULL)
 	{
 		Log(LOG_INFO) << "Found candidate method ID: " << showDirDialogMethod;
-		env->CallStaticVoidMethod(oxcJClass, showDirDialogMethod);
+		env->CallVoidMethod(instance, showDirDialogMethod);
 	}
 	else
 	{
