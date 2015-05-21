@@ -1,23 +1,21 @@
 #!/bin/bash
 
-DATA_DIR=`pwd`
-SOURCES_DIR=$DATA_DIR/translations/sources
-ADDITIONAL_DIR=$DATA_DIR/translations/additional
-OUTPUT_DIR=$DATA_DIR/translations/output
+# This line is taken from https://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
+DATA_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+PROJECT=x-com-1
+SOURCES_DIR=$DATA_DIR/translations/$PROJECT/sources
+ADDITIONAL_DIR=$DATA_DIR/translations/$PROJECT/additional
+OUTPUT_DIR=$DATA_DIR/translations/$PROJECT/output
 
-cd $SOURCES_DIR
-for i in *.yml;
+for i in $SOURCES_DIR/*.yml;
 do
-  if [ -f $ADDITIONAL_DIR/$i ];
+  file=$(basename $i)
+  if [ -f $ADDITIONAL_DIR/$file ];
   then
-    echo "Additional translation exists for file $i, merging..."
-    cat $SOURCES_DIR/$i $ADDITIONAL_DIR/$i > $OUTPUT_DIR/$i
+    echo "Additional translation exists for file $file, merging..."
+    cat $SOURCES_DIR/$file $ADDITIONAL_DIR/$file > $OUTPUT_DIR/$file
   else
-    echo "No additional translations exist for file $i, copying..."
-    cp $SOURCES_DIR/$i $OUTPUT_DIR/$i
+    echo "No additional translations exist for file $file, copying..."
+    cp $SOURCES_DIR/$file $OUTPUT_DIR/$file
   fi
 done
-
-cd $OUTPUT_DIR
-zip latest.zip *
-mv latest.zip $DATA_DIR/
