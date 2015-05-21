@@ -96,6 +96,5 @@ nbproject/
 #ctags index
 src/tags
 #android translations
-bin/translations/sources/*.yml
-bin/translations/output/*.yml
-
+bin/translations/x-com-1/sources/*.yml
+bin/translations/x-com-1/output/*.yml
