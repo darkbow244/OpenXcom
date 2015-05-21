@@ -58,6 +58,7 @@ std::map<std::string, ModInfo> _modInfos;
  */
 void create()
 {
+	if (!_info.empty()) { _info.clear(); }
 #ifdef DINGOO
 	_info.push_back(OptionInfo("displayWidth", &displayWidth, Screen::ORIGINAL_WIDTH));
 	_info.push_back(OptionInfo("displayHeight", &displayHeight, Screen::ORIGINAL_HEIGHT));
