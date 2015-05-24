@@ -354,7 +354,7 @@ void ArrowButton::mouseWheel(Action *action, State *state)
 	{
 		if (_list)
 		{
-			if (ev.wheel.y < 0)
+			if (ev.wheel.y > 0)
 				_list->scrollUp(false, true);
 			else
 				_list->scrollDown(false, true);

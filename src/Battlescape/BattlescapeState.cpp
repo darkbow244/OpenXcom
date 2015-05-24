@@ -654,14 +654,12 @@ void BattlescapeState::mapOver(Action *action)
 
 		_isMouseScrolled = true;
 
+#ifndef __ANDROID__
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-		//assert (0 && "FIXME");
-#ifndef __ANDROID__
-		/* FIXME: Mouse warping still doesn't work as intended */
-		//SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - Map::ICON_HEIGHT / 2);
-#endif
+		//SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - _map->getIconHeight() / 2);
 		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+#endif
 
 		// Check the threshold
 		_totalMouseMoveX += action->getDetails()->motion.xrel;

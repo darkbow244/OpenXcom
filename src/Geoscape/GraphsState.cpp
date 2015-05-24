@@ -1124,7 +1124,7 @@ void GraphsState::shiftButtons(Action *action)
 			return;
 		else if (ev.type == SDL_MOUSEWHEEL)
 		{
-			const int inc = ev.wheel.y < 0 ? -1 : 1;
+			const int inc = ev.wheel.y > 0 ? -1 : 1;
 			scrollButtons(_countryToggles, _btnCountries, _butCountriesOffset, inc);
 		}
 	}
@@ -1135,7 +1135,7 @@ void GraphsState::shiftButtons(Action *action)
 			return;
 		else if (ev.type == SDL_MOUSEWHEEL)
 		{
-			const int inc = ev.wheel.y < 0 ? -1 : 1;
+			const int inc = ev.wheel.y > 0 ? -1 : 1;
 			scrollButtons(_regionToggles, _btnRegions, _butRegionsOffset, inc);
 		}
 	}

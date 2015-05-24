@@ -206,7 +206,6 @@ void CraftSoldiersState::moveSoldierUp(Action *action, unsigned int row, bool ma
 		_base->getSoldiers()->at(row - 1) = s;
 		if (row != _lstSoldiers->getScroll())
 		{
-			//assert (0 && "FIXME");
 			SDL_WarpMouseInWindow(NULL, (action->getLeftBlackBand() + action->getXMouse()), (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
 		}
 		else
@@ -337,7 +336,7 @@ void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y < 0 && row > 0)
+		if (ev.wheel.y > 0 && row > 0)
 		{
 			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&
 				action->getAbsoluteXMouse() <= _lstSoldiers->getArrowsRightEdge())
@@ -345,7 +344,7 @@ void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
 				moveSoldierUp(action, row);
 			}
 		}
-		else if (ev.wheel.y > 0 && 0 < numSoldiers &&
+		else if (ev.wheel.y < 0 && 0 < numSoldiers &&
 			   	INT_MAX >= numSoldiers && row < (int)numSoldiers - 1)
 		{
 			if (action->getAbsoluteXMouse() >= _lstSoldiers->getArrowsLeftEdge() &&

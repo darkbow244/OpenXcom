@@ -106,7 +106,7 @@ void Camera::mouseWheel(Action *action, State *)
 	const SDL_Event &ev(*action->getDetails());
  	if (ev.type == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y < 0)
+		if (ev.wheel.y > 0)
 		{
 			up();
 		}

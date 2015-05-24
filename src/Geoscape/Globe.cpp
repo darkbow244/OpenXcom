@@ -1953,7 +1953,7 @@ void Globe::stopScrolling(Action *action)
 {
 #ifndef __ANDROID__
 	/* FIXME: Still doesn't work as intended */
-	//SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
+	SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());
 #else
 	//Log(LOG_INFO) << "Globe.cpp: stopScrolling(): setting mouse to " << _xBeforeMouseScrolling << ", " << _yBeforeMouseScrolling;

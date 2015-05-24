@@ -354,7 +354,7 @@ void ManageAlienContainmentState::lstItemsMouseWheel(Action *action)
 		if (action->getAbsoluteXMouse() >= _lstAliens->getArrowsLeftEdge() &&
 			action->getAbsoluteXMouse() <= _lstAliens->getArrowsRightEdge())
 		{
-			if (ev.wheel.y < 0)
+			if (ev.wheel.y > 0)
 				increaseByValue(Options::changeValueByMouseWheel);
 			else
 				decreaseByValue(Options::changeValueByMouseWheel);

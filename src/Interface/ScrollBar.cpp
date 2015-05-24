@@ -215,7 +215,7 @@ void ScrollBar::mouseWheel(Action *action, State *state)
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y < 0)
+		if (ev.wheel.y > 0)
 			_list->scrollUp(false, true);
 		else
 			_list->scrollDown(false, true);

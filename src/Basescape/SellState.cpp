@@ -511,7 +511,7 @@ void SellState::lstItemsMouseWheel(Action *action)
 			action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
 		{
 			changeByValue(Options::changeValueByMouseWheel,
-				   	ev.wheel.y < 0 ? 1 : -1);
+				   	ev.wheel.y > 0 ? 1 : -1);
 		}
 	} 
 }

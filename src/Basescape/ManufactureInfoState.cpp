@@ -497,7 +497,7 @@ void ManufactureInfoState::handleWheelEngineer(Action *action)
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y < 0)
+		if (ev.wheel.y > 0)
 			moreEngineer(Options::changeValueByMouseWheel);
 		else
 			lessEngineer(Options::changeValueByMouseWheel);
@@ -531,7 +531,7 @@ void ManufactureInfoState::handleWheelUnit(Action *action)
 	const SDL_Event &ev(*action->getDetails());
 	if (ev.type == SDL_MOUSEWHEEL)
 	{
-		if (ev.wheel.y < 0)
+		if (ev.wheel.y > 0)
 			moreUnit(Options::changeValueByMouseWheel);
 		else
 			lessUnit(Options::changeValueByMouseWheel);

@@ -347,7 +347,7 @@ void CraftEquipmentState::lstEquipmentMouseWheel(Action *action)
 		if (action->getAbsoluteXMouse() >= _lstEquipment->getArrowsLeftEdge() &&
 			action->getAbsoluteXMouse() <= _lstEquipment->getArrowsRightEdge())
 		{
-			if (ev.wheel.y < 0)
+			if (ev.wheel.y > 0)
 				moveRightByValue(Options::changeValueByMouseWheel);
 			else
 				moveLeftByValue(Options::changeValueByMouseWheel);

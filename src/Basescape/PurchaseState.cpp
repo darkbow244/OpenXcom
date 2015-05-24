@@ -402,7 +402,7 @@ void PurchaseState::lstItemsMouseWheel(Action *action)
 		if (action->getAbsoluteXMouse() >= _lstItems->getArrowsLeftEdge() &&
 			action->getAbsoluteXMouse() <= _lstItems->getArrowsRightEdge())
 		{
-			if (ev.wheel.y < 0)
+			if (ev.wheel.y > 0)
 				increaseByValue(Options::changeValueByMouseWheel);
 			else
 				decreaseByValue(Options::changeValueByMouseWheel);

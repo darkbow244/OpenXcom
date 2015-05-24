@@ -114,7 +114,7 @@ void MiniMapState::handle(Action *action)
 	State::handle(action);
 	if (action->getDetails()->type == SDL_MOUSEWHEEL)
 	{
-		if (action->getDetails()->wheel.y < 0)
+		if (action->getDetails()->wheel.y > 0)
 		{
 			btnLevelUpClick(action);
 		}

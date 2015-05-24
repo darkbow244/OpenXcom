@@ -124,7 +124,6 @@ void InteractiveSurface::handle(Action *action, State *state)
 		mouseX = mouseX;
 		mouseY = mouseY;
 		action->setMouseAction(mouseX, mouseY, getX(), getY());
-		//action->setMouseAction(action->getDetails()->wheel.x, action->getDetails()->wheel.y, getX(), getY());
 	}
 	else if (action->getDetails()->type == SDL_MOUSEMOTION)
 	{
