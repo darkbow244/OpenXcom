@@ -40,7 +40,8 @@ namespace OpenXcom
  */
 TextList::TextList(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _big(0), _small(0), _font(0), _scroll(0), _visibleRows(0), _selRow(0), _color(0), _dot(false), _selectable(false), _condensed(false), _contrast(false), _wrap(false),
 																								   _bg(0), _selector(0), _margin(0), _scrolling(true), _arrowPos(-1), _scrollPos(4), _arrowType(ARROW_VERTICAL),
-																								   _leftClick(0), _leftPress(0), _leftRelease(0), _rightClick(0), _rightPress(0), _rightRelease(0), _arrowsLeftEdge(0), _arrowsRightEdge(0), _comboBox(0)
+																								   _leftClick(0), _leftPress(0), _leftRelease(0), _rightClick(0), _rightPress(0), _rightRelease(0), _arrowsLeftEdge(0), _arrowsRightEdge(0), _comboBox(0),
+																								   _overThreshold(false), _accumulatedDelta(0)
 {
 	_up = new ArrowButton(ARROW_BIG_UP, 13, 14, getX() + getWidth() + _scrollPos, getY());
 	_up->setVisible(false);
@@ -1040,16 +1041,8 @@ void TextList::think()
  */
 void TextList::mousePress(Action *action, State *state)
 {
-	bool allowScroll = true;
-	if (Options::changeValueByMouseWheel != 0)
-	{
-		allowScroll = (action->getAbsoluteXMouse() < _arrowsLeftEdge || action->getAbsoluteXMouse() > _arrowsRightEdge);
-	}
-	if (allowScroll && action->getDetails()->type == SDL_MOUSEWHEEL)
-	{
-		if (action->getDetails()->wheel.y > 0) scrollUp(false, true);
-		else scrollDown(false, true);
-	}
+	_accumulatedDelta = 0;
+	_overThreshold = false;
 	if (_selectable)
 	{
 		if (_selRow < _rows.size())
@@ -1099,6 +1092,7 @@ void TextList::mouseWheel(Action *action, State *state)
  */
 void TextList::mouseRelease(Action *action, State *state)
 {
+	_accumulatedDelta = 0;
 	if (_selectable)
 	{
 		if (_selRow < _rows.size())
@@ -1119,6 +1113,12 @@ void TextList::mouseRelease(Action *action, State *state)
  */
 void TextList::mouseClick(Action *action, State *state)
 {
+	if (_overThreshold)
+	{
+		// End scrolling action.
+		_overThreshold = false;
+		return;
+	}
 	if (_selectable)
 	{
 		if (_selRow < _rows.size())
@@ -1144,6 +1144,24 @@ void TextList::mouseClick(Action *action, State *state)
  */
 void TextList::mouseOver(Action *action, State *state)
 {
+	if (_scrolling)
+	{
+		const int threshold = (_font->getHeight() + _font->getSpacing()) * action->getYScale();
+		_accumulatedDelta += action->getDetails()->motion.yrel;
+		if (std::abs(_accumulatedDelta) >= threshold)
+		{
+			_overThreshold = action->getDetails()->motion.state != 0;
+		}
+		if (_overThreshold && action->getDetails()->motion.state)
+		{
+			if (std::abs(_accumulatedDelta) >= threshold)
+			{
+				if (_accumulatedDelta < 0) { scrollDown(false, false);      } // Finger moving up
+				else					   { scrollUp(false, false);        } // Finger moving down
+				_accumulatedDelta = 0;
+			}
+		}
+	}
 	if (_selectable)
 	{
 		int h = _font->getHeight() + _font->getSpacing();

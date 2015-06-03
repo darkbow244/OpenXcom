@@ -66,6 +66,9 @@ private:
 	void updateArrows();
 	/// Updates the visible rows.
 	void updateVisible();
+	/// The following variables are here only to provide finger-scrolling functionality.
+	int _accumulatedDelta;  // How much did the cursor travel?
+	bool _overThreshold;    // Did we go over threshold?
 public:
 	/// Creates a text list with the specified size and position.
 	TextList(int width, int height, int x = 0, int y = 0);
