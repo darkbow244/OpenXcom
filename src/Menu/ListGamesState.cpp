@@ -139,10 +139,10 @@ ListGamesState::ListGamesState(OptionsOrigin origin, int firstValidRow, bool aut
 	_lstSaves->onMouseOut((ActionHandler)&ListGamesState::lstSavesMouseOut);
 #ifdef __ANDROID__
 	_lstSaves->onMouseClick((ActionHandler)&ListGamesState::lstSavesPress);
-#endif
-//#else
-	_lstSaves->onMousePress((ActionHandler)&ListGamesState::lstSavesPress);
 //#endif
+#else
+	_lstSaves->onMousePress((ActionHandler)&ListGamesState::lstSavesPress);
+#endif
 
 	_txtDetails->setWordWrap(true);
 	_txtDetails->setText(tr("STR_DETAILS").arg(L""));
