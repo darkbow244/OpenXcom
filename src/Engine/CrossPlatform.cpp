@@ -955,9 +955,15 @@ void setSystemUI()
 	    env->ReleaseStringUTFChars(gamePath, gamePathString);
 	    env->ReleaseStringUTFChars(savePath, savePathString);
 	    env->ReleaseStringUTFChars(confPath, confPathString);
-		Options::setDataFolder(endPath(dataFolder));
-		Options::setUserFolder(endPath(saveFolder));
-		Options::setConfFolder(endPath(confFolder));
+		// The correct resource reloading requires us to
+		// re-initialize the whole game. Oh well.
+		const char* argv[] = {"openxcom.apk",
+						"-locale", Options::systemLocale.c_str(),
+						"-data", dataFolder.c_str(),
+						"-user", saveFolder.c_str(),
+						"-cfg", confFolder.c_str()};
+		// Bad practice!
+		Options::init(sizeof(argv) / sizeof(char*), (char**)argv);
 		Game *game = State::getGame();
 		game->setState(new StartState);
 	}
