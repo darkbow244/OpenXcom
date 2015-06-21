@@ -25,7 +25,7 @@ namespace OpenXcom
  * Creates a blank alien race.
  * @param id String defining the id.
  */
-AlienRace::AlienRace(const std::string &id) : _id(id), _retaliation(true)
+AlienRace::AlienRace(const std::string &id) : _id(id), _retaliationMission("STR_ALIEN_RETALIATION"), _retaliation(true), _retaliationAggression(0)
 {
 }
 
@@ -40,8 +40,12 @@ AlienRace::~AlienRace()
 void AlienRace::load(const YAML::Node &node)
 {
 	_id = node["id"].as<std::string>(_id);
+	_baseCustomDeploy = node["baseCustomDeploy"].as<std::string>(_baseCustomDeploy);
+	_baseCustomMission = node["baseCustomMission"].as<std::string>(_baseCustomMission);
+	_retaliationMission = node["retaliationMission"].as<std::string>(_retaliationMission);
 	_members = node["members"].as< std::vector<std::string> >(_members);
 	_retaliation = node["retaliation"].as<bool>(_retaliation);
+	_retaliationAggression = node["retaliationAggression"].as<int>(_retaliationAggression);
 }
 
 /**
@@ -49,21 +53,55 @@ void AlienRace::load(const YAML::Node &node)
  * this alien race. Each race has a unique name.
  * @return Race name.
  */
-std::string AlienRace::getId() const
+const std::string &AlienRace::getId() const
 {
 	return _id;
 }
 
 /**
+ * Returns optional weapon deploy for aliens in they base.
+ * @return Alien deployment id.
+ */
+const std::string &AlienRace::getBaseCustomDeploy() const
+{
+	return _baseCustomDeploy;
+}
+
+/**
+ * Returns custom alien base deploy.
+ * @return Alien deployment id.
+ */
+const std::string &AlienRace::getBaseCustomMission() const
+{
+	return _baseCustomMission;
+}
+/**
  * Gets a certain member of this alien race family.
  * @param id The member's id.
  * @return The member's name.
  */
-std::string AlienRace::getMember(int id) const
+const std::string &AlienRace::getMember(int id) const
 {
 	return _members[id];
 }
 
+/**
+ * Gets mission used for retaliation, can be empty. This is different than canRetaliate.
+ * @return Mission ID or empty string.
+ */
+const std::string &AlienRace::getRetaliationMission() const
+{
+	return _retaliationMission;
+}
+
+/**
+ * Gets how aggressive alien are
+ * @return Mission ID or empty string.
+ */
+int AlienRace::getRetaliationAggression() const
+{
+	return _retaliationAggression;
+}
 /**
  * Returns if the race can participate in retaliation missions.
  * @return True if it can retaliate.

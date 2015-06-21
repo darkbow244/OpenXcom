@@ -339,9 +339,18 @@ int Tile::openDoor(int part, BattleUnit *unit, BattleActionType reserve)
 {
 	if (!_objects[part]) return -1;
 
+	BattleActionCost cost;
+	if (unit)
+	{
+		int tuCost = _objects[part]->getTUCost(unit->getMovementType());
+		cost = BattleActionCost(reserve, unit, unit->getMainHandWeapon(false));
+		cost.Time += tuCost;
+		cost.Energy += tuCost / 2;
+	}
+
 	if (_objects[part]->isDoor())
 	{
-		if (unit && unit->getTimeUnits() < _objects[part]->getTUCost(unit->getMovementType()) + unit->getActionTUs(reserve, unit->getMainHandWeapon(false)))
+		if (unit && !cost.haveTU())
 			return 4;
 		if (_unit && _unit != unit && _unit->getPosition() != getPosition())
 			return -1;
@@ -352,7 +361,7 @@ int Tile::openDoor(int part, BattleUnit *unit, BattleActionType reserve)
 	}
 	if (_objects[part]->isUFODoor() && _currentFrame[part] == 0) // ufo door part 0 - door is closed
 	{
-		if (unit &&	unit->getTimeUnits() < _objects[part]->getTUCost(unit->getMovementType()) + unit->getActionTUs(reserve, unit->getMainHandWeapon(false)))
+		if (unit && !cost.haveTU())
 			return 4;
 		_currentFrame[part] = 1; // start opening door
 		return 1;
@@ -446,6 +455,26 @@ int Tile::getShade() const
 
 	for (int layer = 0; layer < LIGHTLAYERS; layer++)
 	{
+		if (_light[layer] > light)
+			light = _light[layer];
+	}
+
+	return std::max(0, 15 - light);
+}
+
+/**
+ * Gets the tile's shade amount 0-15. It returns the brightest of all light layers except 2th (dynamic) layer.
+ * Shade level is the inverse of light level. So a maximum amount of light (15) returns shade level 0.
+ * @return shade
+ */
+int Tile::getExternalShade() const
+{
+	int light = 0;
+	// 2th layer (dynamic) not taken into account
+	for (int layer = 0; layer < LIGHTLAYERS; layer++)
+	{
+		if (layer == 2) continue;
+
 		if (_light[layer] > light)
 			light = _light[layer];
 	}
@@ -795,10 +824,34 @@ int Tile::getTopItemSprite()
 		if ((*i)->getRules()->getWeight() > biggestWeight)
 		{
 			biggestWeight = (*i)->getRules()->getWeight();
-			biggestItem = (*i)->getRules()->getFloorSprite();
+			biggestItem = (*i)->getFloorSprite();
 		}
 	}
 	return biggestItem;
+}
+
+/**
+ * Apply environment damage to unit.
+ * @param unit affected unit.
+ * @param smoke amount of smoke.
+ * @param fire amount of file.
+ */
+static inline void applyEnvi(BattleUnit* unit, int smoke, int fire)
+{
+	if (unit)
+	{
+		if (fire)
+		{
+			// _smoke becomes our damage value
+			unit->setEnviFire(smoke);
+		}
+		// no fire: must be smoke
+		else
+		{
+			// try to knock this guy out.
+			unit->setEnviSmoke(smoke / 4 + 1);
+		}
+	}
 }
 
 /**
@@ -816,36 +869,10 @@ void Tile::prepareNewTurn()
 	// if we still have smoke/fire
 	if (_smoke)
 	{
-		if (_unit && !_unit->isOut())
+		applyEnvi(_unit, _smoke, _fire);
+		for (std::vector<BattleItem*>::iterator i = _inventory.begin(); i != _inventory.end(); ++i)
 		{
-			if (_fire)
-			{
-				// this is how we avoid hitting the same unit multiple times.
-				if (_unit->getArmor()->getSize() == 1 || !_unit->tookFireDamage())
-				{
-					_unit->toggleFireDamage();
-					// _smoke becomes our damage value
-					_unit->damage(Position(0, 0, 0), _smoke, DT_IN, true);
-					// try to set the unit on fire.
-					if (RNG::percent(40 * _unit->getArmor()->getDamageModifier(DT_IN)))
-					{
-						int burnTime = RNG::generate(0, int(5 * _unit->getArmor()->getDamageModifier(DT_IN)));
-						if (_unit->getFire() < burnTime)
-						{
-							_unit->setFire(burnTime);
-						}
-					}
-				}
-			}
-			// no fire: must be smoke
-			else
-			{
-				// try to knock this guy out.
-				if (_unit->getArmor()->getDamageModifier(DT_SMOKE) > 0.0 && _unit->getArmor()->getSize() == 1)
-				{
-					_unit->damage(Position(0,0,0), (_smoke / 4) + 1, DT_SMOKE, true);
-				}
-			}
+			applyEnvi((*i)->getUnit(), _smoke, _fire);
 		}
 	}
 	_overlaps = 0;

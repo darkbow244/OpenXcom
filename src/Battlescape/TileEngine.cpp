@@ -46,6 +46,7 @@
 #include "../Ruleset/Ruleset.h"
 #include "../Resource/ResourcePack.h"
 #include "Pathfinding.h"
+#include "../Engine/Game.h"
 #include "../Engine/Options.h"
 #include "ProjectileFlyBState.h"
 #include "MeleeAttackBState.h"
@@ -61,8 +62,13 @@ const int TileEngine::heightFromCenter[11] = {0,-2,+2,-4,+4,-6,+6,-8,+8,-12,+12}
  * Sets up a TileEngine.
  * @param save Pointer to SavedBattleGame object.
  * @param voxelData List of voxel data.
+ * @param maxViewDistance Max view distance in tiles.
+ * @param maxDarknessToSeeUnits Threshold of darkness for LoS calculation.
  */
-TileEngine::TileEngine(SavedBattleGame *save, std::vector<Uint16> *voxelData) : _save(save), _voxelData(voxelData), _personalLighting(true)
+TileEngine::TileEngine(SavedBattleGame *save, std::vector<Uint16> *voxelData, int maxViewDistance, int maxDarknessToSeeUnits) :
+	_save(save), _voxelData(voxelData), _personalLighting(true),
+	_maxViewDistance(maxViewDistance), _maxViewDistanceSq(maxViewDistance * maxViewDistance),
+	_maxVoxelViewDistance(maxViewDistance * 16), _maxDarknessToSeeUnits(maxDarknessToSeeUnits)
 {
 }
 
@@ -155,7 +161,7 @@ void TileEngine::calculateTerrainLighting()
 
 		for (std::vector<BattleItem*>::iterator it = _save->getTiles()[i]->getInventory()->begin(); it != _save->getTiles()[i]->getInventory()->end(); ++it)
 		{
-			if ((*it)->getRules()->getBattleType() == BT_FLARE)
+			if ((*it)->getGlow())
 			{
 				addLight(_save->getTiles()[i]->getPosition(), (*it)->getRules()->getPower(), layer);
 			}
@@ -268,12 +274,12 @@ bool TileEngine::calculateFOV(BattleUnit *unit)
 			++pos.z;
 		}
 	}
-	for (int x = 0; x <= MAX_VIEW_DISTANCE; ++x)
+	for (int x = 0; x <= getMaxViewDistance(); ++x)
 	{
 		if (direction%2)
 		{
 			y1 = 0;
-			y2 = MAX_VIEW_DISTANCE;
+			y2 = getMaxViewDistance();
 		}
 		else
 		{
@@ -286,7 +292,7 @@ bool TileEngine::calculateFOV(BattleUnit *unit)
 			{
 				const int distanceSqr = x*x + y*y;
 				test.z = z;
-				if (distanceSqr <= MAX_VIEW_DISTANCE_SQR)
+				if (distanceSqr <= getMaxViewDistanceSq())
 				{
 					test.x = center.x + signX[direction]*(swap?y:x);
 					test.y = center.y + signY[direction]*(swap?x:y);
@@ -406,25 +412,24 @@ bool TileEngine::visible(BattleUnit *currentUnit, Tile *tile)
 		return false;
 	}
 
-	// aliens can see in the dark, xcom can see at a distance of 9 or less, further if there's enough light.
-	if ((currentUnit->getFaction() == FACTION_PLAYER &&
-		distance(currentUnit->getPosition(), tile->getPosition()) > 9 &&
-		tile->getShade() > MAX_DARKNESS_TO_SEE_UNITS) ||
-		distance(currentUnit->getPosition(), tile->getPosition()) > MAX_VIEW_DISTANCE)
+	// friendlies are always seen
+	if (currentUnit->getFaction() == tile->getUnit()->getFaction()) return true;
+
+	// aliens can see in the dark at least 20 tiles, xcom can see at a distance of 9 (MaxViewDistanceAtDark) or less, further if there's enough light.
+	if ((getMaxViewDistanceSq() > currentUnit->getMaxViewDistanceAtDarkSq() &&
+		distanceSq(currentUnit->getPosition(), tile->getPosition(), false) > currentUnit->getMaxViewDistanceAtDarkSq() &&
+		tile->getExternalShade() > getMaxDarknessToSeeUnits() &&
+		tile->getUnit()->getFire() == 0) ||
+		distanceSq(currentUnit->getPosition(), tile->getPosition(), false) > getMaxViewDistanceSq())
 	{
 		return false;
 	}
 
-	if (currentUnit->getFaction() == tile->getUnit()->getFaction()) return true; // friendlies are always seen
-
 	Position originVoxel = getSightOriginVoxel(currentUnit);
-
-	bool unitSeen = false;
-	// for large units origin voxel is in the middle
 
 	Position scanVoxel;
 	std::vector<Position> _trajectory;
-	unitSeen = canTargetUnit(&originVoxel, tile, &scanVoxel, currentUnit);
+	bool unitSeen = canTargetUnit(&originVoxel, tile, &scanVoxel, currentUnit);
 
 	if (unitSeen)
 	{
@@ -435,24 +440,33 @@ bool TileEngine::visible(BattleUnit *currentUnit, Tile *tile)
 		// this is traced in voxel space, with smoke affecting visibility every step of the way
 		_trajectory.clear();
 		calculateLine(originVoxel, scanVoxel, true, &_trajectory, currentUnit);
-		Tile *t = _save->getTile(currentUnit->getPosition());
-		size_t visibleDistance = _trajectory.size();
-		for (size_t i = 0; i < _trajectory.size(); i++)
+		int visibleDistance = _trajectory.size();
+		int densityOfSmoke = 0;
+		Position voxelToTile(16, 16, 24);
+		Position trackTile(-1, -1, -1);
+		Tile *t = 0;
+
+		for (int i = 0; i < visibleDistance; i++)
 		{
-			if (t != _save->getTile(Position(_trajectory.at(i).x/16,_trajectory.at(i).y/16, _trajectory.at(i).z/24)))
+			_trajectory.at(i) /= voxelToTile;
+			if (trackTile != _trajectory.at(i))
 			{
-				t = _save->getTile(Position(_trajectory.at(i).x/16,_trajectory.at(i).y/16, _trajectory.at(i).z/24));
+				// 3  - coefficient of calculation (see above).
+				// 20 - maximum view distance in vanilla Xcom.
+				// Even if MaxViewDistance will be increased via ruleset, smoke will keep effect.
+				if (visibleDistance > getMaxVoxelViewDistance() - densityOfSmoke * getMaxViewDistance()/(3 * 20))
+				{
+					return false;
+				}
+				trackTile = _trajectory.at(i);
+				t = _save->getTile(trackTile);
 			}
 			if (t->getFire() == 0)
 			{
-				visibleDistance += t->getSmoke() / 3;
-			}
-			if (visibleDistance > MAX_VOXEL_VIEW_DISTANCE)
-			{
-				unitSeen = false;
-				break;
+				densityOfSmoke += t->getSmoke();
 			}
 		}
+		unitSeen = visibleDistance <= getMaxVoxelViewDistance() - densityOfSmoke * getMaxViewDistance()/(3 * 20);
 	}
 	return unitSeen;
 }
@@ -773,7 +787,7 @@ void TileEngine::calculateFOV(const Position &position)
 {
 	for (std::vector<BattleUnit*>::iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
 	{
-		if (distanceSq(position, (*i)->getPosition()) <= MAX_VIEW_DISTANCE_SQR)
+		if (distanceSq(position, (*i)->getPosition(), false) < getMaxViewDistanceSq())
 		{
 			calculateFOV(*i);
 		}
@@ -794,7 +808,7 @@ bool TileEngine::checkReactionFire(BattleUnit *unit)
 		return false;
 	}
 
-	std::vector<std::pair<BattleUnit *, int> > spotters = getSpottingUnits(unit);
+	std::vector<ReactionScore> spotters = getSpottingUnits(unit);
 	bool result = false;
 
 	// not mind controlled, or controlled by the player
@@ -802,29 +816,30 @@ bool TileEngine::checkReactionFire(BattleUnit *unit)
 		|| unit->getFaction() != FACTION_HOSTILE)
 	{
 		// get the first man up to bat.
-		int attackType;
-		BattleUnit *reactor = getReactor(spotters, attackType, unit);
+		ReactionScore *reactor = getReactor(spotters, unit);
 		// start iterating through the possible reactors until the current unit is the one with the highest score.
-		while (reactor != unit)
+		while (reactor != 0)
 		{
-			if (!tryReaction(reactor, unit, attackType))
+			if (!tryReaction(reactor->unit, unit, reactor->attackType))
 			{
-				// can't make a reaction snapshot for whatever reason, boot this guy from the vector.
-				for (std::vector<std::pair<BattleUnit *, int> >::iterator i = spotters.begin(); i != spotters.end(); ++i)
+				for (std::vector<ReactionScore>::iterator i = spotters.begin(); i != spotters.end(); ++i)
 				{
-					if ((*i).first == reactor)
+					if (&(*i) == reactor)
 					{
 						spotters.erase(i);
+						reactor = 0;
 						break;
 					}
 				}
+				// can't make a reaction snapshot for whatever reason, boot this guy from the vector.
 				// avoid setting result to true, but carry on, just cause one unit can't react doesn't mean the rest of the units in the vector (if any) can't
-				reactor = getReactor(spotters, attackType, unit);
+				reactor = getReactor(spotters, unit);
 				continue;
 			}
 			// nice shot, kid. don't get cocky.
-			reactor = getReactor(spotters, attackType, unit);
 			result = true;
+			reactor->reactionScore -= reactor->reactionReduction;
+			reactor = getReactor(spotters, unit);
 		}
 	}
 	return result;
@@ -835,22 +850,25 @@ bool TileEngine::checkReactionFire(BattleUnit *unit)
  * @param unit The unit to check for spotters of.
  * @return A vector of units that can see this unit.
  */
-std::vector<std::pair<BattleUnit *, int> > TileEngine::getSpottingUnits(BattleUnit* unit)
+std::vector<TileEngine::ReactionScore> TileEngine::getSpottingUnits(BattleUnit* unit)
 {
-	std::vector<std::pair<BattleUnit *, int> > spotters;
+	std::vector<TileEngine::ReactionScore> spotters;
 	Tile *tile = unit->getTile();
+	int threshold = unit->getReactionScore();
 	for (std::vector<BattleUnit*>::const_iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
 	{
 			// not dead/unconscious
 		if (!(*i)->isOut() &&
 			// not dying
-			(*i)->getHealth() != 0 &&
+			(*i)->getHealth() > 0 &&
 			// not about to pass out
 			(*i)->getStunlevel() < (*i)->getHealth() &&
+			// have any chances for reacting
+			(*i)->getReactionScore() >= threshold &&
 			// not a friend
 			(*i)->getFaction() != _save->getSide() &&
 			// closer than 20 tiles
-			distanceSq(unit->getPosition(), (*i)->getPosition()) <= MAX_VIEW_DISTANCE_SQR)
+			distanceSq(unit->getPosition(), (*i)->getPosition(), false) <= getMaxViewDistanceSq())
 		{
 			Position originVoxel = _save->getTileEngine()->getSightOriginVoxel(*i);
 			originVoxel.z -= 2;
@@ -872,10 +890,10 @@ std::vector<std::pair<BattleUnit *, int> > TileEngine::getSpottingUnits(BattleUn
 				// no reaction on civilian turn.
 				if (_save->getSide() != FACTION_NEUTRAL)
 				{
-					int attackType = determineReactionType(*i, unit);
-					if (attackType != BA_NONE)
+					ReactionScore rs = determineReactionType(*i, unit);
+					if (rs.attackType != BA_NONE)
 					{
-						spotters.push_back(std::make_pair(*i, attackType));
+						spotters.push_back(rs);
 					}
 				}
 			}
@@ -890,34 +908,28 @@ std::vector<std::pair<BattleUnit *, int> > TileEngine::getSpottingUnits(BattleUn
  * @param unit The unit to check scores against.
  * @return The unit with the highest reactions.
  */
-BattleUnit* TileEngine::getReactor(std::vector<std::pair<BattleUnit *, int> > spotters, int &attackType, BattleUnit *unit)
+TileEngine::ReactionScore *TileEngine::getReactor(std::vector<TileEngine::ReactionScore> &spotters, BattleUnit *unit)
 {
-	int bestScore = -1;
-	BattleUnit *bu = 0;
-	for (std::vector<std::pair<BattleUnit *, int> >::iterator i = spotters.begin(); i != spotters.end(); ++i)
+	ReactionScore *best = 0;
+	for (std::vector<ReactionScore>::iterator i = spotters.begin(); i != spotters.end(); ++i)
 	{
-		if (!(*i).first->isOut() &&
-		determineReactionType((*i).first, unit) != BA_NONE &&
-		(*i).first->getReactionScore() > bestScore)
+		if (!(*i).unit->isOut() && (!best || (*i).reactionScore > best->reactionScore))
 		{
-			bestScore = (*i).first->getReactionScore();
-			bu = (*i).first;
-			attackType = (*i).second;
+			best = &(*i);
 		}
 	}
-	if (unit->getReactionScore() <= bestScore)
+	if (best &&(unit->getReactionScore() <= best->reactionScore))
 	{
-		if (bu->getOriginalFaction() == FACTION_PLAYER)
+		if (best->unit->getOriginalFaction() == FACTION_PLAYER)
 		{
-			bu->addReactionExp();
+			best->unit->addReactionExp();
 		}
 	}
 	else
 	{
-		bu = unit;
-		attackType = BA_NONE;
+		best = 0;
 	}
-	return bu;
+	return best;
 }
 
 /**
@@ -926,40 +938,45 @@ BattleUnit* TileEngine::getReactor(std::vector<std::pair<BattleUnit *, int> > sp
  * @param target The unit to check sight TO.
  * @return True if the target is valid.
  */
-int TileEngine::determineReactionType(BattleUnit *unit, BattleUnit *target)
+TileEngine::ReactionScore TileEngine::determineReactionType(BattleUnit *unit, BattleUnit *target)
 {
+	ReactionScore reaction =
+	{
+		unit,
+		BA_NONE,
+		unit->getReactionScore(),
+		0,
+	};
 	// prioritize melee
-	BattleItem *meleeWeapon = unit->getMeleeWeapon();
-	if (meleeWeapon &&
+	BattleItem *meleeWeapon = unit->getUtilityWeapon(BT_MELEE);
+	if (_save->canUseWeapon(meleeWeapon, unit) &&
 		// has a melee weapon and is in melee range
 		validMeleeRange(unit, target, unit->getDirection()) &&
-		unit->getActionTUs(BA_HIT, meleeWeapon) > 0 &&
-		unit->getTimeUnits() > unit->getActionTUs(BA_HIT, meleeWeapon) &&
-		(unit->getOriginalFaction() != FACTION_PLAYER ||
-		_save->getGeoscapeSave()->isResearched(meleeWeapon->getRules()->getRequirements())) &&
-		(_save->getDepth() != 0 || meleeWeapon->getRules()->isWaterOnly() == false))
+		BattleActionCost(BA_HIT, unit, meleeWeapon).haveTU())
 	{
-		return BA_HIT;
+		reaction.attackType = BA_HIT;
+		reaction.reactionReduction = 1.0 * BattleActionCost(BA_HIT, unit, meleeWeapon).Time * unit->getBaseStats()->reactions / unit->getBaseStats()->tu;
+		return reaction;
 	}
 
-	BattleItem *weapon = unit->getMainHandWeapon(unit->getFaction() != FACTION_PLAYER);
 	// has a weapon
-	if (weapon &&
-		// has a gun capable of snap shot with ammo
-		(weapon->getRules()->getBattleType() != BT_MELEE &&
-		weapon->getRules()->getTUSnap() &&
-		weapon->getAmmoItem() &&
-		unit->getActionTUs(BA_SNAPSHOT, weapon) > 0 &&
-		unit->getTimeUnits() > unit->getActionTUs(BA_SNAPSHOT, weapon)) &&
-		(unit->getOriginalFaction() != FACTION_PLAYER ||
-		_save->getGeoscapeSave()->isResearched(weapon->getRules()->getRequirements())) &&
-		(_save->getDepth() != 0 || weapon->getRules()->isWaterOnly() == false))
+	BattleItem *weapon = unit->getMainHandWeapon(unit->getFaction() != FACTION_PLAYER);
+	if (_save->canUseWeapon(weapon, unit) &&
+		(	// has a melee weapon and is in melee range
+			(weapon->getRules()->getBattleType() == BT_MELEE &&
+				validMeleeRange(unit, target, unit->getDirection()) &&
+				BattleActionCost(BA_HIT, unit, weapon).haveTU()) ||
+			// has a gun capable of snap shot with ammo
+			(weapon->getRules()->getBattleType() != BT_MELEE &&
+				weapon->getAmmoItem() &&
+				BattleActionCost(BA_SNAPSHOT, unit, weapon).haveTU())))
 	{
-		return BA_SNAPSHOT;
+		reaction.attackType = BA_SNAPSHOT;
+		reaction.reactionReduction = 1.0 * BattleActionCost(BA_SNAPSHOT, unit, weapon).Time * unit->getBaseStats()->reactions / unit->getBaseStats()->tu;
+		return reaction;
 	}
 
-
-	return BA_NONE;
+	return reaction;
 }
 
 /**
@@ -975,21 +992,23 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, int attackTyp
 	action.actor = unit;
 	if (attackType == BA_HIT)
 	{
-		action.weapon = unit->getMeleeWeapon();
+		action.weapon = unit->getUtilityWeapon(BT_MELEE);
 	}
 	else
 	{
 		action.weapon = unit->getMainHandWeapon(unit->getFaction() != FACTION_PLAYER);
 	}
-	if (!action.weapon)
+
+	if (!_save->canUseWeapon(action.weapon, action.actor))
 	{
 		return false;
 	}
+
 	action.type = (BattleActionType)(attackType);
 	action.target = target->getPosition();
-	action.TU = unit->getActionTUs(action.type, action.weapon);
+	action.updateTU();
 
-	if (action.weapon->getAmmoItem() && action.weapon->getAmmoItem()->getAmmoQuantity() && unit->getTimeUnits() >= action.TU)
+	if (action.weapon->getAmmoItem() && action.weapon->getAmmoItem()->getAmmoQuantity() && action.haveTU())
 	{
 		action.targeting = true;
 
@@ -1005,15 +1024,14 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, int attackTyp
 			}
 
 			if (action.weapon->getAmmoItem()->getRules()->getExplosionRadius() &&
-				aggro->explosiveEfficacy(action.target, unit, action.weapon->getAmmoItem()->getRules()->getExplosionRadius(), -1) == false)
+				aggro->explosiveEfficacy(action.target, unit, action.weapon->getAmmoItem()->getRules()->getExplosionRadius(), -1) == 0)
 			{
 				action.targeting = false;
 			}
 		}
 
-		if (action.targeting && unit->spendTimeUnits(action.TU))
+		if (action.targeting)
 		{
-			action.TU = 0;
 			if (action.type == BA_HIT)
 			{
 				_save->getBattleGame()->statePushBack(new MeleeAttackBState(_save->getBattleGame(), action));
@@ -1029,6 +1047,104 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, int attackTyp
 }
 
 /**
+ * Handling of hitting tile.
+ * @param tile targeted tile.
+ * @param damage power of hit.
+ * @param type damage type of hit.
+ */
+void TileEngine::hitTile(Tile* tile, int damage, const RuleDamageType* type)
+{
+	if (damage >= type->SmokeThreshold)
+	{
+		// smoke from explosions always stay 6 to 14 turns - power of a smoke grenade is 60
+		if (tile->getSmoke() < 10 && tile->getTerrainLevel() > -24)
+		{
+			tile->setFire(0);
+			if (damage >= type->SmokeThreshold * 2)
+				tile->setSmoke(RNG::generate(7, 15)); // for SmokeThreshold == 0
+			else
+				tile->setSmoke(RNG::generate(7, 15) * (damage - type->SmokeThreshold) / type->SmokeThreshold);
+		}
+		return;
+	}
+
+	if (damage >= type->FireThreshold)
+	{
+		if (!tile->isVoid())
+		{
+			if (tile->getFire() == 0 && (tile->getMapData(MapData::O_FLOOR) || tile->getMapData(MapData::O_OBJECT)))
+			{
+				if (damage >= type->FireThreshold * 2)
+					tile->setFire(tile->getFuel() + 1); // for FireThreshold == 0
+				else
+					tile->setFire(tile->getFuel() * (damage - type->FireThreshold) / type->FireThreshold + 1);
+				tile->setSmoke(std::max(1, std::min(15 - (tile->getFlammability() / 10), 12)));
+			}
+		}
+		return;
+	}
+}
+
+/**
+ * Handling of hitting unit.
+ * @param unit hitter.
+ * @param target targeted unit.
+ * @param relative angle of hit.
+ * @param damage power of hit.
+ * @param type damage type of hit.
+ * @return Did unit get hit?
+ */
+bool TileEngine::hitUnit(BattleUnit *unit, BattleUnit *target, const Position &relative, int damage, const RuleDamageType *type)
+{
+	if (!target || target->getHealth() <= 0)
+	{
+		return false;
+	}
+
+	const int wounds = target->getFatalWounds();
+	const int adjustedDamage = target->damage(relative, damage, type);
+
+	// if it's going to bleed to death and it's not a player, give credit for the kill.
+	if (unit && target->getFaction() != FACTION_PLAYER && wounds < target->getFatalWounds())
+	{
+		target->killedBy(unit->getFaction());
+	}
+
+	if (type->IgnoreNormalMoraleLose == false)
+	{
+		const int bravery = (110 - target->getBaseStats()->bravery) / 10;
+		const int modifier = target->getFaction() == FACTION_PLAYER ? _save->getFactionMoraleModifier(true) : 100;
+		const int morale_loss = 100 * (adjustedDamage * bravery / 10) / modifier;
+
+		target->moraleChange(-morale_loss);
+	}
+
+	if ((target->getSpecialAbility() == SPECAB_EXPLODEONDEATH || target->getSpecialAbility() == SPECAB_BURN_AND_EXPLODE) && !target->isOut() && (target->getHealth() == 0 || target->getStunlevel() >= target->getHealth()))
+	{
+		if (type->IgnoreSelfDestruct == false)
+		{
+			Position p = Position(target->getPosition().x * 16, target->getPosition().y * 16, target->getPosition().z * 24);
+			_save->getBattleGame()->statePushNext(new ExplosionBState(_save->getBattleGame(), p, BA_NONE, 0, target, 0));
+		}
+	}
+
+	if (adjustedDamage >= type->FireThreshold)
+	{
+		float resistance = target->getArmor()->getDamageModifier(type->ResistType);
+		if (resistance > 0.0)
+		{
+			int burnTime = RNG::generate(0, int(5 * resistance));
+			if (target->getFire() < burnTime)
+			{
+				target->setFire(burnTime); // catch fire and burn
+			}
+		}
+	}
+
+	return true;
+}
+
+/**
  * Handles bullet/weapon hits.
  *
  * A bullet/weapon hits a voxel.
@@ -1038,44 +1154,55 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, int attackTyp
  * @param unit The unit that caused the explosion.
  * @return The Unit that got hit.
  */
-BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType type, BattleUnit *unit)
+BattleUnit *TileEngine::hit(const Position &center, int power, const RuleDamageType *type, BattleUnit *unit, bool rangeAtack)
 {
-	Tile *tile = _save->getTile(Position(center.x/16, center.y/16, center.z/24));
-	if (!tile)
+	Tile *tile = _save->getTile(center.toTile());
+	if (!tile || power <= 0)
 	{
 		return 0;
 	}
 
 	BattleUnit *bu = tile->getUnit();
-	int adjustedDamage = 0;
 	const int part = voxelCheck(center, unit);
+	const int damage = type->getRandomDamage(power);
 	if (part >= V_FLOOR && part <= V_OBJECT)
 	{
-		// power 25% to 75%
-		const int rndPower = RNG::generate(power/4, (power*3)/4); //RNG::boxMuller(power, power/6)
-		if (part == V_OBJECT && _save->getMissionType() == "STR_BASE_DEFENSE")
+		bool nothing = true;
+		if (part == V_FLOOR || part == V_OBJECT)
 		{
-			if (rndPower >= tile->getMapData(MapData::O_OBJECT)->getArmor() && tile->getMapData(V_OBJECT)->isBaseModule())
+			for (std::vector<BattleItem*>::iterator i = tile->getInventory()->begin(); i != tile->getInventory()->end(); ++i)
 			{
-				_save->getModuleMap()[(center.x/16)/10][(center.y/16)/10].second--;
+				if (hitUnit(unit, (*i)->getUnit(), Position(0,0,0), damage, type))
+				{
+					nothing = false;
+					break;
+				}
 			}
 		}
-		if (tile->damage(part, rndPower))
+		if (nothing)
 		{
-			_save->addDestroyedObjective();
+			const int tileDmg = damage * type->ToTile;
+			hitTile(tile, damage, type);
+			if (part == V_OBJECT && _save->getMissionType() == "STR_BASE_DEFENSE")
+			{
+				if (tileDmg >= tile->getMapData(MapData::O_OBJECT)->getArmor() && tile->getMapData(V_OBJECT)->isBaseModule())
+				{
+					_save->getModuleMap()[(center.x/16)/10][(center.y/16)/10].second--;
+				}
+			}
+			if (tile->damage(part, tileDmg))
+			{
+				_save->addDestroyedObjective();
+			}
 		}
 	}
 	else if (part == V_UNIT)
 	{
-		int dmgRng = (type == DT_HE || Options::TFTDDamage) ? 50 : 100;
-		int min = power * (100 - dmgRng) / 100;
-		int max = power * (100 + dmgRng) / 100;
-		const int rndPower = RNG::generate(min, max);
 		int verticaloffset = 0;
 		if (!bu)
 		{
 			// it's possible we have a unit below the actual tile, when he stands on a stairs and sticks his head out to the next tile
-			Tile *below = _save->getTile(Position(center.x/16, center.y/16, (center.z/24)-1));
+			Tile *below = _save->getTile(center.toTile() - Position(0, 0, 1));
 			if (below)
 			{
 				BattleUnit *buBelow = below->getUnit();
@@ -1089,37 +1216,16 @@ BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType ty
 		if (bu)
 		{
 			const int sz = bu->getArmor()->getSize() * 8;
-			const Position target = bu->getPosition() * Position(16,16,24) + Position(sz,sz, bu->getFloatHeight() - tile->getTerrainLevel());
+			const Position target = bu->getPosition().toVexel() + Position(sz,sz, bu->getFloatHeight() - tile->getTerrainLevel());
 			const Position relative = (center - target) - Position(0,0,verticaloffset);
-			const int wounds = bu->getFatalWounds();
 
-			adjustedDamage = bu->damage(relative, rndPower, type);
-
-			// if it's going to bleed to death and it's not a player, give credit for the kill.
-			if (unit && bu->getFaction() != FACTION_PLAYER && wounds < bu->getFatalWounds())
-			{
-				bu->killedBy(unit->getFaction());
-			}
-			const int bravery = (110 - bu->getBaseStats()->bravery) / 10;
-			const int modifier = bu->getFaction() == FACTION_PLAYER ? _save->getMoraleModifier() : 100;
-			const int morale_loss = 100 * (adjustedDamage * bravery / 10) / modifier;
-
-			bu->moraleChange(-morale_loss);
-
-			if ((bu->getSpecialAbility() == SPECAB_EXPLODEONDEATH || bu->getSpecialAbility() == SPECAB_BURN_AND_EXPLODE) && !bu->isOut() && (bu->getHealth() == 0 || bu->getStunlevel() >= bu->getHealth()))
-			{
-				if (type != DT_STUN && type != DT_HE)
-				{
-					Position p = Position(bu->getPosition().x * 16, bu->getPosition().y * 16, bu->getPosition().z * 24);
-					_save->getBattleGame()->statePushNext(new ExplosionBState(_save->getBattleGame(), p, 0, bu, 0));
-				}
-			}
+			hitUnit(unit, bu, relative, damage, type);
 
 			if (bu->getOriginalFaction() == FACTION_HOSTILE &&
 				unit &&
 				unit->getOriginalFaction() == FACTION_PLAYER &&
-				type != DT_NONE &&
-				_save->getBattleGame()->getCurrentAction()->type != BA_HIT)
+				type->ResistType != DT_NONE &&
+				rangeAtack)
 			{
 				unit->addFiringExp();
 			}
@@ -1128,7 +1234,7 @@ BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType ty
 	applyGravity(tile);
 	calculateSunShading(); // roofs could have been destroyed
 	calculateTerrainLighting(); // fires could have been started
-	calculateFOV(center / Position(16,16,24));
+	calculateFOV(center.toTile());
 	return bu;
 }
 
@@ -1144,34 +1250,34 @@ BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType ty
  * @param maxRadius The maximum radius othe explosion.
  * @param unit The unit that caused the explosion.
  */
-void TileEngine::explode(const Position &center, int power, ItemDamageType type, int maxRadius, BattleUnit *unit)
+void TileEngine::explode(const Position &center, int power, const RuleDamageType *type, int maxRadius, BattleUnit *unit)
 {
 	double centerZ = center.z / 24 + 0.5;
 	double centerX = center.x / 16 + 0.5;
 	double centerY = center.y / 16 + 0.5;
 	int power_;
-	std::set<Tile*> tilesAffected;
-	std::pair<std::set<Tile*>::iterator,bool> ret;
+	std::map<Tile*, int> tilesAffected;
+	std::vector<BattleItem*> toRemove;
+	std::pair<std::map<Tile*, int>::iterator, bool> ret;
 
-	if (type == DT_IN)
+	if (type->FireBlastCalc)
 	{
 		power /= 2;
 	}
 
 	int exHeight = std::max(0, std::min(3, Options::battleExplosionHeight));
 	int vertdec = 1000; //default flat explosion
-	int dmgRng = (type == DT_HE || Options::TFTDDamage) ? 50 : 100;
 
 	switch (exHeight)
 	{
 	case 1:
-		vertdec = 30;
+		vertdec = 3.0f * type->RadiusReduction;
 		break;
 	case 2:
-		vertdec = 10;
+		vertdec = 1.0f * type->RadiusReduction;
 		break;
 	case 3:
-		vertdec = 5;
+		vertdec = 0.5f * type->RadiusReduction;
 	}
 
 	for (int fi = -90; fi <= 90; fi += 5)
@@ -1193,132 +1299,60 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
 			{
 				if (power_ > 0)
 				{
-					if (type == DT_HE)
-					{
-						// explosives do 1/2 damage to terrain and 1/2 up to 3/2 random damage to units (the halving is handled elsewhere)
-						dest->setExplosive(power_, 0);
-					}
+					ret = tilesAffected.insert(std::make_pair(dest, 0)); // check if we had this tile already affected
 
-					ret = tilesAffected.insert(dest); // check if we had this tile already
+					const int tileDmg = power_ * type->ToTile;
+					if (tileDmg > ret.first->second)
+					{
+						ret.first->second = tileDmg;
+					}
 					if (ret.second)
 					{
-						int min = power_ * (100 - dmgRng) / 100;
-						int max = power_ * (100 + dmgRng) / 100;
+						const int damage = type->getRandomDamage(power_);
 						BattleUnit *bu = dest->getUnit();
-						int wounds = 0;
-						if (bu && unit)
-						{
-							wounds = bu->getFatalWounds();
-						}
-						switch (type)
-						{
-						case DT_STUN:
-							// power 0 - 200%
-							if (bu)
-							{
-								if (distance(dest->getPosition(), Position(centerX, centerY, centerZ)) < 2)
-								{
-									bu->damage(Position(0, 0, 0), RNG::generate(min, max), type);
-								}
-								else
-								{
-									bu->damage(Position(centerX, centerY, centerZ) - dest->getPosition(), RNG::generate(min, max), type);
-								}
-							}
-							for (std::vector<BattleItem*>::iterator it = dest->getInventory()->begin(); it != dest->getInventory()->end(); ++it)
-							{
-								if ((*it)->getUnit())
-								{
-									(*it)->getUnit()->damage(Position(0, 0, 0), RNG::generate(min, max), type);
-								}
-							}
-							break;
-						case DT_HE:
-							{
-								// power 50 - 150%
-								if (bu)
-								{
-									if (distance(dest->getPosition(), Position(centerX, centerY, centerZ)) < 2)
-									{
-										// ground zero effect is in effect
-										bu->damage(Position(0, 0, 0), (int)(RNG::generate(min, max)), type);
-									}
-									else
-									{
-										// directional damage relative to explosion position.
-										// units above the explosion will be hit in the legs, units lateral to or below will be hit in the torso
-										bu->damage(Position(centerX, centerY, centerZ + 5) - dest->getPosition(), (int)(RNG::generate(min, max)), type);
-									}
-								}
-								bool done = false;
-								while (!done)
-								{
-									done = dest->getInventory()->empty();
-									for (std::vector<BattleItem*>::iterator it = dest->getInventory()->begin(); it != dest->getInventory()->end(); )
-									{
-										if (power_ > (*it)->getRules()->getArmor())
-										{
-											if ((*it)->getUnit() && (*it)->getUnit()->getStatus() == STATUS_UNCONSCIOUS)
-												(*it)->getUnit()->instaKill();
-											_save->removeItem((*it));
-											break;
-										}
-										else
-										{
-											++it;
-											done = it == dest->getInventory()->end();
-										}
-									}
-								}
-							}
-							break;
 
-						case DT_SMOKE:
-							// smoke from explosions always stay 6 to 14 turns - power of a smoke grenade is 60
-							if (dest->getSmoke() < 10 && dest->getTerrainLevel() > -24)
+						toRemove.clear();
+						if (bu)
+						{
+							if (distance(dest->getPosition(), Position(centerX, centerY, centerZ)) < 2)
 							{
-								dest->setFire(0);
-								dest->setSmoke(RNG::generate(7, 15));
+								// ground zero effect is in effect
+								hitUnit(unit, bu, Position(0, 0, 0), damage, type);
 							}
-							break;
-
-						case DT_IN:
-							if (!dest->isVoid())
+							else
 							{
-								if (dest->getFire() == 0 && (dest->getMapData(MapData::O_FLOOR) || dest->getMapData(MapData::O_OBJECT)))
+								// directional damage relative to explosion position.
+								// units above the explosion will be hit in the legs, units lateral to or below will be hit in the torso
+								hitUnit(unit, bu, Position(centerX, centerY, centerZ + 5) - dest->getPosition(), damage, type);
+							}
+
+							// Affect all items and units in inventory
+							const int itemDamage = bu->getOverKillDamage();
+							if (itemDamage > 0)
+							{
+								for (std::vector<BattleItem*>::iterator it = bu->getInventory()->begin(); it != bu->getInventory()->end(); ++it)
 								{
-									dest->setFire(dest->getFuel() + 1);
-									dest->setSmoke(std::max(1, std::min(15 - (dest->getFlammability() / 10), 12)));
-								}
-								if (bu)
-								{
-									float resistance = bu->getArmor()->getDamageModifier(DT_IN);
-									if (resistance > 0.0)
+									if (!hitUnit(unit, (*it)->getUnit(), Position(0, 0, 0), itemDamage, type) && itemDamage * type->ToItem > (*it)->getRules()->getArmor())
 									{
-										bu->damage(Position(0, 0, 12-dest->getTerrainLevel()), RNG::generate(5, 10), DT_IN, true);
-										int burnTime = RNG::generate(0, int(5 * resistance));
-										if (bu->getFire() < burnTime)
-										{
-											bu->setFire(burnTime); // catch fire and burn
-										}
+										toRemove.push_back(*it);
 									}
 								}
-							}
-							break;
-						default:
-							break;
-						}
-
-						if (unit && bu && bu->getFaction() != unit->getFaction())
-						{
-							unit->addFiringExp();
-							// if it's going to bleed to death and it's not a player, give credit for the kill.
-							if (wounds < bu->getFatalWounds() && bu->getFaction() != FACTION_PLAYER)
-							{
-								bu->killedBy(unit->getFaction());
 							}
 						}
+						// Affect all items and units on ground
+						for (std::vector<BattleItem*>::iterator it = dest->getInventory()->begin(); it != dest->getInventory()->end(); ++it)
+						{
+							if (!hitUnit(unit, (*it)->getUnit(), Position(0, 0, 0), damage, type) && damage * type->ToItem > (*it)->getRules()->getArmor())
+							{
+								toRemove.push_back(*it);
+							}
+						}
+						for (std::vector<BattleItem*>::iterator it = toRemove.begin(); it != toRemove.end(); ++it)
+						{
+							_save->removeItem((*it));
+						}
 
+						hitTile(dest, damage, type);
 					}
 				}
 
@@ -1334,33 +1368,33 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
 				if (!dest) break; // out of map!
 
 				// blockage by terrain is deducted from the explosion power
-				power_ -= 10; // explosive damage decreases by 10 per tile
+				power_ -= type->RadiusReduction; // explosive damage decreases by 10 per tile
 				if (origin->getPosition().z != tileZ)
 					power_ -= vertdec; //3d explosion factor
 
-				if (type == DT_IN)
+				if (type->FireBlastCalc)
 				{
 					int dir;
 					Pathfinding::vectorToDirection(origin->getPosition() - dest->getPosition(), dir);
-					if (dir != -1 && dir %2) power_ -= 5; // diagonal movement costs an extra 50% for fire.
+					if (dir != -1 && dir %2) power_ -= 0.5f * type->RadiusReduction; // diagonal movement costs an extra 50% for fire.
 				}
-				if (l>0.5) power_-= horizontalBlockage(origin, dest, type, l<1.5) * 2;
-				if (l>0.5) power_-= verticalBlockage(origin, dest, type, l<1.5) * 2;
+				if (l>0.5) power_-= horizontalBlockage(origin, dest, type->ResistType, l<1.5) * 2;
+				if (l>0.5) power_-= verticalBlockage(origin, dest, type->ResistType, l<1.5) * 2;
 			}
 		}
 	}
-	// now detonate the tiles affected with HE
 
-	if (type == DT_HE)
+	// now detonate the tiles affected by explosion
+	if (type->ToTile > 0.0f)
 	{
-		for (std::set<Tile*>::iterator i = tilesAffected.begin(); i != tilesAffected.end(); ++i)
+		for (std::map<Tile*, int>::iterator i = tilesAffected.begin(); i != tilesAffected.end(); ++i)
 		{
-			if (detonate(*i))
+			if (detonate(i->first, i->second))
 			{
 				_save->addDestroyedObjective();
 			}
-			applyGravity(*i);
-			Tile *j = _save->getTile((*i)->getPosition() + Position(0,0,1));
+			applyGravity(i->first);
+			Tile *j = _save->getTile(i->first->getPosition() + Position(0,0,1));
 			if (j)
 				applyGravity(j);
 		}
@@ -1377,11 +1411,9 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
  * @param tile Tile affected.
  * @return True if the objective was destroyed.
  */
-bool TileEngine::detonate(Tile* tile)
+bool TileEngine::detonate(Tile* tile, int explosive)
 {
-	int explosive = tile->getExplosive();
 	if (explosive == 0) return false; // no damage applied for this tile
-	tile->setExplosive(0,0,true);
 	bool objective = false;
 	Tile* tiles[9];
 	static const int parts[9]={0,1,2,0,1,2,3,3,3}; //6th is the object of current
@@ -1421,20 +1453,20 @@ bool TileEngine::detonate(Tile* tile)
 		}
 		if ( i == 6 &&
 			(bigwall == 2 || bigwall == 3) && //diagonals
-			(2 * tiles[i]->getMapData(currentpart)->getArmor()) > remainingPower) //not enough to destroy
+			tiles[i]->getMapData(currentpart)->getArmor() > remainingPower) //not enough to destroy
 		{
 			bigwalldestroyed = false;
 		}
 		// iterate through tile armor and destroy if can
 		while (	tiles[i]->getMapData(currentpart) &&
-				(2 * tiles[i]->getMapData(currentpart)->getArmor()) <= remainingPower &&
+				tiles[i]->getMapData(currentpart)->getArmor() <= remainingPower &&
 				tiles[i]->getMapData(currentpart)->getArmor() != 255)
 		{
 			if ( i == 6 && (bigwall == 2 || bigwall == 3)) //diagonals for the current tile
 			{
 				bigwalldestroyed = true;
 			}
-			remainingPower -= 2 * tiles[i]->getMapData(currentpart)->getArmor();
+			remainingPower -= tiles[i]->getMapData(currentpart)->getArmor();
 			destroyed = true;
 			if (_save->getMissionType() == "STR_BASE_DEFENSE" &&
 				tiles[i]->getMapData(currentpart)->isBaseModule())
@@ -1443,7 +1475,7 @@ bool TileEngine::detonate(Tile* tile)
 			}
 			//this trick is to follow transformed object parts (object can become a ground)
 			diemcd = tiles[i]->getMapData(currentpart)->getDieMCD();
-			if (diemcd!=0) 
+			if (diemcd!=0)
 				currentpart2 = tiles[i]->getMapData(currentpart)->getDataset()->getObjects()->at(diemcd)->getObjectType();
 			else
 				currentpart2 = currentpart;
@@ -1457,7 +1489,7 @@ bool TileEngine::detonate(Tile* tile)
 			}
 		}
 		// set tile on fire
-		if ((2 * fireProof) < remainingPower)
+		if (fireProof < remainingPower)
 		{
 			if (tiles[i]->getMapData(MapData::O_FLOOR) || tiles[i]->getMapData(MapData::O_OBJECT))
 			{
@@ -1999,7 +2031,7 @@ int TileEngine::unitOpensDoor(BattleUnit *unit, bool rClick, int dir)
 
 	if (TUCost != 0)
 	{
-		if (_save->getBattleGame()->checkReservedTU(unit, TUCost))
+		if (_save->getBattleGame()->checkReservedTU(unit, TUCost, 0))
 		{
 			if (unit->spendTimeUnits(TUCost))
 			{
@@ -2483,8 +2515,129 @@ int TileEngine::distanceSq(const Position &pos1, const Position &pos2, bool cons
 {
 	int x = pos1.x - pos2.x;
 	int y = pos1.y - pos2.y;
-	int z = considerZ ? (pos1.z - pos2.z) : 0;
-	return x*x + y*y + z*z;
+	int sq = x*x + y*y;
+	if (considerZ)
+	{
+		int z = pos1.z - pos2.z;
+		sq += z*z;
+	}
+	return sq;
+}
+
+/**
+ * Calculate strength of psi attack based on range and victim.
+ * @param type Type of attack.
+ * @param attacker Unit attacking.
+ * @param victim Attacked unit.
+ * @param weapon Attack item.
+ * @return Value greater than zero mean successful attack.
+ */
+int TileEngine::psiAttackCalculate(BattleActionType type, BattleUnit *attacker, BattleUnit *victim, BattleItem *weapon)
+{
+	if (!victim)
+		return 0;
+
+	float attackStrength = attacker->getPsiAccuracy(type, weapon);
+	float defenseStrength = 30.0f + victim->getArmor()->getPsiDefence(victim);
+
+	Position p = attacker->getPosition().toVexel() - victim->getPosition().toVexel();
+	p *= p;
+	attackStrength -= weapon->getRules()->getPsiAccuracyRangeReduction(sqrt(float(p.x + p.y + p.z)));
+	attackStrength += RNG::generate(0,55);
+
+	return attackStrength - defenseStrength;
+}
+
+/**
+ * Attempts a panic or mind control action.
+ * @param action Pointer to an action.
+ * @return Whether it failed or succeeded.
+ */
+bool TileEngine::psiAttack(BattleAction *action)
+{
+	BattleUnit *victim = _save->getTile(action->target)->getUnit();
+	if (!victim)
+		return false;
+
+	action->actor->addPsiSkillExp();
+	if (Options::allowPsiStrengthImprovement) victim->addPsiStrengthExp();
+	if (psiAttackCalculate(action->type, action->actor, victim, action->weapon) > 0)
+	{
+		action->actor->addPsiSkillExp();
+		action->actor->addPsiSkillExp();
+		if (action->type == BA_PANIC)
+		{
+			int moraleLoss = (110-victim->getBaseStats()->bravery);
+			if (moraleLoss > 0)
+				victim->moraleChange(-moraleLoss);
+		}
+		else if (action->type == BA_MINDCONTROL)
+		{
+			victim->convertToFaction(action->actor->getFaction());
+			calculateFOV(victim->getPosition());
+			calculateUnitLighting();
+			victim->setTimeUnits(victim->getBaseStats()->tu);
+			victim->allowReselect();
+			victim->abortTurn(); // resets unit status to STANDING
+			// if all units from either faction are mind controlled - auto-end the mission.
+			if (_save->getSide() == FACTION_PLAYER && Options::battleAutoEnd && Options::allowPsionicCapture)
+			{
+				int liveAliens = 0;
+				int liveSoldiers = 0;
+				_save->getBattleGame()->tallyUnits(liveAliens, liveSoldiers);
+				if (liveAliens == 0 || liveSoldiers == 0)
+				{
+					_save->setSelectedUnit(0);
+					_save->getBattleGame()->cancelCurrentAction(true);
+					_save->getBattleGame()->requestEndTurn();
+				}
+			}
+		}
+		return true;
+	}
+	else
+	{
+		if (Options::allowPsiStrengthImprovement)
+		{
+			victim->addPsiStrengthExp();
+		}
+		return false;
+	}
+}
+
+/**
+ *  Attempts a melee attack action.
+ * @param action Pointer to an action.
+ * @return Whether it failed or succeeded.
+ */
+bool TileEngine::meleeAttack(BattleAction *action)
+{
+	BattleUnit *targetUnit = _save->getTile(action->target)->getUnit();
+	if (!targetUnit && action->target.z > 0)
+	{
+		targetUnit = _save->getTile(action->target - Position(0, 0, 1))->getUnit();
+	}
+
+	int hitChance = action->actor->getFiringAccuracy(BA_HIT, action->weapon);
+	if (targetUnit)
+	{
+		int arc = _save->getTileEngine()->getArcDirection(_save->getTileEngine()->getDirectionTo(targetUnit->getPositionVexels(), action->actor->getPositionVexels()), targetUnit->getDirection());
+		float penalty = 1.0f - arc * targetUnit->getArmor()->getMeleeDodgeBackPenalty() / 4.0f;
+		if (penalty > 0)
+		{
+			hitChance -= targetUnit->getArmor()->getMeleeDodge(targetUnit) * penalty;
+		}
+	}
+	if (!RNG::percent(hitChance))
+	{
+		return false;
+	}
+	else if (targetUnit && targetUnit->getOriginalFaction() == FACTION_HOSTILE &&
+			action->actor->getOriginalFaction() == FACTION_PLAYER)
+	{
+		action->actor->addMeleeExp();
+	}
+	return true;
 }
 
 /**
@@ -2525,7 +2678,7 @@ Tile *TileEngine::applyGravity(Tile *t)
 		}
 		if (unitpos != occupant->getPosition())
 		{
-			if (occupant->getHealth() != 0 && occupant->getStunlevel() < occupant->getHealth())
+			if (occupant->getHealth() > 0 && occupant->getStunlevel() < occupant->getHealth())
 			{
 				if (occupant->getMovementType() == MT_FLY)
 				{
@@ -2664,7 +2817,7 @@ bool TileEngine::validMeleeRange(Position pos, int direction, BattleUnit *attack
 			}
 		}
 	}
-	
+
 	for (std::vector<BattleUnit*>::const_iterator i = potentialTargets.begin(); i != potentialTargets.end(); ++i)
 	{
 		// if there's actually something THERE, we'll chalk this up as a success.
@@ -2681,7 +2834,7 @@ bool TileEngine::validMeleeRange(Position pos, int direction, BattleUnit *attack
 			chosenTarget = *i;
 		}
 	}
-	
+
 	if (dest && chosenTarget)
 	{
 		*dest = chosenTarget->getPosition();
@@ -2840,6 +2993,18 @@ int TileEngine::getDirectionTo(const Position &origin, const Position &target) c
 		dir = 0;
 	}
 	return dir;
+}
+
+/**
+ * Calculate arc between two unit directions.
+ * e.g. Arc of 7 and 3 is 4. Arc of 0 and 7 is 1.
+ * @param directionA Value of 0 to 7
+ * @param directionB Value of 0 to 7
+ * @return Value in range of 0 - 4
+ */
+int TileEngine::getArcDirection(int directionA, int directionB) const
+{
+	return std::abs((((directionA - directionB) + 12) % 8) - 4);
 }
 
 /**

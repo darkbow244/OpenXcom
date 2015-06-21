@@ -19,6 +19,7 @@
 #include "SavedGame.h"
 #include <fstream>
 #include <sstream>
+#include <set>
 #include <iomanip>
 #include <algorithm>
 #include <yaml-cpp/yaml.h>
@@ -45,6 +46,7 @@
 #include "ItemContainer.h"
 #include "Soldier.h"
 #include "Transfer.h"
+#include "../Ruleset/RuleResearch.h"
 #include "../Ruleset/RuleManufacture.h"
 #include "Production.h"
 #include "MissionSite.h"
@@ -52,6 +54,7 @@
 #include "AlienStrategy.h"
 #include "AlienMission.h"
 #include "../Ruleset/RuleRegion.h"
+#include "BaseFacility.h"
 
 namespace OpenXcom
 {
@@ -443,7 +446,8 @@ void SavedGame::load(const std::string &filename, Ruleset *rule)
 	{
 		std::string type = (*i)["type"].as<std::string>();
 		std::string deployment = (*i)["deployment"].as<std::string>("STR_TERROR_MISSION");
-		MissionSite *m = new MissionSite(rule->getAlienMission(type), rule->getDeployment(deployment));
+		std::string alienWeaponDeploy = (*i)["missionCustomDeploy"].as<std::string>("");
+		MissionSite *m = new MissionSite(rule->getAlienMission(type), rule->getDeployment(deployment), rule->getDeployment(alienWeaponDeploy));
 		m->load(*i);
 		_missionSites.push_back(m);
 	}
@@ -485,7 +489,7 @@ void SavedGame::load(const std::string &filename, Ruleset *rule)
 
 	if (const YAML::Node &battle = doc["battleGame"])
 	{
-		_battleGame = new SavedBattleGame();
+		_battleGame = new SavedBattleGame(rule);
 		_battleGame->load(battle, rule, this);
 	}
 }
@@ -1022,10 +1026,13 @@ const std::vector<const RuleResearch *> & SavedGame::getDiscoveredResearch() con
  */
 void SavedGame::getAvailableResearchProjects (std::vector<RuleResearch *> & projects, const Ruleset * ruleset, Base * base) const
 {
-	const std::vector<const RuleResearch *> & discovered(getDiscoveredResearch());
-	std::vector<std::string> researchProjects = ruleset->getResearchList();
-	const std::vector<ResearchProject *> & baseResearchProjects = base->getResearch();
+	const std::vector<const RuleResearch *> &discovered = getDiscoveredResearch();
+	const std::vector<std::string> &researchProjects = ruleset->getResearchList();
+	const std::vector<ResearchProject *> &baseResearchProjects = base->getResearch();
+	const std::set<std::string> &baseFunc = base->getProvidedBaseFunc();
 	std::vector<const RuleResearch *> unlocked;
+
+
 	for (std::vector<const RuleResearch *>::const_iterator it = discovered.begin(); it != discovered.end(); ++it)
 	{
 		for (std::vector<std::string>::const_iterator itUnlocked = (*it)->getUnlocked().begin(); itUnlocked != (*it)->getUnlocked().end(); ++itUnlocked)
@@ -1112,6 +1119,11 @@ void SavedGame::getAvailableResearchProjects (std::vector<RuleResearch *> & proj
 			if (tally != research->getRequirements().size())
 				continue;
 		}
+		if (!std::includes(baseFunc.begin(), baseFunc.end(), research->getRequireBaseFunc().begin(), research->getRequireBaseFunc().end()))
+		{
+			continue;
+		}
+
 		projects.push_back (research);
 	}
 }
@@ -1125,7 +1137,8 @@ void SavedGame::getAvailableResearchProjects (std::vector<RuleResearch *> & proj
 void SavedGame::getAvailableProductions (std::vector<RuleManufacture *> & productions, const Ruleset * ruleset, Base * base) const
 {
 	const std::vector<std::string> &items = ruleset->getManufactureList();
-	const std::vector<Production *> baseProductions (base->getProductions());
+	const std::vector<Production *> &baseProductions = base->getProductions();
+	const std::set<std::string> &baseFunc = base->getProvidedBaseFunc();
 
 	for (std::vector<std::string>::const_iterator iter = items.begin();
 		iter != items.end();
@@ -1134,12 +1147,17 @@ void SavedGame::getAvailableProductions (std::vector<RuleManufacture *> & produc
 		RuleManufacture *m = ruleset->getManufacture(*iter);
 		if (!isResearched(m->getRequirements()))
 		{
-		 	continue;
+			continue;
 		}
 		if (std::find_if (baseProductions.begin(), baseProductions.end(), equalProduction(m)) != baseProductions.end())
 		{
 			continue;
 		}
+		if (!std::includes(baseFunc.begin(), baseFunc.end(), m->getRequireBaseFunc().begin(), m->getRequireBaseFunc().end()))
+		{
+			continue;
+		}
+
 		productions.push_back(m);
 	}
 }
@@ -1157,8 +1175,8 @@ bool SavedGame::isResearchAvailable (RuleResearch * r, const std::vector<const R
 	{
 		return false;
 	}
-	std::vector<std::string> deps = r->getDependencies();
-	const std::vector<const RuleResearch *> & discovered(getDiscoveredResearch());
+	const std::vector<std::string> &deps = r->getDependencies();
+	const std::vector<const RuleResearch *> &discovered = getDiscoveredResearch();
 	bool liveAlien = ruleset->getUnit(r->getName()) != 0;
 	if (_debug || std::find(unlocked.begin(), unlocked.end(), r) != unlocked.end())
 	{

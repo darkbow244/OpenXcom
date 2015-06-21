@@ -23,7 +23,7 @@
 #include <yaml-cpp/yaml.h>
 #include "../Ruleset/Unit.h"
 #include "../Ruleset/StatString.h"
-	 
+
 namespace OpenXcom
 {
 
@@ -57,8 +57,9 @@ private:
 	Craft *_craft;
 	SoldierGender _gender;
 	SoldierLook _look;
+	int _lookVariant;
 	int _missions, _kills, _recovery;
-	bool _recentlyPromoted, _psiTraining;
+	bool _recentlyPromoted, _psiTraining, _training;
 	Armor *_armor;
 	std::vector<EquipmentLayoutItem*> _equipmentLayout;
 	SoldierDeath *_death;
@@ -98,6 +99,8 @@ public:
 	SoldierGender getGender() const;
 	/// Gets the soldier's look.
 	SoldierLook getLook() const;
+	/// Gets the soldier's look sub type.
+	int getLookVariant() const;
 	/// Gets soldier rules.
 	RuleSoldier *getRules() const;
 	/// Gets the soldier's unique ID.
@@ -142,6 +145,12 @@ public:
 	void die(SoldierDeath *death);
 	/// Calculate statString.
 	void calcStatString(const std::vector<StatString *> &statStrings, bool psiStrengthEval);
+	/// Trains a soldier's physical stats
+	void trainPhys();
+	/// Returns whether the unit is in training or not
+	bool isInTraining();
+	/// set the training status
+	void setTraining(bool training);
 };
 
 }

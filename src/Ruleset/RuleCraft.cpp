@@ -18,6 +18,7 @@
  */
 #include "RuleCraft.h"
 #include "RuleTerrain.h"
+#include "../Engine/Exception.h"
 
 namespace OpenXcom
 {
@@ -27,9 +28,22 @@ namespace OpenXcom
  * type of craft.
  * @param type String defining the type.
  */
-RuleCraft::RuleCraft(const std::string &type) : _type(type), _sprite(-1), _marker(-1), _fuelMax(0), _damageMax(0), _speedMax(0), _accel(0), _weapons(0), _soldiers(0), _vehicles(0), _costBuy(0), _costRent(0), _costSell(0), _repairRate(1), _refuelRate(1), _radarRange(672), _sightRange(1696), _transferTime(0), _score(0), _battlescapeTerrainData(0), _spacecraft(false), _listOrder(0), _maxItems(0), _maxDepth(0)
+RuleCraft::RuleCraft(const std::string &type) :
+    _type(type), _sprite(-1), _marker(-1), _weapons(0), _soldiers(0), _vehicles(0),
+    _costBuy(0), _costRent(0), _costSell(0), _repairRate(1), _refuelRate(1),
+	_transferTime(0), _score(0), _battlescapeTerrainData(0),
+	_spacecraft(false), _listOrder(0), _maxItems(0), _maxDepth(0), _stats()
 {
-
+	for (int i = 0; i < WeaponMax; ++ i)
+	{
+		for (int j = 0; j < WeaponTypeMax; ++j)
+			_weaponTypes[i][j] = 0;
+	}
+	_stats.radarRange = 672;
+	_stats.radarChance = 100;
+	_stats.sightRange = 1696;
+	_weaponStrings[0] = "STR_WEAPON_ONE";
+	_weaponStrings[1] = "STR_WEAPON_TWO";
 }
 
 /**
@@ -58,11 +72,8 @@ void RuleCraft::load(const YAML::Node &node, Ruleset *ruleset, int modIndex, int
 		if (_sprite > 4)
 			_sprite += modIndex;
 	}
+	_stats.load(node);
 	_marker = node["marker"].as<int>(_marker);
-	_fuelMax = node["fuelMax"].as<int>(_fuelMax);
-	_damageMax = node["damageMax"].as<int>(_damageMax);
-	_speedMax = node["speedMax"].as<int>(_speedMax);
-	_accel = node["accel"].as<int>(_accel);
 	_weapons = node["weapons"].as<int>(_weapons);
 	_soldiers = node["soldiers"].as<int>(_soldiers);
 	_vehicles = node["vehicles"].as<int>(_vehicles);
@@ -72,8 +83,6 @@ void RuleCraft::load(const YAML::Node &node, Ruleset *ruleset, int modIndex, int
 	_refuelItem = node["refuelItem"].as<std::string>(_refuelItem);
 	_repairRate = node["repairRate"].as<int>(_repairRate);
 	_refuelRate = node["refuelRate"].as<int>(_refuelRate);
-	_radarRange = node["radarRange"].as<int>(_radarRange);
-	_sightRange = node["sightRange"].as<int>(_sightRange);
 	_transferTime = node["transferTime"].as<int>(_transferTime);
 	_score = node["score"].as<int>(_score);
 	if (const YAML::Node &terrain = node["battlescapeTerrainData"])
@@ -81,7 +90,7 @@ void RuleCraft::load(const YAML::Node &node, Ruleset *ruleset, int modIndex, int
 		RuleTerrain *rule = new RuleTerrain(terrain["name"].as<std::string>());
 		rule->load(terrain, ruleset);
 		_battlescapeTerrainData = rule;
-		
+
 		if (const YAML::Node &deployment = node["deployment"])
 		{
 			_deployment = deployment.as<std::vector<std::vector<int> > >(_deployment);
@@ -95,6 +104,35 @@ void RuleCraft::load(const YAML::Node &node, Ruleset *ruleset, int modIndex, int
 	}
 	_maxDepth = node["maxDepth"].as<int>(_maxDepth);
 	_maxItems = node["maxItems"].as<int>(_maxItems);
+
+	if (const YAML::Node &types = node["weaponTypes"])
+	{
+		for (int i = 0; (size_t)i < types.size() &&  i < WeaponMax; ++i)
+		{
+			const YAML::Node t = types[i];
+			if (t.IsScalar())
+			{
+				for (int j = 0; j < WeaponTypeMax; ++j)
+					_weaponTypes[i][j] = t.as<int>();
+			}
+			else if (t.IsSequence() && t.size() > 0)
+			{
+				for (int j = 0; (size_t)j < t.size() && j < WeaponTypeMax; ++j)
+					_weaponTypes[i][j] = t[j].as<int>();
+				for (int j = t.size(); j < WeaponTypeMax; ++j)
+					_weaponTypes[i][j] = _weaponTypes[i][0];
+			}
+			else
+			{
+				throw Exception("Invalid weapon type in craft " + _type + ".");
+			}
+		}
+	}
+	if (const YAML::Node &str = node["weaponStrings"])
+	{
+		for (int i = 0; (size_t)i < str.size() &&  i < WeaponMax; ++i)
+			_weaponStrings[i] = str[i].as<std::string>();
+	}
 }
 
 /**
@@ -102,7 +140,7 @@ void RuleCraft::load(const YAML::Node &node, Ruleset *ruleset, int modIndex, int
  * this craft. Each craft type has a unique name.
  * @return The craft's name.
  */
-std::string RuleCraft::getType() const
+const std::string &RuleCraft::getType() const
 {
 	return _type;
 }
@@ -142,7 +180,7 @@ int RuleCraft::getMarker() const
  */
 int RuleCraft::getMaxFuel() const
 {
-	return _fuelMax;
+	return _stats.fuelMax;
 }
 
 /**
@@ -152,7 +190,7 @@ int RuleCraft::getMaxFuel() const
  */
 int RuleCraft::getMaxDamage() const
 {
-	return _damageMax;
+	return _stats.damageMax;
 }
 
 /**
@@ -162,7 +200,7 @@ int RuleCraft::getMaxDamage() const
  */
 int RuleCraft::getMaxSpeed() const
 {
-	return _speedMax;
+	return _stats.speedMax;
 }
 
 /**
@@ -172,7 +210,7 @@ int RuleCraft::getMaxSpeed() const
  */
 int RuleCraft::getAcceleration() const
 {
-	return _accel;
+	return _stats.accel;
 }
 
 /**
@@ -180,7 +218,7 @@ int RuleCraft::getAcceleration() const
  * can be equipped onto the craft.
  * @return The weapon capacity.
  */
-unsigned int RuleCraft::getWeapons() const
+int RuleCraft::getWeapons() const
 {
 	return _weapons;
 }
@@ -239,7 +277,7 @@ int RuleCraft::getSellCost() const
  * the craft is refuelling.
  * @return The item ID or "" if none.
  */
-std::string RuleCraft::getRefuelItem() const
+const std::string &RuleCraft::getRefuelItem() const
 {
 	return _refuelItem;
 }
@@ -271,7 +309,17 @@ int RuleCraft::getRefuelRate() const
  */
 int RuleCraft::getRadarRange() const
 {
-	return _radarRange;
+	return _stats.radarRange;
+}
+
+/**
+ * Gets the craft's radar chance
+ * for detecting UFOs.
+ * @return The chance in percentage.
+ */
+int RuleCraft::getRadarChance() const
+{
+	return _stats.radarChance;
 }
 
 /**
@@ -281,7 +329,7 @@ int RuleCraft::getRadarRange() const
  */
 int RuleCraft::getSightRange() const
 {
-	return _sightRange;
+	return _stats.sightRange;
 }
 
 /**
@@ -328,7 +376,7 @@ bool RuleCraft::getSpacecraft() const
  */
 int RuleCraft::getListOrder() const
 {
-	 return _listOrder;
+	return _listOrder;
 }
 
 /**
@@ -350,6 +398,40 @@ int RuleCraft::getMaxItems() const
 }
 
 /**
+ * Test for possibility of usage of weapon type in weapon slot.
+ * @param slot value less than WeaponMax.
+ * @param weaponType weapon type of weapon that we try insert.
+ * @return True if can use.
+ */
+bool RuleCraft::isValidWeaponSlot(int slot, int weaponType) const
+{
+	for (int j = 0; j < WeaponTypeMax; ++j)
+	{
+		if (_weaponTypes[slot][j] == weaponType)
+			return true;
+	}
+	return false;
+}
+
+/**
+ * Return string ID of weapon slot name for geoscape craft state.
+ * @param slot value less than WeaponMax.
+ * @return String ID for translation.
+ */
+const std::string &RuleCraft::getWeaponSlotString(int slot) const
+{
+	return _weaponStrings[slot];
+}
+/**
+ * Gets basic statistic of craft.
+ * @return Basic stats of craft.
+ */
+const RuleCraftStats& RuleCraft::getStats() const
+{
+	return _stats;
+}
+
+/**
  * Gets the maximum depth this craft can dive to.
  * @return max depth.
  */
@@ -357,7 +439,6 @@ int RuleCraft::getMaxDepth() const
 {
 	return _maxDepth;
 }
-
 
 }
 

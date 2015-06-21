@@ -36,6 +36,7 @@ class Transfer;
 class Language;
 class Ruleset;
 class SavedGame;
+class BaseFacility;
 class ResearchProject;
 class Production;
 class Vehicle;
@@ -181,6 +182,11 @@ public:
 	int getAvailablePsiLabs() const;
 	/// Gets the base's total free psi lab space.
 	int getFreePsiLabs() const;
+	/// Gets the base's used training space.
+	int getUsedTraining() const;
+	/// Gets the base's total available training space.
+	int getAvailableTraining() const;
+	/// Gets the total amount of Containment Space
 	/// Gets the amount of free Containment space.
 	int getFreeContainment() const;
 	/// Gets the total amount of Containment space.
@@ -213,6 +219,10 @@ public:
 	void destroyFacility(std::vector<BaseFacility*>::iterator facility);
 	/// Cleans up the defenses vector and optionally reclaims the tanks and their ammo.
 	void cleanupDefenses(bool reclaimItems);
+	/// Gets available base functionality.
+	std::set<std::string> getProvidedBaseFunc(const BaseFacility *skip = 0) const;
+	/// Gets used base functionality.
+	std::set<std::string> getRequireBaseFunc(const BaseFacility *skip = 0) const;
 };
 
 }

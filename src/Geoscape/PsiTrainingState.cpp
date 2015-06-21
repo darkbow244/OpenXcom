@@ -31,6 +31,7 @@
 #include "../Savegame/Base.h"
 #include "GeoscapeState.h"
 #include "AllocatePsiTrainingState.h"
+#include "TrainingState.h"
 #include "../Engine/Options.h"
 
 namespace OpenXcom
@@ -40,7 +41,7 @@ namespace OpenXcom
  * Initializes all the elements in the Psi Training screen.
  * @param game Pointer to the core game.
  */
-PsiTrainingState::PsiTrainingState()
+PsiTrainingState::PsiTrainingState() : _training(false)
 {
 	// Create objects
 	_window = new Window(this, 320, 200, 0, 0);
@@ -82,6 +83,7 @@ PsiTrainingState::PsiTrainingState()
 				break;
 			}
 		}
+		_training = _training || (*b)->getAvailableTraining();
 	}
 
 	centerAllSurfaces();
@@ -101,6 +103,10 @@ PsiTrainingState::~PsiTrainingState()
 void PsiTrainingState::btnOkClick(Action *)
 {
 	_game->popState();
+	if (_training)
+	{
+		_game->pushState(new TrainingState);
+	}
 }
 
 /**

@@ -153,12 +153,24 @@ bool BaseFacility::inUse() const
 	{
 		return false;
 	}
+
+	const std::set<std::string> &otherBaseFunc = _base->getProvidedBaseFunc(this);
+	const std::set<std::string> &usedBaseFunc = _base->getRequireBaseFunc(this);
+
+	const std::vector<std::string> &thisProve = getRules()->getProvidedBaseFunc();
+	for (std::vector<std::string>::const_iterator i = thisProve.begin(); i != thisProve.end(); ++i)
+	{
+		if (!otherBaseFunc.count(*i) && usedBaseFunc.count(*i)) //we provide something unique and someone else using it.
+			return true;
+	}
+
 	return ((_rules->getPersonnel() > 0 && _base->getAvailableQuarters() - _rules->getPersonnel() < _base->getUsedQuarters()) ||
 			(_rules->getStorage() > 0 && _base->getAvailableStores() - _rules->getStorage() < _base->getUsedStores()) ||
 			(_rules->getLaboratories() > 0 && _base->getAvailableLaboratories() - _rules->getLaboratories() < _base->getUsedLaboratories()) ||
 			(_rules->getWorkshops() > 0 && _base->getAvailableWorkshops() - _rules->getWorkshops() < _base->getUsedWorkshops()) ||
 			(_rules->getCrafts() > 0 && _base->getAvailableHangars() - _rules->getCrafts() < _base->getUsedHangars()) ||
 			(_rules->getPsiLaboratories() > 0 && _base->getAvailablePsiLabs() - _rules->getPsiLaboratories() < _base->getUsedPsiLabs()) ||
+			(_rules->getTrainingFacilities() > 0 && _base->getAvailableTraining() - _rules->getTrainingFacilities() < _base->getUsedTraining()) ||
 			(_rules->getAliens() > 0 && _base->getAvailableContainment() - _rules->getAliens() < _base->getUsedContainment()));
 }
 

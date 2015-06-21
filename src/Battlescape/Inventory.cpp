@@ -247,7 +247,7 @@ void Inventory::drawItems()
 			if ((*i) == _selItem)
 				continue;
 
-			Surface *frame = texture->getFrame((*i)->getRules()->getBigSprite());
+			Surface *frame = texture->getFrame((*i)->getBigSprite());
 			if ((*i)->getSlot()->getType() == INV_SLOT)
 			{
 				frame->setX((*i)->getSlot()->getX() + (*i)->getSlotX() * RuleInventory::SLOT_W);
@@ -258,7 +258,7 @@ void Inventory::drawItems()
 				frame->setX((*i)->getSlot()->getX() + (RuleInventory::HAND_W - (*i)->getRules()->getInventoryWidth()) * RuleInventory::SLOT_W/2);
 				frame->setY((*i)->getSlot()->getY() + (RuleInventory::HAND_H - (*i)->getRules()->getInventoryHeight()) * RuleInventory::SLOT_H/2);
 			}
-			texture->getFrame((*i)->getRules()->getBigSprite())->blit(_items);
+			frame->blit(_items);
 
 			// grenade primer indicators
 			if ((*i)->getFuseTimer() >= 0)
@@ -274,10 +274,10 @@ void Inventory::drawItems()
 			// note that you can make items invisible by setting their width or height to 0 (for example used with tank corpse items)
 			if ((*i) == _selItem || (*i)->getSlotX() < _groundOffset || (*i)->getRules()->getInventoryHeight() == 0 || (*i)->getRules()->getInventoryWidth() == 0)
 				continue;
-			Surface *frame = texture->getFrame((*i)->getRules()->getBigSprite());
+			Surface *frame = texture->getFrame((*i)->getBigSprite());
 			frame->setX((*i)->getSlot()->getX() + ((*i)->getSlotX() - _groundOffset) * RuleInventory::SLOT_W);
 			frame->setY((*i)->getSlot()->getY() + (*i)->getSlotY() * RuleInventory::SLOT_H);
-			texture->getFrame((*i)->getRules()->getBigSprite())->blit(_items);
+			frame->blit(_items);
 
 			// grenade primer indicators
 			if ((*i)->getFuseTimer() >= 0)
@@ -438,7 +438,7 @@ void Inventory::setSelectedItem(BattleItem *item)
 		{
 			_stackLevel[_selItem->getSlotX()][_selItem->getSlotY()] -= 1;
 		}
-		_selItem->getRules()->drawHandSprite(_game->getResourcePack()->getSurfaceSet("BIGOBS.PCK"), _selection);
+		_selItem->getRules()->drawHandSprite(_game->getResourcePack()->getSurfaceSet("BIGOBS.PCK"), _selection, _selItem->isSpriteAlt());
 	}
 	drawItems();
 }
@@ -723,11 +723,18 @@ void Inventory::mouseClick(Action *action, State *state)
 					}
 					else
 					{
+						int tuCost = item->getRules()->getTULoad();
+
+						if (_selItem->getSlot()->getType() != INV_HAND)
+						{
+							tuCost += _selItem->getSlot()->getCost(_game->getRuleset()->getInventory("STR_RIGHT_HAND"));
+						}
+
 						if (item->getAmmoItem() != 0)
 						{
 							_warning->showMessage(_game->getLanguage()->getString("STR_WEAPON_IS_ALREADY_LOADED"));
 						}
-						else if (!_tu || _selUnit->spendTimeUnits(15))
+						else if (!_tu || _selUnit->spendTimeUnits(tuCost))
 						{
 							moveItem(_selItem, 0, 0, 0);
 							item->setAmmoItem(_selItem);
@@ -795,19 +802,22 @@ void Inventory::mouseClick(Action *action, State *state)
 						BattleItem *item = _selUnit->getItem(slot, x, y);
 						if (item != 0)
 						{
-							BattleType itemType = item->getRules()->getBattleType();
-							if (BT_GRENADE == itemType || BT_PROXIMITYGRENADE == itemType)
+							const BattleFuseType fuseType = item->getRules()->getFuseTimerType();
+							if (fuseType != BFT_NONE)
 							{
 								if (item->getFuseTimer() == -1)
 								{
 									// Prime that grenade!
-									if (BT_PROXIMITYGRENADE == itemType)
+									if (fuseType == BFT_SET)
+									{
+										_game->pushState(new PrimeGrenadeState(0, true, item));
+									}
+									else
 									{
 										_warning->showMessage(_game->getLanguage()->getString("STR_GRENADE_IS_ACTIVATED"));
-										item->setFuseTimer(0);
+										item->setFuseTimer(item->getRules()->getFuseTimerDefault());
 										arrangeGround(false);
 									}
-									else _game->pushState(new PrimeGrenadeState(0, true, item));
 								}
 								else
 								{
@@ -851,14 +861,28 @@ bool Inventory::unload()
 		return false;
 	}
 
-	// Item must be loaded
-	if (_selItem->getAmmoItem() == 0 && !_selItem->getRules()->getCompatibleAmmo()->empty())
+	const bool grenade = _selItem->getRules()->getBattleType() == BT_GRENADE || _selItem->getRules()->getBattleType() == BT_PROXIMITYGRENADE;
+
+	// Item should be able to unload or unprimed.
+	if (grenade)
 	{
-		_warning->showMessage(_game->getLanguage()->getString("STR_NO_AMMUNITION_LOADED"));
+		// Item must be primed
+		if (_selItem->getFuseTimer() == -1)
+		{
+			return false;
+		}
 	}
-	if (_selItem->getAmmoItem() == 0 || !_selItem->needsAmmo())
+	else
 	{
-		return false;
+		// Item must be loaded
+		if (_selItem->getAmmoItem() == 0 && !_selItem->getRules()->getCompatibleAmmo()->empty())
+		{
+			_warning->showMessage(_game->getLanguage()->getString("STR_NO_AMMUNITION_LOADED"));
+		}
+		if (_selItem->getAmmoItem() == 0 || !_selItem->needsAmmo() || !_selItem->getRules()->getTUUnload())
+		{
+			return false;
+		}
 	}
 
 	// Hands must be free
@@ -871,13 +895,36 @@ bool Inventory::unload()
 		}
 	}
 
-	if (!_tu || _selUnit->spendTimeUnits(8))
+	int tuCost = 0;
+	if (grenade)
 	{
-		moveItem(_selItem->getAmmoItem(), _game->getRuleset()->getInventory("STR_LEFT_HAND"), 0, 0);
-		_selItem->getAmmoItem()->moveToOwner(_selUnit);
+		tuCost += _selUnit->getActionTUs(BA_PRIME, _selItem).Time / 2;
+	}
+	else
+	{
+		tuCost += _selItem->getRules()->getTUUnload();
+	}
+
+	if (_selItem->getSlot()->getType() != INV_HAND)
+	{
+		tuCost += _selItem->getSlot()->getCost(_game->getRuleset()->getInventory("STR_RIGHT_HAND"));
+	}
+
+	if (!_tu || _selUnit->spendTimeUnits(tuCost))
+	{
 		moveItem(_selItem, _game->getRuleset()->getInventory("STR_RIGHT_HAND"), 0, 0);
 		_selItem->moveToOwner(_selUnit);
-		_selItem->setAmmoItem(0);
+		if (grenade)
+		{
+			_selItem->setFuseTimer(-1);
+			_warning->showMessage(_game->getLanguage()->getString("STR_GRENADE_IS_DEACTIVATED"));
+		}
+		else
+		{
+			moveItem(_selItem->getAmmoItem(), _game->getRuleset()->getInventory("STR_LEFT_HAND"), 0, 0);
+			_selItem->getAmmoItem()->moveToOwner(_selUnit);
+			_selItem->setAmmoItem(0);
+		}
 		setSelectedItem(0);
 	}
 	else

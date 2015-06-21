@@ -24,11 +24,15 @@
 #include <yaml-cpp/yaml.h>
 #include "MapData.h"
 #include "Unit.h"
+#include "RuleStatBonus.h"
+#include "RuleDamageType.h"
 
 namespace OpenXcom
 {
 
-enum ForcedTorso{ TORSO_USE_GENDER, TORSO_ALWAYS_MALE, TORSO_ALWAYS_FEMALE };
+enum ForcedTorso { TORSO_USE_GENDER, TORSO_ALWAYS_MALE, TORSO_ALWAYS_FEMALE };
+enum UnitSide {SIDE_FRONT, SIDE_LEFT, SIDE_RIGHT, SIDE_REAR, SIDE_UNDER};
+
 /**
  * Represents a specific type of armor.
  * Not only soldier armor, but also alien armor - some alien races wear Soldier Armor, Leader Armor or Commander Armor
@@ -36,14 +40,13 @@ enum ForcedTorso{ TORSO_USE_GENDER, TORSO_ALWAYS_MALE, TORSO_ALWAYS_FEMALE };
  */
 class Armor
 {
-public:
-	static const int DAMAGE_TYPES = 10;
 private:
 	std::string _type, _spriteSheet, _spriteInv, _corpseGeo, _storeItem, _specWeapon;
 	std::vector<std::string> _corpseBattle;
+	std::vector<std::string> _builtInWeapons;
 	int _frontArmor, _sideArmor, _rearArmor, _underArmor, _drawingRoutine;
 	MovementType _movementType;
-	int _size, _weight;
+	int _size, _weight, _visibilityAtDark, _regeneration;
 	float _damageModifier[DAMAGE_TYPES];
 	std::vector<int> _loftempsSet;
 	UnitStats _stats;
@@ -52,6 +55,10 @@ private:
 	ForcedTorso _forcedTorso;
 	int _faceColorGroup, _hairColorGroup, _utileColorGroup, _rankColorGroup;
 	std::vector<int> _faceColor, _hairColor, _utileColor, _rankColor;
+	int _fearImmune, _bleedImmune, _painImmune, _zombiImmune;
+	float _overKill, _meleeDodgeBackPenalty;
+	RuleStatBonus _psiDefence, _meleeDodge;
+	RuleStatBonus _timeRecovery, _energyRecovery, _moraleRecovery, _healthRecovery, _stunRecovery;
 public:
 	/// Creates a blank armor ruleset.
 	Armor(const std::string &type);
@@ -73,6 +80,8 @@ public:
 	int getRearArmor() const;
 	/// Gets the under armor level.
 	int getUnderArmor() const;
+	/// Gets the armor level of armor side.
+	int getArmor(UnitSide side) const;
 	/// Gets the Geoscape corpse item.
 	std::string getCorpseGeoscape() const;
 	/// Gets the Battlescape corpse item.
@@ -90,9 +99,27 @@ public:
 	/// Gets damage modifier.
 	float getDamageModifier(ItemDamageType dt) const;
 	/// Gets loftempSet
-	const std::vector<int>& getLoftempsSet() const;
+	const std::vector<int> &getLoftempsSet() const;
 	/// Gets the armor's stats.
 	const UnitStats *getStats() const;
+	/// Gets unit psi defense.
+	int getPsiDefence(const BattleUnit* unit) const;
+	/// Gets unit melee dodge chance.
+	int getMeleeDodge(const BattleUnit* unit) const;
+	/// Gets unit dodge penalty if hit from behind.
+	float getMeleeDodgeBackPenalty() const;
+
+	/// Gets unit TU recovery.
+	int getTimeRecovery(const BattleUnit* unit) const;
+	/// Gets unit Energy recovery.
+	int getEnergyRecovery(const BattleUnit* unit) const;
+	/// Gets unit Morale recovery.
+	int getMoraleRecovery(const BattleUnit* unit) const;
+	/// Gets unit Health recovery.
+	int getHealthRecovery(const BattleUnit* unit) const;
+	/// Gets unit Stun recovery.
+	int getStunRegeneration(const BattleUnit* unit) const;
+
 	/// Gets the armor's weight.
 	int getWeight() const;
 	/// Gets number of death frames.
@@ -103,6 +130,20 @@ public:
 	bool getCanHoldWeapon() const;
 	/// Checks if this armor ignores gender (power suit/flying suit).
 	ForcedTorso getForcedTorso() const;
+	/// Gets buildin weapons of armor.
+	const std::vector<std::string> &getBuiltInWeapons() const;
+	/// Gets max view distance at dark in BattleScape.
+	int getVisibilityAtDark() const;
+	/// Gets how armor react to fear.
+	bool getFearImmune(bool def = false) const;
+	/// Gets how armor react to bleeding.
+	bool getBleedImmune(bool def = false) const;
+	/// Gets how armor react to inflicted pain.
+	bool getPainImmune(bool def = false) const;
+	/// Gets how armor react to zombification.
+	bool getZombiImmune(bool def = false) const;
+	/// Gets how much negative hp is require to gib unit.
+	float getOverKill() const;
 	/// Get face base color
 	int getFaceColorGroup() const;
 	/// Get hair base color

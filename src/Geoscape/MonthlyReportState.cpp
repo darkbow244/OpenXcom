@@ -28,8 +28,10 @@
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
 #include "../Savegame/SavedGame.h"
+#include "../Savegame/Base.h"
 #include "../Savegame/GameTime.h"
 #include "PsiTrainingState.h"
+#include "TrainingState.h"
 #include "../Savegame/Region.h"
 #include "../Savegame/Country.h"
 #include "../Ruleset/RuleCountry.h"
@@ -48,7 +50,7 @@ namespace OpenXcom
  * @param psi Show psi training afterwards?
  * @param globe Pointer to the globe.
  */
-MonthlyReportState::MonthlyReportState(bool psi, Globe *globe) : _psi(psi), _gameOver(false), _ratingTotal(0), _fundingDiff(0), _lastMonthsRating(0), _happyList(0), _sadList(0), _pactList(0)
+MonthlyReportState::MonthlyReportState(Globe *globe) : _gameOver(false), _ratingTotal(0), _fundingDiff(0), _lastMonthsRating(0), _happyList(0), _sadList(0), _pactList(0)
 {
 	_globe = globe;
 	// Create objects
@@ -245,9 +247,24 @@ void MonthlyReportState::btnOkClick(Action *)
 	if (!_gameOver)
 	{
 		_game->popState();
-		if (_psi)
+
+		bool training = false;
+		bool psi = false;
+		for (std::vector<Base*>::const_iterator b = _game->getSavedGame()->getBases()->begin(); b != _game->getSavedGame()->getBases()->end(); ++b)
 		{
-			_game->pushState(new PsiTrainingState);
+			psi = psi || (*b)->getAvailablePsiLabs();
+			training = training || (*b)->getAvailableTraining();
+		}
+		if (!Options::anytimePsiTraining)
+		{
+			if (psi)
+			{
+				_game->pushState(new PsiTrainingState);
+			}
+			else if (training)
+			{
+				_game->pushState(new TrainingState);
+			}
 		}
 		// Autosave
 		if (_game->getSavedGame()->isIronman())

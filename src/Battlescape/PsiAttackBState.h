@@ -48,9 +48,6 @@ public:
 	void init();
 	/// Runs state functionality every cycle.
 	void think();
-	/// Attempts a panic or mind control action.
-	void psiAttack();
-
 };
 
 }

@@ -53,7 +53,7 @@ namespace OpenXcom
  * @param targetVoxel Position the projectile is targeting.
  * @param ammo the ammo that produced this projectile, where applicable.
  */
-Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position targetVoxel, BattleItem *ammo) : _res(res), _save(save), _action(action), _origin(origin), _targetVoxel(targetVoxel), _position(0), _bulletSprite(-1), _reversed(false), _vaporColor(-1), _vaporDensity(-1), _vaporProbability(5)
+Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position targetVoxel, BattleItem *ammo) : _res(res), _save(save), _action(action), _origin(origin), _targetVoxel(targetVoxel), _position(0), _distance(0.0f), _bulletSprite(-1), _reversed(false), _vaporColor(-1), _vaporDensity(-1), _vaporProbability(5)
 {
 	// this is the number of pixels the sprite will move between frames
 	_speed = Options::battleFireSpeed;
@@ -61,7 +61,7 @@ Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction ac
 	{
 		if (_action.type == BA_THROW)
 		{
-			_sprite = _res->getSurfaceSet("FLOOROB.PCK")->getFrame(getItem()->getRules()->getFloorSprite());
+			_sprite = _res->getSurfaceSet("FLOOROB.PCK")->getFrame(getItem()->getFloorSprite());
 		}
 		else
 		{
@@ -128,7 +128,8 @@ int Projectile::calculateTrajectory(double accuracy, Position originVoxel)
 {
 	Tile *targetTile = _save->getTile(_action.target);
 	BattleUnit *bu = _action.actor;
-	
+
+	_distance = 0.0f;
 	int test = _save->getTileEngine()->calculateLine(originVoxel, _targetVoxel, false, &_trajectory, bu);
 	if (test != V_EMPTY &&
 		!_trajectory.empty() &&
@@ -214,7 +215,7 @@ int Projectile::calculateTrajectory(double accuracy, Position originVoxel)
 int Projectile::calculateThrow(double accuracy)
 {
 	Tile *targetTile = _save->getTile(_action.target);
-		
+
 	Position originVoxel = _save->getTileEngine()->getOriginVoxel(_action, 0);
 	Position targetVoxel = _action.target * Position(16,16,24) + Position(8,8, (2 + -targetTile->getTerrainLevel()));
 
@@ -229,6 +230,7 @@ int Projectile::calculateThrow(double accuracy)
 		}
 	}
 
+	_distance = 0.0f;
 	double curvature = 0.0;
 	int retVal = V_OUTOFBOUNDS;
 	if (_save->getTileEngine()->validateThrow(_action, originVoxel, targetVoxel, &curvature, &retVal))
@@ -244,11 +246,7 @@ int Projectile::calculateThrow(double accuracy)
 			_trajectory.clear();
 			test = _save->getTileEngine()->calculateParabola(originVoxel, targetVoxel, true, &_trajectory, _action.actor, curvature, deltas);
 
-			Position endPoint = _trajectory.back();
-			endPoint.x /= 16;
-			endPoint.y /= 16;
-			endPoint.z /= 24;
-			Tile *endTile = _save->getTile(endPoint);
+			Tile *endTile = _save->getTile(_trajectory.back().toTile());
 			// check if the item would land on a tile with a blocking object
 			if (_action.type == BA_THROW
 				&& endTile
@@ -330,13 +328,13 @@ void Projectile::applyAccuracy(const Position& origin, Position *target, double 
 		deviation += 50;				// add extra spread to "miss" cloud
 	else
 		deviation += 10;				//accuracy of 109 or greater will become 1 (tightest spread)
-	
+
 	deviation = std::max(1, zShift * deviation / 200);	//range ratio
-		
+
 	target->x += RNG::generate(0, deviation) - deviation / 2;
 	target->y += RNG::generate(0, deviation) - deviation / 2;
 	target->z += RNG::generate(0, deviation / 2) / 2 - deviation / 8;
-	
+
 	if (extendLine)
 	{
 		double rotation, tilt;
@@ -367,6 +365,12 @@ bool Projectile::move()
 		{
 			_position--;
 			return false;
+		}
+		else if (_position > 0)
+		{
+			Position p = _trajectory[_position] - _trajectory[_position - 1];
+			p *= p;
+			_distance += sqrt(float(p.x + p.y + p.z));
 		}
 		if (_save->getDepth() > 0 && _vaporColor != -1 && _action.type != BA_THROW && RNG::percent(_vaporProbability))
 		{
@@ -437,11 +441,11 @@ void Projectile::skipTrajectory()
  * Gets the Position of origin for the projectile
  * @return origin as a tile position.
  */
-Position Projectile::getOrigin()
+Position Projectile::getOrigin() const
 {
 	// instead of using the actor's position, we'll use the voxel origin translated to a tile position
 	// this is a workaround for large units.
-	return _trajectory.front() / Position(16,16,24);
+	return _trajectory.front().toTile();
 }
 
 /**
@@ -450,9 +454,18 @@ Position Projectile::getOrigin()
  * but rather the targetted tile
  * @return target as a tile position.
  */
-Position Projectile::getTarget()
+Position Projectile::getTarget() const
 {
 	return _action.target;
+}
+
+/**
+ * Gets distances that projectile have traveled until now.
+ * @return Returns traveled distance.
+ */
+float Projectile::getDistance() const
+{
+	return _distance;
 }
 
 /**
@@ -483,4 +496,5 @@ void Projectile::addVaporCloud()
 		}
 	}
 }
+
 }

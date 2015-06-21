@@ -27,8 +27,13 @@ namespace OpenXcom
  * type of UFO.
  * @param type String defining the type.
  */
-RuleUfo::RuleUfo(const std::string &type) : _type(type), _size("STR_VERY_SMALL"), _sprite(-1), _marker(-1), _damageMax(0), _speedMax(0), _accel(0), _power(0), _range(0), _score(0), _reload(0), _breakOffTime(0), _sightRange(268), _battlescapeTerrainData(0)
+RuleUfo::RuleUfo(const std::string &type) :
+	_type(type), _size("STR_VERY_SMALL"), _sprite(-1), _marker(-1),
+	_power(0), _range(0), _score(0), _reload(0), _breakOffTime(0),
+	_battlescapeTerrainData(0), _stats(), _statsRaceBonus()
 {
+	_stats.sightRange = 268;
+	_statsRaceBonus[""] = RuleUfoStats();
 }
 
 /**
@@ -50,15 +55,14 @@ void RuleUfo::load(const YAML::Node &node, Ruleset *ruleset)
 	_size = node["size"].as<std::string>(_size);
 	_sprite = node["sprite"].as<int>(_sprite);
 	_marker = node["marker"].as<int>(_marker);
-	_damageMax = node["damageMax"].as<int>(_damageMax);
-	_speedMax = node["speedMax"].as<int>(_speedMax);
-	_accel = node["accel"].as<int>(_accel);
 	_power = node["power"].as<int>(_power);
 	_range = node["range"].as<int>(_range);
 	_score = node["score"].as<int>(_score);
 	_reload = node["reload"].as<int>(_reload);
 	_breakOffTime = node["breakOffTime"].as<int>(_breakOffTime);
-	_sightRange = node["sightRange"].as<int>(_sightRange);
+
+	_stats.load(node);
+
 	_briefingString = node["briefingString"].as<std::string>(_briefingString);
 	if (const YAML::Node &terrain = node["battlescapeTerrainData"])
 	{
@@ -67,6 +71,13 @@ void RuleUfo::load(const YAML::Node &node, Ruleset *ruleset)
 		_battlescapeTerrainData = rule;
 	}
 	_modSprite = node["modSprite"].as<std::string>(_modSprite);
+	if (const YAML::Node &raceBonus = node["raceBonus"])
+	{
+		for (YAML::const_iterator i = raceBonus.begin(); i != raceBonus.end(); ++i)
+		{
+			_statsRaceBonus[i->first.as<std::string>()].load(i->second);
+		}
+	}
 }
 
 /**
@@ -74,7 +85,7 @@ void RuleUfo::load(const YAML::Node &node, Ruleset *ruleset)
  * this UFO. Each UFO type has a unique name.
  * @return The Ufo's name.
  */
-std::string RuleUfo::getType() const
+const std::string &RuleUfo::getType() const
 {
 	return _type;
 }
@@ -83,7 +94,7 @@ std::string RuleUfo::getType() const
  * Gets the size of this type of UFO.
  * @return The Ufo's size.
  */
-std::string RuleUfo::getSize() const
+const std::string &RuleUfo::getSize() const
 {
 	return _size;
 }
@@ -135,36 +146,6 @@ int RuleUfo::getSprite() const
 int RuleUfo::getMarker() const
 {
 	return _marker;
-}
-
-/**
- * Gets the maximum damage (damage the UFO can take)
- * of the UFO.
- * @return The maximum damage.
- */
-int RuleUfo::getMaxDamage() const
-{
-	return _damageMax;
-}
-
-/**
- * Gets the maximum speed of the UFO flying
- * around the Geoscape.
- * @return The maximum speed.
- */
-int RuleUfo::getMaxSpeed() const
-{
-	return _speedMax;
-}
-
-/**
- * Gets the acceleration of the UFO for
- * taking off / stopping.
- * @return The acceleration.
- */
-int RuleUfo::getAcceleration() const
-{
-	return _accel;
 }
 
 /**
@@ -228,27 +209,42 @@ int RuleUfo::getBreakOffTime() const
  * For user-defined UFOs, use a surface for the "preview" image.
  * @return The name of the surface that represents this UFO.
  */
-std::string RuleUfo::getModSprite() const
+const std::string &RuleUfo::getModSprite() const
 {
 	return _modSprite;
 }
 
 /**
- * Gets the UFO's radar range
- * for detecting bases.
- * @return The range in nautical miles.
+ * Gets basic statistic of UFO.
+ * @return Basic stats of UFO.
  */
-int RuleUfo::getSightRange() const
+const RuleUfoStats& RuleUfo::getStats() const
 {
-	return _sightRange;
+	return _stats;
+}
+
+
+/**
+ * Gets bonus statistic of UFO based on race.
+ * @param s Race name.
+ * @return Bonus stats.
+ */
+const RuleUfoStats& RuleUfo::getRaceBonus(const std::string& s) const
+{
+	std::map<std::string, RuleUfoStats>::const_iterator i = _statsRaceBonus.find(s);
+	if (i != _statsRaceBonus.end())
+		return i->second;
+	else
+		return _statsRaceBonus.find("")->second;
 }
 
 /**
  * Gets the UFO's custom briefing string
  * @return The string name.
  */
-std::string RuleUfo::getBriefingString() const
+const std::string &RuleUfo::getBriefingString() const
 {
 	return _briefingString;
 }
+
 }

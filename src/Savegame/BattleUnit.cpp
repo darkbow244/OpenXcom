@@ -31,6 +31,7 @@
 #include "../Battlescape/BattlescapeGame.h"
 #include "../Battlescape/BattleAIState.h"
 #include "Soldier.h"
+#include "../Ruleset/Ruleset.h"
 #include "../Ruleset/Armor.h"
 #include "../Ruleset/Unit.h"
 #include "../Engine/RNG.h"
@@ -55,7 +56,7 @@ BattleUnit::BattleUnit(Soldier *soldier, int depth) :
 	_verticalDirection(0), _status(STATUS_STANDING), _walkPhase(0), _fallPhase(0), _kneeled(false), _floating(false),
 	_dontReselect(false), _fire(0), _currentAIState(0), _visible(false), _cacheInvalid(true),
 	_expBravery(0), _expReactions(0), _expFiring(0), _expThrowing(0), _expPsiSkill(0), _expPsiStrength(0), _expMelee(0),
-	_motionPoints(0), _kills(0), _hitByFire(false), _moraleRestored(0), _coverReserve(0), _charging(0),
+	_motionPoints(0), _kills(0), _hitByFire(false), _fireMaxHit(0), _smokeMaxHit(0), _moraleRestored(0), _coverReserve(0), _charging(0),
 	_turnsSinceSpotted(255), _geoscapeSoldier(soldier), _unitRules(0), _rankInt(-1), _turretType(-1), _hidingForTurn(false), _respawn(false)
 {
 	_name = soldier->getName(true);
@@ -86,6 +87,8 @@ BattleUnit::BattleUnit(Soldier *soldier, int depth) :
 		}
 	}
 	_stats += *_armor->getStats();	// armors may modify effective stats
+	_maxViewDistanceAtDarkSq = _armor->getVisibilityAtDark() ? _armor->getVisibilityAtDark() : 9;
+	_maxViewDistanceAtDarkSq *= _maxViewDistanceAtDarkSq;
 	_loftempsSet = _armor->getLoftempsSet();
 	_gender = soldier->getGender();
 	_faceDirection = -1;
@@ -129,7 +132,7 @@ BattleUnit::BattleUnit(Soldier *soldier, int depth) :
 
 	deriveRank();
 
-	int look = soldier->getGender() + 2 * soldier->getLook();
+	int look = soldier->getGender() + 2 * soldier->getLook() + 8 * soldier->getLookVariant();
 	setRecolor(look, look, _rankInt);
 }
 
@@ -148,7 +151,7 @@ BattleUnit::BattleUnit(Unit *unit, UnitFaction faction, int id, Armor *armor, in
 	_toDirectionTurret(0),  _verticalDirection(0), _status(STATUS_STANDING), _walkPhase(0),
 	_fallPhase(0), _kneeled(false), _floating(false), _dontReselect(false), _fire(0), _currentAIState(0),
 	_visible(false), _cacheInvalid(true), _expBravery(0), _expReactions(0), _expFiring(0),
-	_expThrowing(0), _expPsiSkill(0), _expPsiStrength(0), _expMelee(0), _motionPoints(0), _kills(0), _hitByFire(false),
+	_expThrowing(0), _expPsiSkill(0), _expPsiStrength(0), _expMelee(0), _motionPoints(0), _kills(0), _hitByFire(false), _fireMaxHit(0), _smokeMaxHit(0),
 	_moraleRestored(0), _coverReserve(0), _charging(0), _turnsSinceSpotted(255),
 	_armor(armor), _geoscapeSoldier(0),  _unitRules(unit), _rankInt(-1),
 	_turretType(-1), _hidingForTurn(false), _respawn(false)
@@ -193,6 +196,8 @@ BattleUnit::BattleUnit(Unit *unit, UnitFaction faction, int id, Armor *armor, in
 	}
 
 	_stats += *_armor->getStats();	// armors may modify effective stats
+	_maxViewDistanceAtDarkSq = _armor->getVisibilityAtDark() ? _armor->getVisibilityAtDark() : faction==FACTION_HOSTILE ? 20 : 9;
+	_maxViewDistanceAtDarkSq *= _maxViewDistanceAtDarkSq;
 
 	_breathFrame = -1; // most aliens don't breathe per-se, that's exclusive to humanoids
 	if (armor->getDrawingRoutine() == 14)
@@ -253,10 +258,10 @@ BattleUnit::BattleUnit(Unit *unit, UnitFaction faction, int id, Armor *armor, in
 	}
 	else if (faction == FACTION_NEUTRAL)
 	{
-		generalRank = std::rand() % 8;
+		generalRank = RNG::seedless(0, 7);
 	}
 
-	setRecolor(std::rand() % 8, std::rand() % 8, generalRank);
+	setRecolor(RNG::seedless(0, 127), RNG::seedless(0, 127), generalRank);
 }
 
 
@@ -277,7 +282,7 @@ BattleUnit::~BattleUnit()
 void BattleUnit::load(const YAML::Node &node)
 {
 	_id = node["id"].as<int>(_id);
-	_faction = _originalFaction = (UnitFaction)node["faction"].as<int>(_faction);
+	_faction = (UnitFaction)node["faction"].as<int>(_faction);
 	_status = (UnitStatus)node["status"].as<int>(_status);
 	_pos = node["position"].as<Position>(_pos);
 	_direction = _toDirection = node["direction"].as<int>(_direction);
@@ -307,7 +312,6 @@ void BattleUnit::load(const YAML::Node &node)
 	_killedBy = (UnitFaction)node["killedBy"].as<int>(_killedBy);
 	_moraleRestored = node["moraleRestored"].as<int>(_moraleRestored);
 	_rankInt = node["rankInt"].as<int>(_rankInt);
-	_originalFaction = (UnitFaction)node["originalFaction"].as<int>(_originalFaction);
 	_kills = node["kills"].as<int>(_kills);
 	_dontReselect = node["dontReselect"].as<bool>(_dontReselect);
 	_charging = 0;
@@ -456,6 +460,17 @@ const Position& BattleUnit::getPosition() const
 const Position& BattleUnit::getLastPosition() const
 {
 	return _lastPos;
+}
+
+/**
+ * Gets position of unit center in vexels.
+ * @return position in vexels
+ */
+Position BattleUnit::getPositionVexels() const
+{
+	Position center = _pos.toVexel();
+	center += Position(8, 8, 0) * _armor->getSize();
+	return center;
 }
 
 /**
@@ -1019,28 +1034,49 @@ int BattleUnit::getMorale() const
 }
 
 /**
+ * Get overkill damage to unit.
+ * @return Damage over normal health.
+ */
+int BattleUnit::getOverKillDamage() const
+{
+	return std::max(-_health - (int)(_stats.health * _armor->getOverKill()), 0);
+}
+
+/**
+ * Helper function for setting value with max bound.
+ * @param value
+ * @param max
+ * @param diff
+ */
+static inline void setValueMax(int& value, int diff, int min, int max)
+{
+	value += diff;
+	if (value < min)
+		value = min;
+	else if (value > max)
+		value = max;
+}
+
+/**
  * Do an amount of damage.
  * @param relative The relative position of which part of armor and/or bodypart is hit.
  * @param power The amount of damage to inflict.
  * @param type The type of damage being inflicted.
- * @param ignoreArmor Should the damage ignore armor resistance?
  * @return damage done after adjustment
  */
-int BattleUnit::damage(const Position &relative, int power, ItemDamageType type, bool ignoreArmor)
+int BattleUnit::damage(const Position &relative, int power, const RuleDamageType *type)
 {
 	UnitSide side = SIDE_FRONT;
 	UnitBodyPart bodypart = BODYPART_TORSO;
 
-	if (power <= 0)
+	if (power <= 0 || _health <= 0)
 	{
 		return 0;
 	}
 
-	power = (int)floor(power * _armor->getDamageModifier(type));
+	power = (int)floor(power * _armor->getDamageModifier(type->ResistType));
 
-	if (type == DT_SMOKE) type = DT_STUN; // smoke doesn't do real damage, but stun damage
-
-	if (!ignoreArmor)
+	if (!type->IgnoreDirection)
 	{
 		if (relative == Position(0, 0, 0))
 		{
@@ -1108,47 +1144,58 @@ int BattleUnit::damage(const Position &relative, int power, ItemDamageType type,
 				}
 			}
 		}
-		power -= getArmor(side);
 	}
+
+	int toArmorPre = power * type->ToArmorPre;
+
+	if (type->ArmorEffectiveness > 0.0f)
+	{
+		power -= getArmor(side) * type->ArmorEffectiveness;
+	}
+
+	setValueMax(_currentArmor[side], - toArmorPre, 0, _armor->getArmor(side));
 
 	if (power > 0)
 	{
-		if (type == DT_STUN)
+		if (!_armor->getPainImmune() || type->IgnorePainImmunity)
 		{
-			_stunlevel += power;
+			// conventional weapons can cause additional stun damage
+			_stunlevel += int(RNG::generate(0, power) * type->ToStun);
+			if (_stunlevel < 0)
+			{
+				_stunlevel = 0;
+			}
 		}
-		else
+
+		moraleChange(-(110 - _stats.bravery) * power * type->ToMorale / 100);
+
+		setValueMax(_tu, - power * type->ToTime, 0, _stats.tu);
+		setValueMax(_health, - power * type->ToHealth, -4 * _stats.health, _stats.health);
+		setValueMax(_energy, - power * type->ToEnergy, 0, _stats.stamina);
+
+		if (_health < 0 && type->IgnoreOverKill)
 		{
-			// health damage
-			_health -= power;
-			if (_health < 0)
-			{
-				_health = 0;
-			}
+			_health = 0;
+		}
 
-			if (type != DT_IN)
+		// fatal wounds
+		if (isWoundable())
+		{
+			if (RNG::generate(0, 10) < int(power * type->ToWound))
 			{
-				if (_armor->getDamageModifier(DT_STUN) > 0.0)
-				{
-					// conventional weapons can cause additional stun damage
-					_stunlevel += RNG::generate(0, power / 4);
-				}
-				// fatal wounds
-				if (isWoundable())
-				{
-					if (RNG::generate(0, 10) < power)
-						_fatalWounds[bodypart] += RNG::generate(1,3);
-
-					if (_fatalWounds[bodypart])
-						moraleChange(-_fatalWounds[bodypart]);
-				}
-				// armor damage
-				setArmor(getArmor(side) - (power/10) - 1, side);
+				const int wound = RNG::generate(1,3);
+				_fatalWounds[bodypart] += wound;
+				moraleChange(-wound);
 			}
+		}
+		// armor damage
+		if (type->ToArmor > 0.0f)
+		{
+			setValueMax(_currentArmor[side], - int(power * type->ToArmor) - 1, 0, _armor->getArmor(side));
 		}
 	}
 
-	return power < 0 ? 0:power;
+	return power < 0 ? 0 : power * type->ToHealth;
 }
 
 /**
@@ -1209,7 +1256,7 @@ void BattleUnit::keepFalling()
 	if (_fallPhase == _armor->getDeathFrames())
 	{
 		_fallPhase--;
-		if (_health == 0)
+		if (_health <= 0)
 		{
 			_status = STATUS_DEAD;
 		}
@@ -1246,7 +1293,7 @@ bool BattleUnit::isOut() const
  * @param item
  * @return TUs
  */
-int BattleUnit::getActionTUs(BattleActionType actionType, BattleItem *item)
+RuleItemUseCost BattleUnit::getActionTUs(BattleActionType actionType, BattleItem *item) const
 {
 	if (item == 0)
 	{
@@ -1255,53 +1302,56 @@ int BattleUnit::getActionTUs(BattleActionType actionType, BattleItem *item)
 	return getActionTUs(actionType, item->getRules());
 }
 
-int BattleUnit::getActionTUs(BattleActionType actionType, RuleItem *item)
+RuleItemUseCost BattleUnit::getActionTUs(BattleActionType actionType, RuleItem *item) const
 {
-	if (item == 0)
+	RuleItemUseCost cost;
+	if (item != 0)
 	{
-		return 0;
-	}
+		bool flat = item->getFlatRate();
+		switch (actionType)
+		{
+			case BA_PRIME:
+				flat = item->getFlatPrime();
+				cost = item->getCostPrime();
+				break;
+			case BA_THROW:
+				flat = item->getFlatThrow();
+				cost = item->getCostThrow();
+				break;
+			case BA_AUTOSHOT:
+				cost = item->getCostAuto();
+				break;
+			case BA_SNAPSHOT:
+				cost = item->getCostSnap();
+				break;
+			case BA_HIT:
+				cost = item->getCostMelee();
+				break;
+			case BA_LAUNCH:
+			case BA_AIMEDSHOT:
+				cost = item->getCostAimed();
+				break;
+			case BA_USE:
+				cost = item->getCostUse();
+				break;
+			case BA_MINDCONTROL:
+				cost = item->getCostMind();
+				break;
+			case BA_PANIC:
+				cost = item->getCostPanic();
+				break;
+			default:
+				break;
+		}
 
-	int cost = 0;
-	switch (actionType)
-	{
-		case BA_PRIME:
-			cost = 50; // maybe this should go in the ruleset
-			break;
-		case BA_THROW:
-			cost = 25;
-			break;
-		case BA_AUTOSHOT:
-			cost = item->getTUAuto();
-			break;
-		case BA_SNAPSHOT:
-			cost = item->getTUSnap();
-			break;
-		case BA_HIT:
-			cost = item->getTUMelee();
-			break;
-		case BA_LAUNCH:
-		case BA_AIMEDSHOT:
-			cost = item->getTUAimed();
-			break;
-		case BA_USE:
-		case BA_MINDCONTROL:
-		case BA_PANIC:
-			cost = item->getTUUse();
-			break;
-		default:
-			cost = 0;
+		// if it's a percentage, apply it to unit TUs
+		if (!flat && cost.Time)
+		{
+			cost.Time = std::max(1, (int)floor(getBaseStats()->tu * cost.Time / 100.0f));
+		}
 	}
-
-	// if it's a percentage, apply it to unit TUs
-	if (!item->getFlatRate() || actionType == BA_THROW || actionType == BA_PRIME)
-	{
-		cost = (int)floor(getBaseStats()->tu * cost / 100.0f);
-	}
-
 	return cost;
 }
-
 
 /**
  * Spend time units if it can. Return false if it can't.
@@ -1323,22 +1373,33 @@ bool BattleUnit::spendTimeUnits(int tu)
 
 /**
  * Spend energy  if it can. Return false if it can't.
- * @param tu
+ * @param energy
  * @return flag if it could spend the time units or not.
  */
-bool BattleUnit::spendEnergy(int tu)
+bool BattleUnit::spendEnergy(int energy)
 {
-	int eu = tu / 2;
-
-	if (eu <= _energy)
+	if (energy <= _energy)
 	{
-		_energy -= eu;
+		_energy -= energy;
 		return true;
 	}
 	else
 	{
 		return false;
 	}
+}
+
+/**
+ * Spend resources cost without checking.
+ * @param cost
+ */
+void BattleUnit::spendCost(const RuleItemUseCost& cost)
+{
+	_tu -= cost.Time;
+	_energy -= cost.Energy;
+	_morale -= cost.Morale;
+	_health -= cost.Health;
+	_stunlevel += cost.Stun;
 }
 
 /**
@@ -1432,6 +1493,33 @@ void BattleUnit::clearVisibleTiles()
 }
 
 /**
+ * Get accuracy of different types of psi attack.
+ * @param actionType Psi attack type.
+ * @param item Psi-Amp.
+ * @return Attack bonus.
+ */
+int BattleUnit::getPsiAccuracy(BattleActionType actionType, BattleItem *item)
+{
+	int psiAcc = 0;
+	if (actionType == BA_MINDCONTROL)
+	{
+		psiAcc = item->getRules()->getAccuracyMind();
+	}
+	else if (actionType == BA_PANIC)
+	{
+		psiAcc = item->getRules()->getAccuracyPanic();
+	}
+	else if (actionType == BA_USE)
+	{
+		psiAcc = item->getRules()->getAccuracyUse();
+	}
+
+	psiAcc += item->getRules()->getAccuracyMultiplier(this);
+
+	return psiAcc;
+}
+
+/**
  * Calculate firing accuracy.
  * Formula = accuracyStat * weaponAccuracy * kneelingbonus(1.15) * one-handPenalty(0.8) * woundsPenalty(% health) * critWoundsPenalty (-10%/wound)
  * @param actionType
@@ -1440,24 +1528,33 @@ void BattleUnit::clearVisibleTiles()
  */
 int BattleUnit::getFiringAccuracy(BattleActionType actionType, BattleItem *item)
 {
-
-	int weaponAcc = item->getRules()->getAccuracySnap();
-	if (actionType == BA_AIMEDSHOT || actionType == BA_LAUNCH)
-		weaponAcc = item->getRules()->getAccuracyAimed();
+	const int modifier = getAccuracyModifier(item);
+	int result = 0;
+	bool kneeled = _kneeled;
+	if (actionType == BA_SNAPSHOT)
+	{
+		result = item->getRules()->getAccuracyMultiplier(this) * item->getRules()->getAccuracySnap() / 100;
+	}
+	else if (actionType == BA_AIMEDSHOT || actionType == BA_LAUNCH)
+	{
+		result = item->getRules()->getAccuracyMultiplier(this) * item->getRules()->getAccuracyAimed() / 100;
+	}
 	else if (actionType == BA_AUTOSHOT)
-		weaponAcc = item->getRules()->getAccuracyAuto();
+	{
+		result = item->getRules()->getAccuracyMultiplier(this) * item->getRules()->getAccuracyAuto() / 100;
+	}
 	else if (actionType == BA_HIT)
 	{
-		if (item->getRules()->isSkillApplied())
-		{
-			return (getBaseStats()->melee * item->getRules()->getAccuracyMelee() / 100) * getAccuracyModifier(item) / 100;
-		}
-		return item->getRules()->getAccuracyMelee() * getAccuracyModifier(item) / 100;
+		kneeled = false;
+		result = item->getRules()->getMeleeMultiplier(this) * item->getRules()->getAccuracyMelee() / 100;
+	}
+	else if (actionType == BA_THROW)
+	{
+		kneeled = false;
+		result = item->getRules()->getThrowMultiplier(this) * item->getRules()->getAccuracyThrow() / 100;
 	}
 
-	int result = getBaseStats()->firing * weaponAcc / 100;
-
-	if (_kneeled)
+	if (kneeled)
 	{
 		result = result * 115 / 100;
 	}
@@ -1471,7 +1568,7 @@ int BattleUnit::getFiringAccuracy(BattleActionType actionType, BattleItem *item)
 		}
 	}
 
-	return result * getAccuracyModifier(item) / 100;
+	return result * modifier / 100;
 }
 
 /**
@@ -1503,15 +1600,6 @@ int BattleUnit::getAccuracyModifier(BattleItem *item)
 		}
 	}
 	return std::max(10, 25 * _health / getBaseStats()->health + 75 + -10 * wounds);
-}
-
-/**
- * Calculate throwing accuracy.
- * @return throwing Accuracy
- */
-double BattleUnit::getThrowingAccuracy()
-{
-	return (double)(getBaseStats()->throwing * getAccuracyModifier()) / 100.0;
 }
 
 /**
@@ -1578,8 +1666,14 @@ void BattleUnit::prepareNewTurn()
 
 	_unitsSpottedThisTurn.clear();
 
+	// snapshot of current stats
+	int TURecovery = _armor->getTimeRecovery(this);
+	int ENRecovery = _armor->getEnergyRecovery(this);
+	int HPRecovery = _armor->getHealthRecovery(this);
+	int MRRecovery = _armor->getMoraleRecovery(this);
+	int STRecovery = _armor->getStunRegeneration(this);
+
 	// recover TUs
-	int TURecovery = getBaseStats()->tu;
 	float encumbrance = (float)getBaseStats()->strength / (float)getCarriedWeight();
 	if (encumbrance < 1)
 	{
@@ -1592,37 +1686,29 @@ void BattleUnit::prepareNewTurn()
 	// recover energy
 	if (!isOut())
 	{
-		int ENRecovery;
-		if (_geoscapeSoldier != 0)
-		{
-			ENRecovery = _geoscapeSoldier->getInitStats()->tu / 3;
-		}
-		else
-		{
-			ENRecovery = _unitRules->getEnergyRecovery();
-		}
 		// Each fatal wound to the body reduces the soldier's energy recovery by 10%.
 		ENRecovery -= (_energy * (_fatalWounds[BODYPART_TORSO] * 10))/100;
 		_energy += ENRecovery;
 		if (_energy > getBaseStats()->stamina)
 			_energy = getBaseStats()->stamina;
+		else if (_energy < 0)
+			_energy = 0;
 	}
 
-	// suffer from fatal wounds
-	_health -= getFatalWounds();
+	// recover health, suffer from fatal wounds
+	HPRecovery -= getFatalWounds();
 
 	// suffer from fire
 	if (!_hitByFire && _fire > 0)
 	{
-		_health -= _armor->getDamageModifier(DT_IN) * RNG::generate(5, 10);
+		HPRecovery -= _armor->getDamageModifier(DT_IN) * RNG::generate(5, 10);
 		_fire--;
 	}
 
-	if (_health < 0)
-		_health = 0;
+	setValueMax(_health, HPRecovery, -4 * _stats.health, _stats.health);
 
 	// if unit is dead, AI state should be gone
-	if (_health == 0 && _currentAIState)
+	if (_health <= 0 && _currentAIState)
 	{
 		_currentAIState->exit();
 		delete _currentAIState;
@@ -1630,12 +1716,15 @@ void BattleUnit::prepareNewTurn()
 	}
 
 	// recover stun 1pt/turn
-	if (_stunlevel > 0 &&
-		(_armor->getSize() == 1 || !isOut()))
-		healStun(1);
+	if (_armor->getSize() == 1 || !isOut())
+	{
+		healStun(STRecovery);
+	}
 
+	// recover morale
 	if (!isOut())
 	{
+		moraleChange(MRRecovery);
 		int chance = 100 - (2 * getMorale());
 		if (RNG::generate(1,100) <= chance)
 		{
@@ -1919,8 +2008,8 @@ BattleItem *BattleUnit::getMainHandWeapon(bool quickest) const
 		return 0;
 
 	// otherwise pick the one with the least snapshot TUs
-	int tuRightHand = weaponRightHand->getRules()->getTUSnap();
-	int tuLeftHand = weaponLeftHand->getRules()->getTUSnap();
+	int tuRightHand = getActionTUs(BA_SNAPSHOT, weaponRightHand).Time;
+	int tuLeftHand = getActionTUs(BA_SNAPSHOT, weaponLeftHand).Time;
 	BattleItem *weaponCurrentHand = getItem(getActiveHand());
 	// if only one weapon has snapshot, pick that one
 	if (tuLeftHand <= 0 && tuRightHand > 0)
@@ -1985,39 +2074,56 @@ BattleItem *BattleUnit::getGrenadeFromBelt() const
  */
 bool BattleUnit::checkAmmo()
 {
-	BattleItem *weapon = getItem("STR_RIGHT_HAND");
-	if (!weapon || weapon->getAmmoItem() != 0 || weapon->getRules()->getBattleType() == BT_MELEE || getTimeUnits() < 15)
+	BattleItem *list[2] =
 	{
-		weapon = getItem("STR_LEFT_HAND");
-		if (!weapon || weapon->getAmmoItem() != 0 || weapon->getRules()->getBattleType() == BT_MELEE || getTimeUnits() < 15)
+		getItem("STR_RIGHT_HAND"),
+		getItem("STR_LEFT_HAND"),
+	};
+
+	for (int i = 0; i < 2; ++i)
+	{
+		BattleItem *weapon = list[i];
+		if (!weapon || weapon->getAmmoItem() != 0 || weapon->getRules()->getBattleType() == BT_MELEE)
 		{
-			return false;
+			continue;
 		}
-	}
-	// we have a non-melee weapon with no ammo and 15 or more TUs - we might need to look for ammo then
-	BattleItem *ammo = 0;
-	bool wrong = true;
-	for (std::vector<BattleItem*>::iterator i = getInventory()->begin(); i != getInventory()->end(); ++i)
-	{
-		ammo = (*i);
-		for (std::vector<std::string>::iterator c = weapon->getRules()->getCompatibleAmmo()->begin(); c != weapon->getRules()->getCompatibleAmmo()->end(); ++c)
+
+		// we have a non-melee weapon with no ammo and 15 or more TUs - we might need to look for ammo then
+		BattleItem *ammo = 0;
+		int tuCost = weapon->getRules()->getTULoad();
+		int tuMove = getTimeUnits() - tuCost;
+
+		if (tuMove < 0)
 		{
-			if ((*c) == ammo->getRules()->getType())
+			continue;
+		}
+
+		for (std::vector<BattleItem*>::iterator i = getInventory()->begin(); i != getInventory()->end(); ++i)
+		{
+			for (std::vector<std::string>::iterator c = weapon->getRules()->getCompatibleAmmo()->begin(); c != weapon->getRules()->getCompatibleAmmo()->end(); ++c)
 			{
-				wrong = false;
-				break;
+				if ((*c) == (*i)->getRules()->getType())
+				{
+					int tuTemp = (*i)->getSlot()->getType() != INV_HAND ? (*i)->getSlot()->getCost(weapon->getSlot()) : 0;
+					if (tuTemp < tuMove)
+					{
+						tuMove = tuTemp;
+						ammo = (*i);
+					}
+					continue;
+				}
 			}
 		}
-		if (!wrong) break;
+
+		if (ammo && spendTimeUnits(tuCost + tuMove))
+		{
+			weapon->setAmmoItem(ammo);
+			ammo->moveToOwner(0);
+
+			return true;
+		}
 	}
-
-	if (wrong) return false; // didn't find any compatible ammo in inventory
-
-	spendTimeUnits(15);
-	weapon->setAmmoItem(ammo);
-	ammo->moveToOwner(0);
-
-	return true;
+	return false;
 }
 
 /**
@@ -2113,6 +2219,10 @@ bool BattleUnit::postMissionProcedures(SavedGame *geoscape)
 	const UnitStats caps = s->getRules()->getStatCaps();
 	int healthLoss = _stats.health - _health;
 
+	if (healthLoss < 0)
+	{
+		healthLoss = 0;
+	}
 	s->setWoundRecovery(RNG::generate((healthLoss*0.5),(healthLoss*1.5)));
 
 	if (_expBravery && stats->bravery < caps.bravery)
@@ -2255,23 +2365,25 @@ void BattleUnit::heal(int part, int woundAmount, int healthAmount)
 		return;
 	if (!_fatalWounds[part])
 		return;
-	_fatalWounds[part] -= woundAmount;
-	_health += healthAmount;
-	if (_health > getBaseStats()->health)
-		_health = getBaseStats()->health;
+
+	setValueMax(_fatalWounds[part], -woundAmount, 0, 100);
+	setValueMax(_health, healthAmount, 1, getBaseStats()->health); //Hippocratic Oath: First do no harm
 }
 
 /**
  * Restore soldier morale
+ * @param moraleAmount additional morale boost.
+ * @param painKillersStrength how much of damage convert to morale.
  */
-void BattleUnit::painKillers()
+void BattleUnit::painKillers(int moraleAmount, float painKillersStrength)
 {
-	int lostHealth = getBaseStats()->health - _health;
+	int lostHealth = (getBaseStats()->health - _health) * painKillersStrength;
 	if (lostHealth > _moraleRestored)
 	{
         _morale = std::min(100, (lostHealth - _moraleRestored + _morale));
 		_moraleRestored = lostHealth;
 	}
+	moraleChange(moraleAmount);
 }
 
 /**
@@ -2337,11 +2449,21 @@ std::wstring BattleUnit::getName(Language *lang, bool debugAppendId) const
 
 	return _name;
 }
+
 /**
   * Gets pointer to the unit's stats.
   * @return stats Pointer to the unit's stats.
   */
 UnitStats *BattleUnit::getBaseStats()
+{
+	return &_stats;
+}
+
+/**
+  * Gets pointer to the unit's stats.
+  * @return stats Pointer to the unit's stats.
+  */
+const UnitStats *BattleUnit::getBaseStats() const
 {
 	return &_stats;
 }
@@ -2419,7 +2541,7 @@ int BattleUnit::getMoveSound() const
  */
 bool BattleUnit::isWoundable() const
 {
-	return (_type=="SOLDIER" || (Options::alienBleeding && _faction != FACTION_PLAYER && _armor->getSize() == 1));
+	return !_armor->getBleedImmune(!(_type=="SOLDIER" || (Options::alienBleeding && _faction != FACTION_PLAYER)));
 }
 /**
  * Get whether the unit is affected by morale loss.
@@ -2428,7 +2550,7 @@ bool BattleUnit::isWoundable() const
  */
 bool BattleUnit::isFearable() const
 {
-	return (_armor->getSize() == 1);
+	return !_armor->getFearImmune();
 }
 
 /**
@@ -2925,27 +3047,74 @@ bool BattleUnit::getFloorAbove()
 }
 
 /**
- * Get the name of any melee weapon we may be carrying, or a built in one.
+ * Get the name of any utility weapon we may be carrying, or a built in one.
  * @return the name .
  */
-BattleItem *BattleUnit::getMeleeWeapon()
+BattleItem *BattleUnit::getUtilityWeapon(BattleType type)
 {
 	BattleItem *melee = getItem("STR_RIGHT_HAND");
-	if (melee && melee->getRules()->getBattleType() == BT_MELEE)
+	if (melee && melee->getRules()->getBattleType() == type)
 	{
 		return melee;
 	}
 	melee = getItem("STR_LEFT_HAND");
-	if (melee && melee->getRules()->getBattleType() == BT_MELEE)
+	if (melee && melee->getRules()->getBattleType() == type)
 	{
 		return melee;
 	}
-	melee = getSpecialWeapon(BT_MELEE);
+	melee = getSpecialWeapon(type);
 	if (melee)
 	{
 		return melee;
 	}
 	return 0;
+}
+
+/**
+ * Set fire damage form environment.
+ * @param damage
+ */
+void BattleUnit::setEnviFire(int damage)
+{
+	if (_fireMaxHit < damage) _fireMaxHit = damage;
+}
+
+/**
+ * Set smoke damage form environment.
+ * @param damage
+ */
+void BattleUnit::setEnviSmoke(int damage)
+{
+	if (_smokeMaxHit < damage) _smokeMaxHit = damage;
+}
+
+/**
+ * Calculate smoke and fire damage form environment.
+ */
+void BattleUnit::calculateEnviDamage(Ruleset *ruleset)
+{
+	if (_fireMaxHit)
+	{
+		_hitByFire = true;
+		damage(Position(0, 0, 0), _fireMaxHit, ruleset->getDamageType(DT_IN));
+		// try to set the unit on fire.
+		if (RNG::percent(40 * getArmor()->getDamageModifier(DT_IN)))
+		{
+			int burnTime = RNG::generate(0, int(5 * getArmor()->getDamageModifier(DT_IN)));
+			if (getFire() < burnTime)
+			{
+				setFire(burnTime);
+			}
+		}
+	}
+
+	if (_smokeMaxHit)
+	{
+		damage(Position(0,0,0), _smokeMaxHit, ruleset->getDamageType(DT_SMOKE));
+	}
+
+	_fireMaxHit = 0;
+	_smokeMaxHit = 0;
 }
 
 /**
@@ -2980,28 +3149,29 @@ static inline BattleItem *createItem(SavedBattleGame *save, BattleUnit *unit, Ru
  * Set special weapon that is handled outside inventory.
  * @param save
  */
-void BattleUnit::setSpecialWeapon(SavedBattleGame *save, const Ruleset *rule)
+void BattleUnit::setSpecialWeapon(SavedBattleGame *save)
 {
+	const Ruleset *rule = save->getRuleset();
 	RuleItem *item = 0;
 	int i = 0;
 
 	if (getUnitRules())
 	{
 		item = rule->getItem(getUnitRules()->getMeleeWeapon());
-		if (item)
+		if (item && i < SPEC_WEAPON_MAX)
 		{
 			_specWeapon[i++] = createItem(save, this, item);
 		}
 	}
 	item = rule->getItem(getArmor()->getSpecialWeapon());
-	if (item)
+	if (item && i < SPEC_WEAPON_MAX)
 	{
 		_specWeapon[i++] = createItem(save, this, item);
 	}
 	if (getBaseStats()->psiSkill > 0 && getFaction() == FACTION_HOSTILE)
 	{
 		item = rule->getItem("ALIEN_PSI_WEAPON");
-		if (item)
+		if (item && i < SPEC_WEAPON_MAX)
 		{
 			_specWeapon[i++] = createItem(save, this, item);
 		}
@@ -3015,7 +3185,11 @@ BattleItem *BattleUnit::getSpecialWeapon(BattleType type) const
 {
 	for (int i = 0; i < SPEC_WEAPON_MAX; ++i)
 	{
-		if (_specWeapon[i] && _specWeapon[i]->getRules()->getBattleType() == type)
+		if (!_specWeapon[i])
+		{
+			break;
+		}
+		if (_specWeapon[i]->getRules()->getBattleType() == type)
 		{
 			return _specWeapon[i];
 		}

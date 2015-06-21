@@ -37,6 +37,7 @@
 #include "../Engine/Options.h"
 #include "../Ruleset/Armor.h"
 #include "../Engine/Logger.h"
+#include "../Ruleset/Ruleset.h"
 #include "UnitFallBState.h"
 
 namespace OpenXcom
@@ -186,7 +187,7 @@ void UnitWalkBState::think()
 			{
 				_unit->getTile()->ignite(1);
 				Position here = (_unit->getPosition() * Position(16,16,24)) + Position(8,8,-(_unit->getTile()->getTerrainLevel()));
-				_parent->getTileEngine()->hit(here, _unit->getBaseStats()->strength, DT_IN, _unit);
+				_parent->getTileEngine()->hit(here, _unit->getBaseStats()->strength, _parent->getRuleset()->getDamageType(DT_IN), _unit, false);
 			}
 
 			// move our personal lighting with us
@@ -288,7 +289,7 @@ void UnitWalkBState::think()
 			{
 				tu = 0;
 			}
-			int energy = tu;
+			int energy = tu / 2;
 			if (_action.run)
 			{
 				tu *= 0.75;
@@ -311,7 +312,7 @@ void UnitWalkBState::think()
 				return;
 			}
 
-			if (energy / 2 > _unit->getEnergy())
+			if (energy > _unit->getEnergy())
 			{
 				if (_parent->getPanicHandled())
 				{
@@ -324,7 +325,7 @@ void UnitWalkBState::think()
 				return;
 			}
 
-			if (_parent->getPanicHandled() && _parent->checkReservedTU(_unit, tu) == false)
+			if (_parent->getPanicHandled() && !_falling && _parent->checkReservedTU(_unit, tu, energy) == false)
 			{
 				_pf->abortPath();
 				_unit->setCache(0);
@@ -378,7 +379,7 @@ void UnitWalkBState::think()
 						(-belowDest->getTerrainLevel() + unitBelowMyWay->getFloatHeight() + unitBelowMyWay->getHeight())
 						>= 28)))  // 4+ voxels poking into the tile above, we don't kick people in the head here at XCom.
 					{
-						_action.TU = 0;
+						_action.clearTU();
 						_pf->abortPath();
 						_unit->setCache(0);
 						_parent->getMap()->cacheUnit(_unit);
@@ -474,7 +475,7 @@ void UnitWalkBState::cancel()
  */
 void UnitWalkBState::postPathProcedures()
 {
-	_action.TU = 0;
+	_action.clearTU();
 	if (_unit->getFaction() != FACTION_PLAYER)
 	{
 		int dir = _action.finalFacing;
@@ -490,10 +491,10 @@ void UnitWalkBState::postPathProcedures()
 				BattleAction action;
 				action.actor = _unit;
 				action.target = _unit->getCharging()->getPosition();
-				action.weapon = _unit->getMeleeWeapon();
+				action.weapon = _unit->getSpecialWeapon(BT_MELEE);
 				action.type = BA_HIT;
-				action.TU = _unit->getActionTUs(action.type, action.weapon);
 				action.targeting = true;
+				action.updateTU();
 				_unit->setCharging(0);
 				_parent->statePushBack(new MeleeAttackBState(_parent, action));
 			}

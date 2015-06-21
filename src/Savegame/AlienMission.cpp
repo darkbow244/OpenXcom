@@ -241,7 +241,7 @@ Ufo *AlienMission::spawnUfo(const SavedGame &game, const Ruleset &ruleset, const
 				pos = regionRules.getRandomPoint(trajectory.getZone(0));
 			}
 			ufo->setAltitude(assaultTrajectory.getAltitude(0));
-			ufo->setSpeed(assaultTrajectory.getSpeedPercentage(0) * battleshipRule.getMaxSpeed());
+			ufo->setSpeed(assaultTrajectory.getSpeedPercentage(0) * ufo->getCraftStats().speedMax);
 			ufo->setLongitude(pos.first);
 			ufo->setLatitude(pos.second);
 			Waypoint *wp = new Waypoint();
@@ -272,7 +272,7 @@ Ufo *AlienMission::spawnUfo(const SavedGame &game, const Ruleset &ruleset, const
 			pos = regionRules.getRandomPoint(trajectory.getZone(0));
 		}
 		ufo->setAltitude(trajectory.getAltitude(0));
-		ufo->setSpeed(trajectory.getSpeedPercentage(0) * ufoRule.getMaxSpeed());
+		ufo->setSpeed(trajectory.getSpeedPercentage(0) * ufo->getCraftStats().speedMax);
 		ufo->setLongitude(pos.first);
 		ufo->setLatitude(pos.second);
 		Waypoint *wp = new Waypoint();
@@ -309,7 +309,7 @@ Ufo *AlienMission::spawnUfo(const SavedGame &game, const Ruleset &ruleset, const
 	{
 		ufo->setSecondsRemaining(trajectory.groundTimer()*5);
 	}
-	ufo->setSpeed(trajectory.getSpeedPercentage(0) * ufoRule.getMaxSpeed());
+	ufo->setSpeed(trajectory.getSpeedPercentage(0) * ufo->getCraftStats().speedMax);
 	ufo->setLongitude(pos.first);
 	ufo->setLatitude(pos.second);
 	Waypoint *wp = new Waypoint();
@@ -395,7 +395,7 @@ void AlienMission::ufoReachedWaypoint(Ufo &ufo, Game &engine, const Globe &globe
 			ufo.setLandId(0);
 		}
 		// Set next waypoint.
-		ufo.setSpeed((int)(ufo.getRules()->getMaxSpeed() * trajectory.getSpeedPercentage(nextWaypoint)));
+		ufo.setSpeed((int)(ufo.getCraftStats().speedMax * trajectory.getSpeedPercentage(nextWaypoint)));
 	}
 	else
 	{
@@ -407,7 +407,8 @@ void AlienMission::ufoReachedWaypoint(Ufo &ufo, Game &engine, const Globe &globe
 			ufo.setStatus(Ufo::DESTROYED);
 
 			MissionArea area = regionRules.getMissionPoint(trajectory.getZone(curWaypoint), &ufo);
-			MissionSite *missionSite = spawnMissionSite(game, rules, area);
+
+			MissionSite *missionSite = spawnMissionSite(game, rules, area, ufo);
 			if (missionSite)
 			{
 				game.getMissionSites()->push_back(missionSite);
@@ -509,7 +510,7 @@ void AlienMission::ufoLifting(Ufo &ufo, SavedGame &game, const Globe &globe)
 				addScore(ufo.getLongitude(), ufo.getLatitude(), game);
 			}
 			ufo.setAltitude("STR_VERY_LOW");
-			ufo.setSpeed((int)(ufo.getRules()->getMaxSpeed() * ufo.getTrajectory().getSpeedPercentage(ufo.getTrajectoryPoint())));
+			ufo.setSpeed((int)(ufo.getCraftStats().speedMax * ufo.getTrajectory().getSpeedPercentage(ufo.getTrajectoryPoint())));
 		}
 		break;
 	case Ufo::CRASHED:
@@ -695,15 +696,18 @@ std::pair<double, double> AlienMission::getLandPoint(const Globe &globe, const R
  * @param game reference to the saved game.
  * @param rules reference to the game rules.
  * @param area the point on the globe at which to spawn this site.
+ * @param ufo ufo that spawn that mission.
  * @return a pointer to the mission site.
  */
-MissionSite *AlienMission::spawnMissionSite(SavedGame &game, const Ruleset &rules, const MissionArea &area)
+MissionSite *AlienMission::spawnMissionSite(SavedGame &game, const Ruleset &rules, const MissionArea &area, const Ufo &ufo)
 {
 	Texture *texture = rules.getGlobe()->getTexture(area.texture);
 	AlienDeployment *deployment = rules.getDeployment(texture->getRandomDeployment());
+	AlienDeployment *alienCustomDeploy = rules.getDeployment(ufo.getCraftStats().missionCustomDeploy);
+
 	if (deployment)
 	{
-		MissionSite *missionSite = new MissionSite(&_rule, deployment);
+		MissionSite *missionSite = new MissionSite(&_rule, deployment, alienCustomDeploy);
 		missionSite->setLongitude(area.lonMin);
 		missionSite->setLatitude(area.latMin);
 		missionSite->setId(game.getId(deployment->getMarkerName()));

@@ -46,6 +46,7 @@ void RuleManufacture::load(const YAML::Node &node, int listOrder)
 	}
 	_category = node["category"].as<std::string>(_category);
 	_requires = node["requires"].as< std::vector<std::string> >(_requires);
+	_requiresBaseFunc = node["requiresBaseFunc"].as< std::vector<std::string> >(_requiresBaseFunc);
 	_space = node["space"].as<int>(_space);
 	_time = node["time"].as<int>(_time);
 	_cost = node["cost"].as<int>(_cost);
@@ -56,13 +57,14 @@ void RuleManufacture::load(const YAML::Node &node, int listOrder)
 	{
 		_listOrder = listOrder;
 	}
+	std::sort(_requiresBaseFunc.begin(), _requiresBaseFunc.end());
 }
 
 /**
  * Gets the unique name of the manufacture.
  * @return The name.
  */
-std::string RuleManufacture::getName() const
+const std::string &RuleManufacture::getName() const
 {
 	return _name;
 }
@@ -71,7 +73,7 @@ std::string RuleManufacture::getName() const
  * Gets the category shown in the manufacture list.
  * @return The category.
  */
-std::string RuleManufacture::getCategory() const
+const std::string &RuleManufacture::getCategory() const
 {
 	return _category;
 }
@@ -84,6 +86,16 @@ std::string RuleManufacture::getCategory() const
 const std::vector<std::string> &RuleManufacture::getRequirements() const
 {
 	return _requires;
+}
+
+/**
+ * Gets the list of base functions required to
+ * manufacture this object.
+ * @return A list of functions IDs.
+ */
+const std::vector<std::string> &RuleManufacture::getRequireBaseFunc() const
+{
+	return _requiresBaseFunc;
 }
 
 /**
@@ -118,7 +130,7 @@ int RuleManufacture::getManufactureCost() const
  * Gets the list of items required to manufacture one object.
  * @return The list of items required to manufacture one object.
 */
-const std::map<std::string, int> & RuleManufacture::getRequiredItems() const
+const std::map<std::string, int> &RuleManufacture::getRequiredItems() const
 {
 	return _requiredItems;
 }
@@ -127,7 +139,7 @@ const std::map<std::string, int> & RuleManufacture::getRequiredItems() const
  * Gets the list of items produced by completing "one object" of this project.
  * @return The list of items produced by completing "one object" of this project.
 */
-const std::map<std::string, int> & RuleManufacture::getProducedItems() const
+const std::map<std::string, int> &RuleManufacture::getProducedItems() const
 {
 	return _producedItems;
 }

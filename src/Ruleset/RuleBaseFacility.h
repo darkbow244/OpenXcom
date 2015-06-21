@@ -36,14 +36,14 @@ class RuleBaseFacility
 {
 private:
 	std::string _type;
-	std::vector<std::string> _requires;
+	std::vector<std::string> _requires, _requiresBaseFunc, _provideBaseFunc;
 	int _spriteShape, _spriteFacility;
 	bool _lift, _hyper, _mind, _grav;
 	int _size, _buildCost, _buildTime, _monthlyCost;
 	int _storage, _personnel, _aliens, _crafts, _labs, _workshops, _psiLabs;
 	int _radarRange, _radarChance, _defense, _hitRatio, _fireSound, _hitSound;
 	std::string _mapName;
-	int _listOrder;
+	int _listOrder, _trainingRooms;
 public:
 	/// Creates a blank facility ruleset.
 	RuleBaseFacility(const std::string &type);
@@ -55,6 +55,10 @@ public:
 	std::string getType() const;
 	/// Gets the facility's requirements.
 	const std::vector<std::string> &getRequirements() const;
+	/// Gets the facility's required function in base to build.
+	const std::vector<std::string> &getRequireBaseFunc() const;
+	/// Gets the functions that facility provide in base.
+	const std::vector<std::string> &getProvidedBaseFunc() const;
 	/// Gets the facility's shape sprite.
 	int getSpriteShape() const;
 	/// Gets the facility's content sprite.
@@ -105,6 +109,8 @@ public:
 	int getHitSound() const;
 	/// Gets the facility's list weight.
 	int getListOrder() const;
+	/// Gets the facility's training capacity.
+	int getTrainingFacilities() const;
 };
 
 }

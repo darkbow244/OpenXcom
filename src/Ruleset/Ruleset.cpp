@@ -133,9 +133,111 @@ void Ruleset::resetGlobalStatics()
 /**
  * Creates a ruleset with blank sets of rules.
  */
-Ruleset::Ruleset() : _costSoldier(0), _costEngineer(0), _costScientist(0), _timePersonnel(0), _initialFunding(0), _turnAIUseGrenade(3), _turnAIUseBlaster(3), _startingTime(6, 1, 1, 1999, 12, 0, 0), _facilityListOrder(0), _craftListOrder(0), _itemListOrder(0), _researchListOrder(0),  _manufactureListOrder(0), _ufopaediaListOrder(0), _invListOrder(0)
+Ruleset::Ruleset() :
+	_maxViewDistance(20), _maxDarknessToSeeUnits(9), _costSoldier(0), _costEngineer(0), _costScientist(0), _timePersonnel(0), _initialFunding(0),
+	_aiUseDelayBlaster(3), _aiUseDelayFirearm(0), _aiUseDelayGrenade(3), _aiUseDelayMelee(0), _aiUseDelayPsionic(0),
+	_startingTime(6, 1, 1, 1999, 12, 0, 0), _facilityListOrder(0), _craftListOrder(0), _itemListOrder(0),
+	_researchListOrder(0),  _manufactureListOrder(0), _ufopaediaListOrder(0), _invListOrder(0)
 {
 	_globe = new RuleGlobe();
+
+	//load base damage types
+	RuleDamageType *dmg;
+	_damageTypes.resize(DAMAGE_TYPES);
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_NONE;
+	dmg->RandomType = DRT_NONE;
+	dmg->IgnoreOverKill = true;
+	dmg->ToHealth = 0.0f;
+	dmg->ToArmor = 0.0f;
+	dmg->ToWound = 0.0f;
+	dmg->ToItem = 0.0f;
+	dmg->ToTile = 0.0f;
+	dmg->ToStun = 0.0f;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_AP;
+	dmg->IgnoreOverKill = true;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_ACID;
+	dmg->IgnoreOverKill = true;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_LASER;
+	dmg->IgnoreOverKill = true;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_PLASMA;
+	dmg->IgnoreOverKill = true;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_MELEE;
+	dmg->IgnoreOverKill = true;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_STUN;
+	dmg->FixRadius = -1;
+	dmg->IgnoreOverKill = true;
+	dmg->IgnoreSelfDestruct = true;
+	dmg->IgnorePainImmunity = true;
+	dmg->RadiusEffectiveness = 0.05f;
+	dmg->ToHealth = 0.0f;
+	dmg->ToArmor = 0.0f;
+	dmg->ToWound = 0.0f;
+	dmg->ToItem = 0.0f;
+	dmg->ToTile = 0.0f;
+	dmg->ToStun = 1.0f;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_HE;
+	dmg->FixRadius = -1;
+	dmg->IgnoreOverKill = true;
+	dmg->IgnoreSelfDestruct = true;
+	dmg->RadiusEffectiveness = 0.05f;
+	dmg->ToItem = 1.0f;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_SMOKE;
+	dmg->FixRadius = -1;
+	dmg->IgnoreOverKill = true;
+	dmg->IgnoreDirection = true;
+	dmg->ArmorEffectiveness = 0.0f;
+	dmg->RadiusEffectiveness = 0.05f;
+	dmg->SmokeThreshold = 0;
+	dmg->ToHealth = 0.0f;
+	dmg->ToArmor = 0.0f;
+	dmg->ToWound = 0.0f;
+	dmg->ToItem = 0.0f;
+	dmg->ToTile = 0.0f;
+	dmg->ToStun = 1.0f;
+	_damageTypes[dmg->ResistType] = dmg;
+
+	dmg = new RuleDamageType();
+	dmg->ResistType = DT_IN;
+	dmg->FixRadius = -1;
+	dmg->FireBlastCalc = true;
+	dmg->IgnoreOverKill = true;
+	dmg->IgnoreDirection = true;
+	dmg->ArmorEffectiveness = 0.0f;
+	dmg->RadiusEffectiveness = 0.03f;
+	dmg->FireThreshold = 0;
+	dmg->ToHealth = 1.0f;
+	dmg->ToArmor = 0.0f;
+	dmg->ToWound = 0.0f;
+	dmg->ToItem = 0.0f;
+	dmg->ToTile = 0.0f;
+	dmg->ToStun = 0.0f;
+	_damageTypes[dmg->ResistType] = dmg;
 }
 
 /**
@@ -145,6 +247,10 @@ Ruleset::~Ruleset()
 {
 	delete _globe;
 	for (std::vector<SoldierNamePool*>::iterator i = _names.begin(); i != _names.end(); ++i)
+	{
+		delete *i;
+	}
+	for (std::vector<RuleDamageType*>::iterator i = _damageTypes.begin(); i != _damageTypes.end(); ++i)
 	{
 		delete *i;
 	}
@@ -334,7 +440,7 @@ void Ruleset::loadFile(const std::string &filename, size_t spriteOffset)
 		if (rule != 0)
 		{
 			_itemListOrder += 100;
-			rule->load(*i, spriteOffset, _itemListOrder);
+			rule->load(*i, spriteOffset, _itemListOrder, _damageTypes);
 		}
 	}
 	for (YAML::const_iterator i = doc["ufos"].begin(); i != doc["ufos"].end(); ++i)
@@ -504,6 +610,8 @@ void Ruleset::loadFile(const std::string &filename, size_t spriteOffset)
 	{
 		_startingTime.load(doc["startingTime"]);
 	}
+	_maxViewDistance = doc["maxViewDistance"].as<int>(_maxViewDistance);
+	_maxDarknessToSeeUnits = doc["maxDarknessToSeeUnits"].as<int>(_maxDarknessToSeeUnits);
 	_costSoldier = doc["costSoldier"].as<int>(_costSoldier);
 	_costEngineer = doc["costEngineer"].as<int>(_costEngineer);
 	_costScientist = doc["costScientist"].as<int>(_costScientist);
@@ -511,8 +619,18 @@ void Ruleset::loadFile(const std::string &filename, size_t spriteOffset)
 	_initialFunding = doc["initialFunding"].as<int>(_initialFunding);
 	_alienFuel = doc["alienFuel"].as<std::string>(_alienFuel);
 	_fontName = doc["fontName"].as<std::string>(_fontName);
-	_turnAIUseGrenade = doc["turnAIUseGrenade"].as<int>(_turnAIUseGrenade);
-	_turnAIUseBlaster = doc["turnAIUseBlaster"].as<int>(_turnAIUseBlaster);
+
+	_aiUseDelayGrenade = doc["turnAIUseGrenade"].as<int>(_aiUseDelayGrenade);
+	_aiUseDelayBlaster = doc["turnAIUseBlaster"].as<int>(_aiUseDelayBlaster);
+	if (const YAML::Node &nodeAI = doc["ai"])
+	{
+		_aiUseDelayBlaster = nodeAI["useDelayBlaster"].as<int>(_aiUseDelayBlaster);
+		_aiUseDelayFirearm = nodeAI["useDelayFirearm"].as<int>(_aiUseDelayFirearm);
+		_aiUseDelayGrenade = nodeAI["useDelayGrenade"].as<int>(_aiUseDelayGrenade);
+		_aiUseDelayMelee   = nodeAI["useDelayMelee"].as<int>(_aiUseDelayMelee);
+		_aiUseDelayPsionic = nodeAI["useDelayPsionic"].as<int>(_aiUseDelayPsionic);
+	}
+
 	for (YAML::const_iterator i = doc["ufoTrajectories"].begin(); i != doc["ufoTrajectories"].end(); ++i)
 	{
 		UfoTrajectory *rule = loadRule(*i, &_ufoTrajectories, 0, "id");
@@ -1194,6 +1312,16 @@ RuleInventory *Ruleset::getInventory(const std::string &id) const
 {
 	std::map<std::string, RuleInventory*>::const_iterator i = _invs.find(id);
 	if (_invs.end() != i) return i->second; else return 0;
+}
+
+/**
+ * Returns basic damage type.
+ * @param type damage type.
+ * @return basic damage ruleset.
+ */
+const RuleDamageType *Ruleset::getDamageType(ItemDamageType type) const
+{
+	return _damageTypes.at(type);
 }
 
 /**

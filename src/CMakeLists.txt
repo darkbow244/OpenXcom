@@ -344,6 +344,10 @@ set ( geoscape_src
   Geoscape/AllocatePsiTrainingState.cpp
   Geoscape/PsiTrainingState.h
   Geoscape/PsiTrainingState.cpp
+  Geoscape/AllocateTrainingState.h
+  Geoscape/AllocateTrainingState.cpp
+  Geoscape/TrainingState.h
+  Geoscape/TrainingState.cpp
   Geoscape/AlienBaseState.h
   Geoscape/AlienBaseState.cpp
   Geoscape/MissionDetectedState.h
@@ -470,10 +474,14 @@ set ( ruleset_src
   Ruleset/MapDataSet.cpp
   Ruleset/RuleSoldier.h
   Ruleset/RuleSoldier.cpp
+  Ruleset/RuleStatBonus.h
+  Ruleset/RuleStatBonus.cpp
   Ruleset/RuleRegion.cpp
   Ruleset/RuleRegion.h
   Ruleset/RuleItem.h
   Ruleset/RuleItem.cpp
+  Ruleset/RuleDamageType.h
+  Ruleset/RuleDamageType.cpp
   Ruleset/RuleCraftWeapon.cpp
   Ruleset/RuleCraftWeapon.h
   Ruleset/RuleInterface.h

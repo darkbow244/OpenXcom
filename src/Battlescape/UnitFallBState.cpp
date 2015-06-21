@@ -33,6 +33,7 @@
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Options.h"
 #include "../Ruleset/Armor.h"
+#include "../Ruleset/Ruleset.h"
 
 namespace OpenXcom
 {
@@ -82,7 +83,7 @@ void UnitFallBState::think()
 		bool largeCheck = true;
 		bool falling = true;
 		int size = (*unit)->getArmor()->getSize() - 1;
-		if ((*unit)->getHealth() == 0 || (*unit)->getStunlevel() >= (*unit)->getHealth())
+		if ((*unit)->getHealth() <= 0 || (*unit)->getStunlevel() >= (*unit)->getHealth())
 		{
 			unit = _parent->getSave()->getFallingUnits()->erase(unit);
 			continue;
@@ -271,7 +272,7 @@ void UnitFallBState::think()
 				{
 					(*unit)->getTile()->ignite(1);
 					Position here = ((*unit)->getPosition() * Position(16,16,24)) + Position(8,8,-((*unit)->getTile()->getTerrainLevel()));
-					_parent->getTileEngine()->hit(here, (*unit)->getBaseStats()->strength, DT_IN, (*unit));
+					_parent->getTileEngine()->hit(here, (*unit)->getBaseStats()->strength, _parent->getRuleset()->getDamageType(DT_IN), (*unit), false);
 				}
 				// move our personal lighting with us
 				_terrain->calculateUnitLighting();

@@ -32,6 +32,7 @@
 #include "../Battlescape/BattlescapeState.h"
 #include "../Battlescape/BattlescapeGame.h"
 #include "../Battlescape/Position.h"
+#include "../Battlescape/Inventory.h"
 #include "../Resource/ResourcePack.h"
 #include "../Ruleset/Ruleset.h"
 #include "../Ruleset/Armor.h"
@@ -51,8 +52,11 @@ namespace OpenXcom
 /**
  * Initializes a brand new battlescape saved game.
  */
-SavedBattleGame::SavedBattleGame() : _battleState(0), _mapsize_x(0), _mapsize_y(0), _mapsize_z(0), _selectedUnit(0), _lastSelectedUnit(0), _pathfinding(0), _tileEngine(0), _globalShade(0), _side(FACTION_PLAYER), _turn(1),
-                                     _debugMode(false), _aborted(false), _itemId(0), _objectivesDestroyed(0), _objectivesNeeded(0), _unitsFalling(false), _cheating(false), _tuReserved(BA_NONE), _kneelReserved(false), _depth(0), _ambience(-1)
+SavedBattleGame::SavedBattleGame(Ruleset *rule) :
+	_battleState(0), _rule(rule), _mapsize_x(0), _mapsize_y(0), _mapsize_z(0), _selectedUnit(0),
+	_lastSelectedUnit(0), _pathfinding(0), _tileEngine(0), _globalShade(0), _side(FACTION_PLAYER), _turn(1),
+    _debugMode(false), _aborted(false), _itemId(0), _objectivesDestroyed(0), _objectivesNeeded(0), _unitsFalling(false),
+	_cheating(false), _tuReserved(BA_NONE), _kneelReserved(false), _depth(0), _ambience(-1)
 {
 	_tileSearch.resize(11*11);
 	for (int i = 0; i < 121; ++i)
@@ -121,6 +125,8 @@ void SavedBattleGame::load(const YAML::Node &node, Ruleset *rule, SavedGame* sav
 	_mapsize_y = node["length"].as<int>(_mapsize_y);
 	_mapsize_z = node["height"].as<int>(_mapsize_z);
 	_missionType = node["missionType"].as<std::string>(_missionType);
+	_alienCustomDeploy = node["alienCustomDeploy"].as<std::string>(_alienCustomDeploy);
+	_alienCustomMission = node["alienCustomMission"].as<std::string>(_alienCustomMission);
 	_globalShade = node["globalshade"].as<int>(_globalShade);
 	_turn = node["turn"].as<int>(_turn);
 	_depth = node["depth"].as<int>(_depth);
@@ -212,7 +218,7 @@ void SavedBattleGame::load(const YAML::Node &node, Ruleset *rule, SavedGame* sav
 			unit = new BattleUnit(rule->getUnit(type), originalFaction, id, rule->getArmor(armor), savedGame->getDifficulty(), _depth);
 		}
 		unit->load(*i);
-		unit->setSpecialWeapon(this, rule);
+		unit->setSpecialWeapon(this);
 		_units.push_back(unit);
 		if (faction == FACTION_PLAYER)
 		{
@@ -349,7 +355,6 @@ void SavedBattleGame::load(const YAML::Node &node, Ruleset *rule, SavedGame* sav
  */
 void SavedBattleGame::loadMapResources(Game *game)
 {
-	ResourcePack *res = game->getResourcePack();
 	for (std::vector<MapDataSet*>::const_iterator i = _mapDataSets.begin(); i != _mapDataSets.end(); ++i)
 	{
 		(*i)->loadData();
@@ -373,7 +378,7 @@ void SavedBattleGame::loadMapResources(Game *game)
 		}
 	}
 
-	initUtilities(res);
+	initUtilities(game->getResourcePack(), game->getRuleset());
 	getTileEngine()->calculateSunShading();
 	getTileEngine()->calculateTerrainLighting();
 	getTileEngine()->calculateUnitLighting();
@@ -524,13 +529,14 @@ void SavedBattleGame::initMap(int mapsize_x, int mapsize_y, int mapsize_z)
 /**
  * Initializes the map utilities.
  * @param res Pointer to resource pack.
+ * @param rule Pointer to the ruleset.
  */
-void SavedBattleGame::initUtilities(ResourcePack *res)
+void SavedBattleGame::initUtilities(ResourcePack *res, Ruleset *rule)
 {
 	delete _pathfinding;
 	delete _tileEngine;
 	_pathfinding = new Pathfinding(this);
-	_tileEngine = new TileEngine(this, res->getVoxelData());
+	_tileEngine = new TileEngine(this, res->getVoxelData(), rule->getMaxViewDistance(), rule->getMaxDarknessToSeeUnits());
 }
 
 /**
@@ -546,9 +552,34 @@ void SavedBattleGame::setMissionType(const std::string &missionType)
  * Gets the mission type.
  * @return The mission type.
  */
-std::string SavedBattleGame::getMissionType() const
+const std::string &SavedBattleGame::getMissionType() const
 {
 	return _missionType;
+}
+
+/**
+ *  Sets the custom alien data.
+ */
+void SavedBattleGame::setAlienCustom(const std::string &deploy, const std::string &mission)
+{
+	_alienCustomDeploy = deploy;
+	_alienCustomMission = mission;
+}
+
+/**
+ *  Gets the custom alien deploy.
+ */
+const std::string &SavedBattleGame::getAlienCustomDeploy() const
+{
+	return _alienCustomDeploy;
+}
+
+/**
+ *  Gets the custom mission definition
+ */
+const std::string &SavedBattleGame::getAlienCustomMission() const
+{
+	return _alienCustomMission;
 }
 
 /**
@@ -813,6 +844,37 @@ UnitFaction SavedBattleGame::getSide() const
 }
 
 /**
+ * Test if weapon is usable by unit.
+ * @param weapon
+ * @param unit
+ * @return Unit can shoot/use it.
+ */
+bool SavedBattleGame::canUseWeapon(const BattleItem* weapon, const BattleUnit* unit) const
+{
+	if (!weapon || !unit) return false;
+
+	const RuleItem *rule = weapon->getRules();
+	volatile bool x = true;
+	if (unit->getOriginalFaction() == FACTION_HOSTILE && getTurn() < rule->getAIUseDelay(getRuleset()))
+	{
+		return false;
+	}
+	if (unit->getOriginalFaction() == FACTION_PLAYER && !_battleState->getGame()->getSavedGame()->isResearched(rule->getRequirements()))
+	{
+		return false;
+	}
+	if (rule->isPsiRequired() && unit->getBaseStats()->psiSkill <= 0)
+	{
+		return false;
+	}
+	if (getDepth() == 0 && rule->isWaterOnly())
+	{
+		return false;
+	}
+	return x;
+}
+
+/**
  * Gets the current turn number.
  * @return The current turn.
  */
@@ -849,7 +911,6 @@ void SavedBattleGame::endTurn()
 			while (_selectedUnit && _selectedUnit->getFaction() != FACTION_PLAYER)
 				selectNextPlayerUnit();
 		}
-
 	}
 	else if (_side == FACTION_NEUTRAL)
 	{
@@ -1080,7 +1141,285 @@ void SavedBattleGame::removeItem(BattleItem *item)
 		}
 	}
 	*/
+}
 
+/**
+ * Adds an item to an XCom soldier (auto-equip).
+ * @param item Pointer to the Item.
+ * @param unit Pointer to the Unit.
+ * @param allowSecondClip allow the unit to take a second clip or not. (only applies to xcom soldiers, aliens are allowed regardless of this flag)
+ * @param allowAutoLoadout allow auto equip of weapons for solders.
+ * @param allowUnloadedWeapons allow equip of weapons without ammo.
+ * @return if the item was placed or not.
+ */
+bool SavedBattleGame::addItem(BattleItem *item, BattleUnit *unit, bool allowSecondClip, bool allowAutoLoadout, bool allowUnloadedWeapons)
+{
+	RuleInventory *rightHand = _rule->getInventory("STR_RIGHT_HAND");
+	RuleInventory *leftHand = _rule->getInventory("STR_LEFT_HAND");
+	bool placed = false;
+	bool loaded = false;
+	BattleItem *rightWeapon = unit->getItem("STR_RIGHT_HAND");
+	BattleItem *leftWeapon = unit->getItem("STR_LEFT_HAND");
+	int weight = 0;
+
+	// tanks and aliens don't care about weight or multiple items,
+	// their loadouts are defined in the rulesets and more or less set in stone.
+	if (unit->getFaction() == FACTION_PLAYER && unit->hasInventory())
+	{
+		weight = unit->getCarriedWeight() + item->getRules()->getWeight();
+		if (item->getAmmoItem() && item->getAmmoItem() != item)
+		{
+			weight += item->getAmmoItem()->getRules()->getWeight();
+		}
+		// allow all weapons to be loaded by avoiding this check,
+		// they'll return false later anyway if the unit has something in his hand.
+		if (item->getRules()->getCompatibleAmmo()->empty())
+		{
+			int tally = 0;
+			for (std::vector<BattleItem*>::iterator i = unit->getInventory()->begin(); i != unit->getInventory()->end(); ++i)
+			{
+				if (item->getRules()->getType() == (*i)->getRules()->getType())
+				{
+					if (allowSecondClip && item->getRules()->getBattleType() == BT_AMMO)
+					{
+						tally++;
+						if (tally == 2)
+						{
+							return false;
+						}
+					}
+					else
+					{
+						// we already have one, thanks.
+						return false;
+					}
+				}
+			}
+		}
+	}
+	// fixed weapon should be always placed in hand slots
+	if (item->getRules()->isFixed())
+	{
+		if (!rightWeapon || !leftWeapon)
+		{
+			item->moveToOwner(unit);
+			item->setSlot(!rightWeapon ? rightHand : leftHand);
+			placed = true;
+			_items.push_back(item);
+			item->setXCOMProperty(unit->getFaction() == FACTION_PLAYER);
+		}
+		return placed;
+	}
+
+	// we equip item only if we have skill to use it.
+	if (unit->getBaseStats()->psiSkill <= 0 && item->getRules()->isPsiRequired())
+	{
+		return false;
+	}
+
+	bool keep = true;
+	switch (item->getRules()->getBattleType())
+	{
+	case BT_FIREARM:
+	case BT_MELEE:
+		if (item->getAmmoItem() || unit->getFaction() != FACTION_PLAYER || !unit->hasInventory() || allowUnloadedWeapons)
+		{
+			loaded = true;
+		}
+
+		if (loaded && (unit->getGeoscapeSoldier() == 0 || allowAutoLoadout))
+		{
+			if (!rightWeapon && unit->getBaseStats()->strength * 0.66 >= weight) // weight is always considered 0 for aliens
+			{
+				item->moveToOwner(unit);
+				item->setSlot(rightHand);
+				placed = true;
+			}
+			if (!placed && !leftWeapon && (unit->getFaction() != FACTION_PLAYER || item->getRules()->isFixed()))
+			{
+				item->moveToOwner(unit);
+				item->setSlot(leftHand);
+				placed = true;
+			}
+		}
+		break;
+	case BT_AMMO:
+		// xcom weapons will already be loaded, aliens and tanks, however, get their ammo added afterwards.
+		// so let's try to load them here.
+		if (rightWeapon && (rightWeapon->getRules()->isFixed() || unit->getFaction() != FACTION_PLAYER || allowUnloadedWeapons) &&
+			!rightWeapon->getRules()->getCompatibleAmmo()->empty() &&
+			!rightWeapon->getAmmoItem() &&
+			rightWeapon->setAmmoItem(item) == 0)
+		{
+			item->setSlot(rightHand);
+			placed = true;
+			break;
+		}
+		if (leftWeapon && (leftWeapon->getRules()->isFixed() || unit->getFaction() != FACTION_PLAYER || allowUnloadedWeapons) &&
+			!leftWeapon->getRules()->getCompatibleAmmo()->empty() &&
+			!leftWeapon->getAmmoItem() &&
+			leftWeapon->setAmmoItem(item) == 0)
+		{
+			item->setSlot(leftHand);
+			placed = true;
+			break;
+		}
+		// don't take ammo for weapons we don't have.
+		keep = (unit->getFaction() != FACTION_PLAYER);
+		if (rightWeapon)
+		{
+			for (std::vector<std::string>::iterator i = rightWeapon->getRules()->getCompatibleAmmo()->begin(); i != rightWeapon->getRules()->getCompatibleAmmo()->end(); ++i)
+			{
+				if (*i == item->getRules()->getType())
+				{
+					keep = true;
+					break;
+				}
+			}
+		}
+		if (leftWeapon)
+		{
+			for (std::vector<std::string>::iterator i = leftWeapon->getRules()->getCompatibleAmmo()->begin(); i != leftWeapon->getRules()->getCompatibleAmmo()->end(); ++i)
+			{
+				if (*i == item->getRules()->getType())
+				{
+					keep = true;
+					break;
+				}
+			}
+		}
+		if (!keep)
+		{
+			break;
+		}
+	default:
+		if (item->getRules()->getBattleType() == BT_PSIAMP && unit->getFaction() == FACTION_HOSTILE)
+		{
+			if (!rightWeapon)
+			{
+				item->moveToOwner(unit);
+				item->setSlot(rightHand);
+				placed = true;
+			}
+			if (!placed && !leftWeapon)
+			{
+				item->moveToOwner(unit);
+				item->setSlot(leftHand);
+				placed = true;
+			}
+		}
+		else if ((unit->getGeoscapeSoldier() == 0 || allowAutoLoadout))
+		{
+			if (unit->getBaseStats()->strength >= weight) // weight is always considered 0 for aliens
+			{
+				for (std::vector<std::string>::const_iterator i = _rule->getInvsList().begin(); i != _rule->getInvsList().end() && !placed; ++i)
+				{
+					RuleInventory *slot = _rule->getInventory(*i);
+					if (slot->getType() == INV_SLOT)
+					{
+						for (std::vector<RuleSlot>::iterator j = slot->getSlots()->begin(); j != slot->getSlots()->end() && !placed; ++j)
+						{
+							if (!Inventory::overlapItems(unit, item, slot, j->x, j->y) && slot->fitItemInSlot(item->getRules(), j->x, j->y))
+							{
+								item->moveToOwner(unit);
+								item->setSlot(slot);
+								item->setSlotX(j->x);
+								item->setSlotY(j->y);
+								placed = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	break;
+	}
+
+	if (placed)
+	{
+		_items.push_back(item);
+	}
+	item->setXCOMProperty(unit->getFaction() == FACTION_PLAYER);
+
+	return placed;
+}
+
+/**
+ * Add buildin items from list to unit.
+ * @param unit Unit that should get weapon.
+ * @param fixed List of buildin items.
+ */
+void SavedBattleGame::addFixedItems(BattleUnit *unit, const std::vector<std::string> &fixed)
+{
+	if (!fixed.empty())
+	{
+		std::vector<RuleItem*> ammo;
+		for (std::vector<std::string>::const_iterator j = fixed.begin(); j != fixed.end(); ++j)
+		{
+			RuleItem *ruleItem = _rule->getItem(*j);
+			if (ruleItem)
+			{
+				if (ruleItem->getBattleType() == BT_AMMO)
+				{
+					ammo.push_back(ruleItem);
+					continue;
+				}
+				BattleItem *item = new BattleItem(ruleItem, getCurrentItemId());
+				if (!addItem(item, unit, false, true, true))
+				{
+					delete item;
+				}
+			}
+		}
+		for (std::vector<RuleItem*>::const_iterator j = ammo.begin(); j != ammo.end(); ++j)
+		{
+			BattleItem *item = new BattleItem(*j, getCurrentItemId());
+			if (!addItem(item, unit, false, true, true))
+			{
+				delete item;
+			}
+		}
+	}
+}
+
+/**
+ * Create all fixed items for new created unit.
+ * @param unit Unit to equip.
+ */
+void SavedBattleGame::initFixedItems(BattleUnit *unit)
+{
+	unit->setSpecialWeapon(this);
+	Unit* rule = unit->getUnitRules();
+	// Built in weapons: the unit has this weapon regardless of loadout or what have you.
+	addFixedItems(unit, unit->getArmor()->getBuiltInWeapons());
+
+	// For aliens and HWP
+	if (rule)
+	{
+		// Built in weapons: the unit has this weapon regardless of loadout or what have you.
+		addFixedItems(unit, rule->getBuiltInWeapons());
+
+		// terrorist alien's equipment is a special case - they are fitted with a weapon which is the alien's name with suffix _WEAPON
+		if (rule->isLivingWeapon())
+		{
+			std::string terroristWeapon = rule->getRace().substr(4);
+			terroristWeapon += "_WEAPON";
+			RuleItem *ruleItem = _rule->getItem(terroristWeapon);
+			if (ruleItem)
+			{
+				BattleItem *item = new BattleItem(ruleItem, getCurrentItemId());
+				if (!addItem(item, unit))
+				{
+					delete item;
+				}
+				else
+				{
+					unit->setTurretType(item->getRules()->getTurretType());
+				}
+			}
+		}
+	}
 }
 
 /**
@@ -1404,6 +1743,12 @@ void SavedBattleGame::prepareNewTurn()
 		getTileEngine()->calculateTerrainLighting();
 	}
 
+	Ruleset *ruleset = getBattleState()->getGame()->getRuleset();
+	for (std::vector<BattleUnit*>::iterator i = getUnits()->begin(); i != getUnits()->end(); ++i)
+	{
+		(*i)->calculateEnviDamage(ruleset);
+	}
+
 	reviveUnconsciousUnits();
 }
 
@@ -1618,19 +1963,46 @@ BattleUnit* SavedBattleGame::getHighestRankedXCom()
 }
 
 /**
- * Gets the morale modifier for
- * - either XCom based on the highest ranked, living XCom unit,
- * - or the unit passed to this function.
- * @param unit Unit.
- * @return The morale modifier.
+ * Gets morale modifier of unit.
+ * @param unit
+ * @return Morale modifier.
  */
-int SavedBattleGame::getMoraleModifier(BattleUnit* unit)
+int SavedBattleGame::getUnitMoraleModifier(BattleUnit* unit)
 {
 	int result = 100;
 
-	if (unit == 0)
+	if (unit->getOriginalFaction() == FACTION_PLAYER)
+	{
+		switch (unit->getRankInt())
+		{
+		case 5:
+			result += 25;
+		case 4:
+			result += 20;
+		case 3:
+			result += 10;
+		case 2:
+			result += 20;
+		default:
+			break;
+		}
+	}
+
+	return result;
+}
+
+/**
+ * Gets the morale modifier for XCom based on the highest ranked, living XCom unit,
+ * or Alien modifier based on they number.
+ * @param hostile modifier for player or hostile?
+ * @return The morale modifier.
+ */
+int SavedBattleGame::getFactionMoraleModifier(bool player)
+{
+	if (player)
 	{
 		BattleUnit *leader = getHighestRankedXCom();
+		int result = 100;
 		if (leader)
 		{
 			switch (leader->getRankInt())
@@ -1647,24 +2019,20 @@ int SavedBattleGame::getMoraleModifier(BattleUnit* unit)
 				break;
 			}
 		}
+		return result;
 	}
-	else if (unit->getFaction() == FACTION_PLAYER)
+	else
 	{
-		switch (unit->getRankInt())
+		int number = 0;
+		for (std::vector<BattleUnit*>::iterator j = _units.begin(); j != _units.end(); ++j)
 		{
-		case 5:
-			result += 25;
-		case 4:
-			result += 20;
-		case 3:
-			result += 10;
-		case 2:
-			result += 20;
-		default:
-			break;
+			if ((*j)->getOriginalFaction() == FACTION_HOSTILE && !(*j)->isOut())
+			{
+				++number;
+			}
 		}
+		return std::max(6 * number, 100);
 	}
-	return result;
 }
 
 /**
@@ -1727,7 +2095,7 @@ void SavedBattleGame::resetTiles()
 /**
  * @return the tilesearch vector for use in AI functions.
  */
-const std::vector<Position> SavedBattleGame::getTileSearch()
+const std::vector<Position> &SavedBattleGame::getTileSearch()
 {
 	return _tileSearch;
 }
@@ -1875,6 +2243,15 @@ int SavedBattleGame::getAmbientSound() const
 }
 
 /**
+ * get ruleset.
+ * @return the ruleset of game.
+ */
+const Ruleset *SavedBattleGame::getRuleset() const
+{
+	return _rule;
+}
+
+/**
  * get the list of items we're guaranteed to take with us (ie: items that were in the skyranger)
  * @return the list of items we're garaunteed.
  */
@@ -1896,7 +2273,7 @@ std::vector<BattleItem*> *SavedBattleGame::getConditionalRecoveredItems()
  * Get the music track for the current battle.
  * @return the name of the music track.
  */
-std::string &SavedBattleGame::getMusic()
+const std::string &SavedBattleGame::getMusic() const
 {
 	return _music;
 }
@@ -1905,7 +2282,7 @@ std::string &SavedBattleGame::getMusic()
  * Set the music track for this battle.
  * @param track the track name.
  */
-void SavedBattleGame::setMusic(std::string track)
+void SavedBattleGame::setMusic(const std::string &track)
 {
 	_music = track;
 }

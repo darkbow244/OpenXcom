@@ -30,6 +30,77 @@ class RuleTerrain;
 class Ruleset;
 
 /**
+ * Battle statistic of craft type and bonus form craft weapons.
+ */
+struct RuleCraftStats
+{
+	int fuelMax, damageMax, speedMax, accel, radarRange, radarChance, sightRange, hitBonus, avoidBonus, powerBonus, armor;
+
+	/// Default constructor.
+	RuleCraftStats() :
+		fuelMax(0), damageMax(0), speedMax(0), accel(0),
+		radarRange(0), radarChance(0), sightRange(0),
+		hitBonus(0), avoidBonus(0), powerBonus(0), armor(0)
+	{
+
+	}
+	/// Add different stats.
+	RuleCraftStats& operator+=(const RuleCraftStats& r)
+	{
+		fuelMax += r.fuelMax;
+		damageMax += r.damageMax;
+		speedMax += r.speedMax;
+		accel += r.accel;
+		radarRange += r.radarRange;
+		radarChance += r.radarChance;
+		sightRange += r.sightRange;
+		hitBonus += r.hitBonus;
+		avoidBonus += r.avoidBonus;
+		powerBonus += r.powerBonus;
+		armor += r.armor;
+		return *this;
+	}
+	/// Subtract different stats.
+	RuleCraftStats& operator-=(const RuleCraftStats& r)
+	{
+		fuelMax -= r.fuelMax;
+		damageMax -= r.damageMax;
+		speedMax -= r.speedMax;
+		accel -= r.accel;
+		radarRange -= r.radarRange;
+		radarChance -= r.radarChance;
+		sightRange -= r.sightRange;
+		hitBonus -= r.hitBonus;
+		avoidBonus -= r.avoidBonus;
+		powerBonus -= r.powerBonus;
+		armor -= r.armor;
+		return *this;
+	}
+	/// Gets negative values of stats.
+	RuleCraftStats operator-() const
+	{
+		RuleCraftStats s;
+		s -= *this;
+		return s;
+	}
+	/// Loads stats form YAML.
+	void load(const YAML::Node &node)
+	{
+		fuelMax = node["fuelMax"].as<int>(fuelMax);
+		damageMax = node["damageMax"].as<int>(damageMax);
+		speedMax = node["speedMax"].as<int>(speedMax);
+		accel = node["accel"].as<int>(accel);
+		radarRange = node["radarRange"].as<int>(radarRange);
+		radarChance = node["radarChance"].as<int>(radarChance);
+		sightRange = node["sightRange"].as<int>(sightRange);
+		hitBonus = node["hitBonus"].as<int>(hitBonus);
+		avoidBonus = node["avoidBonus"].as<int>(avoidBonus);
+		powerBonus = node["powerBonus"].as<int>(powerBonus);
+		armor = node["armor"].as<int>(armor);
+	}
+};
+
+/**
  * Represents a specific type of craft.
  * Contains constant info about a craft like
  * costs, speed, capacities, consumptions, etc.
@@ -37,17 +108,26 @@ class Ruleset;
  */
 class RuleCraft
 {
+public:
+	/// Maximum number of weapon slots on craft.
+	static const int WeaponMax = 4;
+	/// Maximum of diffrernt types in one weapon slot.
+	static const int WeaponTypeMax = 4;
+
 private:
 	std::string _type;
 	std::vector<std::string> _requires;
 	int _sprite, _marker;
-	int _fuelMax, _damageMax, _speedMax, _accel, _weapons, _soldiers, _vehicles, _costBuy, _costRent, _costSell;
+	int _weapons, _soldiers, _vehicles, _costBuy, _costRent, _costSell;
+	char _weaponTypes[WeaponMax][WeaponTypeMax];
 	std::string _refuelItem;
-	int _repairRate, _refuelRate, _radarRange, _sightRange, _transferTime, _score;
+	std::string _weaponStrings[WeaponMax];
+	int _repairRate, _refuelRate, _transferTime, _score;
 	RuleTerrain *_battlescapeTerrainData;
 	bool _spacecraft;
 	int _listOrder, _maxItems, _maxDepth;
 	std::vector<std::vector <int> > _deployment;
+	RuleCraftStats _stats;
 public:
 	/// Creates a blank craft ruleset.
 	RuleCraft(const std::string &type);
@@ -56,7 +136,7 @@ public:
 	/// Loads craft data from YAML.
 	void load(const YAML::Node& node, Ruleset *ruleset, int modIndex, int nextCraftIndex);
 	/// Gets the craft's type.
-	std::string getType() const;
+	const std::string &getType() const;
 	/// Gets the craft's requirements.
 	const std::vector<std::string> &getRequirements() const;
 	/// Gets the craft's sprite.
@@ -72,7 +152,7 @@ public:
 	/// Gets the craft's acceleration.
 	int getAcceleration() const;
 	/// Gets the craft's weapon capacity.
-	unsigned int getWeapons() const;
+	int getWeapons() const;
 	/// Gets the craft's soldier capacity.
 	int getSoldiers() const;
 	/// Gets the craft's vehicle capacity.
@@ -84,13 +164,15 @@ public:
 	/// Gets the craft's value.
 	int getSellCost() const;
 	/// Gets the craft's refuel item.
-	std::string getRefuelItem() const;
+	const std::string &getRefuelItem() const;
 	/// Gets the craft's repair rate.
 	int getRepairRate() const;
 	/// Gets the craft's refuel rate.
 	int getRefuelRate() const;
 	/// Gets the craft's radar range.
 	int getRadarRange() const;
+	/// Gets the craft's radar chance.
+	int getRadarChance() const;
 	/// Gets the craft's sight range.
 	int getSightRange() const;
 	/// Gets the craft's transfer time.
@@ -107,6 +189,12 @@ public:
 	std::vector<std::vector<int> > &getDeployment();
 	/// Gets the item limit for this craft.
 	int getMaxItems() const;
+	/// Test for possibility of usage of weapon type in weapon slot.
+	bool isValidWeaponSlot(int slot, int weaponType) const;
+	/// Get description string of weapon slot.
+	const std::string &getWeaponSlotString(int slot) const;
+	/// Get basic statistic of craft.
+	const RuleCraftStats& getStats() const;
 	/// checks how deep this craft can go.
 	int getMaxDepth() const;
 };

@@ -122,50 +122,71 @@ struct ColorReplace
 	static const Uint8 ColorGroup = 15<<4;
 	static const Uint8 ColorShade = 15;
 
-	static inline bool loop(Uint8& dest, const Uint8& src, const std::pair<Uint8, Uint8>& face_color)
+	static inline void loop(Uint8& dest, const Uint8& src, const Uint8& override, int burn)
 	{
-		if ((src & ColorGroup) == face_color.first)
+		const Uint8 temp = (src & ColorShade) + override;
+		if (burn)
 		{
-			dest = face_color.second + (src & ColorShade);
-			return true;
+			const Uint8 shade = (temp & ColorShade) + burn;
+			if (shade > 26)
+			{
+				dest = 0;
+			}
+			else if (shade > 15)
+			{
+				dest = ColorShade;
+			}
+			else
+			{
+				dest = (temp & ColorGroup) + shade;
+			}
 		}
 		else
 		{
-			return false;
+			dest = temp;
 		}
 	}
 
-	static inline void func(Uint8& dest, const Uint8& src, const std::pair<Uint8, Uint8> *color, int size, int)
+	static inline void func(Uint8& dest, const Uint8& src, const std::pair<Uint8, Uint8> *color, int size, int burn)
 	{
 		if (src)
 		{
 			for (int i = 0; i < size; ++i)
 			{
-				if (loop(dest, src, color[i]))
+				if ((src & ColorGroup) == color[i].first)
 				{
+					loop(dest, src, color[i].second, burn);
 					return;
 				}
 			}
-			dest = src;
+			loop(dest, 0, src, burn);
 		}
 	}
 };
 
-}
+} //namespace
 
 void UnitSprite::drawRecolored(Surface *src)
 {
-	if (_colorSize)
+	int burn = 0;
+	int overkill = _unit->getOverKillDamage();
+	int maxHp = _unit->getBaseStats()->health;
+	if (overkill)
 	{
-		lock();
-		ShaderDraw<ColorReplace>(ShaderSurface(this), ShaderSurface(src), ShaderScalar(_color), ShaderScalar(_colorSize));
-		unlock();
+		if (overkill > maxHp)
+		{
+			burn = 16 * (_unit->getFallingPhase() + 1) / _unit->getArmor()->getDeathFrames();
+		}
+		else
+		{
+			burn = 16 * overkill * (_unit->getFallingPhase() + 1) / _unit->getArmor()->getDeathFrames() / maxHp;
+		}
 	}
-	else
-	{
-		src->blit(this);
-	}
+	lock();
+	ShaderDraw<ColorReplace>(ShaderSurface(this), ShaderSurface(src), ShaderScalar(_color), ShaderScalar(_colorSize), ShaderScalar(burn));
+	unlock();
 }
+
 
 /**
  * Sets the animation frame for animated units.

@@ -458,7 +458,7 @@ int Base::getAvailableSoldiers(bool checkCombatReadiness) const
 		{
 			total++;
 		}
-		else if (checkCombatReadiness && (((*i)->getCraft() != 0 && (*i)->getCraft()->getStatus() != "STR_OUT") || 
+		else if (checkCombatReadiness && (((*i)->getCraft() != 0 && (*i)->getCraft()->getStatus() != "STR_OUT") ||
 			((*i)->getCraft() == 0 && (*i)->getWoundRecovery() == 0)))
 		{
 			total++;
@@ -1073,7 +1073,7 @@ bool Base::getHyperDetection() const
 		if ((*i)->getRules()->isHyperwave() && (*i)->getBuildTime() == 0)
 		{
 			return true;
-		}		
+		}
 	}
 	return false;
 }
@@ -1115,7 +1115,43 @@ int Base::getUsedPsiLabs() const
 }
 
 /**
- * Returns the total amount of used 
+ * Returns the total amount of training space
+ * available in the base.
+ * @return Training space.
+ */
+int Base::getAvailableTraining() const
+{
+	int total = 0;
+	for (std::vector<BaseFacility*>::const_iterator i = _facilities.begin(); i != _facilities.end(); ++i)
+	{
+		if ((*i)->getBuildTime() == 0)
+		{
+			total += (*i)->getRules()->getTrainingFacilities();
+		}
+	}
+	return total;
+}
+
+/**
+ * Returns the total amount of used training space
+ * available in the base.
+ * @return used training space.
+ */
+int Base::getUsedTraining() const
+{
+	int total = 0;
+	for (std::vector<Soldier*>::const_iterator s = _soldiers.begin(); s != _soldiers.end(); ++s)
+	{
+		if ((*s)->isInTraining())
+		{
+			total ++;
+		}
+	}
+	return total;
+}
+
+/**
+ * Returns the total amount of used
  * Containment Space in the base.
  * @return Containment Lab space.
  */
@@ -1674,6 +1710,66 @@ void Base::cleanupDefenses(bool reclaimItems)
 		delete *i;
 		i = _vehicles.erase(i);
 	}
+}
+
+/**
+ * Return list of all provided functionality in base.
+ * @param skip Skip functions provide by this facility .
+ * @return List of custom IDs.
+ */
+std::set<std::string> Base::getProvidedBaseFunc(const BaseFacility *skip) const
+{
+	std::set<std::string> ret;
+
+	for (std::vector<BaseFacility*>::const_iterator bf = _facilities.begin(); bf != _facilities.end(); ++bf)
+	{
+		if (*bf == skip)
+		{
+			continue;
+		}
+		if ((*bf)->getBuildTime() > 0)
+		{
+			continue;
+		}
+		const std::vector<std::string> &prov = (*bf)->getRules()->getProvidedBaseFunc();
+		ret.insert(prov.begin(), prov.end());
+	}
+
+	return ret;
+}
+
+/**
+ * Return list of all required functionality in base.
+ * @param skip Skip functions require by this facility.
+ * @return List of custom IDs.
+ */
+std::set<std::string> Base::getRequireBaseFunc(const BaseFacility *skip) const
+{
+	std::set<std::string> ret;
+
+	for (std::vector<BaseFacility*>::const_iterator bf = _facilities.begin(); bf != _facilities.end(); ++bf)
+	{
+		if (*bf == skip)
+		{
+			continue;
+		}
+		const std::vector<std::string> &prov = (*bf)->getRules()->getRequireBaseFunc();
+		ret.insert(prov.begin(), prov.end());
+	}
+
+	for (std::vector<ResearchProject*>::const_iterator res = _research.begin(); res != _research.end(); ++res)
+	{
+		const std::vector<std::string> &req = (*res)->getRules()->getRequireBaseFunc();
+		ret.insert(req.begin(), req.end());
+	}
+
+	for (std::vector<Production*>::const_iterator prod = _productions.begin(); prod != _productions.end(); ++prod)
+	{
+		const std::vector<std::string> &req = (*prod)->getRules()->getRequireBaseFunc();
+		ret.insert(req.begin(), req.end());
+	}
+
+	return ret;
 }
 
 }

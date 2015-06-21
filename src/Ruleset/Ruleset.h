@@ -24,6 +24,7 @@
 #include <string>
 #include <yaml-cpp/yaml.h>
 #include "../Savegame/GameTime.h"
+#include "RuleDamageType.h"
 #include "../Ruleset/RuleAlienMission.h"
 #include <SDL.h>
 
@@ -39,6 +40,7 @@ class RuleBaseFacility;
 class RuleCraft;
 class RuleCraftWeapon;
 class RuleItem;
+class RuleDamageType;
 class RuleUfo;
 class RuleTerrain;
 class MapDataSet;
@@ -107,9 +109,12 @@ protected:
 	std::vector<std::pair<std::string, ExtraSounds *> > _extraSounds;
 	std::map<std::string, ExtraStrings *> _extraStrings;
 	std::vector<StatString*> _statStrings;
+	std::vector<RuleDamageType*> _damageTypes;
 	std::map<std::string, RuleMusic *> _musics;
 	RuleGlobe *_globe;
-	int _costSoldier, _costEngineer, _costScientist, _timePersonnel, _initialFunding, _turnAIUseGrenade, _turnAIUseBlaster;
+	int _maxViewDistance, _maxDarknessToSeeUnits;
+	int _costSoldier, _costEngineer, _costScientist, _timePersonnel, _initialFunding;
+	int _aiUseDelayBlaster, _aiUseDelayFirearm, _aiUseDelayGrenade, _aiUseDelayMelee, _aiUseDelayPsionic;
 	std::string _alienFuel;
 	std::string _fontName;
 	YAML::Node _startingBase;
@@ -198,6 +203,12 @@ public:
 	std::map<std::string, RuleInventory*> *getInventories();
 	/// Gets the ruleset for a specific inventory.
 	RuleInventory *getInventory(const std::string &id) const;
+	/// Gets max view distance in BattleScape.
+	inline int getMaxViewDistance() const {return _maxViewDistance;}
+	/// Gets threshold of darkness for LoS calculation.
+	inline int getMaxDarknessToSeeUnits() const {return _maxDarknessToSeeUnits;}
+	/// Get basic damage type
+	const RuleDamageType *getDamageType(ItemDamageType type) const;
 	/// Gets the cost of a soldier.
 	int getSoldierCost() const;
 	/// Gets the cost of an engineer.
@@ -206,6 +217,16 @@ public:
 	int getScientistCost() const;
 	/// Gets the transfer time of personnel.
 	int getPersonnelTime() const;
+	/// Gets first turn when AI can use Blaster launcher.
+	int getAIUseDelayBlaster() const  {return _aiUseDelayBlaster;}
+	/// Gets first turn when AI can use firearms.
+	int getAIUseDelayFirearm() const  {return _aiUseDelayFirearm;}
+	/// Gets first turn when AI can use grenades.
+	int getAIUseDelayGrenade() const  {return _aiUseDelayGrenade;}
+	/// Gets first turn when AI can use martial arts.
+	int getAIUseDelayMelee() const    {return _aiUseDelayMelee;}
+	/// Gets first turn when AI can use psionic abilities.
+	int getAIUseDelayPsionic() const  {return _aiUseDelayPsionic;}
 	/// Gets the ruleset for a specific research project.
 	RuleResearch *getResearch (const std::string &id) const;
 	/// Gets the list of all research projects.
@@ -239,7 +260,7 @@ public:
 	/// Gets the list of external Strings.
 	std::map<std::string, ExtraStrings *> getExtraStrings() const;
 	/// Gets the list of StatStrings.
-	std::vector<StatString *> getStatStrings() const;    
+    std::vector<StatString *> getStatStrings() const;
 	/// Sorts all our lists according to their weight.
 	void sortLists();
 	/// Gets the research-requirements for Psi-Lab (it's a cache for psiStrengthEval)
@@ -252,10 +273,6 @@ public:
 	const std::string getAlienFuel() const;
 	/// Gets the font name.
 	const std::string getFontName() const;
-	/// Gets first turn when AI can use grenade.
-	int getTurnAIUseGrenade() const {return _turnAIUseGrenade;}
-	/// Gets first turn when AI can use Blaster launcher.
-	int getTurnAIUseBlaster() const {return _turnAIUseBlaster;}
 	/// Gets the minimum radar's range.
 	int getMinRadarRange() const;
 	/// Gets information on an interface element.
@@ -264,7 +281,7 @@ public:
 	RuleGlobe *getGlobe() const;
 	/// Gets the list of selective files for insertion into our cat files.
 	const std::map<std::string, SoundDefinition *> *getSoundDefinitions() const;
-	/// Gets the list of transparency colors, 
+	/// Gets the list of transparency colors,
 	const std::vector<SDL_Color> *getTransparencies() const;
 	const std::vector<MapScript*> *getMapScript(std::string id) const;
 	/// Gets the list videos for intro/outro etc.

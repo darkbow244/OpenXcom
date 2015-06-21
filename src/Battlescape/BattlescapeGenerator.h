@@ -67,6 +67,7 @@ private:
 	int _unitSequence;
 	Tile *_craftInventoryTile;
 	std::string _alienRace;
+	const AlienDeployment *_alienCustomDeploy, *_alienCustomMission;
 	int _alienItemLevel;
 	bool _allowAutoLoadout, _baseInventory, _generateFuel, _craftDeployed;
 	int _craftZ;
@@ -91,8 +92,6 @@ private:
 	BattleUnit *addCivilian(Unit *rules);
 	/// Places an item on a soldier based on equipment layout.
 	bool placeItemByLayout(BattleItem *item);
-	/// Adds an item to a unit and the game.
-	bool addItem(BattleItem *item, BattleUnit *unit, bool allowSecondClip = false);
 	/// Loads an XCom MAP file.
 	int loadMAP(MapBlock *mapblock, int xoff, int yoff, RuleTerrain *terrain, int objectIDOffset, bool discovered = false, bool craft = false);
 	/// Loads an XCom RMP file.
@@ -106,7 +105,7 @@ private:
 	/// Runs necessary checks before physically setting the position.
 	bool canPlaceXCOMUnit(Tile *tile);
 	/// Deploys the aliens, according to the alien deployment rules.
-	void deployAliens(AlienDeployment *deployment);
+	void deployAliens(const AlienDeployment *deployment);
 	/// Spawns civilians on a terror mission.
 	void deployCivilians(int max);
 	/// Finds a spot near a friend to spawn at.
@@ -150,6 +149,8 @@ public:
 	void setAlienRace(const std::string &alienRace);
 	/// Sets the alien item level.
 	void setAlienItemlevel(int alienItemLevel);
+	/// Sets the alien weapon deploy items.
+	void setAlienCustomDeploy(const AlienDeployment *alienCustomDeploy = 0, const AlienDeployment* alienCustomBase = 0);
 	/// Sets the XCom base.
 	void setBase(Base *base);
 	/// Sets the mission site.

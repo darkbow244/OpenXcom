@@ -53,7 +53,7 @@ PsiAttackBState::~PsiAttackBState()
  * Initializes the sequence:
  * - checks if the action is valid,
  * - adds a psi attack animation to the world.
- * - from that point on, the explode state takes precedence.
+ * - from that point on, the explode state takes precedence (and perform psi attack).
  * - when that state pops, we'll do our first think()
  */
 void PsiAttackBState::init()
@@ -62,7 +62,12 @@ void PsiAttackBState::init()
 	_initialized = true;
 
 	_item = _action.weapon;
-	_unit = _action.actor;
+
+	if (!_item) // can't make a psi attack without a weapon
+	{
+		_parent->popState();
+		return;
+	}
 
 	if (!_parent->getSave()->getTile(_action.target)) // invalid target position
 	{
@@ -70,9 +75,12 @@ void PsiAttackBState::init()
 		return;
 	}
 
-	if (_unit->getTimeUnits() < _action.TU) // not enough time units
+	_unit = _action.actor;
+
+	if (_parent->getTileEngine()->distance(_action.actor->getPosition(), _action.target) > _action.weapon->getRules()->getMaxRange())
 	{
-		_action.result = "STR_NOT_ENOUGH_TIME_UNITS";
+		// out of range
+		_action.result = "STR_OUT_OF_RANGE";
 		_parent->popState();
 		return;
 	}
@@ -85,32 +93,24 @@ void PsiAttackBState::init()
 		return;
 	}
 
-	if (!_item) // can't make a psi attack without a weapon
+	if (!_action.spendTU(&_action.result)) // not enough time units
 	{
 		_parent->popState();
 		return;
 	}
-	else if (_item->getRules()->getHitSound() != -1)
-	{
-		_parent->getResourcePack()->getSoundByDepth(_parent->getDepth(), _item->getRules()->getHitSound())->play(-1, _parent->getMap()->getSoundAngle(_action.target));
-	}
 
-	// make a cosmetic explosion
 	int height = _target->getFloatHeight() + (_target->getHeight() / 2) - _parent->getSave()->getTile(_action.target)->getTerrainLevel();
-	Position voxel = _action.target * Position(16, 16, 24) + Position(8, 8, height);
-	_parent->statePushFront(new ExplosionBState(_parent, voxel, _item, _unit, 0, false, true));
+	Position voxel = _action.target.toVexel() + Position(8, 8, height);
+	_parent->statePushFront(new ExplosionBState(_parent, voxel, _action.type, _item, _unit));
 }
 
 
 /**
  * After the explosion animation is done doing its thing,
- * make the actual psi attack, and restore the camera/cursor.
+ * restore the camera/cursor.
  */
 void PsiAttackBState::think()
 {
-	//make the psi attack.
-	psiAttack();
-
 	if (_action.cameraPosition.z != -1)
 	{
 		_parent->getMap()->getCamera()->setMapOffset(_action.cameraPosition);
@@ -121,82 +121,6 @@ void PsiAttackBState::think()
 		_parent->setupCursor();
 	}
 	_parent->popState();
-}
-
-/**
- * Attempts a panic or mind control action.
- */
-void PsiAttackBState::psiAttack()
-{
-	double attackStrength = _unit->getBaseStats()->psiStrength * _unit->getBaseStats()->psiSkill / 50.0;
-	double defenseStrength = _target->getBaseStats()->psiStrength
-		+ ((_target->getBaseStats()->psiSkill > 0) ? 10.0 + _target->getBaseStats()->psiSkill / 5.0 : 10.0);
-	double dist = _parent->getTileEngine()->distance(_unit->getPosition(), _action.target);
-	attackStrength -= dist;
-	attackStrength += RNG::generate(0,55);
-
-	if (_action.type == BA_MINDCONTROL)
-	{
-		defenseStrength += 20;
-	}
-
-	_unit->addPsiSkillExp();
-	if (Options::allowPsiStrengthImprovement) _target->addPsiStrengthExp();
-	if (attackStrength > defenseStrength)
-	{
-		Game *game = _parent->getSave()->getBattleState()->getGame();
-		_action.actor->addPsiSkillExp();
-		_action.actor->addPsiSkillExp();
-		if (_action.type == BA_PANIC)
-		{
-			int moraleLoss = (110-_target->getBaseStats()->bravery);
-			if (moraleLoss > 0)
-			_target->moraleChange(-moraleLoss);
-			if (_parent->getSave()->getSide() == FACTION_PLAYER)
-			{
-				game->pushState(new InfoboxState(game->getLanguage()->getString("STR_MORALE_ATTACK_SUCCESSFUL")));
-			}
-		}
-		else if (_action.type == BA_MINDCONTROL)
-		{
-			_target->convertToFaction(_unit->getFaction());
-			_parent->getTileEngine()->calculateFOV(_target->getPosition());
-			_parent->getTileEngine()->calculateUnitLighting();
-			_target->setTimeUnits(_target->getBaseStats()->tu);
-			_target->allowReselect();
-			_target->abortTurn(); // resets unit status to STANDING
-			// if all units from either faction are mind controlled - auto-end the mission.
-			if (_parent->getSave()->getSide() == FACTION_PLAYER)
-			{
-				if (Options::battleAutoEnd && Options::allowPsionicCapture)
-				{
-					int liveAliens = 0;
-					int liveSoldiers = 0;
-					_parent->tallyUnits(liveAliens, liveSoldiers);
-					if (liveAliens == 0 || liveSoldiers == 0)
-					{
-						_parent->getSave()->setSelectedUnit(0);
-						_parent->cancelCurrentAction(true);
-						_parent->requestEndTurn();
-					}
-				}
-				game->pushState(new InfoboxState(game->getLanguage()->getString("STR_MIND_CONTROL_SUCCESSFUL")));
-				_parent->getSave()->getBattleState()->updateSoldierInfo();
-			}
-			else
-			{
-				// show a little infobox with the name of the unit and "... is under alien control"
-				game->pushState(new InfoboxState(game->getLanguage()->getString("STR_IS_UNDER_ALIEN_CONTROL", _target->getGender()).arg(_target->getName(game->getLanguage()))));
-			}
-		}
-	}
-	else
-	{
-		if (Options::allowPsiStrengthImprovement)
-		{
-			_target->addPsiStrengthExp();
-		}
-	}
 }
 
 }

@@ -42,6 +42,7 @@
 #include "../Engine/Options.h"
 #include "../Ruleset/RuleAlienMission.h"
 #include "../Ruleset/AlienDeployment.h"
+#include "../Ruleset/AlienRace.h"
 
 namespace OpenXcom
 {
@@ -130,7 +131,7 @@ void ConfirmLandingState::btnYesClick(Action *)
 	MissionSite* m = dynamic_cast<MissionSite*>(_craft->getDestination());
 	AlienBase* b = dynamic_cast<AlienBase*>(_craft->getDestination());
 
-	SavedBattleGame *bgame = new SavedBattleGame();
+	SavedBattleGame *bgame = new SavedBattleGame(_game->getRuleset());
 	_game->getSavedGame()->setBattleGame(bgame);
 	BattlescapeGenerator bgen(_game);
 	bgen.setWorldTexture(_texture);
@@ -143,19 +144,23 @@ void ConfirmLandingState::btnYesClick(Action *)
 		else
 			bgame->setMissionType("STR_UFO_GROUND_ASSAULT");
 		bgen.setUfo(u);
+		bgen.setAlienCustomDeploy(_game->getRuleset()->getDeployment(u->getCraftStats().craftCustomDeploy));
 		bgen.setAlienRace(u->getAlienRace());
 	}
 	else if (m != 0)
 	{
 		bgame->setMissionType(m->getDeployment()->getType());
 		bgen.setMissionSite(m);
+		bgen.setAlienCustomDeploy(m->getMissionCustomDeploy());
 		bgen.setAlienRace(m->getAlienRace());
 	}
 	else if (b != 0)
 	{
+		AlienRace *race = _game->getRuleset()->getAlienRace(b->getAlienRace());
 		bgame->setMissionType("STR_ALIEN_BASE_ASSAULT");
 		bgen.setAlienBase(b);
 		bgen.setAlienRace(b->getAlienRace());
+		bgen.setAlienCustomDeploy(_game->getRuleset()->getDeployment(race->getBaseCustomDeploy()), _game->getRuleset()->getDeployment(race->getBaseCustomMission()));
 		bgen.setWorldTexture(0);
 	}
 	else

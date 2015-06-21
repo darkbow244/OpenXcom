@@ -45,6 +45,7 @@ private:
 	Position _origin, _targetVoxel;
 	std::vector<Position> _trajectory;
 	size_t _position;
+	float _distance;
 	Surface *_sprite;
 	int _speed;
 	int _bulletSprite;
@@ -74,9 +75,11 @@ public:
 	/// Skips the bullet flight.
 	void skipTrajectory();
 	/// Gets the Position of origin for the projectile.
-	Position getOrigin();
+	Position getOrigin() const;
 	/// Gets the targetted tile for the projectile.
-	Position getTarget();
+	Position getTarget() const;
+	/// Gets the distance that projectile traveled.
+	float getDistance() const;
 	/// Is this projectile being drawn back-to-front or front-to-back?
 	bool isReversed() const;
 	/// adds a cloud of particles at the projectile's location

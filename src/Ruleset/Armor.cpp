@@ -29,13 +29,18 @@ namespace OpenXcom
  */
 Armor::Armor(const std::string &type) :
 	_type(type), _frontArmor(0), _sideArmor(0), _rearArmor(0), _underArmor(0),
-	_drawingRoutine(0), _movementType(MT_WALK), _size(1), _weight(0),
-	_deathFrames(3), _constantAnimation(false), _canHoldWeapon(false), _hasInventory(true),
-	_forcedTorso(TORSO_USE_GENDER),
-	_faceColorGroup(0), _hairColorGroup(0), _utileColorGroup(0), _rankColorGroup(0)
+	_drawingRoutine(0), _movementType(MT_WALK), _size(1), _weight(0), _visibilityAtDark(0), _regeneration(0),
+	_deathFrames(3), _constantAnimation(false), _canHoldWeapon(false), _hasInventory(true), _forcedTorso(TORSO_USE_GENDER),
+	_faceColorGroup(0), _hairColorGroup(0), _utileColorGroup(0), _rankColorGroup(0),
+	_fearImmune(-1), _bleedImmune(-1), _painImmune(-1), _zombiImmune(-1), _overKill(0.5f), _meleeDodgeBackPenalty(0)
 {
 	for (int i=0; i < DAMAGE_TYPES; i++)
 		_damageModifier[i] = 1.0f;
+
+	_psiDefence.setPsiDefense();
+	_timeRecovery.setTimeRecovery();
+	_energyRecovery.setEnergyRecovery();
+	_stunRecovery.setStunRecovery();
 }
 
 /**
@@ -67,6 +72,7 @@ void Armor::load(const YAML::Node &node)
 		_corpseBattle = node["corpseBattle"].as< std::vector<std::string> >();
 		_corpseGeo = _corpseBattle[0];
 	}
+	_builtInWeapons = node["builtInWeapons"].as<std::vector<std::string> >(_builtInWeapons);
 	_corpseGeo = node["corpseGeo"].as<std::string>(_corpseGeo);
 	_storeItem = node["storeItem"].as<std::string>(_storeItem);
 	_specWeapon = node["specialWeapon"].as<std::string>(_specWeapon);
@@ -78,6 +84,8 @@ void Armor::load(const YAML::Node &node)
 	_movementType = (MovementType)node["movementType"].as<int>(_movementType);
 	_size = node["size"].as<int>(_size);
 	_weight = node["weight"].as<int>(_weight);
+	_visibilityAtDark = node["visibilityAtDark"].as<int>(_visibilityAtDark);
+	_regeneration = node["regeneration"].as<int>(_regeneration);
 	_stats.merge(node["stats"].as<UnitStats>(_stats));
 	if (const YAML::Node &dmg = node["damageModifier"])
 	{
@@ -109,7 +117,43 @@ void Armor::load(const YAML::Node &node)
 	{
 		_canHoldWeapon = false;
 	}
+	if (_size != 1)
+	{
+		_fearImmune = 1;
+		_bleedImmune = 1;
+		_painImmune = 1;
+		_zombiImmune = 1;
+	}
+	if (node["fearImmune"])
+	{
+		_fearImmune = node["fearImmune"].as<bool>();
+	}
+	if (node["bleedImmune"])
+	{
+		_bleedImmune = node["bleedImmune"].as<bool>();
+	}
+	if (node["painImmune"])
+	{
+		_painImmune = node["painImmune"].as<bool>();
+	}
+	if (node["zombiImmune"] && _size == 1) //Big units are always immune, because game we don't have 2x2 unit zombie
+	{
+		_zombiImmune = node["zombiImmune"].as<bool>();
+	}
+	_overKill = node["overKill"].as<float>(_overKill);
+	_meleeDodgeBackPenalty = node["meleeDodgeBackPenalty"].as<float>(_meleeDodgeBackPenalty);
 
+	_psiDefence.load(node["psiDefence"]);
+	_meleeDodge.load(node["meleeDodge"]);
+
+	if (const YAML::Node &rec = node["recovery"])
+	{
+		_timeRecovery.load(rec["time"]);
+		_energyRecovery.load(rec["energy"]);
+		_moraleRecovery.load(rec["morale"]);
+		_healthRecovery.load(rec["health"]);
+		_stunRecovery.load(rec["stun"]);
+	}
 	_faceColorGroup = node["spriteFaceGroup"].as<int>(_faceColorGroup);
 	_hairColorGroup = node["spriteHairGroup"].as<int>(_hairColorGroup);
 	_rankColorGroup = node["spriteRankGroup"].as<int>(_rankColorGroup);
@@ -182,6 +226,24 @@ int Armor::getRearArmor() const
 int Armor::getUnderArmor() const
 {
 	return _underArmor;
+}
+
+/**
+ * Gets the armor level of part.
+ * @param side Part of armor.
+ * @return The armor level of part.
+ */
+int Armor::getArmor(UnitSide side) const
+{
+	switch (side)
+	{
+	case SIDE_FRONT:	return _frontArmor;
+	case SIDE_LEFT:		return _sideArmor;
+	case SIDE_RIGHT:	return _sideArmor;
+	case SIDE_REAR:		return _rearArmor;
+	case SIDE_UNDER:	return _underArmor;
+	default: return 0;
+	}
 }
 
 
@@ -281,6 +343,70 @@ const UnitStats *Armor::getStats() const
 }
 
 /**
+ * Gets unit psi defense.
+ */
+int Armor::getPsiDefence(const BattleUnit* unit) const
+{
+	return _psiDefence.getBonus(unit);
+}
+
+/**
+ * Gets unit melee dodge chance.
+ */
+int Armor::getMeleeDodge(const BattleUnit* unit) const
+{
+	return _meleeDodge.getBonus(unit);
+}
+
+/**
+ * Gets unit dodge penalty if hit from behind.
+ */
+float Armor::getMeleeDodgeBackPenalty() const
+{
+	return _meleeDodgeBackPenalty;
+}
+
+/**
+ *  Gets unit TU recovery.
+ */
+int Armor::getTimeRecovery(const BattleUnit* unit) const
+{
+	return _timeRecovery.getBonus(unit);
+}
+
+/**
+ *  Gets unit Energy recovery.
+ */
+int Armor::getEnergyRecovery(const BattleUnit* unit) const
+{
+	return _energyRecovery.getBonus(unit);
+}
+
+/**
+ *  Gets unit Morale recovery.
+ */
+int Armor::getMoraleRecovery(const BattleUnit* unit) const
+{
+	return _moraleRecovery.getBonus(unit);
+}
+
+/**
+ *  Gets unit Health recovery.
+ */
+int Armor::getHealthRecovery(const BattleUnit* unit) const
+{
+	return _healthRecovery.getBonus(unit);
+}
+
+/**
+ *  Gets unit Stun recovery.
+ */
+int Armor::getStunRegeneration(const BattleUnit* unit) const
+{
+	return _stunRecovery.getBonus(unit);
+}
+
+/**
  * Gets the armor's weight.
  * @return the weight of the armor.
  */
@@ -298,7 +424,7 @@ int Armor::getDeathFrames() const
 	return _deathFrames;
 }
 
-/*
+/**
  * Gets if armor uses constant animation.
  * @return if it uses constant animation
  */
@@ -307,7 +433,7 @@ bool Armor::getConstantAnimation() const
 	return _constantAnimation;
 }
 
-/*
+/**
  * Gets if armor can hold weapon.
  * @return if it can hold weapon
  */
@@ -316,13 +442,84 @@ bool Armor::getCanHoldWeapon() const
 	return _canHoldWeapon;
 }
 
-/**
+/*
  * Checks if this armor ignores gender (power suit/flying suit).
  * @return which torso to force on the sprite.
  */
 ForcedTorso Armor::getForcedTorso() const
 {
 	return _forcedTorso;
+}
+
+/**
+ * What weapons does this armor have built in?
+ * this is a vector of strings representing any
+ * weapons that may be inherent to this armor.
+ * note: unlike "livingWeapon" this is used in ADDITION to
+ * any loadout or living weapon item that may be defined.
+ * @return list of weapons that are integral to this armor.
+ */
+const std::vector<std::string> &Armor::getBuiltInWeapons() const
+{
+	return _builtInWeapons;
+}
+
+/**
+ * Gets max view distance at dark in BattleScape.
+ * @return The distance to see at dark.
+ */
+int Armor::getVisibilityAtDark() const
+{
+	return _visibilityAtDark;
+}
+
+/**
+ * Gets how armor react to fear.
+ * @param def Default value.
+ * @return Can ignored fear?
+ */
+bool Armor::getFearImmune(bool def) const
+{
+	return _fearImmune != -1 ? _fearImmune : def;
+}
+
+/**
+ * Gets how armor react to bleeding.
+ * @param def Default value.
+ * @return Can ignore bleed?
+ */
+bool Armor::getBleedImmune(bool def) const
+{
+	return _bleedImmune != -1 ? _bleedImmune : def;
+}
+
+/**
+ * Gets how armor react to inflicted pain.
+ * @param def
+ * @return Can ignore pain?
+ */
+bool Armor::getPainImmune(bool def) const
+{
+	return _painImmune != -1 ? _painImmune : def;
+}
+
+/**
+ * Gets how armor react to zombification.
+ * @param def Default value.
+ * @return Can't be turn to zombie?
+ */
+bool Armor::getZombiImmune(bool def) const
+{
+	return _zombiImmune != -1 ? _zombiImmune : def;
+}
+
+/**
+ * Gets how much negative hp is require to gib unit.
+ * @return Percent of require hp.
+ */
+float Armor::getOverKill() const
+{
+	return _overKill;
 }
 
 /**
@@ -361,20 +558,40 @@ int Armor::getRankColorGroup() const
 	return _rankColorGroup;
 }
 
+namespace
+{
+
+/**
+ * Helper function finding value in vector with fallback if vector is shorter.
+ * @param vec Vector with values we try get.
+ * @param pos Position in vector that can be greater than size of vector.
+ * @return Value in vector.
+ */
+int findWithFallback(const std::vector<int> &vec, size_t pos)
+{
+	//if pos == 31 then we test for 31, 15, 7
+	//if pos == 36 then we test for 36, 4
+	//we stop on p < 8 for comatibility reasons.
+	for (int i = 0; i <= 4; ++i)
+	{
+		size_t p = (pos & (127 >> i));
+		if (p < vec.size())
+		{
+			return vec[p];
+		}
+	}
+	return 0;
+}
+
+} //namespace
+
 /**
  * Gets new face colors for replacement, if 0 then don't replace colors.
  * @return Color index or 0.
  */
 int Armor::getFaceColor(int i) const
 {
-	if ((size_t)i < _faceColor.size())
-	{
-		return _faceColor[i];
-	}
-	else
-	{
-		return 0;
-	}
+	return findWithFallback(_faceColor, i);
 }
 
 /**
@@ -383,14 +600,7 @@ int Armor::getFaceColor(int i) const
  */
 int Armor::getHairColor(int i) const
 {
-	if ((size_t)i < _hairColor.size())
-	{
-		return _hairColor[i];
-	}
-	else
-	{
-		return 0;
-	}
+	return findWithFallback(_hairColor, i);
 }
 
 /**
@@ -399,14 +609,7 @@ int Armor::getHairColor(int i) const
  */
 int Armor::getUtileColor(int i) const
 {
-	if ((size_t)i < _utileColor.size())
-	{
-		return _utileColor[i];
-	}
-	else
-	{
-		return 0;
-	}
+	return findWithFallback(_utileColor, i);
 }
 
 /**
@@ -415,14 +618,7 @@ int Armor::getUtileColor(int i) const
  */
 int Armor::getRankColor(int i) const
 {
-	if ((size_t)i < _rankColor.size())
-	{
-		return _rankColor[i];
-	}
-	else
-	{
-		return 0;
-	}
+	return findWithFallback(_rankColor, i);
 }
 
 /**

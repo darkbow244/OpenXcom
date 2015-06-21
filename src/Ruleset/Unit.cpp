@@ -66,8 +66,9 @@ void Unit::load(const YAML::Node &node, int modIndex)
 	_livingWeapon = node["livingWeapon"].as<bool>(_livingWeapon);
 	_meleeWeapon = node["meleeWeapon"].as<std::string>(_meleeWeapon);
 	_builtInWeapons = node["builtInWeapons"].as<std::vector<std::string> >(_builtInWeapons);
+
 	_female = node["female"].as<bool>(_female);
-	
+
 	if (node["deathSound"])
 	{
 		_deathSound = node["deathSound"].as<int>(_deathSound);

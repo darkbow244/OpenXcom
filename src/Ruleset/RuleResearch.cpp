@@ -21,7 +21,7 @@
 namespace OpenXcom
 {
 
-RuleResearch::RuleResearch(const std::string & name) : _name(name), _cost(0), _points(0), _needItem(false), _listOrder(0)
+RuleResearch::RuleResearch(const std::string &name) : _name(name), _cost(0), _points(0), _needItem(false), _listOrder(0)
 {
 }
 
@@ -41,12 +41,14 @@ void RuleResearch::load(const YAML::Node &node, int listOrder)
 	_unlocks = node["unlocks"].as< std::vector<std::string> >(_unlocks);
 	_getOneFree = node["getOneFree"].as< std::vector<std::string> >(_getOneFree);
 	_requires = node["requires"].as< std::vector<std::string> >(_requires);
+	_requiresBaseFunc = node["requiresBaseFunc"].as< std::vector<std::string> >(_requiresBaseFunc);
 	_needItem = node["needItem"].as<bool>(_needItem);
 	_listOrder = node["listOrder"].as<int>(_listOrder);
 	if (!_listOrder)
 	{
 		_listOrder = listOrder;
 	}
+	std::sort(_requiresBaseFunc.begin(), _requiresBaseFunc.end());
 }
 
 /**
@@ -62,7 +64,7 @@ int RuleResearch::getCost() const
  * Gets the name of this ResearchProject.
  * @return The name of this ResearchProject.
  */
-const std::string & RuleResearch::getName() const
+const std::string &RuleResearch::getName() const
 {
 	return _name;
 }
@@ -71,7 +73,7 @@ const std::string & RuleResearch::getName() const
  * Gets the list of dependencies, i.e. ResearchProjects, that must be discovered before this one.
  * @return The list of ResearchProjects.
  */
-const std::vector<std::string> & RuleResearch::getDependencies() const
+const std::vector<std::string> &RuleResearch::getDependencies() const
 {
 	return _dependencies;
 }
@@ -89,7 +91,7 @@ bool RuleResearch::needItem() const
  * Gets the list of ResearchProjects unlocked by this research.
  * @return The list of ResearchProjects.
  */
-const std::vector<std::string> & RuleResearch::getUnlocked() const
+const std::vector<std::string> &RuleResearch::getUnlocked() const
 {
 	return _unlocks;
 }
@@ -107,7 +109,7 @@ int RuleResearch::getPoints() const
  * Gets the list of ResearchProjects granted at random for free by this research.
  * @return The list of ResearchProjects.
  */
-const std::vector<std::string> & RuleResearch::getGetOneFree() const
+const std::vector<std::string> &RuleResearch::getGetOneFree() const
 {
 	return _getOneFree;
 }
@@ -125,9 +127,18 @@ const std::string RuleResearch::getLookup() const
  * Gets the requirements for this ResearchProject.
  * @return The requirement for this research.
  */
-const std::vector<std::string> & RuleResearch::getRequirements() const
+const std::vector<std::string> &RuleResearch::getRequirements() const
 {
 	return _requires;
+}
+
+/**
+ * Gets the require base functions to start this ResearchProject.
+ * @return List of functions IDs
+ */
+const std::vector<std::string> &RuleResearch::getRequireBaseFunc() const
+{
+	return _requiresBaseFunc;
 }
 
 /**
