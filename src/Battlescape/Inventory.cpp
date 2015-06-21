@@ -1088,13 +1088,13 @@ void Inventory::mousePress(Action *action, State *state)
 		{
 			delete _longPressAction;
 		}
-		SDL_Event fakeEvent = *(action->getDetails());
+		_longPressEvent = *(action->getDetails());
 		//Log(LOG_INFO) << "Event type: " << fakeEvent.type;
 		//if (fakeEvent.type == SDL_MOUSEBUTTONDOWN)
 		//{
 		//	Log(LOG_INFO) << "(it's MouseButtonDown)";
 		//}
-		_longPressAction = new Action(&fakeEvent, action->getXScale(), action->getYScale(), action->getTopBlackBand(), action->getLeftBlackBand());
+		_longPressAction = new Action(&_longPressEvent, action->getXScale(), action->getYScale(), action->getTopBlackBand(), action->getLeftBlackBand());
 		_longPressAction->setMouseAction(action->getXMouse() + action->getLeftBlackBand(),
 					 action->getYMouse() + action->getTopBlackBand(),
 					 action->getSender()->getX(),

@@ -55,6 +55,8 @@ private:
 	Timer *_animTimer;
 #ifdef __ANDROID__
 	Timer *_longPressTimer;
+	// SDL_Event for long press action
+	SDL_Event _longPressEvent;
 	// A fake Action pointer for long press events.
 	Action *_longPressAction;
 	State *_longPressState;
