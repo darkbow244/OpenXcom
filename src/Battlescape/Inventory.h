@@ -59,6 +59,10 @@ private:
 	Action *_longPressAction;
 	State *_longPressState;
 #endif
+	// Cursor placement for drag-and-drop
+	int _xBeforeDrag, _yBeforeDrag;
+	bool _dragging, _clicked;
+
 	int _depth;
 	/// Moves an item to a specified slot.
 	void moveItem(BattleItem *item, RuleInventory *slot, int x, int y);
@@ -111,14 +115,14 @@ public:
 	void showWarning(const std::wstring &msg);
 	/// Show priming warnings on grenades.
 	void drawPrimers();
-#ifdef __ANDROID__
+//#ifdef __ANDROID__
 	/// Start long press timer
 	void mousePress(Action *action, State *state);
 	/// Stop long press timer
 	void mouseRelease(Action *action, State *state);
 	/// Handle long press on grenade
 	void longPressAction();
-#endif
+//#endif
 };
 
 }

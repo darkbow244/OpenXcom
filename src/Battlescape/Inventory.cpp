@@ -43,6 +43,8 @@
 #include "PrimeGrenadeState.h"
 #include "../Engine/Logger.h"
 
+#include "../Engine/CrossPlatform.h"
+
 namespace OpenXcom
 {
 
@@ -55,7 +57,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param base Is the inventory being called from the basescape?
  */
-Inventory::Inventory(Game *game, int width, int height, int x, int y, bool base) : InteractiveSurface(width, height, x, y), _game(game), _selUnit(0), _selItem(0), _tu(true), _base(base), _groundOffset(0), _animFrame(0)
+	Inventory::Inventory(Game *game, int width, int height, int x, int y, bool base) : InteractiveSurface(width, height, x, y), _game(game), _selUnit(0), _selItem(0), _tu(true), _base(base), _groundOffset(0), _animFrame(0), _xBeforeDrag(0), _yBeforeDrag(0), _dragging(false), _clicked(false)
 {
 	_depth = _game->getSavedGame()->getSavedBattle()->getDepth();
 	_grid = new Surface(width, height, x, y);
@@ -516,6 +518,27 @@ void Inventory::mouseOver(Action *action, State *state)
 
 	_selection->setX((int)floor(action->getAbsoluteXMouse()) - _selection->getWidth()/2 - getX());
 	_selection->setY((int)floor(action->getAbsoluteYMouse()) - _selection->getHeight()/2 - getY());
+
+	if (CrossPlatform::getPointerState(0, 0) && _clicked)
+	{
+		int mx = action->getDetails()->motion.x;
+		int my = action->getDetails()->motion.y;
+		if ((std::abs(mx - _xBeforeDrag) + std::abs(my - _yBeforeDrag)) > Options::dragScrollPixelTolerance)
+		{
+			if (!_dragging)
+			{
+				action->setMouseAction(_xBeforeDrag + action->getLeftBlackBand(),
+					_yBeforeDrag + action->getTopBlackBand(),
+					action->getSender()->getX(),
+					action->getSender()->getY());
+				mouseClick(action, state);
+				_dragging = true;
+				//_longPressTimer->stop();
+				_clicked = false;
+			}
+		}
+	}
+
 	InteractiveSurface::mouseOver(action, state);
 }
 
@@ -1054,6 +1077,10 @@ void Inventory::mousePress(Action *action, State *state)
 {
 	//Log(LOG_INFO) << "Long press timer started";
 	// This should only be called when we're in pre-battle inventory.
+	_xBeforeDrag = action->getDetails()->button.x;
+	_yBeforeDrag = action->getDetails()->button.y;
+	_dragging = false;
+	_clicked = true;
 	if (!_tu)
 	{
 		// Prepare our fake action
@@ -1081,7 +1108,12 @@ void Inventory::mousePress(Action *action, State *state)
 
 void Inventory::mouseRelease(Action *action, State *state)
 {
+	_clicked = false;
 	//Log(LOG_INFO) << "Long press timer stopped";
+	if (_dragging)
+	{
+		_dragging = false;
+	}
 	if (!_tu)
 	{
 		_longPressTimer->stop();
@@ -1099,8 +1131,12 @@ void Inventory::longPressAction()
 //	Log(LOG_INFO) << "Long press action called";
 //	_longPressAction->getDetails()->button.button = SDL_BUTTON_LEFT;
 //	mouseClick(_longPressAction, _longPressState);
-	_longPressAction->getDetails()->button.button = SDL_BUTTON_RIGHT;
-	mouseClick(_longPressAction, _longPressState);
+	_clicked = false;
+	if (!_dragging)
+	{
+		_longPressAction->getDetails()->button.button = SDL_BUTTON_RIGHT;
+		mouseClick(_longPressAction, _longPressState);
+	}
 	_longPressTimer->stop();
 	delete _longPressAction;
 	_longPressAction = NULL;
