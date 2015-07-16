@@ -69,6 +69,7 @@ private:
 	/// The following variables are here only to provide finger-scrolling functionality.
 	int _accumulatedDelta;  // How much did the cursor travel?
 	bool _overThreshold;    // Did we go over threshold?
+	bool _dragScrollable;   // Is drag-scrolling enabled for this TextList?
 public:
 	/// Creates a text list with the specified size and position.
 	TextList(int width, int height, int x = 0, int y = 0);
@@ -202,6 +203,10 @@ public:
 	ComboBox *getComboBox() const;
 	void setBorderColor(Uint8 color);
 	int getScrollbarColor();
+	/// Set drag-scrolling for this TextList
+	void setDragScrollable(bool scrollable);
+	/// Check if the list supports drag-scrolling
+	bool isDragScrollable();
 };
 
 }

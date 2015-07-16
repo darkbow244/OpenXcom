@@ -41,7 +41,7 @@ namespace OpenXcom
 TextList::TextList(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _big(0), _small(0), _font(0), _scroll(0), _visibleRows(0), _selRow(0), _color(0), _dot(false), _selectable(false), _condensed(false), _contrast(false), _wrap(false),
 																								   _bg(0), _selector(0), _margin(0), _scrolling(true), _arrowPos(-1), _scrollPos(4), _arrowType(ARROW_VERTICAL),
 																								   _leftClick(0), _leftPress(0), _leftRelease(0), _rightClick(0), _rightPress(0), _rightRelease(0), _arrowsLeftEdge(0), _arrowsRightEdge(0), _comboBox(0),
-																								   _overThreshold(false), _accumulatedDelta(0)
+																								   _overThreshold(false), _accumulatedDelta(0), _dragScrollable(Options::listDragScroll)
 {
 	_up = new ArrowButton(ARROW_BIG_UP, 13, 14, getX() + getWidth() + _scrollPos, getY());
 	_up->setVisible(false);
@@ -1041,8 +1041,11 @@ void TextList::think()
  */
 void TextList::mousePress(Action *action, State *state)
 {
-	_accumulatedDelta = 0;
-	_overThreshold = false;
+	if (_dragScrollable)
+	{
+		_accumulatedDelta = 0;
+		_overThreshold = false;
+	}
 	if (_selectable)
 	{
 		if (_selRow < _rows.size())
@@ -1113,7 +1116,7 @@ void TextList::mouseRelease(Action *action, State *state)
  */
 void TextList::mouseClick(Action *action, State *state)
 {
-	if (_overThreshold)
+	if (_overThreshold && _dragScrollable)
 	{
 		// End scrolling action.
 		_overThreshold = false;
@@ -1145,7 +1148,7 @@ void TextList::mouseClick(Action *action, State *state)
  */
 void TextList::mouseOver(Action *action, State *state)
 {
-	if (_scrolling)
+	if (_scrolling && _dragScrollable)
 	{
 		const int threshold = (_font->getHeight() + _font->getSpacing()) * action->getYScale();
 		const SDL_Event *ev = action->getDetails();
@@ -1283,5 +1286,23 @@ void TextList::setBorderColor(Uint8 color)
 int TextList::getScrollbarColor()
 {
 	return _scrollbar->getColor();
+}
+
+/**
+*  Sets drag-scrolling option, taking into account the option to actually drag-scroll.
+*  @param scrollable Desired drag-scrolling state.
+*/
+void TextList::setDragScrollable(bool scrollable)
+{
+	_dragScrollable = scrollable && Options::listDragScroll;
+}
+
+/**
+*  Checks if the TextList supports drag-scrolling.
+*  @return true if the list is drag-scrollable.
+*/
+bool TextList::isDragScrollable()
+{
+	return _dragScrollable;
 }
 }
