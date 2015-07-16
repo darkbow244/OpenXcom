@@ -107,7 +107,7 @@ public:
 	BattlescapeState();
 	/// Cleans up the Battlescape state.
 	~BattlescapeState();
-	/// Initilizes the battlescapestate.
+	/// Initializes the battlescapestate.
 	void init();
 	/// Runs the timers and handles popups.
 	void think();

@@ -117,14 +117,14 @@ public:
 	void showWarning(const std::wstring &msg);
 	/// Show priming warnings on grenades.
 	void drawPrimers();
-//#ifdef __ANDROID__
+#ifdef __ANDROID__
 	/// Start long press timer
 	void mousePress(Action *action, State *state);
 	/// Stop long press timer
 	void mouseRelease(Action *action, State *state);
 	/// Handle long press on grenade
 	void longPressAction();
-//#endif
+#endif
 };
 
 }

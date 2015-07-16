@@ -38,17 +38,11 @@ if ( IS_DIRECTORY ${DEPS_DIR} )
    set ( SDLMIXER_LIBRARY SDL_mixer )
    set ( SDLIMAGE_LIBRARY SDL_image )
    set ( YAMLCPP_LIBRARY yaml-cpp )
+   set ( YAMLCPP_LIBRARY_DEBUG yaml-cppd )
 else ( )
   find_package ( SDL2 REQUIRED mixer image )
   find_package ( SDL_gfx REQUIRED )
   find_package ( Yaml_cpp 0.5.0)
-  find_package ( OpenGL )
-
-  if ( NOT OPENGL_FOUND )
-	  message ( FATAL_ERROR "Can't find OpenGL; how does that even happen?" )
-  else ()
-	  include_directories ( ${OPENGL_INCLUDE_DIR} )
-  endif ()
 
   if ( NOT SDL2_FOUND )
     message ( FATAL_ERROR "Can't find SDL which is required" )
@@ -71,6 +65,12 @@ else ( )
     message ( "found yaml-cpp(${YAMLCPP_LIBRARY_DIRS}:${YAMLCPP_INCLUDE_DIR})" )
   endif ( NOT YAMLCPP_FOUND )
 endif()
+
+# Find OpenGL
+find_package ( OpenGL )
+if ( NOT OPENGL_FOUND )
+  message ( FATAL_ERROR "Can't find OpenGL; how does that even happen?" )
+endif ()
 
 # Read version number
 set ( file "${CMAKE_SOURCE_DIR}/src/version.h" )

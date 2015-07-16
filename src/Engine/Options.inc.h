@@ -17,6 +17,7 @@ OPT KeyboardType keyboardMode;
 OPT SaveSort saveOrder;
 OPT MusicFormat preferredMusic;
 OPT SoundFormat preferredSound;
+OPT VideoFormat preferredVideo;
 OPT bool captureMouse;
 OPT SDL_Keycode keyOk, keyCancel, keyScreenshot, keyFps, keyQuickLoad, keyQuickSave;
 

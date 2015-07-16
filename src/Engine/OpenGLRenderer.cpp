@@ -300,10 +300,10 @@ void OpenGLRenderer::clear() {
 
 
 
-    shader_support = glCreateProgram && glUseProgram && glCreateShader
-    && glDeleteShader && glShaderSource && glCompileShader && glAttachShader
-    && glDetachShader && glLinkProgram && glGetUniformLocation
-    && glUniform1i && glUniform2fv && glUniform4fv;
+    shader_support = &glCreateProgram && &glUseProgram && &glCreateShader
+    && &glDeleteShader && &glShaderSource && &glCompileShader && &glAttachShader
+    && &glDetachShader && &glLinkProgram && &glGetUniformLocation
+    && &glUniform1i && &glUniform2fv && &glUniform4fv;
 	
     if(shader_support) glprogram = glCreateProgram();
 

@@ -33,6 +33,7 @@
 #include "../Ruleset/RuleVideo.h"
 #include "MainMenuState.h"
 #include "CutsceneState.h"
+#include "../Interface/Cursor.h"
 
 namespace OpenXcom
 {
@@ -420,6 +421,7 @@ void VideoState::init()
 			_game->setVolume(Options::soundVolume, Options::musicVolume, -1);
 		}
 	}
+	_game->getCursor()->setVisible(false);
 
 	int dx = (Options::baseXResolution - Screen::ORIGINAL_WIDTH) / 2;
 	int dy = (Options::baseYResolution - Screen::ORIGINAL_HEIGHT) / 2;
@@ -523,6 +525,7 @@ void VideoState::init()
 	SDL_EventState(SDL_DOLLARRECORD, SDL_IGNORE);
 #endif
 
+	_game->getCursor()->setVisible(true);
 	CutsceneState::resetDisplay(wasLetterboxed);
 	_game->popState();
 }

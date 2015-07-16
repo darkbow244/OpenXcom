@@ -36,6 +36,7 @@
 #include "BaseNameState.h"
 #include "ConfirmNewBaseState.h"
 #include "../Engine/Options.h"
+#include "../Menu/ErrorMessageState.h"
 
 namespace OpenXcom
 {
@@ -228,7 +229,7 @@ void BuildNewBaseState::globeClick(Action *action)
 		return;
 	}
 
-	// Clicking on land for a base location
+	// Clicking on a polygon for a base location
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 	{
 		if (_globe->insideLand(lon, lat))
@@ -248,6 +249,10 @@ void BuildNewBaseState::globeClick(Action *action)
 			{
 				_game->pushState(new ConfirmNewBaseState(_base, _globe));
 			}
+		}
+		else
+		{
+			_game->pushState(new ErrorMessageState(tr("STR_XCOM_BASE_CANNOT_BE_BUILT"), _palette, _game->getRuleset()->getInterface("geoscape")->getElement("genericWindow")->color, "BACK01.SCR", _game->getRuleset()->getInterface("geoscape")->getElement("palette")->color));
 		}
 	}
 }

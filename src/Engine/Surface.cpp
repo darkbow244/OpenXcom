@@ -492,7 +492,7 @@ void Surface::think()
  * Draws the graphic that the surface contains before it
  * gets blitted onto other surfaces. The surface is only
  * redrawn if the flag is set by a property change, to
- * avoid unecessary drawing.
+ * avoid unnecessary drawing.
  */
 void Surface::draw()
 {
@@ -901,7 +901,7 @@ void Surface::resize(int width, int height)
 
 	// Copy old contents
 	SDL_SetColorKey(surface, SDL_TRUE, 0);
-	SDL_SetPaletteColors(surface->format->palette, getPalette(), 0, 255);
+	SDL_SetPaletteColors(surface->format->palette, getPalette(), 0, 256);
 	SDL_BlitSurface(_surface, 0, surface, 0);
 
 	// Delete old surface
