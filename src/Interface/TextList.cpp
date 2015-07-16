@@ -1117,6 +1117,7 @@ void TextList::mouseClick(Action *action, State *state)
 	{
 		// End scrolling action.
 		_overThreshold = false;
+		_accumulatedDelta = 0;
 		return;
 	}
 	if (_selectable)
@@ -1147,7 +1148,12 @@ void TextList::mouseOver(Action *action, State *state)
 	if (_scrolling)
 	{
 		const int threshold = (_font->getHeight() + _font->getSpacing()) * action->getYScale();
-		_accumulatedDelta += action->getDetails()->motion.yrel;
+		const SDL_Event *ev = action->getDetails();
+		if (ev->type == SDL_MOUSEMOTION && ev->motion.state != 0)
+		{
+			// Only accumulate delta while mouse button is pressed
+			_accumulatedDelta += action->getDetails()->motion.yrel;
+		}
 		if (std::abs(_accumulatedDelta) >= threshold)
 		{
 			_overThreshold = action->getDetails()->motion.state != 0;
