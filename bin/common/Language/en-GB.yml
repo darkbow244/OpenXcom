@@ -335,3 +335,5 @@ en-GB:
   STR_MOUSE_MODE_DESC: "Extended mode enables native mouse events, providing near-desktop experience."
   STR_LISTDRAGSCROLL: "List drag-scrolling"
   STR_LISTDRAGSCROLL_DESC: "Enable drag-scrolling for scrollable lists. Useful for touchscreen-based devices."
+  STR_DRAGREORDER: "Drag to reorder soldiers"
+  STR_DRAGREORDER_DESC: "Drag soldiers to reorder them in the craft equipment screen."

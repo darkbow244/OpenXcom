@@ -48,6 +48,10 @@ private:
 	Uint8 _otherCraftColor;
 	///initializes the display list based on the craft soldier's list and the position to display
 	void initList(size_t scrl);
+	/// Stores previously selected soldier position
+	unsigned int _pselSoldier;
+	/// (De)selection guard
+	bool _wasDragging;
 public:
 	/// Creates the Craft Soldiers state.
 	CraftSoldiersState(Base *base, size_t craft);
@@ -71,6 +75,8 @@ public:
 	void lstSoldiersMousePress(Action *action);
 	/// Handler for mousewheel action.
 	void lstSoldiersMouseWheel(Action *action);
+	/// Handler for mouseover (drag-drop) action
+	void lstSoldiersMouseOver(Action *action);
 };
 
 }

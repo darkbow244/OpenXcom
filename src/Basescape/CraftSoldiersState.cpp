@@ -46,7 +46,7 @@ namespace OpenXcom
  * @param base Pointer to the base to get info from.
  * @param craft ID of the selected craft.
  */
-CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft) :  _base(base), _craft(craft), _otherCraftColor(0)
+CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft) : _base(base), _craft(craft), _otherCraftColor(0), _pselSoldier(0), _wasDragging(false)
 {
 	// Create objects
 	_window = new Window(this, 320, 200, 0, 0);
@@ -103,6 +103,9 @@ CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft) :  _base(base),
 	_lstSoldiers->onMouseClick((ActionHandler)&CraftSoldiersState::lstSoldiersClick, 0);
 	_lstSoldiers->onMousePress((ActionHandler)&CraftSoldiersState::lstSoldiersMousePress);
 	_lstSoldiers->onMouseWheel((ActionHandler)&CraftSoldiersState::lstSoldiersMouseWheel);
+
+	_lstSoldiers->setDragScrollable(false);
+	_lstSoldiers->onMouseOver((ActionHandler)&CraftSoldiersState::lstSoldiersMouseOver);
 }
 
 /**
@@ -206,7 +209,9 @@ void CraftSoldiersState::moveSoldierUp(Action *action, unsigned int row, bool ma
 		_base->getSoldiers()->at(row - 1) = s;
 		if (row != _lstSoldiers->getScroll())
 		{
+#ifndef __ANDROID__
 			SDL_WarpMouseInWindow(NULL, (action->getLeftBlackBand() + action->getXMouse()), (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
+#endif
 		}
 		else
 		{
@@ -277,6 +282,11 @@ void CraftSoldiersState::moveSoldierDown(Action *action, unsigned int row, bool 
  */
 void CraftSoldiersState::lstSoldiersClick(Action *action)
 {
+	if (_wasDragging)
+	{
+		_wasDragging = false;
+		return;
+	}
 	double mx = action->getAbsoluteXMouse();
 	if (mx >= _lstSoldiers->getArrowsLeftEdge() && mx < _lstSoldiers->getArrowsRightEdge())
 	{
@@ -320,7 +330,8 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
  */
 void CraftSoldiersState::lstSoldiersMousePress(Action *action)
 {
-	
+	unsigned int row = _lstSoldiers->getSelectedRow();
+	_pselSoldier = row;
 }
 
 /**
@@ -352,6 +363,31 @@ void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
 			{
 				moveSoldierDown(action, row);
 			}
+		}
+	}
+}
+
+/**
+ * Handles soldier drag-dropping in craft equipment screen.
+ * @param action Pointer to an action.
+ */
+void CraftSoldiersState::lstSoldiersMouseOver(Action *action)
+{
+	unsigned int row = std::min(_lstSoldiers->getSelectedRow(), (unsigned int) _base->getSoldiers()->size() - 1);
+	if (Options::dragSoldierReorder) {
+		const SDL_Event *ev = action->getDetails();
+		if ((ev->type == SDL_MOUSEMOTION) && (ev->motion.state) &&
+											 (_lstSoldiers->getSelectedRow() < _base->getSoldiers()->size())) {
+			int delta = row - _pselSoldier;
+			if (delta > 0) {
+				_wasDragging = true;
+				moveSoldierDown(action, _pselSoldier);
+			}
+			if (delta < 0) {
+				_wasDragging = true;
+				moveSoldierUp(action, _pselSoldier);
+			}
+			_pselSoldier = row;
 		}
 	}
 }
