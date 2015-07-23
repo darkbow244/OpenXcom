@@ -1086,7 +1086,7 @@ BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType ty
 				}
 			}
 		}
-		if (bu)
+		if (bu && bu->getHealth() != 0 && bu->getStunlevel() < bu->getHealth())
 		{
 			const int sz = bu->getArmor()->getSize() * 8;
 			const Position target = bu->getPosition() * Position(16,16,24) + Position(sz,sz, bu->getFloatHeight() - tile->getTerrainLevel());
@@ -1108,7 +1108,7 @@ BattleUnit *TileEngine::hit(const Position &center, int power, ItemDamageType ty
 
 			if ((bu->getSpecialAbility() == SPECAB_EXPLODEONDEATH || bu->getSpecialAbility() == SPECAB_BURN_AND_EXPLODE) && !bu->isOut() && (bu->getHealth() == 0 || bu->getStunlevel() >= bu->getHealth()))
 			{
-				if (type != DT_STUN && type != DT_HE)
+				if (type != DT_STUN && type != DT_HE && type != DT_IN && type != DT_MELEE)
 				{
 					Position p = Position(bu->getPosition().x * 16, bu->getPosition().y * 16, bu->getPosition().z * 24);
 					_save->getBattleGame()->statePushNext(new ExplosionBState(_save->getBattleGame(), p, 0, bu, 0));
