@@ -18,7 +18,6 @@
  */
 #include "InteractiveSurface.h"
 #include "Action.h"
-#include "Options.h"
 #include "CrossPlatform.h"
 
 namespace OpenXcom

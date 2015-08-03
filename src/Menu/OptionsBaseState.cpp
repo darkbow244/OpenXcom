@@ -20,8 +20,7 @@
 #include <SDL.h>
 #include "../Engine/Game.h"
 #include "../Engine/Options.h"
-#include "../Engine/Palette.h"
-#include "../Engine/Language.h"
+#include "../Engine/LocalizedText.h"
 #include "../Engine/Screen.h"
 #include "../Resource/ResourcePack.h"
 #include "../Savegame/SavedGame.h"
@@ -81,14 +80,14 @@ OptionsBaseState::OptionsBaseState(OptionsOrigin origin) : _origin(origin)
 	_txtTooltip = new Text(305, 25, 8, 148);
 
 	// Set palette
-	setInterface("optionsMenu", false, _origin == OPT_BATTLESCAPE);
+	setInterface("optionsMenu", false, _game->getSavedGame() ? _game->getSavedGame()->getSavedBattle() : 0);
 
 	add(_window, "window", "optionsMenu");
 
 	add(_btnVideo, "button", "optionsMenu");
 	add(_btnAudio, "button", "optionsMenu");
 #if defined(__ANDROID__) || defined (__PSEUDO_ANDROID__)
-	add(_btnSystem);
+	add(_btnSystem, "button", "optionsMenu");
 #else
 	add(_btnControls, "button", "optionsMenu");
 #endif
@@ -112,7 +111,6 @@ OptionsBaseState::OptionsBaseState(OptionsOrigin origin) : _origin(origin)
 	_btnAudio->setText(tr("STR_AUDIO"));
 	_btnAudio->onMousePress((ActionHandler)&OptionsBaseState::btnGroupPress, SDL_BUTTON_LEFT);
 #if defined(__ANDROID__) || defined(__PSEUDO_ANDROID__)
-	_btnSystem->setColor(Palette::blockOffset(8)+5);
 	_btnSystem->setText(tr("STR_SYSTEM"));
 	_btnSystem->onMousePress((ActionHandler)&OptionsBaseState::btnGroupPress, SDL_BUTTON_LEFT);
 #else

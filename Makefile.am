@@ -516,6 +516,8 @@ openxcom_SOURCES = \
 	src/Ruleset/RuleItem.h \
 	src/Ruleset/RuleManufacture.cpp \
 	src/Ruleset/RuleManufacture.h \
+	src/Ruleset/RuleMissionScript.cpp \
+	src/Ruleset/RuleMissionScript.h \
 	src/Ruleset/RuleMusic.cpp \
 	src/Ruleset/RuleMusic.h \
 	src/Ruleset/RuleRegion.cpp \
@@ -710,6 +712,7 @@ dist-hook:
 	fi
 
 install-data-local:
+	mkdir -p $(DESTDIR)$(pkgdatadir)
 	cp -r $(top_srcdir)/bin/* $(DESTDIR)$(pkgdatadir)/ ; \
 	find $(DESTDIR)$(pkgdatadir) | xargs chmod a=rX,u+w
 

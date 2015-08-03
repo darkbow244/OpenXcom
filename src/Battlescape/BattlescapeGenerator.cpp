@@ -35,7 +35,7 @@
 #include "../Savegame/Craft.h"
 #include "../Savegame/Node.h"
 #include "../Engine/Game.h"
-#include "../Engine/Language.h"
+#include "../Engine/LocalizedText.h"
 #include "../Engine/FileMap.h"
 #include "../Engine/Options.h"
 #include "../Engine/RNG.h"
@@ -278,7 +278,10 @@ void BattlescapeGenerator::nextStage()
 	{
 		throw Exception("Map generator encountered an error: " + _terrain->getScript() + " script not found.");
 	}
+
 	generateMap(script);
+
+	setupObjectives(ruleDeploy);
 
 	int highestSoldierID = 0;
 	bool selectedFirstSoldier = false;
@@ -427,7 +430,10 @@ void BattlescapeGenerator::run()
 	{
 		throw Exception("Map generator encountered an error: " + _terrain->getScript() + " script not found.");
 	}
+
 	generateMap(script);
+
+	setupObjectives(ruleDeploy);
 
 	deployXCOM();
 
@@ -1528,7 +1534,7 @@ void BattlescapeGenerator::fuelPowerSources()
 		if (_save->getTiles()[i]->getMapData(O_OBJECT)
 			&& _save->getTiles()[i]->getMapData(O_OBJECT)->getSpecialType() == UFO_POWER_SOURCE)
 		{
-			BattleItem *alienFuel = new BattleItem(_game->getRuleset()->getItem(_game->getRuleset()->getAlienFuel()), _save->getCurrentItemId());
+			BattleItem *alienFuel = new BattleItem(_game->getRuleset()->getItem(_game->getRuleset()->getAlienFuelName()), _save->getCurrentItemId());
 			_save->getItems()->push_back(alienFuel);
 			_save->getTiles()[i]->addItem(alienFuel, _game->getRuleset()->getInventory("STR_GROUND"));
 		}
@@ -2006,17 +2012,6 @@ void BattlescapeGenerator::generateMap(const std::vector<MapScript*> *script)
 						_save->getTile(Position(i,j,k))->setDiscovered(true, 2);
 					}
 				}
-			}
-		}
-	}
-
-	for (int i = 0; i < _save->getMapSizeXYZ(); ++i)
-	{
-		for (int j = 0; j != 4; ++j)
-		{
-			if (_save->getTiles()[i]->getMapData(j) && _save->getTiles()[i]->getMapData(j)->getSpecialType() == MUST_DESTROY)
-			{
-				_save->addToObjectiveCount();
 			}
 		}
 	}
@@ -2660,4 +2655,44 @@ void BattlescapeGenerator::setTerrain(RuleTerrain *terrain)
 	_terrain = terrain;
 }
 
+
+/**
+ * Sets up the objectives for the map.
+ * @param ruleDeploy the deployment data we're gleaning data from.
+ */
+void BattlescapeGenerator::setupObjectives(AlienDeployment *ruleDeploy)
+{
+	int targetType = ruleDeploy->getObjectiveType();
+
+	if (targetType > -1)
+	{
+		int objectives = ruleDeploy->getObjectivesRequired();
+		int actualCount = 0;
+
+		for (int i = 0; i < _save->getMapSizeXYZ(); ++i)
+		{
+			for (int j = 0; j != 4; ++j)
+			{
+				if (_save->getTiles()[i]->getMapData(j) && _save->getTiles()[i]->getMapData(j)->getSpecialType() == targetType)
+				{
+					actualCount++;
+				}
+			}
+		}
+
+		if (actualCount > 0)
+		{
+			_save->setObjectiveType(targetType);
+
+			if (actualCount < objectives || objectives == 0)
+			{
+				_save->setObjectiveCount(actualCount);
+			}
+			else
+			{
+				_save->setObjectiveCount(objectives);
+			}
+		}
+	}
+}
 }

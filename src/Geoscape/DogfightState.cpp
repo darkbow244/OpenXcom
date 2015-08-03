@@ -20,9 +20,8 @@
 #include <sstream>
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
-#include "../Engine/Palette.h"
 #include "../Engine/Screen.h"
-#include "../Engine/Language.h"
+#include "../Engine/LocalizedText.h"
 #include "../Engine/SurfaceSet.h"
 #include "../Engine/Surface.h"
 #include "../Interface/ImageButton.h"
@@ -299,37 +298,38 @@ DogfightState::DogfightState(Globe *globe, Craft *craft, Ufo *ufo) : _globe(glob
 	_btnUfo->invalidate(false);
 
 	// Set up objects
+	RuleInterface *dogfightInterface = _game->getRuleset()->getInterface("dogfight");
+
 	Surface *graphic;
 	graphic = _game->getResourcePack()->getSurface("INTERWIN.DAT");
 	graphic->setX(0);
 	graphic->setY(0);
 	graphic->getCrop()->x = 0;
 	graphic->getCrop()->y = 0;
-	graphic->getCrop()->w = 160;
-	graphic->getCrop()->h = 96;
+	graphic->getCrop()->w = _window->getWidth();
+	graphic->getCrop()->h = _window->getHeight();
 	_window->drawRect(graphic->getCrop(), 15);
 	graphic->blit(_window);
 
 	_preview->drawRect(graphic->getCrop(), 15);
-	graphic->getCrop()->y = 96;
-	graphic->getCrop()->h = 15;
+	graphic->getCrop()->y = dogfightInterface->getElement("previewTop")->y;
+	graphic->getCrop()->h = dogfightInterface->getElement("previewTop")->h;
 	graphic->blit(_preview);
-	graphic->setY(67);
-	graphic->getCrop()->y = 111;
-	graphic->getCrop()->h = 29;
+	graphic->setY(_window->getHeight() - dogfightInterface->getElement("previewBot")->h);
+	graphic->getCrop()->y = dogfightInterface->getElement("previewBot")->y;
+	graphic->getCrop()->h = dogfightInterface->getElement("previewBot")->h;
 	graphic->blit(_preview);
 	if (ufo->getRules()->getModSprite().empty())
 	{
-		graphic->setY(15);
-		graphic->getCrop()->y = 140 + 52 * _ufo->getRules()->getSprite();
-		graphic->getCrop()->h = 52;
+		graphic->getCrop()->y = dogfightInterface->getElement("previewMid")->y + dogfightInterface->getElement("previewMid")->h * _ufo->getRules()->getSprite();
+		graphic->getCrop()->h = dogfightInterface->getElement("previewMid")->h;
 	}
 	else
 	{
 		graphic = _game->getResourcePack()->getSurface(ufo->getRules()->getModSprite());
-		graphic->setX(0);
-		graphic->setY(15);
 	}
+	graphic->setX(dogfightInterface->getElement("previewTop")->x);
+	graphic->setY(dogfightInterface->getElement("previewTop")->h);
 	graphic->blit(_preview);
 	_preview->setVisible(false);
 	_preview->onMouseClick((ActionHandler)&DogfightState::previewClick);
@@ -379,7 +379,6 @@ DogfightState::DogfightState(Globe *globe, Craft *craft, Ufo *ufo) : _globe(glob
 	_txtInterceptionNumber->setText(ss1.str());
 	_txtInterceptionNumber->setVisible(false);
 
-	RuleInterface *dogfightInterface = _game->getRuleset()->getInterface("dogfight");
 	// define the colors to be used
 	_colors[CRAFT_MIN] = dogfightInterface->getElement("craftRange")->color;
 	_colors[CRAFT_MAX] = dogfightInterface->getElement("craftRange")->color2;
@@ -731,23 +730,24 @@ void DogfightState::update()
 	if (!_minimized)
 	{
 		animate();
-		int escapeCounter = _ufo->getEscapeCountdown();
-		if (!_ufo->isCrashed() && !_ufo->isDestroyed() && !_craft->isDestroyed())
+		if (!_ufo->isCrashed() && !_ufo->isDestroyed() && !_craft->isDestroyed() && !_ufo->getInterceptionProcessed())
 		{
-			if (escapeCounter > 0 && !_ufo->getInterceptionProcessed())
+			_ufo->setInterceptionProcessed(true);
+			int escapeCounter = _ufo->getEscapeCountdown();
+
+			if (escapeCounter > 0 )
 			{
 				escapeCounter--;
 				_ufo->setEscapeCountdown(escapeCounter);
-				_ufo->setInterceptionProcessed(true);
-				if (_ufo->getFireCountdown() > 0)
+				// Check if UFO is breaking off.
+				if (escapeCounter == 0)
 				{
-					_ufo->setFireCountdown(_ufo->getFireCountdown() - 1);
+					_ufo->setSpeed(_ufo->getRules()->getMaxSpeed());
 				}
 			}
-			// Check if UFO is breaking off.
-			if (escapeCounter == 0)
+			if (_ufo->getFireCountdown() > 0)
 			{
-				_ufo->setSpeed(_ufo->getRules()->getMaxSpeed());
+				_ufo->setFireCountdown(_ufo->getFireCountdown() - 1);
 			}
 		}
 	}
@@ -1196,7 +1196,7 @@ void DogfightState::fireWeapon2()
  */
 void DogfightState::ufoFireWeapon()
 {
-	int fireCountdown = (_ufo->getRules()->getWeaponReload() - 2 * (int)(_game->getSavedGame()->getDifficulty()));
+	int fireCountdown = std::max(1, (_ufo->getRules()->getWeaponReload() - 2 * (int)(_game->getSavedGame()->getDifficulty())));
 	_ufo->setFireCountdown(RNG::generate(0, fireCountdown) + fireCountdown);
 
 	setStatus("STR_UFO_RETURN_FIRE");

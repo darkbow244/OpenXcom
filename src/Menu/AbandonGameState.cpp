@@ -20,8 +20,7 @@
 #include "../Engine/Game.h"
 #include "../Engine/Options.h"
 #include "../Resource/ResourcePack.h"
-#include "../Engine/Language.h"
-#include "../Engine/Palette.h"
+#include "../Engine/LocalizedText.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
@@ -59,7 +58,7 @@ AbandonGameState::AbandonGameState(OptionsOrigin origin) : _origin(origin)
 	_txtTitle = new Text(206, 17, x+5, 70);
 
 	// Set palette
-	setInterface("geoscape", false, _origin == OPT_BATTLESCAPE);
+	setInterface("geoscape", false, _game->getSavedGame() ? _game->getSavedGame()->getSavedBattle() : 0);
 
 	add(_window, "genericWindow", "geoscape");
 	add(_btnYes, "genericButton2", "geoscape");

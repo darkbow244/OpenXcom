@@ -937,6 +937,9 @@
     <ClCompile Include="Menu\SlideshowState.cpp">
       <Filter>Menu</Filter>
     </ClCompile>
+    <ClCompile Include="Ruleset\RuleMissionScript.cpp">
+      <Filter>Ruleset</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -1927,6 +1930,9 @@
     </ClInclude>
     <ClInclude Include="Menu\SlideshowState.h">
       <Filter>Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="Ruleset\RuleMissionScript.h">
+      <Filter>Ruleset</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
