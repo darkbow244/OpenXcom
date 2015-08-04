@@ -51,5 +51,10 @@ extraSprites: #done
     subY: 3
     files:
       0: Resources/UI/globe_tftd.png
-
+  - type: WpnActive
+    width: 36
+    height: 52
+    singleImage: true
+    files:
+      0: Resources/UI/WpnActive.png
 
