@@ -78,7 +78,7 @@ BaseNameState::BaseNameState(Base *base, Globe *globe, bool first) : _base(base)
 	add(_txtTitle, "text", "baseNaming");
 	add(_edtName, "text", "baseNaming");
 #ifdef __ANDROID__
-	add(_btnCancel);
+	add(_btnCancel, "text", "baseNaming");
 #endif
 	centerAllSurfaces();
 
@@ -90,7 +90,6 @@ BaseNameState::BaseNameState(Base *base, Globe *globe, bool first) : _base(base)
 	//_btnOk->onKeyboardPress((ActionHandler)&BaseNameState::btnOkClick, Options::keyOk);
 	_btnOk->onKeyboardPress((ActionHandler)&BaseNameState::btnOkClick, Options::keyCancel);
 #ifdef __ANDROID__
-	_btnCancel->setColor(Palette::blockOffset(8) + 5);
 	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->onMouseClick((ActionHandler)&BaseNameState::btnCancelClick); /* That _will_ bite me in the ass, won't it? */
 
