@@ -159,7 +159,10 @@ bool FlcPlayer::init(const char *filename, void(*frameCallBack)(), Game *game, i
 	}
 	else // Otherwise create a new one
 	{
-		_mainScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, _screenWidth, _screenHeight, 8, 0, 0, 0, 0);
+		// Actually, create a surface the same size as the _realScreen
+		_mainScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, 
+			_realScreen->getSurface()->getWidth(), 
+			_realScreen->getSurface()->getHeight(), 8, 0, 0, 0, 0);
 	}
 
 	
