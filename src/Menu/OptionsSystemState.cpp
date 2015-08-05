@@ -39,35 +39,33 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
     _txtMouseMode = new Text(104, 9, 206, 66);
     _cbxMouseMode = new ComboBox(this, 104, 16, 206, 76);
 
-	add(_txtSystemUIControls);
+	add(_txtSystemUIControls, "text", "systemMenu");
 
-	add(_txtReconfigureDirs);
-	add(_btnReconfigureDirs);
+	add(_txtReconfigureDirs, "text", "systemMenu");
+	add(_btnReconfigureDirs, "button", "systemMenu");
 
-	add(_txtControls);
-	add(_btnControls);
+	add(_txtControls, "text", "systemMenu");
+	add(_btnControls, "button", "systemMenu");
 
-	add(_txtLogDestination);
-	add(_btnLogFile);
-	add(_btnLogSystem);
+	add(_txtLogDestination, "text", "systemMenu");
+	add(_btnLogFile, "button", "systemMenu");
+	add(_btnLogSystem, "button", "systemMenu");
 
-	add(_txtDebugOptions);
-	add(_btnLogTouchEvents);
-	add(_btnFakeEvents);
-	add(_btnForceGLMode);
+	add(_txtDebugOptions, "text", "systemMenu");
+	add(_btnLogTouchEvents, "button", "systemMenu");
+	add(_btnFakeEvents, "button", "systemMenu");
+	add(_btnForceGLMode, "button", "systemMenu");
         
-    add(_txtMouseMode);
+    add(_txtMouseMode, "text", "systemMenu");
 
 	// Combobox should be added last, because it will be overlapped by other elements otherwise
-	add(_cbxSystemUI);
-    add(_cbxMouseMode);
+	add(_cbxSystemUI, "button", "systemMenu");
+    add(_cbxMouseMode, "button", "systemMenu");
 
 	centerAllSurfaces();
 
-	_txtLogDestination->setColor(Palette::blockOffset(8) + 10);
 	_txtLogDestination->setText(tr("STR_LOG_DESTINATION"));
 
-	_btnLogFile->setColor(Palette::blockOffset(15) - 1);
 	_btnLogFile->setText(tr("STR_LOG_FILE"));
 	_btnLogFile->setPressed(Options::logToFile);
 	_btnLogFile->onMouseClick((ActionHandler)&OptionsSystemState::btnLogClick);
@@ -75,7 +73,6 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnLogFile->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_btnLogFile->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
-	_btnLogSystem->setColor(Palette::blockOffset(15) - 1);
 	_btnLogSystem->setText(tr("STR_LOG_SYSTEM"));
 	_btnLogSystem->setPressed(Options::logToSystem);
 	_btnLogSystem->onMouseClick((ActionHandler)&OptionsSystemState::btnLogClick);
@@ -83,10 +80,8 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnLogSystem->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_btnLogSystem->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
-	_txtDebugOptions->setColor(Palette::blockOffset(8) + 10);
 	_txtDebugOptions->setText(tr("STR_DEBUG_OPTIONS"));
 
-	_btnLogTouchEvents->setColor(Palette::blockOffset(15) - 1);
 	_btnLogTouchEvents->setText(tr("STR_LOG_TOUCH_EVENTS"));
 	_btnLogTouchEvents->setPressed(Options::logTouch);
 	_btnLogTouchEvents->onMouseClick((ActionHandler)&OptionsSystemState::btnLogTouchEventsClick);
@@ -94,7 +89,6 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnLogTouchEvents->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_btnLogTouchEvents->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
-	_btnFakeEvents->setColor(Palette::blockOffset(15) - 1);
 	_btnFakeEvents->setText(tr("STR_FAKE_EVENTS"));
 	_btnFakeEvents->setPressed(Options::fakeEvents);
 	_btnFakeEvents->onMouseClick((ActionHandler)&OptionsSystemState::btnFakeEventsClick);
@@ -102,7 +96,6 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnFakeEvents->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_btnFakeEvents->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
-	_btnForceGLMode->setColor(Palette::blockOffset(15) - 1);
 	_btnForceGLMode->setText(tr("STR_FORCE_GL_MODE"));
 	_btnForceGLMode->setPressed(Options::forceGLMode);
 	_btnForceGLMode->onMouseClick((ActionHandler)&OptionsSystemState::btnForceGLModeClick);
@@ -110,10 +103,8 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnForceGLMode->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_btnForceGLMode->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
-	_txtSystemUIControls->setColor(Palette::blockOffset(8) + 10);
 	_txtSystemUIControls->setText(tr("STR_SYSTEM_UI"));
 
-	_txtControls->setColor(Palette::blockOffset(8) + 10);
 	_txtControls->setText(tr("STR_CONTROLS_LABEL"));
 
 	std::vector<std::string> sysUI;
@@ -129,13 +120,12 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	}
 	
 	std::vector<std::string> mouseMode;
-        mouseMode.push_back("STR_MOUSE_BASIC");
-        if (sysVersion >= 14)
-        {
-                mouseMode.push_back("STR_MOUSE_EXTENDED");
-        }
+    mouseMode.push_back("STR_MOUSE_BASIC");
+    if (sysVersion >= 14)
+    {
+		mouseMode.push_back("STR_MOUSE_EXTENDED");
+    }
 
-	_cbxSystemUI->setColor(Palette::blockOffset(15) - 1);
 	_cbxSystemUI->setOptions(sysUI);
 	_cbxSystemUI->setSelected((int)Options::systemUI);
 	_cbxSystemUI->onChange((ActionHandler)&OptionsSystemState::cbxSystemUIChange);
@@ -143,11 +133,8 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_cbxSystemUI->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_cbxSystemUI->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
         
-        
-    _txtMouseMode->setColor(Palette::blockOffset(8) + 10);
     _txtMouseMode->setText(tr("STR_MOUSE_MODE"));
-        
-    _cbxMouseMode->setColor(Palette::blockOffset(15) - 1);
+
     _cbxMouseMode->setOptions(mouseMode);
     _cbxMouseMode->setSelected((int)Options::mouseMode);
     _cbxMouseMode->onChange((ActionHandler)&OptionsSystemState::cbxMouseModeChange);
@@ -155,21 +142,17 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
     _cbxMouseMode->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
     _cbxMouseMode->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
-	_txtReconfigureDirs->setColor(Palette::blockOffset(8) + 10);
 	_txtReconfigureDirs->setText(tr("STR_RECONFIGURE_DIRS"));
 
-	_btnReconfigureDirs->setColor(Palette::blockOffset(15) - 1);
 	_btnReconfigureDirs->setText(tr("STR_RECONFIGURE_DIRS_BTN"));
 	_btnReconfigureDirs->onMouseClick((ActionHandler)&OptionsSystemState::btnReconfigureDirsClick);
 
-	_btnControls->setColor(Palette::blockOffset(15) - 1);
 	_btnControls->setText(tr("STR_CONTROLS"));
 	_btnControls->onMouseClick((ActionHandler)&OptionsSystemState::btnControlsClick);
 
 	// This option requires restart, so it's disabled in-game.
 	_txtReconfigureDirs->setVisible(_origin == OPT_MENU);
-	_btnReconfigureDirs->setVisible(_origin == OPT_MENU);
-	
+	_btnReconfigureDirs->setVisible(_origin == OPT_MENU);	
 }
 
 

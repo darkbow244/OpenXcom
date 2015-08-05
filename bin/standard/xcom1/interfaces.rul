@@ -1287,3 +1287,9 @@ interfaces:
         color: 32
       - id: numWounds
         color: 32
+  - type: systemMenu
+    elements:
+      - id: text
+        color: 138   # yellow
+      - id: button
+        color: 239   # bright green
