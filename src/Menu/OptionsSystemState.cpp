@@ -18,11 +18,6 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 {
 	setCategory(_btnSystem);
 
-	//_txtTurningOptions = new Text(104, 9, 94, 8);
-
-	//_btnSwipeToTurn = new ToggleTextButton(104, 16, 94, 18);
-	//_btnHoldToTurn = new ToggleTextButton(104, 16, 94, 36);
-
 	_txtSystemUIControls = new Text(104, 9, 94, 8);
 	_cbxSystemUI = new ComboBox(this, 104, 16, 94, 18);
 
@@ -41,12 +36,8 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnFakeEvents = new ToggleTextButton(104, 16, 94, 94);
 	_btnForceGLMode = new ToggleTextButton(104, 16, 94, 112);
         
-        _txtMouseMode = new Text(104, 9, 206, 66);
-        _cbxMouseMode = new ComboBox(this, 104, 16, 206, 76);
-	
-	//add(_txtTurningOptions);
-	//add(_btnSwipeToTurn);
-	//add(_btnHoldToTurn);
+    _txtMouseMode = new Text(104, 9, 206, 66);
+    _cbxMouseMode = new ComboBox(this, 104, 16, 206, 76);
 
 	add(_txtSystemUIControls);
 
@@ -65,28 +56,13 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	add(_btnFakeEvents);
 	add(_btnForceGLMode);
         
-        add(_txtMouseMode);
+    add(_txtMouseMode);
 
 	// Combobox should be added last, because it will be overlapped by other elements otherwise
 	add(_cbxSystemUI);
-        add(_cbxMouseMode);
+    add(_cbxMouseMode);
 
 	centerAllSurfaces();
-
-	/*
-	_txtTurningOptions->setColor(Palette::blockOffset(8) + 10);
-	_txtTurningOptions->setText(tr("STR_TURNING_OPTIONS"));
-	
-	_btnSwipeToTurn->setColor(Palette::blockOffset(15) - 1);
-	_btnSwipeToTurn->setText(tr("STR_SWIPE"));
-	_btnSwipeToTurn->setPressed(Options::swipeToTurn);
-	_btnSwipeToTurn->onMouseClick((ActionHandler)&OptionsSystemState::turnSettingChange);
-
-	_btnHoldToTurn->setColor(Palette::blockOffset(15) - 1);
-	_btnHoldToTurn->setText(tr("STR_HOLD"));
-	_btnHoldToTurn->setPressed(Options::holdToTurn);
-	_btnHoldToTurn->onMouseClick((ActionHandler)&OptionsSystemState::turnSettingChange);
-	*/
 
 	_txtLogDestination->setColor(Palette::blockOffset(8) + 10);
 	_txtLogDestination->setText(tr("STR_LOG_DESTINATION"));
@@ -168,16 +144,16 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_cbxSystemUI->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
         
         
-        _txtMouseMode->setColor(Palette::blockOffset(8) + 10);
-        _txtMouseMode->setText(tr("STR_MOUSE_MODE"));
+    _txtMouseMode->setColor(Palette::blockOffset(8) + 10);
+    _txtMouseMode->setText(tr("STR_MOUSE_MODE"));
         
-        _cbxMouseMode->setColor(Palette::blockOffset(15) - 1);
-        _cbxMouseMode->setOptions(mouseMode);
-        _cbxMouseMode->setSelected((int)Options::mouseMode);
-        _cbxMouseMode->onChange((ActionHandler)&OptionsSystemState::cbxMouseModeChange);
-        _cbxMouseMode->setTooltip("STR_MOUSE_MODE_DESC");
-        _cbxMouseMode->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
-        _cbxMouseMode->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
+    _cbxMouseMode->setColor(Palette::blockOffset(15) - 1);
+    _cbxMouseMode->setOptions(mouseMode);
+    _cbxMouseMode->setSelected((int)Options::mouseMode);
+    _cbxMouseMode->onChange((ActionHandler)&OptionsSystemState::cbxMouseModeChange);
+    _cbxMouseMode->setTooltip("STR_MOUSE_MODE_DESC");
+    _cbxMouseMode->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
+    _cbxMouseMode->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
 	_txtReconfigureDirs->setColor(Palette::blockOffset(8) + 10);
 	_txtReconfigureDirs->setText(tr("STR_RECONFIGURE_DIRS"));

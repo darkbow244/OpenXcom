@@ -380,28 +380,28 @@ void OptionsModsState::lstModsMousePress(Action *action)
 
 void OptionsModsState::lstModsMouseWheel(Action *action)
 {
-        if (Options::changeValueByMouseWheel == 0)
-                return;
-        unsigned int row = _lstMods->getSelectedRow();
-        size_t numMods = _mods.size();
-        if (action->getDetails()->wheel.y > 0 &&
-                row > 0)
-        {
-                if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
-                        action->getAbsoluteXMouse() <= _lstMods->getArrowsRightEdge())
-                {
-                        moveModUp(action, row);
-                }
+    if (Options::changeValueByMouseWheel == 0)
+		return;
+    unsigned int row = _lstMods->getSelectedRow();
+    size_t numMods = _mods.size();
+    if (action->getDetails()->wheel.y > 0 &&
+		row > 0)
+    {
+		if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
+			action->getAbsoluteXMouse() <= _lstMods->getArrowsRightEdge())
+		{
+			moveModUp(action, row);
         }
-        else if (action->getDetails()->wheel.y < 0 &&
-                         0 < numMods && INT_MAX >= numMods && row < numMods - 1)
+    }
+    else if (action->getDetails()->wheel.y < 0 &&
+             0 < numMods && INT_MAX >= numMods && row < numMods - 1)
+    {
+		if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
+			action->getAbsoluteXMouse() <= _lstMods->getArrowsRightEdge())
         {
-                if (action->getAbsoluteXMouse() >= _lstMods->getArrowsLeftEdge() &&
-                        action->getAbsoluteXMouse() <= _lstMods->getArrowsRightEdge())
-                {
-                        moveModDown(action, row);
-                }
+			moveModDown(action, row);
         }
+    }
 }
 
 }

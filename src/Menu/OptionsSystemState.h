@@ -19,12 +19,9 @@ class ToggleTextButton;
 class OptionsSystemState : public OptionsBaseState
 {
 private:
-	//Text *_txtTurningOptions;
 	Text *_txtSystemUIControls;
 	Text *_txtReconfigureDirs;
 	Text *_txtControls;
-	//ToggleTextButton *_btnSwipeToTurn;
-	//ToggleTextButton *_btnHoldToTurn;
 	Text *_txtLogDestination;
 	Text *_txtDebugOptions;
 	ToggleTextButton *_btnLogFile;
@@ -34,8 +31,8 @@ private:
 	ToggleTextButton *_btnForceGLMode;
 	ComboBox *_cbxSystemUI;
 	TextButton *_btnReconfigureDirs;
-        Text *_txtMouseMode;
-        ComboBox *_cbxMouseMode;
+    Text *_txtMouseMode;
+    ComboBox *_cbxMouseMode;
 public:
 	OptionsSystemState(OptionsOrigin origin);
 	~OptionsSystemState();
@@ -46,7 +43,7 @@ public:
 	void btnLogTouchEventsClick(Action *action);
 	void btnFakeEventsClick(Action *action);
 	void btnForceGLModeClick(Action *action);
-        void cbxMouseModeChange(Action *action);
+    void cbxMouseModeChange(Action *action);
 };
 
 }
