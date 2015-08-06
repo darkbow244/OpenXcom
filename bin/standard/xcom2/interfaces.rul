@@ -971,7 +971,7 @@ interfaces: #done
       - id: button
         color: 1   # white
   - type: soldierMemorial
-    music: GMISPOSH
+    music: GMLOSE
     palette: PAL_BASESCAPE
     elements:
       - id: palette
@@ -1337,7 +1337,7 @@ interfaces: #done
         color: 5
       - id: weight
         color: 16     # gold (acceptable)
-        color2: 32    # red (overweight)
+        color2: 176    # red (overweight)
       - id: numStack
         color: 82
   - type: stats
