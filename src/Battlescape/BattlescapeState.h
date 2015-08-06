@@ -226,6 +226,14 @@ public:
 	void btnReserveKneelClick(Action *action);
 	/// Handler for clicking the expend all TUs button.
 	void btnZeroTUsClick(Action *action);
+#ifdef __ANDROID__
+	/// Handler for pressing the expend all TUs button.
+	void btnZeroTUsPress(Action *action);
+	/// Handler for releasing the expend all TUs button.
+	void btnZeroTUsRelease(Action *action);
+	/// Handler for long-pressing the expend all TUs button.
+	void btnZeroTUsLongPress();
+#endif
 	/// Handler for showing tooltip.
 	void txtTooltipIn(Action *action);
 	/// Handler for hiding tooltip.

@@ -423,6 +423,10 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	_btnReserveKneel->allowToggleInversion();
 
 	_btnZeroTUs->onMouseClick((ActionHandler)&BattlescapeState::btnZeroTUsClick, SDL_BUTTON_RIGHT);
+#ifdef __ANDROID__
+	_btnZeroTUs->onMousePress((ActionHandler)&BattlescapeState::btnZeroTUsPress);
+	_btnZeroTUs->onMouseRelease((ActionHandler)&BattlescapeState::btnZeroTUsRelease);
+#endif
 	_btnZeroTUs->onKeyboardPress((ActionHandler)&BattlescapeState::btnZeroTUsClick, Options::keyBattleZeroTUs);
 	_btnZeroTUs->setTooltip("STR_EXPEND_ALL_TIME_UNITS");
 	_btnZeroTUs->onMouseIn((ActionHandler)&BattlescapeState::txtTooltipIn);
@@ -734,6 +738,7 @@ void BattlescapeState::mapPress(Action *action)
 	}
 
 #ifdef __ANDROID__
+	_longPressTimer->onTimer((StateHandler)&BattlescapeState::mapLongPress);
 	_longPressTimer->start();
 	Position pos;
 	/* Avoid null pointer dereference */
@@ -2321,6 +2326,30 @@ void BattlescapeState::btnZeroTUsClick(Action *action)
 		}
 	}
 }
+
+#ifdef __ANDROID__
+void BattlescapeState::btnZeroTUsPress(Action *action)
+{
+	_longPressTimer->onTimer((StateHandler)&BattlescapeState::btnZeroTUsLongPress);
+	_longPressTimer->start();
+}
+
+void BattlescapeState::btnZeroTUsRelease(Action *action)
+{
+	_longPressTimer->stop();
+}
+
+void BattlescapeState::btnZeroTUsLongPress()
+{
+	_longPressTimer->stop();
+	SDL_Event ev;
+	ev.type = SDL_MOUSEBUTTONDOWN;
+	ev.button.button = SDL_BUTTON_LEFT;
+	Action a = Action(&ev, 0.0, 0.0, 0, 0);
+	a.setSender(_btnZeroTUs);
+	btnZeroTUsClick(&a);
+}
+#endif
 
 /**
 * Shows a tooltip for the appropriate button.
