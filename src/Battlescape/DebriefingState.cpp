@@ -536,17 +536,14 @@ void DebriefingState::prepareDebriefing()
 		}
 	}
 	
-	if (deployment && deployment->getNextStage().empty())
+	// mission site disappears (even when you abort)
+	for (std::vector<MissionSite*>::iterator i = save->getMissionSites()->begin(); i != save->getMissionSites()->end(); ++i)
 	{
-		// mission site disappears (even when you abort)
-		for (std::vector<MissionSite*>::iterator i = save->getMissionSites()->begin(); i != save->getMissionSites()->end(); ++i)
+		if ((*i)->isInBattlescape())
 		{
-			if ((*i)->isInBattlescape())
-			{
-				delete *i;
-				save->getMissionSites()->erase(i);
-				break;
-			}
+			delete *i;
+			save->getMissionSites()->erase(i);
+			break;
 		}
 	}
 
@@ -577,40 +574,42 @@ void DebriefingState::prepareDebriefing()
 		}
 	}
 
-	if (deployment && deployment->getNextStage().empty())
+	// alien base disappears (if you didn't abort)
+	for (std::vector<AlienBase*>::iterator i = save->getAlienBases()->begin(); i != save->getAlienBases()->end(); ++i)
 	{
-		// alien base disappears (if you didn't abort)
-		for (std::vector<AlienBase*>::iterator i = save->getAlienBases()->begin(); i != save->getAlienBases()->end(); ++i)
+		if ((*i)->isInBattlescape())
 		{
-			if ((*i)->isInBattlescape())
-			{
-				_txtRecovery->setText(tr("STR_ALIEN_BASE_RECOVERY"));
-				bool destroyAlienBase = true;
+			_txtRecovery->setText(tr("STR_ALIEN_BASE_RECOVERY"));
+			bool destroyAlienBase = true;
 
-				if (aborted || playersSurvived == 0)
+			if (aborted || playersSurvived == 0)
+			{
+				if (!battle->allObjectivesDestroyed())
+					destroyAlienBase = false;
+			}
+			
+			if (deployment && !deployment->getNextStage().empty())
+			{
+				destroyAlienBase = false;
+			}
+			success = destroyAlienBase;
+			if (destroyAlienBase)
+			{
+				if (objectiveCompleteText != "")
 				{
-					if (!battle->allObjectivesDestroyed())
-						destroyAlienBase = false;
+					addStat(objectiveCompleteText, 1, objectiveCompleteScore);
 				}
-				success = destroyAlienBase;
-				if (destroyAlienBase)
-				{
-					if (objectiveCompleteText != "")
-					{
-						addStat(objectiveCompleteText, 1, objectiveCompleteScore);
-					}
-					// Take care to remove supply missions for this base.
-					std::for_each(save->getAlienMissions().begin(), save->getAlienMissions().end(),
-								ClearAlienBase(*i));
-					delete *i;
-					save->getAlienBases()->erase(i);
-					break;
-				}
-				else
-				{
-					(*i)->setInBattlescape(false);
-					break;
-				}
+				// Take care to remove supply missions for this base.
+				std::for_each(save->getAlienMissions().begin(), save->getAlienMissions().end(),
+							ClearAlienBase(*i));
+				delete *i;
+				save->getAlienBases()->erase(i);
+				break;
+			}
+			else
+			{
+				(*i)->setInBattlescape(false);
+				break;
 			}
 		}
 	}
@@ -1119,15 +1118,24 @@ void DebriefingState::recoverItems(std::vector<BattleItem*> *from, Base *base)
 					addStat("STR_ALIEN_CORPSES_RECOVERED", 1, (*it)->getUnit()->getValue());
 					base->getItems()->addItem((*it)->getUnit()->getArmor()->getCorpseGeoscape(), 1);
 				}
-				else if ((*it)->getRules()->getBattleType() == BT_CORPSE && (*it)->getUnit()->getStatus() == STATUS_UNCONSCIOUS)
+				else if ((*it)->getRules()->getBattleType() == BT_CORPSE)
 				{
-					if ((*it)->getUnit()->getOriginalFaction() == FACTION_HOSTILE)
+					// it's unconscious
+					if ((*it)->getUnit()->getStatus() == STATUS_UNCONSCIOUS ||
+						// or it's in timeout because it's unconscious from the previous stage
+						// units can be in timeout and alive, and we assume they flee.
+						((*it)->getUnit()->getStatus() == STATUS_TIMEOUT &&
+						(*it)->getUnit()->getHealth() > 0 &&
+						(*it)->getUnit()->getHealth() < (*it)->getUnit()->getStunlevel()))
 					{
-						recoverAlien((*it)->getUnit(), base);
-					}
-					else if ((*it)->getUnit()->getOriginalFaction() == FACTION_NEUTRAL)
-					{
-						addStat("STR_CIVILIANS_SAVED", 1, (*it)->getUnit()->getValue());
+						if ((*it)->getUnit()->getOriginalFaction() == FACTION_HOSTILE)
+						{
+							recoverAlien((*it)->getUnit(), base);
+						}
+						else if ((*it)->getUnit()->getOriginalFaction() == FACTION_NEUTRAL)
+						{
+							addStat("STR_CIVILIANS_SAVED", 1, (*it)->getUnit()->getValue());
+						}
 					}
 				}
 				// only "recover" unresearched items
