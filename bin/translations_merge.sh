@@ -37,6 +37,6 @@ done
 
 echo "Carbon-copying standard files - they don't have system-specific translations."
 
-cp -r $TRANSLATIONS_SOURCE/standard/ $TRANSLATIONS_OUTPUT/standard/
+cp -r $TRANSLATIONS_SOURCE/standard/ $TRANSLATIONS_OUTPUT
 
 echo "All done."
