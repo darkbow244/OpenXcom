@@ -353,7 +353,7 @@ void OptionsModsState::moveModDown(Action *action, unsigned int row, bool max)
 			}
 			targetScrollPos += _lstMods->getNumTextLines(i);
 		}
-		if (curScrollPos + _lstMods->getVisibleRows() > targetScrollPos)
+		if (curScrollPos + (int)_lstMods->getVisibleRows() > targetScrollPos)
 		{
 			int ydiff = _lstMods->getTextHeight(row + 1);
 			SDL_WarpMouseInWindow(0, action->getLeftBlackBand() + action->getXMouse(),
