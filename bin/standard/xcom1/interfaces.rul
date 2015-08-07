@@ -1287,6 +1287,9 @@ interfaces:
         color: 32
       - id: numWounds
         color: 32
+      - id: buttonEnd
+        pos: [220, 140]
+        size: [20, 20]
   - type: systemMenu
     elements:
       - id: text
