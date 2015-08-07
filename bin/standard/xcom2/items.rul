@@ -9,6 +9,7 @@ items: #done
     costBuy: 3000
     costSell: 2400
     transferTime: 48
+    clipSize: 1
   - type: STR_DUP_HEAD_LAUNCHER
     size: 1
     costBuy: 17000
@@ -19,6 +20,7 @@ items: #done
     costBuy: 9000
     costSell: 7200
     transferTime: 48
+    clipSize: 1
   - type: STR_CRAFT_GAS_CANNON
     size: 1.5
     costBuy: 30000
@@ -59,6 +61,7 @@ items: #done
     size: 0.6
     costSell: 53300
     transferTime: 48
+    clipSize: 1
   - type: STR_COELACANTH_GAS_CANNON
     size: 6
     costBuy: 420000
@@ -716,7 +719,6 @@ items: #done
     battleType: 7
     tuUse: 25
     armor: 20
-    underwaterOnly: true
   - type: STR_MEDI_KIT
     size: 0.1
     costSell: 46500
@@ -754,7 +756,6 @@ items: #done
     tuUse: 25
     flatRate: true
     armor: 20
-    underwaterOnly: true
   - type: STR_THERMAL_TAZER
     size: 0.1
     costBuy: 1260
