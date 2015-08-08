@@ -940,6 +940,9 @@
     <ClCompile Include="Ruleset\RuleMissionScript.cpp">
       <Filter>Ruleset</Filter>
     </ClCompile>
+    <ClCompile Include="Geoscape\DogfightErrorState.cpp">
+      <Filter>Geoscape</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -1892,6 +1895,9 @@
     </ClInclude>
     <ClInclude Include="Ruleset\RuleMissionScript.h">
       <Filter>Ruleset</Filter>
+    </ClInclude>
+    <ClInclude Include="Geoscape\DogfightErrorState.h">
+      <Filter>Geoscape</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
