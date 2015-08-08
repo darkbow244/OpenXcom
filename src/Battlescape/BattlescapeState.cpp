@@ -501,7 +501,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	_gameTimer->onTimer((StateHandler)&BattlescapeState::handleState);
 	
 #ifdef __ANDROID__
-	_longPressTimer = new Timer(500, false);
+	_longPressTimer = new Timer(Options::longPressDuration, false);
 	_longPressTimer->onTimer((StateHandler)&BattlescapeState::mapLongPress);
 #endif
 

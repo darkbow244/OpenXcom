@@ -74,7 +74,7 @@ namespace OpenXcom
 	_animTimer->onTimer((SurfaceHandler)&Inventory::drawPrimers);
 	_animTimer->start();
 #ifdef __ANDROID__
-	_longPressTimer = new Timer(500, true);
+	_longPressTimer = new Timer(Options::longPressDuration, true);
 	_longPressTimer->onTimer((SurfaceHandler)&Inventory::longPressAction);
 	_longPressTimer->stop();
 
