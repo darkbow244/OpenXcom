@@ -60,7 +60,10 @@ namespace OpenXcom
  * @param base Pointer to the base to get info from.
  * @param globe Pointer to the Geoscape globe.
  */
-	BasescapeState::BasescapeState(Base *base, Globe *globe) : _base(base), _globe(globe), _clickGuard(false)
+	BasescapeState::BasescapeState(Base *base, Globe *globe) : _base(base), _globe(globe)
+#ifdef __ANDROID__
+		, _clickGuard(false)
+#endif
 {
 	// Create objects
 	_txtFacility = new Text(192, 9, 0, 0);
@@ -152,12 +155,13 @@ namespace OpenXcom
 	_btnGeoscape->setText(tr("STR_GEOSCAPE_UC"));
 	_btnGeoscape->onMouseClick((ActionHandler)&BasescapeState::btnGeoscapeClick);
 	_btnGeoscape->onKeyboardPress((ActionHandler)&BasescapeState::btnGeoscapeClick, Options::keyCancel);
-
+#ifdef __ANDROID__
 	_longPressTimer = new Timer(Options::longPressDuration, false);
 	_longPressTimer->onTimer((StateHandler)&BasescapeState::viewLongPress);
 
 	_view->onMousePress((ActionHandler)&BasescapeState::viewPress);
 	_view->onMouseRelease((ActionHandler)&BasescapeState::viewRelease);
+#endif
 }
 
 /**
@@ -179,8 +183,9 @@ BasescapeState::~BasescapeState()
 	{
 		delete _base;
 	}
-
+#ifdef __ANDROID__
 	delete _longPressTimer;
+#endif
 }
 
 /**
@@ -356,12 +361,14 @@ void BasescapeState::btnGeoscapeClick(Action *)
  */
 void BasescapeState::viewLeftClick(Action *)
 {
+#ifdef __ANDROID__
 	// If the guard is in place, ignore this click and clear guard
 	if (_clickGuard)
 	{
 		_clickGuard = false;
 		return;
 	}
+#endif
 	BaseFacility *fac = _view->getSelectedFacility();
 	if (fac != 0)
 	{
@@ -525,7 +532,7 @@ void BasescapeState::edtBaseChange(Action *action)
 {
 	_base->setName(_edtBase->getText());
 }
-
+#ifdef __ANDROID__
 /**
  * Pokes the timer.
  */
@@ -560,5 +567,6 @@ void BasescapeState::viewLongPress()
 	_clickGuard = true;
 	viewRightClick(0);
 }
+#endif
 
 }
