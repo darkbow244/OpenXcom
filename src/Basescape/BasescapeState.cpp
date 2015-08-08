@@ -49,6 +49,7 @@
 #include "TransferBaseState.h"
 #include "CraftInfoState.h"
 #include "../Geoscape/AllocatePsiTrainingState.h"
+#include "../Engine/Timer.h"
 
 namespace OpenXcom
 {
@@ -59,7 +60,7 @@ namespace OpenXcom
  * @param base Pointer to the base to get info from.
  * @param globe Pointer to the Geoscape globe.
  */
-BasescapeState::BasescapeState(Base *base, Globe *globe) : _base(base), _globe(globe)
+	BasescapeState::BasescapeState(Base *base, Globe *globe) : _base(base), _globe(globe), _clickGuard(false)
 {
 	// Create objects
 	_txtFacility = new Text(192, 9, 0, 0);
@@ -151,6 +152,12 @@ BasescapeState::BasescapeState(Base *base, Globe *globe) : _base(base), _globe(g
 	_btnGeoscape->setText(tr("STR_GEOSCAPE_UC"));
 	_btnGeoscape->onMouseClick((ActionHandler)&BasescapeState::btnGeoscapeClick);
 	_btnGeoscape->onKeyboardPress((ActionHandler)&BasescapeState::btnGeoscapeClick, Options::keyCancel);
+
+	_longPressTimer = new Timer(Options::longPressDuration, false);
+	_longPressTimer->onTimer((StateHandler)&BasescapeState::viewLongPress);
+
+	_view->onMousePress((ActionHandler)&BasescapeState::viewPress);
+	_view->onMouseRelease((ActionHandler)&BasescapeState::viewRelease);
 }
 
 /**
@@ -172,6 +179,8 @@ BasescapeState::~BasescapeState()
 	{
 		delete _base;
 	}
+
+	delete _longPressTimer;
 }
 
 /**
@@ -347,6 +356,12 @@ void BasescapeState::btnGeoscapeClick(Action *)
  */
 void BasescapeState::viewLeftClick(Action *)
 {
+	// If the guard is in place, ignore this click and clear guard
+	if (_clickGuard)
+	{
+		_clickGuard = false;
+		return;
+	}
 	BaseFacility *fac = _view->getSelectedFacility();
 	if (fac != 0)
 	{
@@ -509,6 +524,41 @@ void BasescapeState::handleKeyPress(Action *action)
 void BasescapeState::edtBaseChange(Action *action)
 {
 	_base->setName(_edtBase->getText());
+}
+
+/**
+ * Pokes the timer.
+ */
+void BasescapeState::think()
+{
+	_longPressTimer->think(this, 0);
+}
+/**
+ * Starts the timer when the base view is pressed.
+ * @param action Pointer to an action.
+ */
+void BasescapeState::viewPress(Action *action)
+{
+	_longPressTimer->start();
+}
+
+/**
+ * Stops the timer if the user doesn't wait for the base module state to appear.
+ * @param action Pointer to an action.
+ */
+void BasescapeState::viewRelease(Action *action)
+{
+	_longPressTimer->stop();
+}
+
+/**
+ * Fires the right mouse button handler if the view was pressed long enough.
+ */
+void BasescapeState::viewLongPress()
+{
+	_longPressTimer->stop();
+	_clickGuard = true;
+	viewRightClick(0);
 }
 
 }

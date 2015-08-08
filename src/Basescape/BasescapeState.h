@@ -31,6 +31,7 @@ class TextButton;
 class TextEdit;
 class Base;
 class Globe;
+class Timer;
 
 /**
  * Basescape screen that shows a base's layout
@@ -46,6 +47,10 @@ private:
 	TextButton *_btnNewBase, *_btnBaseInfo, *_btnSoldiers, *_btnCrafts, *_btnFacilities, *_btnResearch, *_btnManufacture, *_btnTransfer, *_btnPurchase, *_btnSell, *_btnGeoscape;
 	Base *_base;
 	Globe *_globe;
+
+	Timer *_longPressTimer;
+	bool _clickGuard;
+
 public:
 	/// Creates the Basescape state.
 	BasescapeState(Base *base, Globe *globe);
@@ -91,6 +96,14 @@ public:
 	void edtBaseChange(Action *action);
 	/// Handler for pressing a base selection hotkey.
 	void handleKeyPress(Action *action);
+	/// Pokes timer now and again
+	void think();
+	/// Handler for base view presses (starts _longPressTimer)
+	void viewPress(Action *action);
+	/// Handler for base view releases (stops _longPressTimer)
+	void viewRelease(Action *action);
+	/// Handler for timer event (long press action)
+	void viewLongPress();
 };
 
 }

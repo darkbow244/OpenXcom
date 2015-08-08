@@ -51,6 +51,7 @@ OPT SystemUIStyle systemUI;
 OPT bool logToFile, logToSystem, logTouch, fakeEvents, forceGLMode;
 OPT int mouseMode;
 OPT bool listDragScroll;
+OPT int longPressDuration;
 
 // Flags and other stuff that don't need OptionInfo's.
 OPT bool mute, reload, newOpenGL, newScaleFilter, newHQXFilter, newXBRZFilter;
