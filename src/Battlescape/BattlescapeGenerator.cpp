@@ -1012,7 +1012,7 @@ void BattlescapeGenerator::deployAliens(AlienDeployment *deployment)
  */
 BattleUnit *BattlescapeGenerator::addAlien(Unit *rules, int alienRank, bool outside)
 {
-	int difficulty = (int)(_game->getSavedGame()->getDifficulty());
+	int difficulty =_game->getSavedGame()->getDifficultyCoefficient();
 	BattleUnit *unit = new BattleUnit(rules, FACTION_HOSTILE, _unitSequence++, _game->getRuleset()->getArmor(rules->getArmor()), difficulty, _save->getDepth());
 	Node *node = 0;
 
@@ -1738,6 +1738,7 @@ void BattlescapeGenerator::generateMap(const std::vector<MapScript*> *script)
 {
 	// set our ambient sound
 	_save->setAmbientSound(_terrain->getAmbience());
+	_save->setAmbientVolume(_terrain->getAmbientVolume());
 
 	// set up our map generation vars
 	_dummy = new MapBlock("dummy");

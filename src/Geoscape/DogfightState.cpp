@@ -489,7 +489,7 @@ DogfightState::DogfightState(GeoscapeState *state, Craft *craft, Ufo *ufo) : _st
 	if (!_ufo->getEscapeCountdown())
 	{
 		_ufo->setFireCountdown(0);
-		_ufo->setEscapeCountdown(_ufo->getRules()->getBreakOffTime() + RNG::generate(0, _ufo->getRules()->getBreakOffTime()) - 30 * (int)(_game->getSavedGame()->getDifficulty()));
+		_ufo->setEscapeCountdown(_ufo->getRules()->getBreakOffTime() + RNG::generate(0, _ufo->getRules()->getBreakOffTime()) - 30 * _game->getSavedGame()->getDifficultyCoefficient());
 	}
 
 	// technically this block is redundant, but i figure better to initialize the variables as SOMETHING
@@ -1023,11 +1023,11 @@ void DogfightState::update()
 			AlienMission *mission = _ufo->getMission();
 			mission->ufoShotDown(*_ufo);
 			// Check for retaliation trigger.
-			if (!RNG::percent(4 * (24 - (int)(_game->getSavedGame()->getDifficulty()))))
+			if (!RNG::percent(4 * (24 - _game->getSavedGame()->getDifficultyCoefficient())))
 			{
 				// Spawn retaliation mission.
 				std::string targetRegion;
-				if (RNG::percent(50 - 6 * (int)(_game->getSavedGame()->getDifficulty())))
+				if (RNG::percent(50 - 6 * _game->getSavedGame()->getDifficultyCoefficient()))
 				{
 					// Attack on UFO's mission region
 					targetRegion = _ufo->getMission()->getRegion();
@@ -1046,7 +1046,7 @@ void DogfightState::update()
 					mission->setId(_game->getSavedGame()->getId("ALIEN_MISSIONS"));
 					mission->setRegion(targetRegion, *_game->getRuleset());
 					mission->setRace(_ufo->getAlienRace());
-					mission->start();
+					mission->start(mission->getRules().getWave(0).spawnTimer); // fixed delay for first scout
 					_game->getSavedGame()->getAlienMissions().push_back(mission);
 				}
 			}
@@ -1198,7 +1198,7 @@ void DogfightState::fireWeapon2()
  */
 void DogfightState::ufoFireWeapon()
 {
-	int fireCountdown = std::max(1, (_ufo->getRules()->getWeaponReload() - 2 * (int)(_game->getSavedGame()->getDifficulty())));
+	int fireCountdown = std::max(1, (_ufo->getRules()->getWeaponReload() - 2 * _game->getSavedGame()->getDifficultyCoefficient()));
 	_ufo->setFireCountdown(RNG::generate(0, fireCountdown) + fireCountdown);
 
 	setStatus("STR_UFO_RETURN_FIRE");
@@ -1638,7 +1638,7 @@ void DogfightState::btnMinimizedIconClick(Action *)
 		bool underwater = !_craft->getWeapons()->empty();
 		for (std::vector<CraftWeapon*>::iterator w = _craft->getWeapons()->begin(); w != _craft->getWeapons()->end(); ++w)
 		{
-			if (!(*w)->getRules()->isWaterOnly())
+			if ((*w) && !(*w)->getRules()->isWaterOnly())
 			{
 				underwater = false;
 				break;
