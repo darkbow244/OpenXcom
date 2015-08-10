@@ -83,7 +83,7 @@ Uint8 Cursor::getColor() const
  */
 void Cursor::draw()
 {
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	//don't paint the cursor
 	return;
 #endif

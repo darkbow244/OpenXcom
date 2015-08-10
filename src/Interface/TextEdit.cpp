@@ -35,7 +35,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  */
 TextEdit::TextEdit(State *state, int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _blink(true), _modal(true), _ascii(L'A'), _caretPos(0), _numerical(false), _change(0), _state(state)
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	, _isKeyboardActive(false)
 #endif
 {
@@ -53,7 +53,7 @@ TextEdit::TextEdit(State *state, int width, int height, int x, int y) : Interact
 TextEdit::~TextEdit()
 {
 	/* for good measure? */
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_stopTextInput();
 #endif
 	delete _text;
@@ -103,7 +103,7 @@ void TextEdit::setFocus(bool focus, bool modal)
 			_timer->start();
 			if (_modal)
 				_state->setModal(this);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 			// Show virtual keyboard
 			/* SDL_Rect r;
 			r.x = getX();
@@ -123,7 +123,7 @@ void TextEdit::setFocus(bool focus, bool modal)
 			//SDL_EnableKeyRepeat(0, SDL_DEFAULT_REPEAT_INTERVAL);
 			if (_modal)
 				_state->setModal(0);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 			/* SDL_StopTextInput(); */
 			_stopTextInput();
 #endif
@@ -131,7 +131,7 @@ void TextEdit::setFocus(bool focus, bool modal)
 	}
 }
 
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 /**
  * Shows keyboard on devices without physical keyboard
  */
@@ -425,7 +425,7 @@ void TextEdit::mousePress(Action *action, State *state)
 {
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 	{
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	/* Show keyboard */
 	_startTextInput();
 #endif

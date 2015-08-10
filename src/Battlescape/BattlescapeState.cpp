@@ -128,7 +128,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	_numAmmoRight = new NumberText(30, 5, x + 280, y + 4);
 	const int visibleUnitX = _game->getRuleset()->getInterface("battlescape")->getElement("visibleUnits")->x;
 	const int visibleUnitY = _game->getRuleset()->getInterface("battlescape")->getElement("visibleUnits")->y;
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_leftWpnActive = new Surface(36, 52, x + 6, y + 2);
 	_rightWpnActive = new Surface(36, 52, x + 278, y + 2);
 	
@@ -235,7 +235,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	add(_btnReserveAuto, "buttonReserveAuto", "battlescape", _icons);
 	add(_btnReserveKneel, "buttonReserveKneel", "battlescape", _icons);
 	add(_btnZeroTUs, "buttonZeroTUs", "battlescape", _icons);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	add(_leftWpnActive);
 	add(_rightWpnActive);
 	Surface *wpnActive = _game->getResourcePack()->getSurface("WpnActive");
@@ -423,7 +423,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	_btnReserveKneel->allowToggleInversion();
 
 	_btnZeroTUs->onMouseClick((ActionHandler)&BattlescapeState::btnZeroTUsClick, SDL_BUTTON_RIGHT);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_btnZeroTUs->onMousePress((ActionHandler)&BattlescapeState::btnZeroTUsPress);
 	_btnZeroTUs->onMouseRelease((ActionHandler)&BattlescapeState::btnZeroTUsRelease);
 #endif
@@ -500,7 +500,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	_gameTimer = new Timer(DEFAULT_ANIM_SPEED, true);
 	_gameTimer->onTimer((StateHandler)&BattlescapeState::handleState);
 	
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_longPressTimer = new Timer(Options::longPressDuration, false);
 	_longPressTimer->onTimer((StateHandler)&BattlescapeState::mapLongPress);
 #endif
@@ -519,7 +519,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
  */
 BattlescapeState::~BattlescapeState()
 {
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	delete _longPressTimer;
 #endif
 	delete _animTimer;
@@ -592,7 +592,7 @@ void BattlescapeState::think()
 			_battleGame->think();
 			_animTimer->think(this, 0);
 			_gameTimer->think(this, 0);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 			_longPressTimer->think(this, 0);
 #endif
 			if (popped)
@@ -642,7 +642,7 @@ void BattlescapeState::mapOver(Action *action)
 
 		_isMouseScrolled = true;
 
-#ifndef __ANDROID__
+#ifndef __MOBILE__
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 		//SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - _map->getIconHeight() / 2);
@@ -738,7 +738,7 @@ void BattlescapeState::mapPress(Action *action)
 		_mouseScrollingStartTime = SDL_GetTicks();
 	}
 
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_longPressTimer->onTimer((StateHandler)&BattlescapeState::mapLongPress);
 	_longPressTimer->start();
 	Position pos;
@@ -772,7 +772,7 @@ void BattlescapeState::mapPress(Action *action)
 void BattlescapeState::mapRelease(Action *action)
 {
 	_multiGestureProcess = false;
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_longPressTimer->stop();
 	// Do nothing if this method of turning is disabled
 	if (!Options::swipeToTurn)
@@ -791,7 +791,7 @@ void BattlescapeState::mapRelease(Action *action)
 }
 
 
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 /**
 * Handles long presses to turn the soldier.
 */
@@ -946,7 +946,7 @@ void BattlescapeState::multiGesture(Action *action)
 		_multiGestureProcess = true;
 		delta = 0;
 		prevPointY = action->getDetails()->mgesture.y;
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 		_longPressTimer->stop();
 #endif
 		return;
@@ -1270,7 +1270,7 @@ void BattlescapeState::btnLeftHandItemClick(Action *)
 		if (_battleGame->getCurrentAction()->targeting)
 		{
 			_battleGame->cancelCurrentAction();
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 			if (!_battleGame->getCurrentAction()->targeting)
 			{
 				_leftWpnActive->setVisible(false);
@@ -1304,7 +1304,7 @@ void BattlescapeState::btnRightHandItemClick(Action *)
 		if (_battleGame->getCurrentAction()->targeting)
 		{
 			_battleGame->cancelCurrentAction();
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 			if (!_battleGame->getCurrentAction()->targeting)
 			{
 				_leftWpnActive->setVisible(false);
@@ -1347,7 +1347,7 @@ void BattlescapeState::btnVisibleUnitClick(Action *action)
 	}
 
 	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_longPressTimer->stop();
 #endif
 }
@@ -1360,7 +1360,7 @@ void BattlescapeState::btnLaunchClick(Action *action)
 {
 	_battleGame->launchAction();
 	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	// Seems we have an issue with a timer.
 	_longPressTimer->stop();
 #endif
@@ -1374,7 +1374,7 @@ void BattlescapeState::btnPsiClick(Action *action)
 {
 	_battleGame->psiButtonAction();
 	action->getDetails()->type = SDL_FIRSTEVENT; // consume the event
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_longPressTimer->stop();
 #endif
 }
@@ -1478,7 +1478,7 @@ void BattlescapeState::updateSoldierInfo()
 	_numAmmoRight->setVisible(playableUnit);
 	if (!playableUnit)
 	{
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 		_leftWpnActive->setVisible(false);
 		_rightWpnActive->setVisible(false);
 #endif
@@ -1543,7 +1543,7 @@ void BattlescapeState::updateSoldierInfo()
 		}
 	}
 
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	if (_battleGame->getCurrentAction()->targeting)
 	{
 		BattleItem *currentItem = _battleGame->getCurrentAction()->weapon;
@@ -1611,7 +1611,7 @@ void BattlescapeState::handleItemClick(BattleItem *item)
 		if (_game->getSavedGame()->isResearched(item->getRules()->getRequirements()) || _save->getSelectedUnit()->getOriginalFaction() == FACTION_HOSTILE)
 		{
 			_battleGame->getCurrentAction()->weapon = item;
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 		BattleUnit *battleUnit = _save->getSelectedUnit();
 		if (battleUnit)
 		{
@@ -2340,7 +2340,7 @@ void BattlescapeState::btnZeroTUsClick(Action *action)
 	}
 }
 
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 void BattlescapeState::btnZeroTUsPress(Action *action)
 {
 	_longPressTimer->onTimer((StateHandler)&BattlescapeState::btnZeroTUsLongPress);
@@ -2459,13 +2459,11 @@ bool BattlescapeState::hasScrolled() const
  */
 void BattlescapeState::stopScrolling(Action *action)
 {
-#ifndef __ANDROID__
+#ifndef __MOBILE__
 	if (Options::battleDragScrollInvert)
 	{
-//#ifndef __ANDROID__
 		/* FIXME: Mouse warping still doesn't work as intended */
 		SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
-//#endif
 		action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, _map->getX(), _map->getY());
 		_battleGame->setupCursor();
 		if (_battleGame->getCurrentAction()->actor == 0 && (_save->getSide() == FACTION_PLAYER || _save->getDebugMode()))
@@ -2475,10 +2473,8 @@ void BattlescapeState::stopScrolling(Action *action)
 	}
 	else
 	{
-//#ifndef __ANDROID__
 		/* FIXME: Mouse warping still doesn't work as intended */
 		SDL_WarpMouseInWindow(NULL, _cursorPosition.x, _cursorPosition.y);
-//#endif
 		action->setMouseAction(_cursorPosition.x/action->getXScale(), _cursorPosition.y/action->getYScale(), _game->getScreen()->getSurface()->getX(), _game->getScreen()->getSurface()->getY());
 		_map->setSelectorPosition(_cursorPosition.x / action->getXScale(), _cursorPosition.y / action->getYScale());
 	}

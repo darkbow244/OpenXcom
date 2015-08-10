@@ -90,7 +90,7 @@ private:
 	void handleItemClick(BattleItem *item);
 	/// Shifts the red colors of the visible unit buttons backgrounds.
 	void blinkVisibleUnitButtons();
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	// Scalers for touchscreen
 	float _mouseXScale, _mouseYScale;
 	Surface *_leftWpnActive, *_rightWpnActive;
@@ -124,7 +124,7 @@ public:
 	void multiGesture(Action *action);
 	/// Handler for buttons
 	void mapKey(Action *action);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	/// Handler for long presses
 	void mapLongPress();
 #endif
@@ -226,7 +226,7 @@ public:
 	void btnReserveKneelClick(Action *action);
 	/// Handler for clicking the expend all TUs button.
 	void btnZeroTUsClick(Action *action);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	/// Handler for pressing the expend all TUs button.
 	void btnZeroTUsPress(Action *action);
 	/// Handler for releasing the expend all TUs button.

@@ -46,7 +46,7 @@ protected:
 	OptionsOrigin _origin;
 	Window *_window;
 	TextButton *_btnVideo, *_btnAudio, *_btnControls, *_btnGeoscape, *_btnBattlescape, *_btnAdvanced, *_btnMods;
-#if defined (__ANDROID__) || defined (__PSEUDO_ANDROID__)
+#if defined (__MOBILE__) || defined (__PSEUDO_ANDROID__)
 	TextButton *_btnSystem;
 #endif
 	TextButton *_btnOk, *_btnCancel, *_btnDefault;

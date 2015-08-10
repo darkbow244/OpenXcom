@@ -233,9 +233,7 @@ void FlcPlayer::SDLPolling()
 	{
 		switch (event.type)
 		{
-//#ifdef __ANDROID__
 		case SDL_FINGERDOWN:
-//#endif
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_KEYDOWN:
 			_playingState = SKIPPED;

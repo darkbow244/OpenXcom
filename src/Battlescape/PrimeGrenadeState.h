@@ -47,7 +47,7 @@ private:
 	Frame *_frame;
 	InteractiveSurface *_button[24];
 	Surface *_bg;
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	InteractiveSurface *_outside;
 #endif
 public:
@@ -59,7 +59,7 @@ public:
 	void handle(Action *action);
 	/// Handler for clicking a button.
 	void btnClick(Action *action);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	void outsideClick(Action *action);
 #endif
 };

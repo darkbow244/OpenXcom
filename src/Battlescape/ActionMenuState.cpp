@@ -34,7 +34,7 @@
 #include "Pathfinding.h"
 #include "TileEngine.h"
 #include "../Interface/Text.h"
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 #include "../Engine/InteractiveSurface.h"
 #endif
 
@@ -54,7 +54,7 @@ ActionMenuState::ActionMenuState(BattleAction *action, int x, int y) : _action(a
 
 	// Set palette
 	_game->getSavedGame()->getSavedBattle()->setPaletteByDepth(this);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	// Set an underlying InteractiveSurface to exit the menu
 	_outside = new InteractiveSurface(Options::baseXResolution, Options::baseYResolution, 0, 0);
 	_outside->onMouseClick((ActionHandler)&ActionMenuState::outsideClick);
@@ -339,7 +339,7 @@ void ActionMenuState::resize(int &dX, int &dY)
 {
 	State::recenter(dX, dY * 2);
 }
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 void ActionMenuState::outsideClick(Action *action)
 {
 	_game->popState();

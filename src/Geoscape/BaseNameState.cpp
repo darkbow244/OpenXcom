@@ -46,7 +46,7 @@ BaseNameState::BaseNameState(Base *base, Globe *globe, bool first) : _base(base)
 	_screen = false;
 
 	// Create objects
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	int windowTop = 15;
 	int windowLeft = 32;
 #else
@@ -54,7 +54,7 @@ BaseNameState::BaseNameState(Base *base, Globe *globe, bool first) : _base(base)
 	int windowLeft = 32;
 #endif
 	_window = new Window(this, 192, 80, windowLeft, windowTop, POPUP_BOTH);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	if(_first)
 	{
 		_btnOk = new TextButton(81, 12, windowLeft + 15, windowTop + 58);
@@ -77,7 +77,7 @@ BaseNameState::BaseNameState(Base *base, Globe *globe, bool first) : _base(base)
 	add(_btnOk, "button", "baseNaming");
 	add(_txtTitle, "text", "baseNaming");
 	add(_edtName, "text", "baseNaming");
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	add(_btnCancel, "text", "baseNaming");
 #endif
 	centerAllSurfaces();
@@ -89,7 +89,7 @@ BaseNameState::BaseNameState(Base *base, Globe *globe, bool first) : _base(base)
 	_btnOk->onMouseClick((ActionHandler)&BaseNameState::btnOkClick);
 	//_btnOk->onKeyboardPress((ActionHandler)&BaseNameState::btnOkClick, Options::keyOk);
 	_btnOk->onKeyboardPress((ActionHandler)&BaseNameState::btnOkClick, Options::keyCancel);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->onMouseClick((ActionHandler)&BaseNameState::btnCancelClick); /* That _will_ bite me in the ass, won't it? */
 
@@ -146,7 +146,7 @@ void BaseNameState::btnOkClick(Action *)
 {
 	if (!_edtName->getText().empty())
 	{
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 		// Hide the keyboard (it won't hide itself)!
 		if (SDL_IsScreenKeyboardShown(NULL))
 		{
@@ -166,13 +166,13 @@ void BaseNameState::btnOkClick(Action *)
 	}
 }
 
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 /**
  * Hopefully this will pop enough states to get back to the base placing view
  */
 void BaseNameState::btnCancelClick(Action *)
 {
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	if (SDL_IsScreenKeyboardShown(NULL))
 	{
 		SDL_StopTextInput();

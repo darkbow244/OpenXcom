@@ -204,7 +204,7 @@ void CraftSoldiersState::moveSoldierUp(Action *action, unsigned int row, bool ma
 		_base->getSoldiers()->at(row - 1) = s;
 		if (row != _lstSoldiers->getScroll())
 		{
-#ifndef __ANDROID__
+#ifndef __MOBILE__
 			SDL_WarpMouseInWindow(NULL, (action->getLeftBlackBand() + action->getXMouse()), (action->getTopBlackBand() + action->getYMouse() - static_cast<Uint16>(8 * action->getYScale())));
 #endif
 		}
@@ -258,7 +258,7 @@ void CraftSoldiersState::moveSoldierDown(Action *action, unsigned int row, bool 
 		if (row != _lstSoldiers->getVisibleRows() - 1 + _lstSoldiers->getScroll())
 		{
 			//assert (0 && "FIXME");
-#ifndef __ANDROID__
+#ifndef __MOBILE__
 			SDL_WarpMouseInWindow(NULL, action->getLeftBlackBand() + action->getXMouse(), action->getTopBlackBand() + action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
 #endif
 		}

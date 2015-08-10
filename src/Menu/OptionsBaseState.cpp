@@ -62,7 +62,7 @@ OptionsBaseState::OptionsBaseState(OptionsOrigin origin) : _origin(origin)
 
 	_btnVideo = new TextButton(80, 16, 8, 8);
 	_btnAudio = new TextButton(80, 16, 8, 28);
-#if defined (__ANDROID__) || defined (__PSEUDO_ANDROID__)
+#if defined (__MOBILE__) || defined (__PSEUDO_ANDROID__)
 	_btnSystem = new TextButton(80, 16, 8, 48);
 #else
 	_btnControls = new TextButton(80, 16, 8, 48);
@@ -86,7 +86,7 @@ OptionsBaseState::OptionsBaseState(OptionsOrigin origin) : _origin(origin)
 
 	add(_btnVideo, "button", "optionsMenu");
 	add(_btnAudio, "button", "optionsMenu");
-#if defined(__ANDROID__) || defined (__PSEUDO_ANDROID__)
+#if defined(__MOBILE__) || defined (__PSEUDO_ANDROID__)
 	add(_btnSystem, "button", "optionsMenu");
 #else
 	add(_btnControls, "button", "optionsMenu");
@@ -110,7 +110,7 @@ OptionsBaseState::OptionsBaseState(OptionsOrigin origin) : _origin(origin)
 
 	_btnAudio->setText(tr("STR_AUDIO"));
 	_btnAudio->onMousePress((ActionHandler)&OptionsBaseState::btnGroupPress, SDL_BUTTON_LEFT);
-#if defined(__ANDROID__) || defined(__PSEUDO_ANDROID__)
+#if defined(__MOBILE__) || defined(__PSEUDO_ANDROID__)
 	_btnSystem->setText(tr("STR_SYSTEM"));
 	_btnSystem->onMousePress((ActionHandler)&OptionsBaseState::btnGroupPress, SDL_BUTTON_LEFT);
 #else
@@ -192,7 +192,7 @@ void OptionsBaseState::setCategory(TextButton *button)
 	_group = button;
 	_btnVideo->setGroup(&_group);
 	_btnAudio->setGroup(&_group);
-#if defined(__ANDROID__ ) || defined(__PSEUDO_ANDROID__)
+#if defined(__MOBILE__) || defined(__PSEUDO_ANDROID__)
 	_btnSystem->setGroup(&_group);
 #else
 	_btnControls->setGroup(&_group);
@@ -298,7 +298,7 @@ void OptionsBaseState::btnGroupPress(Action *action)
 				_game->pushState(new OptionsNoAudioState(_origin));
 			}
 		}
-#if defined(__ANDROID__) || defined(__PSEUDO_ANDROID__)
+#if defined(__MOBILE__) || defined(__PSEUDO_ANDROID__)
 		else if (sender == _btnSystem)
 		{
 			_game->pushState(new OptionsSystemState(_origin));

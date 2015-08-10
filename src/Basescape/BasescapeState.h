@@ -47,7 +47,7 @@ private:
 	TextButton *_btnNewBase, *_btnBaseInfo, *_btnSoldiers, *_btnCrafts, *_btnFacilities, *_btnResearch, *_btnManufacture, *_btnTransfer, *_btnPurchase, *_btnSell, *_btnGeoscape;
 	Base *_base;
 	Globe *_globe;
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	Timer *_longPressTimer;
 	bool _clickGuard;
 #endif
@@ -96,7 +96,7 @@ public:
 	void edtBaseChange(Action *action);
 	/// Handler for pressing a base selection hotkey.
 	void handleKeyPress(Action *action);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	/// Pokes timer now and again
 	void think();
 	/// Handler for base view presses (starts _longPressTimer)

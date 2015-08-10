@@ -1629,7 +1629,7 @@ void Globe::mouseOver(Action *action, State *state)
 		}
 
 		_isMouseScrolled = true;
-#ifndef __ANDROID__
+#ifndef __MOBILE__
 		// Set the mouse cursor back
 		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
 		/* FIXME: Still doesn't work as intended */
@@ -1948,7 +1948,7 @@ void Globe::setupRadii(int width, int height)
  */
 void Globe::stopScrolling(Action *action)
 {
-#ifndef __ANDROID__
+#ifndef __MOBILE__
 	/* FIXME: Still doesn't work as intended */
 	SDL_WarpMouseInWindow(NULL, _xBeforeMouseScrolling, _yBeforeMouseScrolling);
 	action->setMouseAction(_xBeforeMouseScrolling, _yBeforeMouseScrolling, getX(), getY());

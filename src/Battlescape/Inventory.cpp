@@ -73,7 +73,7 @@ namespace OpenXcom
 	_animTimer = new Timer(125);
 	_animTimer->onTimer((SurfaceHandler)&Inventory::drawPrimers);
 	_animTimer->start();
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_longPressTimer = new Timer(Options::longPressDuration, true);
 	_longPressTimer->onTimer((SurfaceHandler)&Inventory::longPressAction);
 	_longPressTimer->stop();
@@ -93,7 +93,7 @@ Inventory::~Inventory()
 	delete _warning;
 	delete _stackNumber;
 	delete _animTimer;
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	delete _longPressTimer;
 	if (_longPressAction)
 	{
@@ -467,7 +467,7 @@ void Inventory::think()
 {
 	_warning->think();
 	_animTimer->think(0,this);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	_longPressTimer->think(NULL, this);
 #endif
 }
@@ -1071,7 +1071,7 @@ void Inventory::drawPrimers()
 	}
 	_animFrame++;
 }
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 void Inventory::mousePress(Action *action, State *state)
 {
 	//Log(LOG_INFO) << "Long press timer started";

@@ -53,7 +53,7 @@ private:
 	std::vector<std::pair<int, int> > _grenadeIndicators;
 	NumberText *_stackNumber;
 	Timer *_animTimer;
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	Timer *_longPressTimer;
 	// SDL_Event for long press action
 	SDL_Event _longPressEvent;
@@ -117,7 +117,7 @@ public:
 	void showWarning(const std::wstring &msg);
 	/// Show priming warnings on grenades.
 	void drawPrimers();
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	/// Start long press timer
 	void mousePress(Action *action, State *state);
 	/// Stop long press timer

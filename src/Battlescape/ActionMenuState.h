@@ -39,7 +39,7 @@ private:
 	ActionMenuItem *_actionMenu[6];
 	/// Adds a new menu item for an action.
 	void addItem(BattleActionType ba, const std::string &name, int *id);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	InteractiveSurface *_outside;
 #endif
 public:
@@ -53,7 +53,7 @@ public:
 	void btnActionMenuItemClick(Action *action);
 	/// Update the resolution settings, we just resized the window.
 	void resize(int &dX, int &dY);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	/// Pop the state in case of clicking.
 	void outsideClick(Action *action);
 #endif

@@ -46,7 +46,7 @@ private:
 	State *_state;
 	/// Checks if a character will exceed the maximum width.
 	bool exceedsMaxWidth(wchar_t c);
-#ifdef __ANDROID__
+#ifdef __MOBILE__
 	/// Shows keyboard on touchscreen devices
 	void _startTextInput();
 	/// Hides keyboard on touchscreen devices

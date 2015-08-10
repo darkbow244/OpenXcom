@@ -35,7 +35,7 @@ namespace OpenXcom
  */
 OptionsControlsState::OptionsControlsState(OptionsOrigin origin) : OptionsBaseState(origin), _selected(-1), _selKey(0)
 {
-#if !defined(__ANDROID__) && !defined(__PSEUDO_ANDROID__)
+#if !defined(__MOBILE__) && !defined(__PSEUDO_ANDROID__)
 	setCategory(_btnControls);
 #endif
 
