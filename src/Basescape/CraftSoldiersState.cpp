@@ -32,6 +32,8 @@
 #include "../Savegame/Craft.h"
 #include "SoldierInfoState.h"
 
+#include "../Engine/Timer.h"
+
 namespace OpenXcom
 {
 
@@ -101,6 +103,12 @@ CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft) : _base(base), 
 
 	_lstSoldiers->setDragScrollable(false);
 	_lstSoldiers->onMouseOver((ActionHandler)&CraftSoldiersState::lstSoldiersMouseOver);
+
+#ifdef __MOBILE__
+	_longPressTimer = new Timer(Options::longPressDuration, false);
+	_longPressTimer->onTimer((StateHandler)&CraftSoldiersState::lstSoldiersLongPress);
+	_lstSoldiers->onMouseRelease((ActionHandler)&CraftSoldiersState::lstSoldiersMouseRelease);
+#endif
 }
 
 /**
@@ -108,6 +116,9 @@ CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft) : _base(base), 
  */
 CraftSoldiersState::~CraftSoldiersState()
 {
+#ifdef __MOBILE__
+	delete _longPressTimer;
+#endif
 }
 
 /**
@@ -320,12 +331,16 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 
 /**
  * Handles the mouse-wheels on the arrow-buttons.
+ * Also, starts the long-press timer.
  * @param action Pointer to an action.
  */
 void CraftSoldiersState::lstSoldiersMousePress(Action *action)
 {
 	unsigned int row = _lstSoldiers->getSelectedRow();
 	_pselSoldier = row;
+#ifdef __MOBILE__
+	_longPressTimer->start();
+#endif
 }
 
 /**
@@ -386,4 +401,36 @@ void CraftSoldiersState::lstSoldiersMouseOver(Action *action)
 	}
 }
 
+#ifdef __MOBILE__
+/**
+ * Pokes the timer.
+ */
+void CraftSoldiersState::think()
+{
+	State::think();
+	_longPressTimer->think(this, 0);
+}
+
+/**
+ * Stops the long-press timer.
+ * @param action Pointer to an action.
+ */
+void CraftSoldiersState::lstSoldiersMouseRelease(Action *action)
+{
+	_longPressTimer->stop();
+}
+
+/**
+ * Emulates right-clicking.
+ */
+void CraftSoldiersState::lstSoldiersLongPress()
+{
+	_longPressTimer->stop();
+	if (_wasDragging)
+	{
+		return;
+	}
+	_game->pushState(new SoldierInfoState(_base, _pselSoldier));
+}
+#endif
 }

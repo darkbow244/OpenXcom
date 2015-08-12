@@ -30,6 +30,7 @@ class Text;
 class TextList;
 class Base;
 class Craft;
+class Timer;
 
 /**
  * Select Squad screen that lets the player
@@ -52,6 +53,10 @@ private:
 	unsigned int _pselSoldier;
 	/// (De)selection guard
 	bool _wasDragging;
+#ifdef __MOBILE__
+	/// Timer for handling long presses as right clicks
+	Timer *_longPressTimer;
+#endif
 public:
 	/// Creates the Craft Soldiers state.
 	CraftSoldiersState(Base *base, size_t craft);
@@ -77,6 +82,14 @@ public:
 	void lstSoldiersMouseWheel(Action *action);
 	/// Handler for mouseover (drag-drop) action
 	void lstSoldiersMouseOver(Action *action);
+#ifdef __MOBILE__
+	/// Pokes the timer
+	void think();
+	/// Handler for mouse releases
+	void lstSoldiersMouseRelease(Action *action);
+	/// Handler for long presses
+	void lstSoldiersLongPress();
+#endif
 };
 
 }
