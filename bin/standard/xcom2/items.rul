@@ -749,7 +749,7 @@ items: #done
     bigSprite: 26
     floorSprite: 26
     handSprite: 152
-    meleeSound: 26
+    meleeSound: 60
     power: 80
     damageType: 6
     accuracyMelee: 100
@@ -1062,14 +1062,14 @@ items: #done
   - type: STR_VIBRO_BLADE
     requires:
       - STR_VIBRO_BLADE
-    size: 3
+    size: 0.3
     costSell: 1500
     transferTime: 48
     weight: 10
     bigSprite: 60
     floorSprite: 75
     handSprite: 168
-    meleeSound: 26
+    meleeSound: 60
     hitAnimation: 0
     accuracyMelee: 150
     tuMelee: 10
@@ -1082,14 +1082,14 @@ items: #done
   - type: STR_THERMIC_LANCE
     requires:
       - STR_THERMIC_LANCE
-    size: 3
+    size: 0.3
     costSell: 1800
     transferTime: 48
     weight: 10
     bigSprite: 59
     floorSprite: 74
     handSprite: 176
-    meleeSound: 26
+    meleeSound: 60
     hitAnimation: 0
     accuracyMelee: 160
     tuMelee: 15
@@ -1102,14 +1102,14 @@ items: #done
   - type: STR_HEAVY_THERMIC_LANCE
     requires:
       - STR_HEAVY_THERMIC_LANCE
-    size: 3
+    size: 0.3
     costSell: 2000
     transferTime: 48
     weight: 15
     bigSprite: 58
     floorSprite: 73
     handSprite: 184
-    meleeSound: 26
+    meleeSound: 60
     hitAnimation: 0
     accuracyMelee: 160
     tuMelee: 20
@@ -1466,7 +1466,8 @@ items: #done
   - type: DEEP_ONE_WEAPON 
     bigSprite: 34
     bulletSprite: 8
-    fireSound: 67
+    fireSound: 40
+    hitSound: 41
     power: 100
     damageType: 8
     accuracyAuto: 50
