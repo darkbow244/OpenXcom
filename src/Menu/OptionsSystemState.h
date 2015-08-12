@@ -3,6 +3,8 @@
 #ifndef OPENXCOM_OPTIONSSYSTEMSTATE_H
 #define OPENXCOM_OPTIONSSYSTEMSTATE_H
 
+#ifdef __MOBILE__
+
 #include "OptionsBaseState.h"
 
 namespace OpenXcom 
@@ -47,4 +49,7 @@ public:
 };
 
 }
+
+#endif /*__MOBILE__*/
+
 #endif /*OPENXCOM_OPTIONSSYSTEMSATE_H*/

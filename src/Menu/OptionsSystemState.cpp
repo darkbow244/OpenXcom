@@ -1,4 +1,7 @@
 #include "OptionsSystemState.h"
+
+#ifdef __MOBILE__
+
 #include "../Engine/Game.h"
 #include "../Interface/Text.h"
 #include "../Interface/TextButton.h"
@@ -227,3 +230,5 @@ void OptionsSystemState::cbxMouseModeChange(Action *action)
 }
 
 }
+
+#endif /*__MOBILE__*/
