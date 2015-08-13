@@ -32,3 +32,5 @@
   STR_LISTDRAGSCROLL_DESC: "Enable drag-scrolling for scrollable lists. Useful for touchscreen-based devices."
   STR_DRAGREORDER: "Drag to reorder soldiers"
   STR_DRAGREORDER_DESC: "Drag soldiers to reorder them in the craft equipment screen."
+  STR_SHOW_CURSOR: "Show cursor"
+  STR_SHOW_CURSOR_DESC: "Draw the yellow cursor arrow. Useful with a mouse."
