@@ -42,6 +42,8 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
     _txtMouseMode = new Text(104, 9, 206, 66);
     _cbxMouseMode = new ComboBox(this, 104, 16, 206, 76);
 
+	_btnShowCursor = new ToggleTextButton(104, 16, 206, 94);
+
 	add(_txtSystemUIControls, "text", "systemMenu");
 
 	add(_txtReconfigureDirs, "text", "systemMenu");
@@ -60,6 +62,8 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	add(_btnForceGLMode, "button", "systemMenu");
         
     add(_txtMouseMode, "text", "systemMenu");
+
+	add(_btnShowCursor, "button", "systemMenu");
 
 	// Combobox should be added last, because it will be overlapped by other elements otherwise
 	add(_cbxSystemUI, "button", "systemMenu");
@@ -105,6 +109,13 @@ OptionsSystemState::OptionsSystemState(OptionsOrigin origin) : OptionsBaseState(
 	_btnForceGLMode->setTooltip("STR_FORCE_GL_MODE_DESC");
 	_btnForceGLMode->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
 	_btnForceGLMode->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
+
+	_btnShowCursor->setText(tr("STR_SHOW_CURSOR"));
+	_btnShowCursor->setPressed(Options::showCursor);
+	_btnShowCursor->onMouseClick((ActionHandler)&OptionsSystemState::btnShowCursorClick);
+	_btnShowCursor->setTooltip("STR_SHOW_CURSOR_DESC");
+	_btnShowCursor->onMouseIn((ActionHandler)&OptionsSystemState::txtTooltipIn);
+	_btnShowCursor->onMouseOut((ActionHandler)&OptionsSystemState::txtTooltipOut);
 
 	_txtSystemUIControls->setText(tr("STR_SYSTEM_UI"));
 
@@ -227,6 +238,11 @@ void OptionsSystemState::cbxMouseModeChange(Action *action)
 #ifdef __ANDROID__
     SDL_SetHint(SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, Options::mouseMode == 0 ? "0" : "1");
 #endif
+}
+
+void OptionsSystemState::btnShowCursorClick(Action *action)
+{
+	Options::showCursor = _btnShowCursor->getPressed();
 }
 
 }

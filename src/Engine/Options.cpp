@@ -253,6 +253,11 @@ void create()
 	_info.push_back(OptionInfo("forceGLMode", &forceGLMode, true));
     _info.push_back(OptionInfo("mouseMode", &mouseMode, 0));
 	_info.push_back(OptionInfo("longPressDuration", &longPressDuration, 500));
+#ifdef __MOBILE__
+	_info.push_back(OptionInfo("showCursor", &showCursor, false));
+#else
+	_info.push_back(OptionInfo("showCursor", &showCursor, true));
+#endif
 
 	// controls
 	_info.push_back(KeyOptionInfo("keyOk", &keyOk, SDLK_RETURN, "STR_OK", "STR_GENERAL"));
