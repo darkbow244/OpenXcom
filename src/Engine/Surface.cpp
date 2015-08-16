@@ -20,7 +20,8 @@
 #include "ShaderDraw.h"
 #include <vector>
 #include <fstream>
-#include <SDL_gfxPrimitives.h>
+//#include <SDL_gfxPrimitives.h>
+#include "Gfx/GfxPrimitives.h"
 #include <SDL_image.h>
 #include <SDL_endian.h>
 #include "Palette.h"
@@ -603,7 +604,7 @@ void Surface::drawRect(Sint16 x, Sint16 y, Sint16 w, Sint16 h, Uint8 color)
  */
 void Surface::drawLine(Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 color)
 {
-	lineColor(_surface, x1, y1, x2, y2, Palette::getRGBA(getPalette(), color));
+	GfxPrimitives::lineColor(_surface, x1, y1, x2, y2, Palette::getRGBA(getPalette(), color));
 }
 
 /**
@@ -615,7 +616,7 @@ void Surface::drawLine(Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 color)
  */
 void Surface::drawCircle(Sint16 x, Sint16 y, Sint16 r, Uint8 color)
 {
-	filledCircleColor(_surface, x, y, r, Palette::getRGBA(getPalette(), color));
+	GfxPrimitives::filledCircleColor(_surface, x, y, r, Palette::getRGBA(getPalette(), color));
 }
 
 /**
@@ -627,7 +628,7 @@ void Surface::drawCircle(Sint16 x, Sint16 y, Sint16 r, Uint8 color)
  */
 void Surface::drawPolygon(Sint16 *x, Sint16 *y, int n, Uint8 color)
 {
-	filledPolygonColor(_surface, x, y, n, Palette::getRGBA(getPalette(), color));
+	GfxPrimitives::filledPolygonColor(_surface, x, y, n, Palette::getRGBA(getPalette(), color));
 }
 
 /**
@@ -641,7 +642,7 @@ void Surface::drawPolygon(Sint16 *x, Sint16 *y, int n, Uint8 color)
  */
 void Surface::drawTexturedPolygon(Sint16 *x, Sint16 *y, int n, Surface *texture, int dx, int dy)
 {
-	texturedPolygon(_surface, x, y, n, texture->getSurface(), dx, dy);
+	GfxPrimitives::texturedPolygon(_surface, x, y, n, texture->getSurface(), dx, dy);
 }
 
 /**
@@ -653,7 +654,7 @@ void Surface::drawTexturedPolygon(Sint16 *x, Sint16 *y, int n, Surface *texture,
  */
 void Surface::drawString(Sint16 x, Sint16 y, const char *s, Uint8 color)
 {
-	stringColor(_surface, x, y, s, Palette::getRGBA(getPalette(), color));
+	GfxPrimitives::stringColor(_surface, x, y, s, Palette::getRGBA(getPalette(), color));
 }
 
 /**

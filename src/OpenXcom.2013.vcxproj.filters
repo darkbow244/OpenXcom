@@ -943,6 +943,9 @@
     <ClCompile Include="Geoscape\DogfightErrorState.cpp">
       <Filter>Geoscape</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Gfx\GfxPrimitives.cpp">
+      <Filter>Engine\Gfx</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -1940,6 +1943,12 @@
     <ClInclude Include="Geoscape\DogfightErrorState.h">
       <Filter>Geoscape</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Gfx\GfxPrimitives.h">
+      <Filter>Engine\Gfx</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Gfx\GfxFontData.h">
+      <Filter>Engine\Gfx</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Geoscape">
@@ -1977,6 +1986,9 @@
     </Filter>
     <Filter Include="Engine\Adlib">
       <UniqueIdentifier>{09464f19-4bce-449f-a27c-5cd7b9850dbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Gfx">
+      <UniqueIdentifier>{769691ac-b5be-4159-b6b3-dbea857fae12}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
