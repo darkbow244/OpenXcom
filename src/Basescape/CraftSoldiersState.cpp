@@ -33,6 +33,7 @@
 #include "SoldierInfoState.h"
 
 #include "../Engine/Timer.h"
+#include "../Engine/Logger.h"
 
 namespace OpenXcom
 {
@@ -43,7 +44,10 @@ namespace OpenXcom
  * @param base Pointer to the base to get info from.
  * @param craft ID of the selected craft.
  */
-CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft) : _base(base), _craft(craft), _otherCraftColor(0), _pselSoldier(0), _wasDragging(false)
+CraftSoldiersState::CraftSoldiersState(Base *base, size_t craft) : _base(base), _craft(craft), _otherCraftColor(0), _pselSoldier(-1), _wasDragging(false)
+#ifdef __MOBILE__
+	, _clickGuard(false)
+#endif
 {
 	// Create objects
 	_window = new Window(this, 320, 200, 0, 0);
@@ -292,6 +296,11 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 		_wasDragging = false;
 		return;
 	}
+	if (_clickGuard)
+	{
+		_clickGuard = false;
+		return;
+	}
 	double mx = action->getAbsoluteXMouse();
 	if (mx >= _lstSoldiers->getArrowsLeftEdge() && mx < _lstSoldiers->getArrowsRightEdge())
 	{
@@ -337,10 +346,13 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 void CraftSoldiersState::lstSoldiersMousePress(Action *action)
 {
 	unsigned int row = _lstSoldiers->getSelectedRow();
-	_pselSoldier = row;
+	if (row < _base->getSoldiers()->size())
+	{
+		_pselSoldier = row;
 #ifdef __MOBILE__
-	_longPressTimer->start();
+		_longPressTimer->start();
 #endif
+	}
 }
 
 /**
@@ -382,19 +394,30 @@ void CraftSoldiersState::lstSoldiersMouseWheel(Action *action)
  */
 void CraftSoldiersState::lstSoldiersMouseOver(Action *action)
 {
-	unsigned int row = std::min(_lstSoldiers->getSelectedRow(), (unsigned int) _base->getSoldiers()->size() - 1);
+	unsigned int row = _lstSoldiers->getSelectedRow();
+	if (_pselSoldier < 0)
+	{
+		if (row < _base->getSoldiers()->size())
+		{
+			_pselSoldier = row;
+		}
+		return;
+	}
 	if (Options::dragSoldierReorder) {
 		const SDL_Event *ev = action->getDetails();
 		if ((ev->type == SDL_MOUSEMOTION) && (ev->motion.state) &&
-											 (_lstSoldiers->getSelectedRow() < _base->getSoldiers()->size())) {
+											 (_lstSoldiers->getSelectedRow() < _base->getSoldiers()->size()))
+		{
 			int delta = row - _pselSoldier;
-			if (delta > 0) {
-				_wasDragging = true;
-				moveSoldierDown(action, _pselSoldier);
-			}
-			if (delta < 0) {
-				_wasDragging = true;
-				moveSoldierUp(action, _pselSoldier);
+			{
+				if (delta > 0) {
+					_wasDragging = true;
+					moveSoldierDown(action, _pselSoldier);
+				}
+				if (delta < 0) {
+					_wasDragging = true;
+					moveSoldierUp(action, _pselSoldier);
+				}
 			}
 			_pselSoldier = row;
 		}
@@ -408,6 +431,7 @@ void CraftSoldiersState::lstSoldiersMouseOver(Action *action)
 void CraftSoldiersState::think()
 {
 	State::think();
+	_clickGuard = false;
 	_longPressTimer->think(this, 0);
 }
 
@@ -430,6 +454,7 @@ void CraftSoldiersState::lstSoldiersLongPress()
 	{
 		return;
 	}
+	_clickGuard = true;
 	_game->pushState(new SoldierInfoState(_base, _pselSoldier));
 }
 #endif
