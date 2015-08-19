@@ -226,73 +226,105 @@ void BattlescapeGenerator::nextStage()
 	// this does not include items in your soldier's hands.
 	std::vector<BattleItem*> *takeHomeGuaranteed = _save->getGuaranteedRecoveredItems();
 	std::vector<BattleItem*> *takeHomeConditional = _save->getConditionalRecoveredItems();
-	std::vector<BattleItem*> takeToNextStage;
-	std::map<RuleItem*, int> guaranteedRounds, conditionalRounds;
+	std::vector<BattleItem*> takeToNextStage, carryToNextStage, removeFromGame;
 
-	for (std::vector<BattleItem*>::iterator i = _save->getItems()->begin(); i != _save->getItems()->end();)
+	for (std::vector<BattleItem*>::iterator i = _save->getItems()->begin(); i != _save->getItems()->end(); ++i)
 	{
-		if (aliensAlive == 0 && (!(*i)->getOwner() || (*i)->getOwner()->getOriginalFaction() != FACTION_PLAYER) &&
-			(*i)->getRules()->isRecoverable() && !(*i)->getUnit())
+		// first off: don't process ammo loaded into weapons. at least not at this level. ammo will be handled simultaneously.
+		if (!(*i)->isAmmo())
 		{
-			takeToNextStage.push_back(*i);
-			++i;
-			continue;
-		}
-		else
-		{
-			bool isAmmo = false;
-
-			for (std::vector<BattleItem*>::iterator j = _save->getItems()->begin(); j != _save->getItems()->end(); ++j)
+			std::vector<BattleItem*> *toContainer = &removeFromGame;
+			// if it's recoverable, and it's not owned by someone
+			if ((*i)->getRules()->isRecoverable() && !(*i)->getOwner())
 			{
-				if ((*j)->getAmmoItem() == *i)
+				// protocol 1: all defenders dead, recover all items.
+				if (aliensAlive == 0)
 				{
-					if ((*j)->getOwner() && (*j)->getOwner()->getOriginalFaction() == FACTION_PLAYER)
+					// any corpses or unconscious units get put in the skyranger, as well as any unresearched items
+					if ((*i)->getUnit() || !_game->getSavedGame()->isResearched((*i)->getRules()->getRequirements()))
 					{
-						isAmmo = true;
+						toContainer = takeHomeGuaranteed;
 					}
+					// otherwise it comes with us to stage two
+					else
+					{
+						toContainer = &takeToNextStage;
+					}
+				}
+				// protocol 2: some of the aliens survived, meaning we ran to the exit zone.
+				// recover stuff depending on where it was at the end of the mission.
+				else
+				{
+					Tile *tile = (*i)->getTile();
+					if (tile)
+					{
+						// on a tile at least, so i'll give you the benefit of the doubt on this and give it a conditional recovery at this point
+						toContainer = takeHomeConditional;
+						if (tile->getMapData(O_FLOOR))
+						{
+							// in the skyranger? it goes home.
+							if (tile->getMapData(O_FLOOR)->getSpecialType() == START_POINT)
+							{
+								toContainer = takeHomeGuaranteed;
+							}
+							// on the exit grid? it goes to stage two.
+							else if (tile->getMapData(O_FLOOR)->getSpecialType() == END_POINT)
+							{
+								toContainer = &takeToNextStage;
+							}
+						}
+					}
+				}
+			}
+			// if a soldier is already holding it, let's let him keep it
+			if ((*i)->getOwner() && (*i)->getOwner()->getFaction() == FACTION_PLAYER)
+			{
+				toContainer = &carryToNextStage;
+			}
+
+			// at this point, we know what happens with the item, so let's apply it to any ammo as well.
+			BattleItem *ammo = (*i)->getAmmoItem();
+			if (ammo && ammo != *i)
+			{
+				// break any tile links, because all the tiles are about to disappear.
+				ammo->setTile(0);
+				toContainer->push_back(ammo);
+			}
+			// and now the actual item itself.
+			(*i)->setTile(0);
+			toContainer->push_back(*i);
+		}
+	}
+
+	// anything in the "removeFromGame" vector will now be discarded - they're all dead to us now.
+	for (std::vector<BattleItem*>::iterator i = removeFromGame.begin(); i != removeFromGame.end();++i)
+	{
+		// fixed weapons, or anything that's otherwise "equipped" will need to be de-equipped
+		// from their owners to make sure we don't have any null pointers to worry about later
+		if ((*i)->getOwner())
+		{
+			for (std::vector<BattleItem*>::iterator j = (*i)->getOwner()->getInventory()->begin(); j != (*i)->getOwner()->getInventory()->end(); ++j)
+			{
+				if (*i == *j)
+				{
+					(*i)->getOwner()->getInventory()->erase(j);
 					break;
 				}
 			}
-
-			if (isAmmo)
-			{
-				++i;
-				continue;
-			}
-
-			if (!(*i)->getOwner() || (*i)->getOwner()->getOriginalFaction() != FACTION_PLAYER)
-			{
-
-				Tile *tile = (*i)->getTile();
-				std::vector<BattleItem*> *toContainer = takeHomeConditional;
-				if (tile)
-				{
-					tile->removeItem(*i);
-					if (tile->getMapData(O_FLOOR))
-					{
-						if (tile->getMapData(O_FLOOR)->getSpecialType() == START_POINT)
-						{
-							toContainer = takeHomeGuaranteed;
-						}
-						else if (tile->getMapData(O_FLOOR)->getSpecialType() == END_POINT
-						&& (*i)->getRules()->isRecoverable()
-						&& !(*i)->getUnit())
-						{
-							takeToNextStage.push_back(*i);
-							++i;
-							continue;
-						}
-					}
-				}
-				if ((*i)->getRules()->isRecoverable() && !(*i)->getXCOMProperty())
-				{
-					toContainer->push_back(*i);
-					i = _save->getItems()->erase(i);
-					continue;
-				}
-			}
 		}
-		++i;
+		delete *i;
+	}
+
+	// empty the items vector
+	_save->getItems()->clear();
+
+	// rebuild it with only the items we want to keep active in battle for the next stage
+	// here we add all the items that our soldiers are carrying, and we'll add the items on the
+	// inventory tile after we've generated our map. everything else will either be in one of the
+	// recovery arrays, or deleted from existance at this point.
+	for (std::vector<BattleItem*>::iterator i = carryToNextStage.begin(); i != carryToNextStage.end();++i)
+	{
+		_save->getItems()->push_back(*i);
 	}
 
 	AlienDeployment *ruleDeploy = _game->getRuleset()->getDeployment(_save->getMissionType());
@@ -366,6 +398,7 @@ void BattlescapeGenerator::nextStage()
 
 	for (std::vector<BattleItem*>::iterator i = takeToNextStage.begin(); i != takeToNextStage.end(); ++i)
 	{
+		_save->getItems()->push_back(*i);
 		_craftInventoryTile->addItem(*i, ground);
 	}
 
@@ -426,8 +459,15 @@ void BattlescapeGenerator::run()
 	{
 		if (_worldTexture == 0 || _worldTexture->getTerrain()->empty() || !ruleDeploy->getTerrains().empty())
 		{
-			size_t pick = RNG::generate(0, ruleDeploy->getTerrains().size() - 1);
-			_terrain = _game->getRuleset()->getTerrain(ruleDeploy->getTerrains().at(pick));
+			if (!ruleDeploy->getTerrains().empty())
+			{
+				size_t pick = RNG::generate(0, ruleDeploy->getTerrains().size() - 1);
+				_terrain = _game->getRuleset()->getTerrain(ruleDeploy->getTerrains().at(pick));
+			}
+			else // trouble: no texture and no deployment terrain, most likely scenario is a UFO landing on water: use the first available terrain
+			{
+				_terrain = _game->getRuleset()->getTerrain(_game->getRuleset()->getTerrainList().front());
+			}
 		}
 		else
 		{
