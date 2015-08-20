@@ -44,6 +44,8 @@
 #include "BattlescapeState.h"
 #include "TileEngine.h"
 #include "../Engine/CrossPlatform.h"
+#include "../Ruleset/Ruleset.h"
+#include "../Ruleset/RuleInterface.h"
 
 namespace OpenXcom
 {

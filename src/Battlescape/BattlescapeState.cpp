@@ -69,6 +69,8 @@
 #include "../Savegame/BattleUnit.h"
 #include "../Savegame/Soldier.h"
 #include "../Savegame/BattleItem.h"
+#include "../Ruleset/Ruleset.h"
+#include "../Ruleset/RuleInterface.h"
 
 namespace OpenXcom
 {
@@ -1608,9 +1610,7 @@ void BattlescapeState::handleItemClick(BattleItem *item)
 	// make sure there is an item, and the battlescape is in an idle state
 	if (item && !_battleGame->isBusy())
 	{
-		if (_game->getSavedGame()->isResearched(item->getRules()->getRequirements()) || _save->getSelectedUnit()->getOriginalFaction() == FACTION_HOSTILE)
-		{
-			_battleGame->getCurrentAction()->weapon = item;
+		_battleGame->getCurrentAction()->weapon = item;
 #ifdef __MOBILE__
 		BattleUnit *battleUnit = _save->getSelectedUnit();
 		if (battleUnit)
@@ -1635,12 +1635,7 @@ void BattlescapeState::handleItemClick(BattleItem *item)
 			}
 		}
 #endif
-			popup(new ActionMenuState(_battleGame->getCurrentAction(), _icons->getX(), _icons->getY()+16));
-		}
-		else
-		{
-			warning("STR_UNABLE_TO_USE_ALIEN_ARTIFACT_UNTIL_RESEARCHED");
-		}
+		popup(new ActionMenuState(_battleGame->getCurrentAction(), _icons->getX(), _icons->getY()+16));
 	}
 }
 
