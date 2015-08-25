@@ -553,7 +553,7 @@ void InventoryState::btnRankClick(Action *)
 	_game->pushState(new UnitInfoState(_battleGame->getSelectedUnit(), _parent, true, false));
 }
 
-void InventoryState::btnCreateTemplateClick(Action *action)
+void InventoryState::btnCreateTemplateClick(Action *)
 {
 	// don't accept clicks when moving items
 	if (_inv->getSelectedItem() != 0)
@@ -607,7 +607,7 @@ static void _clearInventory(Game *game, std::vector<BattleItem*> *unitInv, Tile 
 	}
 }
 
-void InventoryState::btnApplyTemplateClick(Action *action)
+void InventoryState::btnApplyTemplateClick(Action *)
 {
 	// don't accept clicks when moving items
 	// it's ok if the template is empty -- it will just result in clearing the
@@ -738,7 +738,7 @@ void InventoryState::_refreshMouse()
 	SDL_WarpMouseInWindow(NULL, x, y);
 }
 
-void InventoryState::onClearInventory(Action *action)
+void InventoryState::onClearInventory(Action *)
 {
 	// don't accept clicks when moving items
 	if (_inv->getSelectedItem() != 0)

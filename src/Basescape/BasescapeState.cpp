@@ -530,7 +530,7 @@ void BasescapeState::handleKeyPress(Action *action)
  * Changes the Base name.
  * @param action Pointer to an action.
  */
-void BasescapeState::edtBaseChange(Action *action)
+void BasescapeState::edtBaseChange(Action *)
 {
 	_base->setName(_edtBase->getText());
 }
