@@ -22,10 +22,10 @@
 #include "PathfindingOpenSet.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Savegame/Tile.h"
-#include "../Ruleset/Armor.h"
+#include "../Mod/Armor.h"
 #include "../Savegame/BattleUnit.h"
 #include "../Engine/Options.h"
-#include "../Battlescape/BattlescapeGame.h"
+#include "BattlescapeGame.h"
 
 namespace OpenXcom
 {
@@ -261,7 +261,6 @@ int Pathfinding::getTUCost(const Position &startPosition, int direction, Positio
 	int numberOfPartsGoingDown = 0;
 	int numberOfPartsFalling = 0;
 	int numberOfPartsChangingHeight = 0;
-	int numberOfPartsMovingOnAir = 0;
 	int totalCost = 0;
 
 	for (int x = 0; x <= size; ++x)
@@ -269,7 +268,6 @@ int Pathfinding::getTUCost(const Position &startPosition, int direction, Positio
 		{
 			Position offset = Position (x, y, 0);
 			Tile *startTile = _save->getTile(startPosition + offset);
-			Tile *belowStartTile = _save->getTile(startPosition + offset + Position(0,0,-1));
 			Tile *destinationTile = _save->getTile(*endPosition + offset);
 			Tile *belowDestination = _save->getTile(*endPosition + offset + Position(0,0,-1));
 			Tile *aboveDestination = _save->getTile(*endPosition + offset + Position(0,0,1));
@@ -277,18 +275,13 @@ int Pathfinding::getTUCost(const Position &startPosition, int direction, Positio
 			// this means the destination is probably outside the map
 			if (startTile == 0 || destinationTile == 0)
 				return 255;
-			if (direction != DIR_DOWN && startTile->hasNoFloor(belowStartTile) &&  _movementType != MT_FLY)
+			if (!x && !y && _movementType != MT_FLY && canFallDown(startTile, size+1))
 			{
-				numberOfPartsMovingOnAir++;
-				if (numberOfPartsMovingOnAir == (size + 1)*(size + 1))
+				if (direction != DIR_DOWN)
 				{
 					return 255; //cannot walk on air
 				}
-			}
-			else if (direction == DIR_DOWN && startTile->hasNoFloor(belowStartTile) &&  _movementType != MT_FLY)
-			{
-				numberOfPartsMovingOnAir++;
-				if (numberOfPartsMovingOnAir == (size + 1)*(size + 1))
+				else
 				{
 					fellDown = true;
 				}
@@ -319,7 +312,7 @@ int Pathfinding::getTUCost(const Position &startPosition, int direction, Positio
 						triedStairs = true;
 					}
 			}
-			else if (!fellDown && _movementType != MT_FLY && belowDestination && canFallDown(destinationTile) && belowDestination->getTerrainLevel() <= -12)
+			else if (direction < DIR_UP && !fellDown && _movementType != MT_FLY && belowDestination && canFallDown(destinationTile) && belowDestination->getTerrainLevel() <= -12)
 			{
 					numberOfPartsGoingDown++;
 
@@ -476,13 +469,20 @@ int Pathfinding::getTUCost(const Position &startPosition, int direction, Positio
 			cost = 0;
 		}
 
-	// for bigger sized units, check the path between part 1,1 and part 0,0 at end position
+	// for bigger sized units, check the path between parts in an X shape at the end position
 	if (size)
 	{
 		totalCost /= (size+1)*(size+1);
 		Tile *startTile = _save->getTile(*endPosition + Position(1,1,0));
 		Tile *destinationTile = _save->getTile(*endPosition);
 		int tmpDirection = 7;
+		if (isBlocked(startTile, destinationTile, tmpDirection, target))
+			return 255;
+		if (!fellDown && abs(startTile->getTerrainLevel() - destinationTile->getTerrainLevel()) > 10)
+			return 255;
+		startTile = _save->getTile(*endPosition + Position(1,0,0));
+		destinationTile = _save->getTile(*endPosition + Position(0,1,0));
+		tmpDirection = 5;
 		if (isBlocked(startTile, destinationTile, tmpDirection, target))
 			return 255;
 		if (!fellDown && abs(startTile->getTerrainLevel() - destinationTile->getTerrainLevel()) > 10)

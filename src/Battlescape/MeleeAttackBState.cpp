@@ -33,8 +33,8 @@
 #include "../Savegame/BattleUnit.h"
 #include "../Savegame/BattleItem.h"
 #include "../Engine/Sound.h"
-#include "../Resource/ResourcePack.h"
-#include "../Ruleset/RuleItem.h"
+#include "../Mod/ResourcePack.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {
@@ -109,7 +109,10 @@ void MeleeAttackBState::init()
 	
 	AlienBAIState *ai = dynamic_cast<AlienBAIState*>(_unit->getCurrentAIState());
 
-	if (_unit->getFaction() != FACTION_PLAYER && _parent->_debugPlay == false && ai && ai->getTarget())
+	if (_unit->getFaction() == _parent->getSave()->getSide() &&
+		_unit->getFaction() != FACTION_PLAYER &&
+		_parent->_debugPlay == false &&
+		ai && ai->getTarget())
 	{
 		_target = ai->getTarget();
 	}
@@ -142,6 +145,8 @@ void MeleeAttackBState::think()
 	resolveHit();
 		// aliens
 	if (_unit->getFaction() != FACTION_PLAYER &&
+		// not performing a reaction attack
+		_unit->getFaction() == _parent->getSave()->getSide() &&
 		// with enough TU for a second attack (*2 because they'll get charged for the initial attack when this state pops.)
 		_unit->getTimeUnits() >= _unit->getActionTUs(BA_HIT, _action.weapon) * 2 &&
 		// whose target is still alive or at least conscious

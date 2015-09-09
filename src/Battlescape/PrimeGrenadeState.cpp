@@ -28,12 +28,12 @@
 #include "../Savegame/BattleItem.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/SavedBattleGame.h"
+#include "../Mod/Ruleset.h"
+#include "../Mod/RuleInterface.h"
 #ifdef __MOBILE__
 #include "../Engine/Options.h"
 #endif
 
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/RuleInterface.h"
 
 namespace OpenXcom
 {

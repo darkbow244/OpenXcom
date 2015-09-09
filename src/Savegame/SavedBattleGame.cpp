@@ -23,18 +23,18 @@
 #include "SavedGame.h"
 #include "Tile.h"
 #include "Node.h"
-#include "../Ruleset/MapDataSet.h"
-#include "../Ruleset/MCDPatch.h"
+#include "../Mod/MapDataSet.h"
+#include "../Mod/MCDPatch.h"
 #include "../Battlescape/Pathfinding.h"
 #include "../Battlescape/TileEngine.h"
 #include "../Battlescape/BattlescapeState.h"
 #include "../Battlescape/BattlescapeGame.h"
 #include "../Battlescape/Position.h"
-#include "../Resource/ResourcePack.h"
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/Armor.h"
+#include "../Mod/ResourcePack.h"
+#include "../Mod/Ruleset.h"
+#include "../Mod/Armor.h"
 #include "../Engine/Game.h"
-#include "../Ruleset/RuleInventory.h"
+#include "../Mod/RuleInventory.h"
 #include "../Battlescape/CivilianBAIState.h"
 #include "../Battlescape/AlienBAIState.h"
 #include "../Engine/RNG.h"
@@ -1490,6 +1490,7 @@ bool SavedBattleGame::setUnitPosition(BattleUnit *bu, const Position &position, 
 			{
 				return false;
 			}
+			// move the unit up to the next level (desert and seabed terrains)
 			if (t && t->getTerrainLevel() == -24)
 			{
 				zOffset.z += 1;

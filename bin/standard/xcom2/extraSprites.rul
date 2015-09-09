@@ -51,10 +51,18 @@ extraSprites: #done
     subY: 3
     files:
       0: Resources/UI/globe_tftd.png
+  - type: BIGOBS.PCK
+    width: 288
+    height: 48
+    subX: 32
+    subY: 48
+    files:
+      -9: Resources/Weapons/Terror.png
   - type: WpnActive
     width: 36
     height: 52
     singleImage: true
     files:
       0: Resources/UI/WpnActive.png
+
 
