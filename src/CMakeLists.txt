@@ -457,10 +457,6 @@ set ( menu_src
 )
 
 set ( mod_src
-  Mod/ResourcePack.h
-  Mod/ResourcePack.cpp
-  Mod/XcomResourcePack.cpp
-  Mod/XcomResourcePack.h
   Mod/RuleCraft.cpp
   Mod/RuleCraft.h
   Mod/Armor.cpp
@@ -489,8 +485,8 @@ set ( mod_src
   Mod/RuleBaseFacility.h
   Mod/SoldierNamePool.h
   Mod/SoldierNamePool.cpp
-  Mod/Ruleset.h
-  Mod/Ruleset.cpp
+  Mod/Mod.h
+  Mod/Mod.cpp
   Mod/RuleCountry.cpp
   Mod/RuleCountry.h
   Mod/RuleUfo.h
@@ -726,12 +722,8 @@ set ( install_dest RUNTIME )
 set ( set_exec_path ON )
 set ( install_dest_dir bin )
 if ( UNIX AND NOT APPLE )
-  if ( "${DATADIR}" STREQUAL "" )
-    set ( data_install_dir "share/openxcom" )
-  else ()
-    set ( data_install_dir ${DATADIR} )
-    add_definitions( -DDATADIR="${data_install_dir}/" )
-  endif ()
+  set ( data_install_dir "${CMAKE_INSTALL_FULL_DATADIR}/openxcom" )
+  add_definitions( -DDATADIR="${data_install_dir}/" )
 endif ()
 if ( APPLE )
   set ( openxcom_src ${openxcom_src} ${MACOS_SDLMAIN_M_PATH} )
@@ -743,12 +735,8 @@ if ( APPLE )
     set ( install_dest_dir "" )
     set ( data_install_dir bin )
   else ()
-    if ( "${DATADIR}" STREQUAL "" )
-      set ( data_install_dir "share/openxcom" )
-    else ()
-      set ( data_install_dir ${DATADIR} )
-      add_definitions( -DDATADIR="${data_install_dir}/" )
-    endif ()
+    set ( data_install_dir "${CMAKE_INSTALL_FULL_DATADIR}/openxcom" )
+    add_definitions( -DDATADIR="${data_install_dir}/" )
   endif ()
 endif ()
 if ( set_exec_path )
@@ -760,7 +748,7 @@ if ( FORCE_INSTALL_DATA_TO_BIN )
 endif ()
 
 add_executable ( openxcom  ${application_type} ${openxcom_src} )
-install ( TARGETS openxcom ${install_dest} DESTINATION bin )
+install ( TARGETS openxcom ${install_dest} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 # Extra link flags for Windows. They need to be set before the SDL/YAML link flags, otherwise you will get strange link errors ('Undefined reference to WinMain@16')
 if ( WIN32 )
   set ( basic_windows_libs advapi32.lib shell32.lib shlwapi.lib )

@@ -18,7 +18,7 @@
  */
 #include "Inventory.h"
 #include <cmath>
-#include "../Mod/Ruleset.h"
+#include "../Mod/Mod.h"
 #include "../Mod/RuleInventory.h"
 #include "../Mod/RuleInterface.h"
 #include "../Engine/Game.h"
@@ -28,7 +28,7 @@
 #include "../Engine/Font.h"
 #include "../Engine/Language.h"
 #include "../Engine/Options.h"
-#include "../Mod/ResourcePack.h"
+#include "../Mod/Mod.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Engine/SurfaceSet.h"
@@ -66,9 +66,9 @@ namespace OpenXcom
 	_stackNumber = new NumberText(15, 15, 0, 0);
 	_stackNumber->setBordered(true);
 
-	_warning->initText(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"), _game->getLanguage());
-	_warning->setColor(_game->getRuleset()->getInterface("battlescape")->getElement("warning")->color2);
-	_warning->setTextColor(_game->getRuleset()->getInterface("battlescape")->getElement("warning")->color);
+	_warning->initText(_game->getMod()->getFont("FONT_BIG"), _game->getMod()->getFont("FONT_SMALL"), _game->getLanguage());
+	_warning->setColor(_game->getMod()->getInterface("battlescape")->getElement("warning")->color2);
+	_warning->setTextColor(_game->getMod()->getInterface("battlescape")->getElement("warning")->color);
 
 	_animTimer = new Timer(125);
 	_animTimer->onTimer((SurfaceHandler)&Inventory::drawPrimers);
@@ -157,16 +157,16 @@ void Inventory::drawGrid()
 	_grid->clear();
 	Text text = Text(80, 9, 0, 0);
 	text.setPalette(_grid->getPalette());
-	text.initText(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"), _game->getLanguage());
+	text.initText(_game->getMod()->getFont("FONT_BIG"), _game->getMod()->getFont("FONT_SMALL"), _game->getLanguage());
 
-	RuleInterface *rule = _game->getRuleset()->getInterface("inventory");
+	RuleInterface *rule = _game->getMod()->getInterface("inventory");
 
 	text.setColor(rule->getElement("textSlots")->color);
 	text.setHighContrast(true);
 
 	Uint8 color = rule->getElement("grid")->color;
 
-	for (std::map<std::string, RuleInventory*>::iterator i = _game->getRuleset()->getInventories()->begin(); i != _game->getRuleset()->getInventories()->end(); ++i)
+	for (std::map<std::string, RuleInventory*>::iterator i = _game->getMod()->getInventories()->begin(); i != _game->getMod()->getInventories()->end(); ++i)
 	{
 		// Draw grid
 		if (i->second->getType() == INV_SLOT)
@@ -236,10 +236,10 @@ void Inventory::drawItems()
 {
 	_items->clear();
 	_grenadeIndicators.clear();
-	Uint8 color = _game->getRuleset()->getInterface("inventory")->getElement("numStack")->color;
+	Uint8 color = _game->getMod()->getInterface("inventory")->getElement("numStack")->color;
 	if (_selUnit != 0)
 	{
-		SurfaceSet *texture = _game->getResourcePack()->getSurfaceSet("BIGOBS.PCK");
+		SurfaceSet *texture = _game->getMod()->getSurfaceSet("BIGOBS.PCK");
 		// Soldier items
 		for (std::vector<BattleItem*>::iterator i = _selUnit->getInventory()->begin(); i != _selUnit->getInventory()->end(); ++i)
 		{
@@ -401,7 +401,7 @@ bool Inventory::overlapItems(BattleUnit *unit, BattleItem *item, RuleInventory *
  */
 RuleInventory *Inventory::getSlotInPosition(int *x, int *y) const
 {
-	for (std::map<std::string, RuleInventory*>::iterator i = _game->getRuleset()->getInventories()->begin(); i != _game->getRuleset()->getInventories()->end(); ++i)
+	for (std::map<std::string, RuleInventory*>::iterator i = _game->getMod()->getInventories()->begin(); i != _game->getMod()->getInventories()->end(); ++i)
 	{
 		if (i->second->checkSlotInPosition(x, y))
 		{
@@ -437,7 +437,7 @@ void Inventory::setSelectedItem(BattleItem *item)
 		{
 			_stackLevel[_selItem->getSlotX()][_selItem->getSlotY()] -= 1;
 		}
-		_selItem->getRules()->drawHandSprite(_game->getResourcePack()->getSurfaceSet("BIGOBS.PCK"), _selection);
+		_selItem->getRules()->drawHandSprite(_game->getMod()->getSurfaceSet("BIGOBS.PCK"), _selection);
 	}
 	drawItems();
 }
@@ -569,7 +569,7 @@ void Inventory::mouseClick(Action *action, State *state)
 				{
 					if ((SDL_GetModState() & KMOD_CTRL))
 					{
-						RuleInventory *newSlot = _game->getRuleset()->getInventory("STR_GROUND");
+						RuleInventory *newSlot = _game->getMod()->getInventory("STR_GROUND");
 						std::string warning = "STR_NOT_ENOUGH_SPACE";
 						bool placed = false;
 
@@ -578,22 +578,22 @@ void Inventory::mouseClick(Action *action, State *state)
 							switch (item->getRules()->getBattleType())
 							{
 							case BT_FIREARM:
-								newSlot = _game->getRuleset()->getInventory("STR_RIGHT_HAND");
+								newSlot = _game->getMod()->getInventory("STR_RIGHT_HAND");
 								break;
 							case BT_MINDPROBE:
 							case BT_PSIAMP:
 							case BT_MELEE:
 							case BT_CORPSE:
-								newSlot = _game->getRuleset()->getInventory("STR_LEFT_HAND");
+								newSlot = _game->getMod()->getInventory("STR_LEFT_HAND");
 								break;
 							default:
 								if (item->getRules()->getInventoryHeight() > 2)
 								{
-									newSlot = _game->getRuleset()->getInventory("STR_BACK_PACK");
+									newSlot = _game->getMod()->getInventory("STR_BACK_PACK");
 								}
 								else
 								{
-									newSlot = _game->getRuleset()->getInventory("STR_BELT");
+									newSlot = _game->getMod()->getInventory("STR_BELT");
 								}
 								break;
 							}
@@ -607,7 +607,7 @@ void Inventory::mouseClick(Action *action, State *state)
 
 							if (!placed)
 							{
-								for (std::map<std::string, RuleInventory *>::const_iterator wildCard = _game->getRuleset()->getInventories()->begin(); wildCard != _game->getRuleset()->getInventories()->end() && !placed; ++wildCard)
+								for (std::map<std::string, RuleInventory *>::const_iterator wildCard = _game->getMod()->getInventories()->begin(); wildCard != _game->getMod()->getInventories()->end() && !placed; ++wildCard)
 								{
 									newSlot = wildCard->second;
 									if (newSlot->getType() == INV_GROUND)
@@ -628,7 +628,7 @@ void Inventory::mouseClick(Action *action, State *state)
 							{
 								placed = true;
 								moveItem(item, newSlot, 0, 0);
-								_game->getResourcePack()->getSoundByDepth(_depth, ResourcePack::ITEM_DROP)->play();
+								_game->getMod()->getSoundByDepth(_depth, Mod::ITEM_DROP)->play();
 								arrangeGround(false);
 							}
 							else
@@ -682,7 +682,7 @@ void Inventory::mouseClick(Action *action, State *state)
 								_stackLevel[x][y] += 1;
 							}
 							setSelectedItem(0);
-							_game->getResourcePack()->getSoundByDepth(_depth, ResourcePack::ITEM_DROP)->play();
+							_game->getMod()->getSoundByDepth(_depth, Mod::ITEM_DROP)->play();
 						}
 						else
 						{
@@ -696,7 +696,7 @@ void Inventory::mouseClick(Action *action, State *state)
 							moveItem(_selItem, slot, item->getSlotX(), item->getSlotY());
 							_stackLevel[item->getSlotX()][item->getSlotY()] += 1;
 							setSelectedItem(0);
-							_game->getResourcePack()->getSoundByDepth(_depth, ResourcePack::ITEM_DROP)->play();
+							_game->getMod()->getSoundByDepth(_depth, Mod::ITEM_DROP)->play();
 						}
 						else
 						{
@@ -732,7 +732,7 @@ void Inventory::mouseClick(Action *action, State *state)
 							item->setAmmoItem(_selItem);
 							_selItem->moveToOwner(0);
 							setSelectedItem(0);
-							_game->getResourcePack()->getSoundByDepth(_depth, ResourcePack::ITEM_RELOAD)->play();
+							_game->getMod()->getSoundByDepth(_depth, Mod::ITEM_RELOAD)->play();
 							if (item->getSlot()->getType() == INV_GROUND)
 							{
 								arrangeGround(false);
@@ -763,7 +763,7 @@ void Inventory::mouseClick(Action *action, State *state)
 							moveItem(_selItem, slot, item->getSlotX(), item->getSlotY());
 							_stackLevel[item->getSlotX()][item->getSlotY()] += 1;
 							setSelectedItem(0);
-							_game->getResourcePack()->getSoundByDepth(_depth, ResourcePack::ITEM_DROP)->play();
+							_game->getMod()->getSoundByDepth(_depth, Mod::ITEM_DROP)->play();
 						}
 						else
 						{
@@ -872,9 +872,9 @@ bool Inventory::unload()
 
 	if (!_tu || _selUnit->spendTimeUnits(8))
 	{
-		moveItem(_selItem->getAmmoItem(), _game->getRuleset()->getInventory("STR_LEFT_HAND"), 0, 0);
+		moveItem(_selItem->getAmmoItem(), _game->getMod()->getInventory("STR_LEFT_HAND"), 0, 0);
 		_selItem->getAmmoItem()->moveToOwner(_selUnit);
-		moveItem(_selItem, _game->getRuleset()->getInventory("STR_RIGHT_HAND"), 0, 0);
+		moveItem(_selItem, _game->getMod()->getInventory("STR_RIGHT_HAND"), 0, 0);
 		_selItem->moveToOwner(_selUnit);
 		_selItem->setAmmoItem(0);
 		setSelectedItem(0);
@@ -896,7 +896,7 @@ bool Inventory::unload()
  */
 void Inventory::arrangeGround(bool alterOffset)
 {
-	RuleInventory *ground = _game->getRuleset()->getInventory("STR_GROUND");
+	RuleInventory *ground = _game->getMod()->getInventory("STR_GROUND");
 
 	int slotsX = (320 - ground->getX()) / RuleInventory::SLOT_W;
 	int slotsY = (200 - ground->getY()) / RuleInventory::SLOT_H;
@@ -1001,7 +1001,7 @@ bool Inventory::fitItem(RuleInventory *newSlot, BattleItem *item, std::string &w
 				{
 					placed = true;
 					moveItem(item, newSlot, x2, y2);
-					_game->getResourcePack()->getSoundByDepth(_depth, ResourcePack::ITEM_DROP)->play();
+					_game->getMod()->getSoundByDepth(_depth, Mod::ITEM_DROP)->play();
 					drawItems();
 				}
 				else
@@ -1064,7 +1064,7 @@ void Inventory::drawPrimers()
 	{
 		_animFrame = 0;
 	}
-	Surface *tempSurface = _game->getResourcePack()->getSurfaceSet("SCANG.DAT")->getFrame(6);
+	Surface *tempSurface = _game->getMod()->getSurfaceSet("SCANG.DAT")->getFrame(6);
 	for (std::vector<std::pair<int, int> >::const_iterator i = _grenadeIndicators.begin(); i != _grenadeIndicators.end(); ++i)
 	{
 		tempSurface->blitNShade(_items, (*i).first, (*i).second, Pulsate[_animFrame]);
