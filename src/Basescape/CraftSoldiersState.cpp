@@ -298,11 +298,13 @@ void CraftSoldiersState::lstSoldiersClick(Action *action)
 		_wasDragging = false;
 		return;
 	}
+#ifdef __MOBILE__
 	if (_clickGuard)
 	{
 		_clickGuard = false;
 		return;
 	}
+#endif
 	double mx = action->getAbsoluteXMouse();
 	if (mx >= _lstSoldiers->getArrowsLeftEdge() && mx < _lstSoldiers->getArrowsRightEdge())
 	{
