@@ -44,7 +44,6 @@
 #include "BattlescapeState.h"
 #include "TileEngine.h"
 #include "../Engine/CrossPlatform.h"
-#include "../Mod/Mod.h"
 #include "../Mod/RuleInterface.h"
 
 namespace OpenXcom
@@ -881,9 +880,9 @@ void InventoryState::handle(Action *action)
 }
 
 /**
-* Shows a tooltip for the appropriate button.
-* @param action Pointer to an action.
-*/
+ * Shows a tooltip for the appropriate button.
+ * @param action Pointer to an action.
+ */
 void InventoryState::txtTooltipIn(Action *action)
 {
 	if (_inv->getSelectedItem() == 0 && Options::battleTooltips)
@@ -894,9 +893,9 @@ void InventoryState::txtTooltipIn(Action *action)
 }
 
 /**
-* Clears the tooltip text.
-* @param action Pointer to an action.
-*/
+ * Clears the tooltip text.
+ * @param action Pointer to an action.
+ */
 void InventoryState::txtTooltipOut(Action *action)
 {
 	if (_inv->getSelectedItem() == 0 && Options::battleTooltips)

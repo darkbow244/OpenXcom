@@ -43,7 +43,6 @@
 #include "../Battlescape/InventoryState.h"
 #include "../Battlescape/BattlescapeGenerator.h"
 #include "../Savegame/SavedBattleGame.h"
-#include "../Mod/Mod.h"
 #include "../Mod/RuleInterface.h"
 
 namespace OpenXcom
@@ -213,8 +212,8 @@ CraftEquipmentState::~CraftEquipmentState()
 }
 
 /**
-* Resets the savegame when coming back from the inventory.
-*/
+ * Resets the savegame when coming back from the inventory.
+ */
 void CraftEquipmentState::init()
 {
 	State::init();
@@ -601,10 +600,10 @@ void CraftEquipmentState::btnClearClick(Action *)
 }
 
 /**
-* Displays the inventory screen for the soldiers
-* inside the craft.
-* @param action Pointer to an action.
-*/
+ * Displays the inventory screen for the soldiers
+ * inside the craft.
+ * @param action Pointer to an action.
+ */
 void CraftEquipmentState::btnInventoryClick(Action *)
 {
 	Craft *craft = _base->getCrafts()->at(_craft);

@@ -698,9 +698,9 @@ Language *Game::getLanguage() const
 }
 
 /**
-* Changes the language currently in use by the game.
-* @param filename Filename of the language file.
-*/
+ * Changes the language currently in use by the game.
+ * @param filename Filename of the language file.
+ */
 void Game::loadLanguage(const std::string &filename)
 {
 	std::ostringstream ss;
