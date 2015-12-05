@@ -659,7 +659,7 @@ bool isQuitShortcut(const SDL_Event &ev)
 	return (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_F4 && ev.key.keysym.mod & KMOD_ALT);
 #elif __APPLE__
 	// Command + Q
-	return (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_q && ev.key.keysym.mod & KMOD_LMETA);
+	return (ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_q && ev.key.keysym.mod & KMOD_LGUI);
 #else
 	//TODO add other OSs shortcuts.
     (void)ev;
