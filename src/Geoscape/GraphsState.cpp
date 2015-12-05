@@ -19,15 +19,15 @@
 #include "GraphsState.h"
 #include <sstream>
 #include "../Engine/Game.h"
-#include "../Resource/ResourcePack.h"
+#include "../Mod/Mod.h"
 #include "../Engine/Palette.h"
 #include "../Engine/Surface.h"
 #include "../Engine/Screen.h"
 #include "../Engine/InteractiveSurface.h"
 #include "../Savegame/Country.h"
 #include "../Savegame/Region.h"
-#include "../Ruleset/RuleCountry.h"
-#include "../Ruleset/RuleRegion.h"
+#include "../Mod/RuleCountry.h"
+#include "../Mod/RuleRegion.h"
 #include "../Interface/Text.h"
 #include "../Engine/LocalizedText.h"
 #include "../Interface/TextButton.h"
@@ -37,6 +37,7 @@
 #include "../Interface/TextList.h"
 #include "../Engine/Action.h"
 #include "../Engine/Options.h"
+#include "../Mod/RuleInterface.h"
 
 namespace OpenXcom
 {
@@ -68,7 +69,7 @@ GraphsState::GraphsState() : _butRegionsOffset(0), _butCountriesOffset(0)
 	_btnIncome = new InteractiveSurface(32, 24, 224, 0);
 	_btnFinance = new InteractiveSurface(32, 24, 256, 0);
 	_btnGeoscape = new InteractiveSurface(32, 24, 288, 0);
-	_txtTitle = new Text(220, 16, 100, 28);
+	_txtTitle = new Text(230, 16, 90, 28);
 	_txtFactor = new Text(38, 11, 96, 28);
 	_txtMonths = new TextList(205, 8, 115, 183);
 	_txtYears = new TextList(200, 8, 121, 191);
@@ -94,8 +95,8 @@ GraphsState::GraphsState() : _butRegionsOffset(0), _butCountriesOffset(0)
 		_txtScale.push_back(new Text(42, 16, 80, 171 - (scaleText*14)));
 		add(_txtScale.at(scaleText), "scale", "graphs");
 	}
-	Uint8 regionTotalColor = _game->getRuleset()->getInterface("graphs")->getElement("regionTotal")->color;
-	Uint8 countryTotalColor = _game->getRuleset()->getInterface("graphs")->getElement("countryTotal")->color;
+	Uint8 regionTotalColor = _game->getMod()->getInterface("graphs")->getElement("regionTotal")->color;
+	Uint8 countryTotalColor = _game->getMod()->getInterface("graphs")->getElement("countryTotal")->color;
 
 	//create buttons (sooooo many buttons)
 	size_t offset = 0;
@@ -229,7 +230,7 @@ GraphsState::GraphsState() : _butRegionsOffset(0), _butCountriesOffset(0)
 		_financeToggles[i] = ('0'==graphFinanceToggles[i]) ? false : true;
 		_btnFinances.at(i)->setPressed(_financeToggles[i]);
 	}
-	Uint8 gridColor = _game->getRuleset()->getInterface("graphs")->getElement("graph")->color;
+	Uint8 gridColor = _game->getMod()->getInterface("graphs")->getElement("graph")->color;
 	// set up the grid
 	_bg->drawRect(125, 49, 188, 127, gridColor);
 
@@ -286,13 +287,13 @@ GraphsState::GraphsState() : _butRegionsOffset(0), _butCountriesOffset(0)
 	btnUfoRegionClick(0);
 
 	// Set up objects
-	if (_game->getResourcePack()->getSurface("GRAPH.BDY"))
+	if (_game->getMod()->getSurface("GRAPH.BDY"))
 	{
-		_game->getResourcePack()->getSurface("GRAPH.BDY")->blit(_bg);
+		_game->getMod()->getSurface("GRAPH.BDY")->blit(_bg);
 	}
 	else
 	{
-		_game->getResourcePack()->getSurface("GRAPHS.SPK")->blit(_bg);
+		_game->getMod()->getSurface("GRAPHS.SPK")->blit(_bg);
 	}
 
 	_txtTitle->setAlign(ALIGN_CENTER);
@@ -776,7 +777,7 @@ void GraphsState::drawCountryLines()
 
 	// set up the "total" line
 	std::vector<Sint16> newLineVector;
-	Uint8 color = _game->getRuleset()->getInterface("graphs")->getElement("countryTotal")->color2;
+	Uint8 color = _game->getMod()->getInterface("graphs")->getElement("countryTotal")->color2;
 	for (int iter = 0; iter != 12; ++iter)
 	{
 		int x = 312 - (iter*17);
@@ -932,7 +933,7 @@ void GraphsState::drawRegionLines()
 	else
 		_xcomRegionLines.back()->clear();
 
-	Uint8 color = _game->getRuleset()->getInterface("graphs")->getElement("regionTotal")->color2;
+	Uint8 color = _game->getMod()->getInterface("graphs")->getElement("regionTotal")->color2;
 	std::vector<Sint16> newLineVector;
 	for (int iter = 0; iter != 12; ++iter)
 	{

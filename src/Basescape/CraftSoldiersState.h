@@ -50,12 +50,14 @@ private:
 	///initializes the display list based on the craft soldier's list and the position to display
 	void initList(size_t scrl);
 	/// Stores previously selected soldier position
-	unsigned int _pselSoldier;
+	int _pselSoldier;
 	/// (De)selection guard
 	bool _wasDragging;
 #ifdef __MOBILE__
 	/// Timer for handling long presses as right clicks
 	Timer *_longPressTimer;
+	/// Click guard for state transitions
+	bool _clickGuard;
 #endif
 public:
 	/// Creates the Craft Soldiers state.

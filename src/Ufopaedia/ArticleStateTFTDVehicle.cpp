@@ -17,26 +17,26 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../Ruleset/ArticleDefinition.h"
+#include "../Mod/ArticleDefinition.h"
 #include "ArticleStateTFTDVehicle.h"
 #include <sstream>
 #include "../Engine/Game.h"
 #include "../Engine/LocalizedText.h"
 #include "../Engine/Palette.h"
 #include "../Interface/TextList.h"
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/Unit.h"
-#include "../Ruleset/Armor.h"
-#include "../Ruleset/RuleItem.h"
+#include "../Mod/Mod.h"
+#include "../Mod/Unit.h"
+#include "../Mod/Armor.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {
 
 	ArticleStateTFTDVehicle::ArticleStateTFTDVehicle(ArticleDefinitionTFTD *defs) : ArticleStateTFTD(defs)
 	{
-		Unit *unit = _game->getRuleset()->getUnit(defs->id);
-		Armor *armor = _game->getRuleset()->getArmor(unit->getArmor());
-		RuleItem *item = _game->getRuleset()->getItem(defs->id);
+		Unit *unit = _game->getMod()->getUnit(defs->id);
+		Armor *armor = _game->getMod()->getArmor(unit->getArmor());
+		RuleItem *item = _game->getMod()->getItem(defs->id);
 
 		_lstStats = new TextList(150, 65, 168, 106);
 
@@ -86,16 +86,24 @@ namespace OpenXcom
 				
 		if (!item->getCompatibleAmmo()->empty())
 		{
-			RuleItem *ammo = _game->getRuleset()->getItem(item->getCompatibleAmmo()->front());
+			RuleItem *ammo = _game->getMod()->getItem(item->getCompatibleAmmo()->front());
 
 			std::wostringstream ss8;
 			ss8 << ammo->getPower();
 			_lstStats2->addRow(2, tr("STR_WEAPON_POWER").c_str(), ss8.str().c_str());
 
 			_lstStats2->addRow(2, tr("STR_AMMUNITION").c_str(), tr(ammo->getName()).c_str());
-			
+
 			std::wostringstream ss9;
-			ss9 << ammo->getClipSize();
+			if (item->getClipSize() > 0)
+			{
+				ss9 << item->getClipSize();
+			}
+			else
+			{
+				ss9 << ammo->getClipSize();
+			}
+
 			_lstStats2->addRow(2, tr("STR_ROUNDS").c_str(), ss9.str().c_str());
 		}
 		else

@@ -49,7 +49,7 @@ private:
 	size_t _scroll, _visibleRows, _selRow;
 	Uint8 _color, _color2;
 	std::map<int, TextHAlign> _align;
-	bool _dot, _selectable, _condensed, _contrast, _wrap;
+	bool _dot, _selectable, _condensed, _contrast, _wrap, _flooding;
 	Surface *_bg, *_selector;
 	ArrowButton *_up, *_down;
 	ScrollBar *_scrollbar;
@@ -203,6 +203,8 @@ public:
 	ComboBox *getComboBox() const;
 	void setBorderColor(Uint8 color);
 	int getScrollbarColor();
+    /// Allows the cell to flood into other columns.
+    void setFlooding(bool flooding);
 	/// Set drag-scrolling for this TextList
 	void setDragScrollable(bool scrollable);
 	/// Check if the list supports drag-scrolling

@@ -1,4 +1,6 @@
 
+#if 0
+
 #include <SDL.h>
 #include "UIBuilder.h"
 #include "Surface.h"
@@ -437,3 +439,5 @@ namespace UIBuilder
 }
 
 }
+
+#endif

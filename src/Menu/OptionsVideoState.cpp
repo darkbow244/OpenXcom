@@ -373,6 +373,7 @@ void OptionsVideoState::updateDisplayResolution()
 	Options::newDisplayWidth = _res[_resCurrent].w;
 	Options::newDisplayHeight = _res[_resCurrent].h;
 }
+
 /**
  * Changes the Display Width option.
  * @param action Pointer to an action.

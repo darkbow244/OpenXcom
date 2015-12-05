@@ -27,12 +27,13 @@
 #include "../Engine/Screen.h"
 #include "../Savegame/BattleItem.h"
 #include "../Savegame/BattleUnit.h"
-#include "../Ruleset/RuleItem.h"
-#include "../Resource/ResourcePack.h"
+#include "../Mod/RuleItem.h"
+#include "../Mod/Mod.h"
 #include <sstream>
 #include "../Engine/Options.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/SavedBattleGame.h"
+#include "../Savegame/BattleUnitStatistics.h"
 
 namespace OpenXcom
 {
@@ -166,7 +167,7 @@ MedikitState::MedikitState (BattleUnit *targetUnit, BattleAction *action) : _tar
 
 	centerAllSurfaces();
 
-	_game->getResourcePack()->getSurface("MEDIBORD.PCK")->blit(_bg);
+	_game->getMod()->getSurface("MEDIBORD.PCK")->blit(_bg);
 	_pkText->setBig();
 	_stimulantTxt->setBig();
 	_healTxt->setBig();
@@ -230,7 +231,9 @@ void MedikitState::onHealClick(Action *)
 		if (_targetUnit->getStatus() == STATUS_UNCONSCIOUS && _targetUnit->getStunlevel() < _targetUnit->getHealth() && _targetUnit->getHealth() > 0)
 		{
 			_targetUnit->setTimeUnits(0);
+			_action->actor->getStatistics()->revivedSoldier++;
 		}
+		_unit->getStatistics()->woundsHealed++;
 	}
 	else
 	{
@@ -255,6 +258,7 @@ void MedikitState::onStimulantClick(Action *)
 	{
 		_targetUnit->stimulant(rule->getEnergyRecovery(), rule->getStunRecovery());
 		_item->setStimulantQuantity(--stimulant);
+		_action->actor->getStatistics()->appliedStimulant++;
 		update();
 
 		// if the unit has revived we quit this screen automatically
@@ -287,6 +291,7 @@ void MedikitState::onPainKillerClick(Action *)
 	{
 		_targetUnit->painKillers();
 		_item->setPainKillerQuantity(--pk);
+		_action->actor->getStatistics()->appliedPainKill++;
 		update();
 	}
 	else

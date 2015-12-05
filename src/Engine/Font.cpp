@@ -49,19 +49,19 @@ Font::~Font()
 }
 
 /**
-* Loads the characters contained in each font
-* from a UTF-8 string to use as the index.
-* @param index String of characters.
-*/
+ * Loads the characters contained in each font
+ * from a UTF-8 string to use as the index.
+ * @param index String of characters.
+ */
 void Font::setIndex(const std::wstring &index)
 {
 	_index = index;
 }
 
 /**
-* Loads the font from a YAML file.
-* @param node YAML node.
-*/
+ * Loads the font from a YAML file.
+ * @param node YAML node.
+ */
 void Font::load(const YAML::Node &node)
 {
 	_width = node["width"].as<int>(_width);
@@ -187,6 +187,7 @@ Surface *Font::getChar(wchar_t c)
 	_surface->getCrop()->h = _chars[c].h;
 	return _surface;
 }
+
 /**
  * Returns the maximum width for any character in the font.
  * @return Width in pixels.

@@ -20,9 +20,9 @@
 #include <sstream>
 #include "Ufopaedia.h"
 #include "ArticleStateTFTDItem.h"
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/ArticleDefinition.h"
-#include "../Ruleset/RuleItem.h"
+#include "../Mod/Mod.h"
+#include "../Mod/ArticleDefinition.h"
+#include "../Mod/RuleItem.h"
 #include "../Engine/Game.h"
 #include "../Engine/Palette.h"
 #include "../Engine/LocalizedText.h"
@@ -33,7 +33,7 @@ namespace OpenXcom
 
 	ArticleStateTFTDItem::ArticleStateTFTDItem(ArticleDefinitionTFTD *defs) : ArticleStateTFTD(defs)
 	{
-		RuleItem *item = _game->getRuleset()->getItem(defs->id);
+		RuleItem *item = _game->getMod()->getItem(defs->id);
 
 		std::vector<std::string> *ammo_data = item->getCompatibleAmmo();
 
@@ -145,10 +145,10 @@ namespace OpenXcom
 				{
 					for (size_t i = 0; i < std::min(ammo_data->size(), (size_t)3); ++i)
 					{
-						ArticleDefinition *ammo_article = _game->getRuleset()->getUfopaediaArticle((*ammo_data)[i]);
+						ArticleDefinition *ammo_article = _game->getMod()->getUfopaediaArticle((*ammo_data)[i]);
 						if (Ufopaedia::isArticleAvailable(_game->getSavedGame(), ammo_article))
 						{
-							RuleItem *ammo_rule = _game->getRuleset()->getItem((*ammo_data)[i]);
+							RuleItem *ammo_rule = _game->getMod()->getItem((*ammo_data)[i]);
 							_txtAmmoType[i]->setText(tr(getDamageTypeText(ammo_rule->getDamageType())));
 
 							ss.str(L"");ss.clear();

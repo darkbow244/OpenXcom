@@ -50,7 +50,6 @@ private:
 	double _scaleX, _scaleY, _scale;
 	int _topBlackBand, _bottomBlackBand, _leftBlackBand, _rightBlackBand, _cursorTopBlackBand, _cursorLeftBlackBand;
 	Uint32 _flags;
-	int _zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy);
 	SDL_Color deferredPalette[256];
 	int _numColors, _firstColor;
 	bool _pushPalette;

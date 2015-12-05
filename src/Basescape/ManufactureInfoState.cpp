@@ -26,12 +26,13 @@
 #include "../Engine/Game.h"
 #include "../Engine/Language.h"
 #include "../Engine/Options.h"
-#include "../Resource/ResourcePack.h"
-#include "../Ruleset/RuleManufacture.h"
+#include "../Mod/Mod.h"
+#include "../Mod/RuleManufacture.h"
 #include "../Savegame/Base.h"
 #include "../Savegame/Production.h"
 #include "../Engine/Timer.h"
 #include "../Menu/ErrorMessageState.h"
+#include "../Mod/RuleInterface.h"
 #include <limits>
 
 namespace OpenXcom
@@ -119,7 +120,7 @@ void ManufactureInfoState::buildUi()
 
 	centerAllSurfaces();
 
-	_window->setBackground(_game->getResourcePack()->getSurface("BACK17.SCR"));
+	_window->setBackground(_game->getMod()->getSurface("BACK17.SCR"));
 
 	_txtTitle->setText(tr(_item ? _item->getName() : _production->getRules()->getName()));
 	_txtTitle->setBig();
@@ -188,6 +189,17 @@ void ManufactureInfoState::buildUi()
 	_timerLessEngineer->onTimer((StateHandler)&ManufactureInfoState::onLessEngineer);
 	_timerMoreUnit->onTimer((StateHandler)&ManufactureInfoState::onMoreUnit);
 	_timerLessUnit->onTimer((StateHandler)&ManufactureInfoState::onLessUnit);
+}
+
+/**
+ * Frees up memory that's not automatically cleaned on exit
+ */
+ManufactureInfoState::~ManufactureInfoState()
+{
+	delete _timerMoreEngineer;
+	delete _timerLessEngineer;
+	delete _timerMoreUnit;
+	delete _timerLessUnit;
 }
 
 /**
@@ -352,7 +364,7 @@ void ManufactureInfoState::moreUnit(int change)
 	if (_production->getRules()->getCategory() == "STR_CRAFT" && _base->getAvailableHangars() - _base->getUsedHangars() <= 0)
 	{
 		_timerMoreUnit->stop();
-		_game->pushState(new ErrorMessageState(tr("STR_NO_FREE_HANGARS_FOR_CRAFT_PRODUCTION"), _palette, _game->getRuleset()->getInterface("basescape")->getElement("errorMessage")->color, "BACK17.SCR", _game->getRuleset()->getInterface("basescape")->getElement("errorPalette")->color));
+		_game->pushState(new ErrorMessageState(tr("STR_NO_FREE_HANGARS_FOR_CRAFT_PRODUCTION"), _palette, _game->getMod()->getInterface("basescape")->getElement("errorMessage")->color, "BACK17.SCR", _game->getMod()->getInterface("basescape")->getElement("errorPalette")->color));
 	}
 	else
 	{

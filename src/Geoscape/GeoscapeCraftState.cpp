@@ -19,16 +19,16 @@
 #include "GeoscapeCraftState.h"
 #include <sstream>
 #include "../Engine/Game.h"
-#include "../Resource/ResourcePack.h"
+#include "../Mod/Mod.h"
 #include "../Engine/LocalizedText.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
 #include "../Savegame/Base.h"
 #include "../Savegame/Craft.h"
-#include "../Ruleset/RuleCraft.h"
+#include "../Mod/RuleCraft.h"
 #include "../Savegame/CraftWeapon.h"
-#include "../Ruleset/RuleCraftWeapon.h"
+#include "../Mod/RuleCraftWeapon.h"
 #include "../Savegame/Target.h"
 #include "../Savegame/Ufo.h"
 #include "../Savegame/SavedGame.h"
@@ -99,7 +99,7 @@ GeoscapeCraftState::GeoscapeCraftState(Craft *craft, Globe *globe, Waypoint *way
 	centerAllSurfaces();
 
 	// Set up objects
-	_window->setBackground(_game->getResourcePack()->getSurface("BACK12.SCR"));
+	_window->setBackground(_game->getMod()->getSurface("BACK12.SCR"));
 
 	_btnBase->setText(tr("STR_RETURN_TO_BASE"));
 	_btnBase->onMouseClick((ActionHandler)&GeoscapeCraftState::btnBaseClick);

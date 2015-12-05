@@ -17,9 +17,9 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../Ruleset/ArticleDefinition.h"
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/RuleBaseFacility.h"
+#include "../Mod/ArticleDefinition.h"
+#include "../Mod/Mod.h"
+#include "../Mod/RuleBaseFacility.h"
 #include "ArticleStateTFTD.h"
 #include "ArticleStateTFTDFacility.h"
 #include "../Engine/Game.h"
@@ -32,7 +32,7 @@ namespace OpenXcom
 
 	ArticleStateTFTDFacility::ArticleStateTFTDFacility(ArticleDefinitionTFTD *defs) : ArticleStateTFTD(defs)
 	{
-		RuleBaseFacility *facility = _game->getRuleset()->getBaseFacility(defs->id);
+		RuleBaseFacility *facility = _game->getMod()->getBaseFacility(defs->id);
 
 		_lstInfo = new TextList(150, 50, 168, 150);
 		add(_lstInfo);

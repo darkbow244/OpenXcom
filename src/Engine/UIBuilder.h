@@ -4,7 +4,7 @@
  */
 
 
-
+#if 0
 
 #ifndef OPENXCOM_UIBUILDER_H
 #define OPENXCOM_UIBUILDER_H
@@ -14,7 +14,6 @@
 #include <yaml-cpp/yaml.h>
 #include "State.h"
 #include "InteractiveSurface.h"
-#include "../Resource/ResourcePack.h"
 
 namespace OpenXcom
 {
@@ -32,3 +31,5 @@ namespace UIBuilder
 }
 
 #endif //OPENXCOM_UIBUILDER_H
+
+#endif

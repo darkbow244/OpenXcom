@@ -24,21 +24,21 @@
 #include "../Engine/Action.h"
 #include "../Engine/SurfaceSet.h"
 #include "../Engine/Timer.h"
-#include "../Resource/ResourcePack.h"
-#include "../Ruleset/Polygon.h"
-#include "../Ruleset/Polyline.h"
+#include "../Mod/Mod.h"
+#include "../Mod/Polygon.h"
+#include "../Mod/Polyline.h"
 #include "../Engine/FastLineClip.h"
 #include "../Engine/Game.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/GameTime.h"
 #include "../Savegame/Base.h"
 #include "../Savegame/Country.h"
-#include "../Ruleset/RuleCountry.h"
+#include "../Mod/RuleCountry.h"
 #include "../Interface/Text.h"
 #include "../Engine/LocalizedText.h"
-#include "../Ruleset/RuleRegion.h"
+#include "../Mod/RuleRegion.h"
 #include "../Savegame/Region.h"
-#include "../Ruleset/City.h"
+#include "../Mod/City.h"
 #include "../Savegame/Target.h"
 #include "../Savegame/Ufo.h"
 #include "../Savegame/Craft.h"
@@ -50,10 +50,9 @@
 #include "../Savegame/AlienBase.h"
 #include "../Engine/Language.h"
 #include "../Savegame/BaseFacility.h"
-#include "../Ruleset/RuleBaseFacility.h"
-#include "../Ruleset/RuleCraft.h"
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/RuleGlobe.h"
+#include "../Mod/RuleBaseFacility.h"
+#include "../Mod/RuleCraft.h"
+#include "../Mod/RuleGlobe.h"
 #include "../Interface/Cursor.h"
 #include "../Engine/Screen.h"
 #include "../Engine/CrossPlatform.h"
@@ -270,9 +269,9 @@ struct CreateShadow
 Globe::Globe(Game* game, int cenX, int cenY, int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _rotLon(0.0), _rotLat(0.0), _hoverLon(0.0), _hoverLat(0.0), _cenX(cenX), _cenY(cenY), _game(game), _hover(false), _blink(-1),
 																					_isMouseScrolling(false), _isMouseScrolled(false), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _lonBeforeMouseScrolling(0.0), _latBeforeMouseScrolling(0.0), _mouseScrollingStartTime(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(false)
 {
-	_rules = game->getRuleset()->getGlobe();
-	_texture = new SurfaceSet(*_game->getResourcePack()->getSurfaceSet("TEXTURE.DAT"));
-	_markerSet = new SurfaceSet(*_game->getResourcePack()->getSurfaceSet("GlobeMarkers"));
+	_rules = game->getMod()->getGlobe();
+	_texture = new SurfaceSet(*_game->getMod()->getSurfaceSet("TEXTURE.DAT"));
+	_markerSet = new SurfaceSet(*_game->getMod()->getSurfaceSet("GlobeMarkers"));
 
 	_countries = new Surface(width, height, x, y);
 	_markers = new Surface(width, height, x, y);
@@ -415,43 +414,49 @@ double Globe::lastVisibleLat(double lon) const
 	return atan(-cos(_cenLat) * cos(lon - _cenLon)/sin(_cenLat));
 }
 
-/**
- * Checks if a polar point is inside a certain polygon.
- * @param lon Longitude of the point.
- * @param lat Latitude of the point.
- * @param poly Pointer to the polygon.
- * @return True if it's inside, False if it's outside.
- */
-bool Globe::insidePolygon(double lon, double lat, Polygon *poly) const
+
+Polygon* Globe::getPolygonFromLonLat(double lon, double lat) const
 {
-	bool backFace = true;
-	for (int i = 0; i < poly->getPoints(); ++i)
+	const double zDiscard=0.75f;
+    double coslat = cos(lat);
+    double sinlat = sin(lat);
+
+	for (std::list<Polygon*>::iterator i = _rules->getPolygons()->begin(); i != _rules->getPolygons()->end(); ++i)
 	{
-		backFace = backFace && pointBack(poly->getLongitude(i), poly->getLatitude(i));
-	}
-	if (backFace != pointBack(lon, lat))
-		return false;
-
-	bool odd = false;
-	for (int i = 0; i < poly->getPoints(); ++i)
-	{
-		int j = (i + 1) % poly->getPoints();
-
-		/*double x = lon, y = lat,
-			   x_i = poly->getLongitude(i), y_i = poly->getLatitude(i),
-			   x_j = poly->getLongitude(j), y_j = poly->getLatitude(j);*/
-
-		double x, y, x_i, x_j, y_i, y_j;
-		polarToCart(poly->getLongitude(i), poly->getLatitude(i), &x_i, &y_i);
-		polarToCart(poly->getLongitude(j), poly->getLatitude(j), &x_j, &y_j);
-		polarToCart(lon, lat, &x, &y);
-
-		if (((y_i < y && y_j >= y) || (y_j < y && y_i >= y)) && (x_i <= x || x_j <= x))
+		double x, y, z, x2, y2;
+		double clat, clon;
+		z = 0;
+		for (int j = 0; j < (*i)->getPoints(); ++j)
 		{
-			odd ^= (x_i + (y - y_i) / (y_j - y_i) * (x_j - x_i) < x);
+			z = coslat * cos((*i)->getLatitude(j)) * cos((*i)->getLongitude(j) - lon) + sinlat * sin((*i)->getLatitude(j));
+			if (z<zDiscard) break; //discarded
 		}
+		if (z<zDiscard) continue; //discarded
+
+		bool odd = false;
+
+		clat = (*i)->getLatitude(0); //initial point
+		clon = (*i)->getLongitude(0);
+		x = cos(clat) * sin(clon - lon);
+		y = coslat * sin(clat) - sinlat * cos(clat) * cos(clon - lon);
+
+		for (int j = 0; j < (*i)->getPoints(); ++j)
+		{
+			int k = (j + 1) % (*i)->getPoints(); //index of next point in poly
+			clat = (*i)->getLatitude(k);
+			clon = (*i)->getLongitude(k);
+
+			x2 = cos(clat) * sin(clon - lon);
+			y2 = coslat * sin(clat) - sinlat * cos(clat) * cos(clon - lon);
+			if ( ((y>0)!=(y2>0)) && (0 < (x2-x)*(0-y)/(y2-y)+x) )
+				odd = !odd;
+			x = x2;
+			y = y2;
+
+		}
+		if (odd) return *i;
 	}
-	return odd;
+	return NULL;
 }
 
 /**
@@ -668,19 +673,7 @@ void Globe::center(double lon, double lat)
  */
 bool Globe::insideLand(double lon, double lat) const
 {
-	bool inside = false;
-	// We're only temporarily changing cenLon/cenLat so the "const" is actually preserved
-	Globe* const globe = const_cast<Globe* const>(this); // WARNING: BAD CODING PRACTICE
-	double oldLon = _cenLon, oldLat = _cenLat;
-	globe->_cenLon = lon;
-	globe->_cenLat = lat;
-	for (std::list<Polygon*>::iterator i = _rules->getPolygons()->begin(); i != _rules->getPolygons()->end() && !inside; ++i)
-	{
-		inside = insidePolygon(lon, lat, *i);
-	}
-	globe->_cenLon = oldLon;
-	globe->_cenLat = oldLat;
-	return inside;
+	return (getPolygonFromLonLat(lon,lat))!=NULL;
 }
 
 /**
@@ -1102,7 +1095,6 @@ void Globe::drawRadars()
 	if (!Options::globeRadarLines)
 		return;
 
-	double x, y;
 	double tr, range;
 	double lat, lon;
 	std::vector<double> ranges;
@@ -1111,10 +1103,10 @@ void Globe::drawRadars()
 
 	if (_hover)
 	{
-		const std::vector<std::string> &facilities = _game->getRuleset()->getBaseFacilitiesList();
+		const std::vector<std::string> &facilities = _game->getMod()->getBaseFacilitiesList();
 		for (std::vector<std::string>::const_iterator i = facilities.begin(); i != facilities.end(); ++i)
 		{
-			range=_game->getRuleset()->getBaseFacility(*i)->getRadarRange();
+			range=_game->getMod()->getBaseFacility(*i)->getRadarRange();
 			range = range * (1 / 60.0) * (M_PI / 180);
 			drawGlobeCircle(_hoverLat,_hoverLon,range,48);
 			if (Options::globeAllRadarsOnBaseBuild) ranges.push_back(range);
@@ -1130,8 +1122,6 @@ void Globe::drawRadars()
 		if (( !(AreSame(lon, 0.0) && AreSame(lat, 0.0)) )/* &&
 			!pointBack((*i)->getLongitude(), (*i)->getLatitude())*/)
 		{
-			polarToCart(lon, lat, &x, &y);
-
 			if (_hover && Options::globeAllRadarsOnBaseBuild)
 			{
 				for (size_t j=0; j<ranges.size(); j++) drawGlobeCircle(lat,lon,ranges[j],48);
@@ -1156,11 +1146,10 @@ void Globe::drawRadars()
 
 		for (std::vector<Craft*>::iterator j = (*i)->getCrafts()->begin(); j != (*i)->getCrafts()->end(); ++j)
 		{
-			lat=(*j)->getLatitude();
-			lon=(*j)->getLongitude();
 			if ((*j)->getStatus()!= "STR_OUT")
 				continue;
-			polarToCart(lon, lat, &x, &y);
+			lat=(*j)->getLatitude();
+			lon=(*j)->getLongitude();
 			range = (*j)->getRules()->getRadarRange();
 			range = range * (1 / 60.0) * (M_PI / 180);
 
@@ -1301,7 +1290,7 @@ void Globe::drawDetail()
 	{
 		Text *label = new Text(100, 9, 0, 0);
 		label->setPalette(getPalette());
-		label->initText(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"), _game->getLanguage());
+		label->initText(_game->getMod()->getFont("FONT_BIG"), _game->getMod()->getFont("FONT_SMALL"), _game->getLanguage());
 		label->setAlign(ALIGN_CENTER);
 		label->setColor(COUNTRY_LABEL_COLOR);
 
@@ -1329,7 +1318,7 @@ void Globe::drawDetail()
 	{
 		Text *label = new Text(100, 9, 0, 0);
 		label->setPalette(getPalette());
-		label->initText(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"), _game->getLanguage());
+		label->initText(_game->getMod()->getFont("FONT_BIG"), _game->getMod()->getFont("FONT_SMALL"), _game->getLanguage());
 		label->setAlign(ALIGN_CENTER);
 		label->setColor(CITY_LABEL_COLOR);
 
@@ -1848,24 +1837,9 @@ void Globe::getPolygonTextureAndShade(double lon, double lat, int *texture, int 
 							 7, 7, 8, 8, 9, 9,10,11,
 							11,12,12,13,13,14,15,15};
 
-	*texture = -1;
 	*shade = worldshades[ CreateShadow::getShadowValue(0, Cord(0.,0.,1.), getSunDirection(lon, lat), 0) ];
-
-	// We're only temporarily changing cenLon/cenLat so the "const" is actually preserved
-	Globe* const globe = const_cast<Globe* const>(this); // WARNING: BAD CODING PRACTICE
-	double oldLon = _cenLon, oldLat = _cenLat;
-	globe->_cenLon = lon;
-	globe->_cenLat = lat;
-	for (std::list<Polygon*>::iterator i = _rules->getPolygons()->begin(); i != _rules->getPolygons()->end(); ++i)
-	{
-		if (insidePolygon(lon, lat, *i))
-		{
-			*texture = (*i)->getTexture();
-			break;
-		}
-	}
-	globe->_cenLon = oldLon;
-	globe->_cenLat = oldLat;
+	Polygon *t = getPolygonFromLonLat(lon,lat);
+	*texture = (t==NULL)? -1 : t->getTexture();
 }
 
 /**

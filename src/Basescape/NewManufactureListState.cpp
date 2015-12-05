@@ -25,12 +25,13 @@
 #include "../Engine/Game.h"
 #include "../Engine/LocalizedText.h"
 #include "../Engine/Options.h"
-#include "../Resource/ResourcePack.h"
-#include "../Ruleset/RuleManufacture.h"
+#include "../Mod/Mod.h"
+#include "../Mod/RuleManufacture.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/Base.h"
 #include "ManufactureStartState.h"
 #include "../Menu/ErrorMessageState.h"
+#include "../Mod/RuleInterface.h"
 
 namespace OpenXcom
 {
@@ -65,7 +66,7 @@ NewManufactureListState::NewManufactureListState(Base *base) : _base(base)
 
 	centerAllSurfaces();
 
-	_window->setBackground(_game->getResourcePack()->getSurface("BACK17.SCR"));
+	_window->setBackground(_game->getMod()->getSurface("BACK17.SCR"));
 
 	_txtTitle->setText(tr("STR_PRODUCTION_ITEMS"));
 	_txtTitle->setBig();
@@ -86,7 +87,7 @@ NewManufactureListState::NewManufactureListState(Base *base) : _base(base)
 	_btnOk->onKeyboardPress((ActionHandler)&NewManufactureListState::btnOkClick, Options::keyCancel);
 
 	_possibleProductions.clear();
-	_game->getSavedGame()->getAvailableProductions(_possibleProductions, _game->getRuleset(), _base);
+	_game->getSavedGame()->getAvailableProductions(_possibleProductions, _game->getMod(), _base);
 	_catStrings.push_back("STR_ALL_ITEMS");
 
 	for (std::vector<RuleManufacture *>::iterator it = _possibleProductions.begin(); it != _possibleProductions.end(); ++it)
@@ -94,7 +95,7 @@ NewManufactureListState::NewManufactureListState(Base *base) : _base(base)
 		bool addCategory = true;
 		for (size_t x = 0; x < _catStrings.size(); ++x)
 		{
-			if ((*it)->getCategory().c_str() == _catStrings[x])
+			if ((*it)->getCategory() == _catStrings[x])
 			{
 				addCategory = false;
 				break;
@@ -102,7 +103,7 @@ NewManufactureListState::NewManufactureListState(Base *base) : _base(base)
 		}
 		if (addCategory)
 		{
-			_catStrings.push_back((*it)->getCategory().c_str());
+			_catStrings.push_back((*it)->getCategory());
 		}
 	}
 
@@ -132,13 +133,13 @@ void NewManufactureListState::btnOkClick(Action *)
 /**
  * Opens the Production settings screen.
  * @param action A pointer to an Action.
-*/
+ */
 void NewManufactureListState::lstProdClick(Action *)
 {
 	RuleManufacture *rule = 0;
 	for (std::vector<RuleManufacture *>::iterator it = _possibleProductions.begin(); it != _possibleProductions.end(); ++it)
 	{
-		if ((*it)->getName().c_str() == _displayedStrings[_lstManufacture->getSelectedRow()])
+		if ((*it)->getName() == _displayedStrings[_lstManufacture->getSelectedRow()])
 		{
 			rule = (*it);
 			break;
@@ -146,11 +147,11 @@ void NewManufactureListState::lstProdClick(Action *)
 	}
 	if (rule->getCategory() == "STR_CRAFT" && _base->getAvailableHangars() - _base->getUsedHangars() <= 0)
 	{
-		_game->pushState(new ErrorMessageState(tr("STR_NO_FREE_HANGARS_FOR_CRAFT_PRODUCTION"), _palette, _game->getRuleset()->getInterface("basescape")->getElement("errorMessage")->color, "BACK17.SCR", _game->getRuleset()->getInterface("basescape")->getElement("errorPalette")->color));
+		_game->pushState(new ErrorMessageState(tr("STR_NO_FREE_HANGARS_FOR_CRAFT_PRODUCTION"), _palette, _game->getMod()->getInterface("basescape")->getElement("errorMessage")->color, "BACK17.SCR", _game->getMod()->getInterface("basescape")->getElement("errorPalette")->color));
 	}
 	else if (rule->getRequiredSpace() > _base->getFreeWorkshops())
 	{
-		_game->pushState(new ErrorMessageState(tr("STR_NOT_ENOUGH_WORK_SPACE"), _palette, _game->getRuleset()->getInterface("basescape")->getElement("errorMessage")->color, "BACK17.SCR", _game->getRuleset()->getInterface("basescape")->getElement("errorPalette")->color));
+		_game->pushState(new ErrorMessageState(tr("STR_NOT_ENOUGH_WORK_SPACE"), _palette, _game->getMod()->getInterface("basescape")->getElement("errorMessage")->color, "BACK17.SCR", _game->getMod()->getInterface("basescape")->getElement("errorPalette")->color));
 	}
 	else
 	{
@@ -174,15 +175,15 @@ void NewManufactureListState::fillProductionList()
 {
 	_lstManufacture->clearList();
 	_possibleProductions.clear();
-	_game->getSavedGame()->getAvailableProductions(_possibleProductions, _game->getRuleset(), _base);
+	_game->getSavedGame()->getAvailableProductions(_possibleProductions, _game->getMod(), _base);
 	_displayedStrings.clear();
 
 	for (std::vector<RuleManufacture *>::iterator it = _possibleProductions.begin(); it != _possibleProductions.end(); ++it)
 	{
-		if (((*it)->getCategory().c_str() == _catStrings[_cbxCategory->getSelected()]) || (_catStrings[_cbxCategory->getSelected()] == "STR_ALL_ITEMS"))
+		if (((*it)->getCategory() == _catStrings[_cbxCategory->getSelected()]) || (_catStrings[_cbxCategory->getSelected()] == "STR_ALL_ITEMS"))
 		{
 			_lstManufacture->addRow(2, tr((*it)->getName()).c_str(), tr((*it)->getCategory()).c_str());
-			_displayedStrings.push_back((*it)->getName().c_str());
+			_displayedStrings.push_back((*it)->getName());
 		}
 	}
 }

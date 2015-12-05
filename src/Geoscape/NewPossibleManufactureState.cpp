@@ -19,12 +19,12 @@
 #include "NewPossibleManufactureState.h"
 #include "../Engine/Game.h"
 #include "../Engine/LocalizedText.h"
-#include "../Resource/ResourcePack.h"
+#include "../Mod/Mod.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
 #include "../Interface/TextList.h"
-#include "../Ruleset/RuleManufacture.h"
+#include "../Mod/RuleManufacture.h"
 #include "../Basescape/ManufactureState.h"
 #include "../Engine/Options.h"
 
@@ -45,7 +45,7 @@ NewPossibleManufactureState::NewPossibleManufactureState(Base * base, const std:
 	_btnOk = new TextButton(160, 14, 80, 149);
 	_btnManufacture = new TextButton(160, 14, 80, 165);
 	_txtTitle = new Text(288, 40, 16, 20);
-	_lstPossibilities = new TextList(260, 80, 21, 56);
+	_lstPossibilities = new TextList(250, 80, 35, 56);
 
 	// Set palette
 	setInterface("geoManufacture");
@@ -59,7 +59,7 @@ NewPossibleManufactureState::NewPossibleManufactureState(Base * base, const std:
 	centerAllSurfaces();
 
 	// Set up objects
-	_window->setBackground(_game->getResourcePack()->getSurface("BACK17.SCR"));
+	_window->setBackground(_game->getMod()->getSurface("BACK17.SCR"));
 
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&NewPossibleManufactureState::btnOkClick);
