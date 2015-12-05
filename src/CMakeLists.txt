@@ -281,6 +281,9 @@ set ( engine_src
   Engine/Adlib/fmopl.h
   Engine/AdlibMusic.h
   Engine/AdlibMusic.cpp
+  Engine/Gfx/GfxPrimitives.cpp
+  Engine/Gfx/GfxPrimitives.h
+  Engine/Gfx/GfxFontData.h
 )
 
 set ( geoscape_src
