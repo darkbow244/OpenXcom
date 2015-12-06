@@ -149,6 +149,16 @@ void Game::run()
 	bool startupEvent = Options::allowResize;
 	
 	int numTouchDevices = SDL_GetNumTouchDevices();
+	if (!numTouchDevices)
+	{
+		// Workaround for Macs that don't report their touch capabilities,
+		// but still report finger presses for their touchpads.
+		SDL_EventState(SDL_FINGERDOWN, SDL_IGNORE);
+		SDL_EventState(SDL_FINGERUP, SDL_IGNORE);
+		SDL_EventState(SDL_FINGERMOTION, SDL_IGNORE);
+		SDL_EventState(SDL_MULTIGESTURE, SDL_IGNORE);
+		// FIXME: Adjust scaling so that there's no need for these lines.
+	} 
 	std::vector<SDL_TouchID> touchDevices;
 	for(int i = 0; i < numTouchDevices; ++i)
 	{
