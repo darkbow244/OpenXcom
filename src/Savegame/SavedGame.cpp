@@ -215,12 +215,12 @@ std::vector<SaveInfo> SavedGame::getList(Language *lang, bool autoquick)
 		}
 		catch (Exception &e)
 		{
-			Log(LOG_ERROR) << e.what();
+			Log(LOG_ERROR) << (*i) << ": " << e.what();
 			continue;
 		}
 		catch (YAML::Exception &e)
 		{
-			Log(LOG_ERROR) << e.what();
+			Log(LOG_ERROR) << (*i) << ": " << e.what();
 			continue;
 		}
 	}
@@ -509,11 +509,22 @@ void SavedGame::save(const std::string &filename) const
 		brief["turn"] = _battleGame->getTurn();
 	}
 
+	// only save mods that work with the current master
 	std::vector<std::string> activeMods;
+	std::string curMasterId;
 	for (std::vector< std::pair<std::string, bool> >::iterator i = Options::mods.begin(); i != Options::mods.end(); ++i)
 	{
 		if (i->second)
 		{
+			ModInfo modInfo = Options::getModInfos().find(i->first)->second;
+			if (modInfo.isMaster())
+			{
+				curMasterId = i->first;
+			}
+			if (!modInfo.getMaster().empty() && modInfo.getMaster() != curMasterId)
+			{
+				continue;
+			}
 			activeMods.push_back(i->first);
 		}
 	}
@@ -1852,8 +1863,6 @@ std::vector<MissionStatistics*> *SavedGame::getMissionStatistics()
  */
 std::vector<Soldier*>::iterator SavedGame::killSoldier(Soldier *soldier, BattleUnitKills *cause)
 {
-	soldier->die(new SoldierDeath(*_time, cause));
-	_deadSoldiers.push_back(soldier);
 	std::vector<Soldier*>::iterator j;
 	for (std::vector<Base*>::const_iterator i = _bases.begin(); i != _bases.end(); ++i)
 	{
@@ -1861,6 +1870,8 @@ std::vector<Soldier*>::iterator SavedGame::killSoldier(Soldier *soldier, BattleU
 		{
 			if ((*j) == soldier)
 			{
+				soldier->die(new SoldierDeath(*_time, cause));
+				_deadSoldiers.push_back(soldier);
 				return (*i)->getSoldiers()->erase(j);
 			}
 		}

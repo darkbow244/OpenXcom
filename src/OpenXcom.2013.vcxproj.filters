@@ -958,6 +958,9 @@
     <ClCompile Include="Savegame\SoldierDiary.cpp">
       <Filter>Savegame</Filter>
     </ClCompile>
+    <ClCompile Include="Mod\RuleConverter.cpp">
+      <Filter>Savegame</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -1864,9 +1867,6 @@
     <ClInclude Include="Menu\ListLoadOriginalState.h">
       <Filter>Menu</Filter>
     </ClInclude>
-    <ClInclude Include="Savegame\SaveConverterXcom1.h">
-      <Filter>Savegame</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\FlcPlayer.h">
       <Filter>Engine</Filter>
     </ClInclude>
@@ -1968,6 +1968,9 @@
       <Filter>Battlescape</Filter>
     </ClInclude>
     <ClInclude Include="Savegame\SoldierDiary.h">
+      <Filter>Savegame</Filter>
+    </ClInclude>
+    <ClInclude Include="Mod\RuleConverter.h">
       <Filter>Savegame</Filter>
     </ClInclude>
   </ItemGroup>

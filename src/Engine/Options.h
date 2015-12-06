@@ -115,6 +115,8 @@ namespace Options
 	void mapResources();
 	/// Gets the map of mod ids to mod infos
 	const std::map<std::string, ModInfo> &getModInfos();
+	/// Refreshes the mods and filemaps.
+	void updateMods();
 	/// Sets the user folder (should be called from Java)
 	void setUserFolder(const std::string &userFolder);
 	/// Sets the config folder (should be called from Java)
