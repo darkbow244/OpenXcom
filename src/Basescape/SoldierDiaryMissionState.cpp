@@ -20,7 +20,6 @@
 #include "../Mod/Mod.h"
 #include "../Engine/Game.h"
 #include "../Engine/Language.h"
-#include "../Engine/Palette.h"
 #include "../Engine/Options.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
@@ -55,6 +54,7 @@ SoldierDiaryMissionState::SoldierDiaryMissionState(Soldier *soldier, int rowEntr
 	_txtRace = new Text(120, 9, 169, 76);
 	_txtDaylight = new Text(120, 9, 169, 84);
 	_txtDaysWounded = new Text(180, 9, 29, 84);
+	_txtNoRecord = new Text(240, 9, 29, 100);
 	_lstKills = new TextList(240, 32, 29, 100);
 
 	// Set palette
@@ -70,6 +70,7 @@ SoldierDiaryMissionState::SoldierDiaryMissionState(Soldier *soldier, int rowEntr
 	add(_txtRace, "text", "soldierMission");
 	add(_txtDaylight, "text", "soldierMission");
 	add(_txtDaysWounded, "text", "soldierMission");
+	add(_txtNoRecord, "text", "soldierMission");
 	add(_lstKills, "list", "soldierMission");
 
 	centerAllSurfaces();
@@ -109,8 +110,6 @@ SoldierDiaryMissionState::SoldierDiaryMissionState(Soldier *soldier, int rowEntr
 	_txtDaysWounded->setVisible(daysWounded != 0);
 
 	_lstKills->setColumns(3, 60, 95, 85);
-	_lstKills->setSelectable(false);
-	_lstKills->setBackground(_window);
 
 	int kills = 0;
     bool stunOrKill = false;
@@ -135,10 +134,10 @@ SoldierDiaryMissionState::SoldierDiaryMissionState(Soldier *soldier, int rowEntr
 							 (*i)->getUnitName(_game->getLanguage()).c_str(),
 							 tr((*i)->weapon).c_str());
 	}
-	if (!stunOrKill)
-	{
-		_lstKills->addRow(1, tr("STR_NO_RECORD").c_str());
-	}
+
+	_txtNoRecord->setAlign(ALIGN_CENTER);
+	_txtNoRecord->setText(tr("STR_NO_RECORD"));
+	_txtNoRecord->setVisible(!stunOrKill);
 
 	_txtKills->setText(tr("STR_KILLS").arg(kills));
 }

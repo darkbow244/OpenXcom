@@ -513,6 +513,8 @@ set ( mod_src
   Mod/RuleBaseFacility.h
   Mod/RuleCommendations.cpp
   Mod/RuleCommendations.h
+  Mod/RuleConverter.cpp
+  Mod/RuleConverter.h
   Mod/RuleCountry.cpp
   Mod/RuleCountry.h
   Mod/RuleCraft.cpp
@@ -606,7 +608,6 @@ set ( savegame_src
   Savegame/ResearchProject.h
   Savegame/SaveConverter.cpp
   Savegame/SaveConverter.h
-  Savegame/SaveConverterXcom1.h
   Savegame/SavedBattleGame.cpp
   Savegame/SavedBattleGame.h
   Savegame/SavedGame.cpp
