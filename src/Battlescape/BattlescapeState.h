@@ -90,6 +90,8 @@ private:
 	void handleItemClick(BattleItem *item);
 	/// Shifts the red colors of the visible unit buttons backgrounds.
 	void blinkVisibleUnitButtons();
+	/// Shifts the colors of the health bar when unit has fatal wounds.
+	void blinkHealthBar();
 #ifdef __MOBILE__
 	// Scalers for touchscreen
 	float _mouseXScale, _mouseYScale;
