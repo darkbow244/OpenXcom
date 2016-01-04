@@ -826,8 +826,8 @@ void GeoscapeState::time5Seconds()
 						{
 							(*j)->setDestination(0);
 							Waypoint *w = new Waypoint();
-							w->setLongitude(u->getLongitude());
-							w->setLatitude(u->getLatitude());
+							w->setLongitude(u->getMeetLongitude());
+							w->setLatitude(u->getMeetLatitude());
 							w->setId(u->getId());
 							popup(new GeoscapeCraftState((*j), _globe, w));
 						}
@@ -880,15 +880,7 @@ void GeoscapeState::time5Seconds()
 						}
 						else
 						{
-							underwater = !(*j)->getWeapons()->empty();
-							for (std::vector<CraftWeapon*>::iterator w = (*j)->getWeapons()->begin(); w != (*j)->getWeapons()->end(); ++w)
-							{
-								if ( (*w) && !(*w)->getRules()->isWaterOnly())
-								{
-									underwater = false;
-									break;
-								}
-							}
+							underwater = (*j)->getRules()->getMaxDepth() > 0;
 						}
 						if (!(*j)->isInDogfight() && !(*j)->getDistance(u))
 						{
@@ -1360,7 +1352,7 @@ void GeoscapeState::time30Minutes()
 					}
 					for (std::vector<Craft*>::iterator c = (*b)->getCrafts()->begin(); !detected && c != (*b)->getCrafts()->end(); ++c)
 					{
-						if ((*c)->getStatus() == "STR_OUT" && (*c)->detect(*u))
+						if ((*c)->getStatus() == "STR_OUT" && (*c)->insideRadarRange(*u))
 						{
 							detected = true;
 							hyperdetected = (*u)->getHyperDetected();
@@ -1436,7 +1428,7 @@ void GeoscapeState::time1Hour()
 		for (std::vector<Transfer*>::iterator j = (*i)->getTransfers()->begin(); j != (*i)->getTransfers()->end(); ++j)
 		{
 			(*j)->advance(*i);
-			if (!window && (*j)->getHours() == 0)
+			if (!window && (*j)->getHours() <= 0)
 			{
 				window = true;
 			}

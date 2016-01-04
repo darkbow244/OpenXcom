@@ -92,6 +92,7 @@ Dependencies/
 *.swp
 #Ignore NetBeans project directory
 nbproject/
+.tx/
 #ctags index
 src/tags
 #android translations

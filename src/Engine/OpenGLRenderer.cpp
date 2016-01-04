@@ -154,6 +154,7 @@ void OpenGLRenderer::clear() {
     }
 
     if(source_yaml_filename && strlen(source_yaml_filename)) {
+   	try {
       YAML::Node document = YAML::LoadFile(source_yaml_filename);
 
       bool is_glsl;
@@ -170,7 +171,10 @@ void OpenGLRenderer::clear() {
         if(vertex_source != "") set_vertex_shader(vertex_source.c_str());
       }
     }
-
+	  }
+	  catch (YAML::Exception &e) {
+	    Log(LOG_ERROR) << source_yaml_filename << ": " << e.what();
+	  }
     glLinkProgram(glprogram);
   }
 

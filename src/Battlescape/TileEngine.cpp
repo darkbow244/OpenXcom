@@ -43,7 +43,6 @@
 #include "../Engine/Options.h"
 #include "ProjectileFlyBState.h"
 #include "MeleeAttackBState.h"
-#include "../Engine/Logger.h"
 #include "../fmath.h"
 
 namespace OpenXcom
@@ -441,7 +440,7 @@ bool TileEngine::visible(BattleUnit *currentUnit, Tile *tile)
 			{
 				visibleDistance += t->getSmoke() / 3;
 			}
-			if (visibleDistance > MAX_VOXEL_VIEW_DISTANCE)
+			if (visibleDistance > (unsigned)MAX_VOXEL_VIEW_DISTANCE)
 			{
 				unitSeen = false;
 				break;
@@ -487,7 +486,7 @@ int TileEngine::checkVoxelExposure(Position *originVoxel, Tile *tile, BattleUnit
 	int relX = floor(((float)relPos.y)*normal+0.5);
 	int relY = floor(((float)-relPos.x)*normal+0.5);
 
-	int sliceTargets[10]={0,0, relX,relY, -relX,-relY};
+	int sliceTargets[] = {0,0, relX,relY, -relX,-relY};
 
 	if (!otherUnit->isOut())
 	{
@@ -506,7 +505,7 @@ int TileEngine::checkVoxelExposure(Position *originVoxel, Tile *tile, BattleUnit
 	{
 		++total;
 		scanVoxel.z=targetMinHeight+i;
-		for (int j = 0; j < 2; ++j)
+		for (int j = 0; j < 3; ++j)
 		{
 			scanVoxel.x=targetVoxel.x + sliceTargets[j*2];
 			scanVoxel.y=targetVoxel.y + sliceTargets[j*2+1];
@@ -572,7 +571,7 @@ bool TileEngine::canTargetUnit(Position *originVoxel, Tile *tile, Position *scan
 	int relX = floor(((float)relPos.y)*normal+0.5);
 	int relY = floor(((float)-relPos.x)*normal+0.5);
 
-	int sliceTargets[10]={0,0, relX,relY, -relX,-relY, relY,-relX, -relY,relX};
+	int sliceTargets[] = {0,0, relX,relY, -relX,-relY, relY,-relX, -relY,relX};
 
 	if (!potentialUnit->isOut())
 	{
@@ -733,6 +732,7 @@ bool TileEngine::canTargetTile(Position *originVoxel, Tile *tile, int part, Posi
 
 	if (minZ > maxZ) minZ = maxZ;
 	int rangeZ = maxZ - minZ;
+	if (rangeZ>10) rangeZ = 10; //as above, clamping height range to prevent buffer overflow
 	int centerZ = (maxZ + minZ)/2;
 
 	for (int j = 0; j <= rangeZ; ++j)

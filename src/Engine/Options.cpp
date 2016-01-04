@@ -94,7 +94,7 @@ void create()
 	_info.push_back(OptionInfo("useXBRZFilter", &useXBRZFilter, false));
 	_info.push_back(OptionInfo("useOpenGL", &useOpenGL, false));
 	_info.push_back(OptionInfo("checkOpenGLErrors", &checkOpenGLErrors, false));
-	_info.push_back(OptionInfo("useOpenGLShader", &useOpenGLShader, "Shaders/Openxcom.OpenGL.shader"));
+	_info.push_back(OptionInfo("useOpenGLShader", &useOpenGLShader, "Shaders/Raw.OpenGL.shader"));
 	_info.push_back(OptionInfo("vSyncForOpenGL", &vSyncForOpenGL, true));
 	_info.push_back(OptionInfo("useOpenGLSmoothing", &useOpenGLSmoothing, true));
 	_info.push_back(OptionInfo("debug", &debug, false));
@@ -206,6 +206,7 @@ void create()
 	_info.push_back(OptionInfo("canManufactureMoreItemsPerHour", &canManufactureMoreItemsPerHour, false, "STR_CANMANUFACTUREMOREITEMSPERHOUR", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("spendResearchedItems", &spendResearchedItems, false, "STR_SPENDRESEARCHEDITEMS", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("fieldPromotions", &fieldPromotions, false, "STR_FIELDPROMOTIONS", "STR_GEOSCAPE"));
+	_info.push_back(OptionInfo("meetingPoint", &meetingPoint, false, "STR_MEETINGPOINT", "STR_GEOSCAPE"));
 #ifdef __MOBILE__
 	_info.push_back(OptionInfo("dragSoldierReorder", &dragSoldierReorder, true, "STR_DRAGREORDER", "STR_GEOSCAPE"));
 #else
@@ -335,10 +336,11 @@ void create()
 	_info.push_back(KeyOptionInfo("keyInvCreateTemplate", &keyInvCreateTemplate, SDLK_c, "STR_CREATE_INVENTORY_TEMPLATE", "STR_BATTLESCAPE"));
 	_info.push_back(KeyOptionInfo("keyInvApplyTemplate", &keyInvApplyTemplate, SDLK_v, "STR_APPLY_INVENTORY_TEMPLATE", "STR_BATTLESCAPE"));
     _info.push_back(KeyOptionInfo("keyInvClear", &keyInvClear, SDLK_x, "STR_CLEAR_INVENTORY", "STR_BATTLESCAPE"));
+	_info.push_back(OptionInfo("keyInvAutoEquip", &keyInvAutoEquip, SDLK_z, "STR_AUTO_EQUIP", "STR_BATTLESCAPE"));
 
 #ifdef __MORPHOS__
-	_info.push_back(OptionInfo("FPS", &FPS, 15));
-	_info.push_back(OptionInfo("FPS_INACTIVE", &FPSInactive, 15));
+	_info.push_back(OptionInfo("FPS", &FPS, 15, "STR_FPS_LIMIT", "STR_GENERAL"));
+	_info.push_back(OptionInfo("FPSInactive", &FPSInactive, 15, "STR_FPS_INACTIVE_LIMIT", "STR_GENERAL"));
 #else
 	_info.push_back(OptionInfo("FPS", &FPS, 60, "STR_FPS_LIMIT", "STR_GENERAL"));
 	_info.push_back(OptionInfo("FPSInactive", &FPSInactive, 30, "STR_FPS_INACTIVE_LIMIT", "STR_GENERAL"));
@@ -528,7 +530,7 @@ static void _scanMods(const std::string &modsDir)
 		std::string metadataPath = modPath + "/metadata.yml";
 		if (!CrossPlatform::fileExists(metadataPath))
 		{
-			Log(LOG_WARNING) << metadataPath << " not found; using default values for mod: " << *i;
+			Log(LOG_VERBOSE) << metadataPath << " not found; using default values for mod: " << *i;
 		}
 		else
 		{
@@ -614,6 +616,9 @@ bool init(int argc, char *argv[])
 	Log(LOG_INFO) << "User folder is: " << _userFolder;
 	Log(LOG_INFO) << "Config folder is: " << _configFolder;
 	Log(LOG_INFO) << "Options loaded successfully.";
+
+	// pick up stuff in common
+	FileMap::load("common", CrossPlatform::searchDataFolder("common"), true);
 
 	return true;
 }
