@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -36,7 +36,6 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <direct.h>
 #include <dbghelp.h>
 #ifndef SHGFP_TYPE_CURRENT
 #define SHGFP_TYPE_CURRENT 0
@@ -66,6 +65,10 @@
 #endif
 #include <SDL.h>
 #include <SDL_syswm.h>
+#ifdef __HAIKU__
+#include <FindDirectory.h>
+#include <StorageDefs.h>
+#endif
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -194,7 +197,10 @@ std::vector<std::string> findDataFolders()
 #else
 	char const *home = getHome();
 #ifdef __HAIKU__
-	list.push_back("/boot/apps/OpenXcom/");
+	char data_path[B_PATH_NAME_LENGTH];
+	find_directory(B_SYSTEM_SETTINGS_DIRECTORY, 0, true, data_path, sizeof(data_path)-strlen("/OpenXcom/"));
+	strcat(data_path,"/OpenXcom/");
+	list.push_back(data_path);
 #endif
 	char path[MAXPATHLEN];
 
@@ -292,7 +298,10 @@ std::vector<std::string> findUserFolders()
 	}
 #else
 #ifdef __HAIKU__
-	list.push_back("/boot/apps/OpenXcom/");
+	char user_path[B_PATH_NAME_LENGTH];
+	find_directory(B_USER_SETTINGS_DIRECTORY, 0, true, user_path, sizeof(user_path)-strlen("/OpenXcom/"));
+	strcat(user_path,"/OpenXcom/");
+	list.push_back(user_path);
 #endif
 	char const *home = getHome();
 	char path[MAXPATHLEN];
@@ -340,7 +349,10 @@ std::string findConfigFolder()
 #if defined(_WIN32) || defined(__APPLE__)
 	return "";
 #elif defined (__HAIKU__)
-	return "/boot/home/config/settings/openxcom/";
+	char settings_path[B_PATH_NAME_LENGTH];
+	find_directory(B_USER_SETTINGS_DIRECTORY, 0, true, settings_path, sizeof(settings_path)-strlen("/OpenXcom/"));
+	strcat(settings_path,"/OpenXcom/");
+	return settings_path;
 #else
 	char const *home = getHome();
 	char path[MAXPATHLEN];
@@ -660,7 +672,15 @@ std::string getLocale()
 	return Language::wstrToUtf8(locale);
 	*/
 #else
-	std::locale l("");
+	std::locale l;
+	try
+	{
+		l = std::locale("");
+	}
+	catch (std::runtime_error)
+	{
+		return "x-";
+	}
 	std::string name = l.name();
 	size_t dash = name.find_first_of('_'), dot = name.find_first_of('.');
 	if (dot != std::string::npos)
@@ -1169,18 +1189,18 @@ void stackTrace(void *ctx)
 			}
 			else
 			{
-				Log(LOG_FATAL) << "0x" << std::hex << symbol->Address << std::dec << " " << symbol->Name << " (SymGetLineFromAddr64 failed: " << GetLastError() << ")";
+				Log(LOG_FATAL) << "0x" << std::hex << symbol->Address << std::dec << " " << symbol->Name << " (??: " << GetLastError() << ")";
 			}
 		}
 		else
 		{
-			Log(LOG_FATAL) << "SymFromAddr failed: " << GetLastError();
+			Log(LOG_FATAL) << "??: " << GetLastError();
 		}
 	}
 	DWORD err = GetLastError();
 	if (err)
 	{
-		Log(LOG_FATAL) << "StackWalk64 failed: " << err;
+		Log(LOG_FATAL) << "No stack trace generated: " << err;
 	}
 	SymCleanup(process);
 #elif defined(__ANDROID__)
@@ -1266,7 +1286,7 @@ void crashDump(void *ex, const std::string &err)
 	}
 	else
 	{
-		Log(LOG_FATAL) << "MiniDumpWriteDump failed: " << GetLastError();
+		Log(LOG_FATAL) << "No crash dump generated: " << GetLastError();
 	}
 #else
 	if (ex == 0)
@@ -1284,7 +1304,7 @@ void crashDump(void *ex, const std::string &err)
 	std::ostringstream msg;
 	msg << "OpenXcom has crashed: " << error.str() << std::endl;
 	msg << "Extra information has been saved to openxcom.log." << std::endl;
-	msg << "Please report this to the developers.";
+	msg << "If this was unexpected, please report this to the developers.";
 	showError(msg.str());
 }
 

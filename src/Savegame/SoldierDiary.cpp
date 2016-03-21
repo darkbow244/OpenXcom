@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,6 +17,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "SoldierDiary.h"
+#include <algorithm>
 #include "../Mod/RuleCommendations.h"
 #include "../Mod/Mod.h"
 #include "BattleUnitStatistics.h"
@@ -559,13 +560,14 @@ bool SoldierDiary::manageCommendations(Mod *mod)
 								}
 
                                 // See if we find no matches with any criteria. If so, break and try the next kill.
-								if ( (*singleKill)->weapon == "STR_WEAPON_UNKNOWN" || (*singleKill)->weaponAmmo == "STR_WEAPON_UNKNOWN" ||
+								RuleItem *weapon = mod->getItem((*singleKill)->weaponAmmo);
+								RuleItem *weaponAmmo = mod->getItem((*singleKill)->weaponAmmo);
+								if (weapon == 0 || weaponAmmo == 0 ||
 									((*singleKill)->rank != (*detail) && (*singleKill)->race != (*detail) &&
 									 (*singleKill)->weapon != (*detail) && (*singleKill)->weaponAmmo != (*detail) &&
-									 (*singleKill)->getUnitStatusString() != (*detail) && (*singleKill)->getUnitFactionString() != (*detail)  &&
-									 mod->getItem((*singleKill)->weaponAmmo)->getDamageType() != damageType && 
-									 mod->getItem((*singleKill)->weapon)->getBattleType() != battleType &&
-                                     (*singleKill)->getUnitSideString() != (*detail) && (*singleKill)->getUnitBodyPartString() != (*detail)) )
+									 (*singleKill)->getUnitStatusString() != (*detail) && (*singleKill)->getUnitFactionString() != (*detail) &&
+                                     (*singleKill)->getUnitSideString() != (*detail) && (*singleKill)->getUnitBodyPartString() != (*detail) && 
+									 weaponAmmo->getDamageType() != damageType && weapon->getBattleType() != battleType))
                                 {
                                     foundMatch = false;
                                     break;
@@ -845,7 +847,15 @@ void SoldierDiary::addMonthlyService()
 }
 
 /**
- *  Award special commendation to the original 8 soldiers.
+ * Returns the total months this soldier has been in service.
+ */
+int SoldierDiary::getMonthsService() const
+{
+	return _monthsService;
+}
+
+/**
+ * Award special commendation to the original 8 soldiers.
  */
 void SoldierDiary::awardOriginalEightCommendation()
 {
@@ -853,7 +863,7 @@ void SoldierDiary::awardOriginalEightCommendation()
 }
 
 /**
- *  Award post-humous best-of commendation.
+ * Award post-humous best-of commendation.
  */
 void SoldierDiary::awardBestOfRank(SoldierRank rank)
 {
@@ -861,7 +871,7 @@ void SoldierDiary::awardBestOfRank(SoldierRank rank)
 }
 
 /**
- *  Award post-humous best-of commendation.
+ * Award post-humous best-of commendation.
  */
 void SoldierDiary::awardBestOverall()
 {
@@ -869,7 +879,7 @@ void SoldierDiary::awardBestOverall()
 }
 
 /**
- *  Award post-humous kills commendation.
+ * Award post-humous kills commendation.
  */
 void SoldierDiary::awardPostMortemKill(int kills)
 {

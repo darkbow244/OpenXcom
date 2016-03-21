@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_FONT_H
-#define OPENXCOM_FONT_H
-
 #include <map>
 #include <string>
 #include <SDL.h>
@@ -41,7 +39,6 @@ class Font
 {
 private:
 	static std::wstring _index;
-	static SDL_Color _palette[6];
 	Surface *_surface;
 	int _width, _height, _spacing;
 	std::map<wchar_t, SDL_Rect> _chars;
@@ -79,10 +76,6 @@ public:
 	SDL_Rect getCharSize(wchar_t c);
 	/// Gets the font's surface.
 	Surface *getSurface() const;
-
-	void fix(const std::string &file, int width);
 };
 
 }
-
-#endif

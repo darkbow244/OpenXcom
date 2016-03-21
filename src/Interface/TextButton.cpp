@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -353,13 +353,9 @@ void TextButton::setHeight(int height)
 	_text->setHeight(height);
 }
 
-void TextButton::setSecondaryColor(Uint8 color)
-{
-	_text->setColor(color);
-	_redraw = true;
-}
 void TextButton::setGeoscapeButton(bool geo)
 {
 	_geoscapeButton = geo;
 }
+
 }

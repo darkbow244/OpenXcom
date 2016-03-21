@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -47,7 +47,7 @@ namespace OpenXcom
 
 namespace
 {
-  
+
 /**
  * Helper function counting pitch in bytes with 16byte padding
  * @param bpp bytes per pixel
@@ -291,7 +291,18 @@ void Surface::loadImage(const std::string &filename)
 					{
 						setPixelIterative(&x, &y, *i);
 					}
-					setPalette((SDL_Color*)color->palette, 0, color->palettesize);					
+					setPalette((SDL_Color*)color->palette, 0, color->palettesize);
+					int transparent = 0;
+					for (int c = 0; c < _surface->format->palette->ncolors; ++c)
+					{
+						SDL_Color *palColor = _surface->format->palette->colors + c;
+						if (palColor->a == 0)
+						{
+							transparent = c;
+							break;
+						}
+					}
+					SDL_SetColorKey(_surface, SDL_TRUE, transparent);
 				}
 			}
 		}
@@ -311,8 +322,6 @@ void Surface::loadImage(const std::string &filename)
 		std::string err = filename + ":" + IMG_GetError();
 		throw Exception(err);
 	}
-
-	SDL_SetColorKey(_surface, SDL_TRUE, 0);
 }
 
 /**

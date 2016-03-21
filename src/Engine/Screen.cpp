@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,6 +17,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Screen.h"
+#include <algorithm>
 #include <sstream>
 #include <cmath>
 #include <iomanip>
@@ -314,10 +315,9 @@ void Screen::resetDisplay(bool resetVideo)
 
 	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
 
-	if (!_surface || (_surface && 
-		(_surface->getSurface()->format->BitsPerPixel != _bpp || 
+	if (!_surface || (_surface->getSurface()->format->BitsPerPixel != _bpp || 
 		_surface->getSurface()->w != _baseWidth ||
-		_surface->getSurface()->h != _baseHeight))) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
+		_surface->getSurface()->h != _baseHeight)) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
 	{
 		if (_surface) delete _surface;
 		//_surface = new Surface(_baseWidth, _baseHeight, 0, 0, Screen::isHQXEnabled() ? 32 : 8); // only HQX needs 32bpp for this surface; the OpenGL class has its own 32bpp buffer

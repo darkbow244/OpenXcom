@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http:///www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_BATTLESCAPESTATE_H
-#define OPENXCOM_BATTLESCAPESTATE_H
-
 #include "../Engine/State.h"
 #include "Position.h"
 
@@ -49,7 +47,6 @@ class BattlescapeGame;
 class BattlescapeState : public State
 {
 private:
-	//std::map<std::string, Surface*> _bUI;
 	Surface *_rank;
 	InteractiveSurface *_icons;
 	Map *_map;
@@ -83,6 +80,8 @@ private:
 	std::string _currentTooltip;
 	float _scrollAccumX, _scrollAccumY;
 	Position _cursorPosition;
+	Uint8 _barHealthColor;
+	bool _autosave;
 	bool _hasScrolled;
 	bool _swipeFromSoldier;
 	bool _multiGestureProcess;
@@ -92,6 +91,8 @@ private:
 	void blinkVisibleUnitButtons();
 	/// Shifts the colors of the health bar when unit has fatal wounds.
 	void blinkHealthBar();
+	/// Shows the unit kneel state.
+	void toggleKneelButton(BattleUnit* unit);
 #ifdef __MOBILE__
 	// Scalers for touchscreen
 	float _mouseXScale, _mouseYScale;
@@ -246,10 +247,10 @@ public:
 	bool hasScrolled() const;
 	/// Move the mouse back to where it started after we finish drag scrolling.
 	void stopScrolling(Action *action);
+	/// Autosave next turn.
+	void autosave();
 	/// Don't do anything and consume the event.
 	void consumeEvent(Action *action);
 };
 
 }
-
-#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -943,6 +943,7 @@ int TileEngine::determineReactionType(BattleUnit *unit, BattleUnit *target)
 		// has a gun capable of snap shot with ammo
 		(weapon->getRules()->getBattleType() != BT_MELEE &&
 		weapon->getRules()->getTUSnap() &&
+		distance(unit->getPosition(), target->getPosition()) < weapon->getRules()->getMaxRange() &&
 		weapon->getAmmoItem() &&
 		unit->getActionTUs(BA_SNAPSHOT, weapon) > 0 &&
 		unit->getTimeUnits() > unit->getActionTUs(BA_SNAPSHOT, weapon)) &&
@@ -1252,8 +1253,10 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
 										if (power_ > (*it)->getRules()->getArmor())
 										{
 											if ((*it)->getUnit() && (*it)->getUnit()->getStatus() == STATUS_UNCONSCIOUS)
-												(*it)->getUnit()->instaKill();
-											_save->removeItem((*it));
+											{
+												(*it)->getUnit()->kill();
+											}
+											_save->removeItem(*it);
 											break;
 										}
 										else
@@ -1337,8 +1340,10 @@ void TileEngine::explode(const Position &center, int power, ItemDamageType type,
 					Pathfinding::vectorToDirection(origin->getPosition() - dest->getPosition(), dir);
 					if (dir != -1 && dir %2) power_ -= 5; // diagonal movement costs an extra 50% for fire.
 				}
-				if (l>0.5) power_-= horizontalBlockage(origin, dest, type, l<1.5) * 2;
-				if (l>0.5) power_-= verticalBlockage(origin, dest, type, l<1.5) * 2;
+				if (l > 0.5) {
+					power_ -= horizontalBlockage(origin, dest, type, l < 1.5) * 2;
+					power_ -= verticalBlockage(origin, dest, type, l < 1.5) * 2;
+				}
 			}
 		}
 	}

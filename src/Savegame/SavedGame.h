@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_SAVEDGAME_H
-#define OPENXCOM_SAVEDGAME_H
-
 #include <map>
 #include <vector>
 #include <string>
@@ -56,17 +54,22 @@ struct MissionStatistics;
 struct BattleUnitKills;
 
 /**
- *Enumerator containing all the possible game difficulties.
+ * Enumerator containing all the possible game difficulties.
  */
 enum GameDifficulty { DIFF_BEGINNER = 0, DIFF_EXPERIENCED, DIFF_VETERAN, DIFF_GENIUS, DIFF_SUPERHUMAN };
 
- /**
+/**
  * Enumerator for the various save types.
  */
 enum SaveType { SAVE_DEFAULT, SAVE_QUICK, SAVE_AUTO_GEOSCAPE, SAVE_AUTO_BATTLESCAPE, SAVE_IRONMAN, SAVE_IRONMAN_END };
 
 /**
- *Container for savegame info displayed on listings.
+ * Enumerator for the current game ending.
+ */
+enum GameEnding { END_NONE, END_WIN, END_LOSE };
+
+/**
+ * Container for savegame info displayed on listings.
  */
 struct SaveInfo
 {
@@ -98,6 +101,7 @@ class SavedGame
 private:
 	std::wstring _name;
 	GameDifficulty _difficulty;
+	GameEnding _end;
 	bool _ironman;
 	GameTime *_time;
 	std::vector<int> _researchScores;
@@ -147,9 +151,14 @@ public:
 	void setName(const std::wstring &name);
 	/// Gets the game difficulty.
 	GameDifficulty getDifficulty() const;
-	int getDifficultyCoefficient() const;
 	/// Sets the game difficulty.
 	void setDifficulty(GameDifficulty difficulty);
+	/// Gets the game difficulty coefficient.
+	int getDifficultyCoefficient() const;
+	/// Gets the game ending.
+	GameEnding getEnding() const;
+	/// Sets the game ending.
+	void setEnding(GameEnding end);
 	/// Gets if the game is in ironman mode.
 	bool isIronman() const;
 	/// Sets if the game is in ironman mode.
@@ -305,5 +314,5 @@ public:
 	/// Handles a soldier's death.
 	std::vector<Soldier*>::iterator killSoldier(Soldier *soldier, BattleUnitKills *cause = 0);
 };
+
 }
-#endif

@@ -285,7 +285,6 @@
     <ClCompile Include="Battlescape\PathfindingNode.cpp" />
     <ClCompile Include="Battlescape\PathfindingOpenSet.cpp" />
     <ClCompile Include="Battlescape\CivilianBAIState.cpp" />
-    <ClCompile Include="Battlescape\Position.cpp" />
     <ClCompile Include="Battlescape\PrimeGrenadeState.cpp" />
     <ClCompile Include="Battlescape\Projectile.cpp" />
     <ClCompile Include="Battlescape\ProjectileFlyBState.cpp" />
@@ -309,7 +308,6 @@
     <ClCompile Include="Engine\Adlib\fmopl.cpp" />
     <ClCompile Include="Engine\CatFile.cpp" />
     <ClCompile Include="Engine\CrossPlatform.cpp" />
-    <ClCompile Include="Engine\Exception.cpp" />
     <ClCompile Include="Engine\FastLineClip.cpp" />
     <ClCompile Include="Engine\FileMap.cpp" />
     <ClCompile Include="Engine\FlcPlayer.cpp" />
@@ -429,6 +427,7 @@
     <ClCompile Include="Menu\SaveGameState.cpp" />
     <ClCompile Include="Menu\SlideshowState.cpp" />
     <ClCompile Include="Menu\StartState.cpp" />
+    <ClCompile Include="Menu\StatisticsState.cpp" />
     <ClCompile Include="Menu\TestState.cpp" />
     <ClCompile Include="Menu\VideoState.cpp" />
     <ClCompile Include="Mod\RuleCommendations.cpp" />
@@ -765,6 +764,7 @@
     <ClInclude Include="Menu\SaveGameState.h" />
     <ClInclude Include="Menu\SlideshowState.h" />
     <ClInclude Include="Menu\StartState.h" />
+    <ClInclude Include="Menu\StatisticsState.h" />
     <ClInclude Include="Menu\TestState.h" />
     <ClInclude Include="Menu\VideoState.h" />
     <ClInclude Include="Mod\RuleCommendations.h" />

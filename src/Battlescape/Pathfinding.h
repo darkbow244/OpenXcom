@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_PATHFINDING_H
-#define OPENXCOM_PATHFINDING_H
-
 #include <vector>
 #include "Position.h"
 #include "PathfindingNode.h"
@@ -92,7 +90,7 @@ public:
 	/// Gets the strafe move setting.
 	bool getStrafeMove() const;
 	/// Checks, for the up/down button, if the movement is valid.
-	bool validateUpDown(BattleUnit *bu, Position startPosition, const int direction);
+	bool validateUpDown(BattleUnit *bu, Position startPosition, const int direction, bool missile = false);
 	/// Previews the path.
 	bool previewPath(bool bRemove = false);
 	/// Removes the path preview.
@@ -114,5 +112,3 @@ public:
 };
 
 }
-
-#endif

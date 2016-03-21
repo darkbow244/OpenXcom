@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -18,6 +18,7 @@
  */
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <algorithm>
 #include <sstream>
 #include <iomanip>
 #include <SDL_gfxPrimitives.h>
@@ -325,6 +326,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	_btnKneel->setTooltip("STR_KNEEL");
 	_btnKneel->onMouseIn((ActionHandler)&BattlescapeState::txtTooltipIn);
 	_btnKneel->onMouseOut((ActionHandler)&BattlescapeState::txtTooltipOut);
+	_btnKneel->allowToggleInversion();
 
 	_btnInventory->onMouseClick((ActionHandler)&BattlescapeState::btnInventoryClick);
 	_btnInventory->onKeyboardPress((ActionHandler)&BattlescapeState::btnInventoryClick, Options::keyBattleInventory);
@@ -508,6 +510,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 
 	_battleGame = new BattlescapeGame(_save, this);
 
+	_barHealthColor = _barHealth->getColor();
 	_firstInit = true;
 	_isMouseScrolling = false;
 	_isMouseScrolled = false;
@@ -576,6 +579,18 @@ void BattlescapeState::init()
 	_txtTooltip->setText(L"");
 	_btnReserveKneel->toggle(_save->getKneelReserved());
 	_battleGame->setKneelReserved(_save->getKneelReserved());
+	if (_autosave)
+	{
+		_autosave = false;
+		if (_game->getSavedGame()->isIronman())
+		{
+			_game->pushState(new SaveGameState(OPT_BATTLESCAPE, SAVE_IRONMAN, _palette));
+		}
+		else if (Options::autosave)
+		{
+			_game->pushState(new SaveGameState(OPT_BATTLESCAPE, SAVE_AUTO_BATTLESCAPE, _palette));
+		}
+	}
 }
 
 /**
@@ -644,10 +659,13 @@ void BattlescapeState::mapOver(Action *action)
 		_isMouseScrolled = true;
 
 #ifndef __MOBILE__
-		// Set the mouse cursor back
-		SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-		//SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - _map->getIconHeight() / 2);
-		SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+		if (Options::touchEnabled == false)
+		{
+			// Set the mouse cursor back
+			SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+			//SDL_WarpMouseInWindow(NULL, _game->getScreen()->getWidth() / 2, _game->getScreen()->getHeight() / 2 - _map->getIconHeight() / 2);
+			SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+		}
 #endif
 
 		// Check the threshold
@@ -674,9 +692,12 @@ void BattlescapeState::mapOver(Action *action)
 				_totalMouseMoveX = -(int) (delta2.x * action->getXScale());
 				_totalMouseMoveY = -(int) (delta2.y * action->getYScale());
 			}
-
-			action->getDetails()->motion.x = _xBeforeMouseScrolling;
-			action->getDetails()->motion.y = _yBeforeMouseScrolling;
+			
+			if (Options::touchEnabled == false)
+			{
+				action->getDetails()->motion.x = _xBeforeMouseScrolling;
+				action->getDetails()->motion.y = _yBeforeMouseScrolling;
+			}
 			_map->setCursorType(CT_NONE);
 		}
 		else
@@ -703,8 +724,12 @@ void BattlescapeState::mapOver(Action *action)
 			int cursorY = _cursorPosition.y + Round(delta.y * action->getYScale());
 			_cursorPosition.x = std::min(_game->getScreen()->getWidth() - barWidth - (int)(Round(action->getXScale())), std::max(barWidth, cursorX));
 			_cursorPosition.y = std::min(_game->getScreen()->getHeight() - barHeight - (int)(Round(action->getYScale())), std::max(barHeight, cursorY));
-			action->getDetails()->motion.x = _cursorPosition.x;
-			action->getDetails()->motion.y = _cursorPosition.y;
+			
+			if (Options::touchEnabled == false)
+			{
+				action->getDetails()->motion.x = _cursorPosition.x;
+				action->getDetails()->motion.y = _cursorPosition.y;
+			}
 		}
 
 		// We don't want to look the mouse-cursor jumping :)
@@ -1033,6 +1058,18 @@ void BattlescapeState::btnShowMapClick(Action *)
 		_game->pushState (new MiniMapState (_map->getCamera(), _save));
 }
 
+void BattlescapeState::toggleKneelButton(BattleUnit* unit)
+{
+	if (_btnKneel->isTFTDMode())
+	{
+		_btnKneel->toggle(unit && unit->isKneeled());
+	}
+	else
+	{
+		_game->getMod()->getSurfaceSet("KneelButton")->getFrame((unit && unit->isKneeled()) ? 1 : 0)->blit(_btnKneel);
+	}
+}
+
 /**
  * Toggles the current unit's kneel/standup status.
  * @param action Pointer to an action.
@@ -1045,14 +1082,15 @@ void BattlescapeState::btnKneelClick(Action *)
 		if (bu)
 		{
 			_battleGame->kneel(bu);
-		}
+			toggleKneelButton(bu);
 
-		// update any path preview if unit kneels
-		if (_battleGame->getPathfinding()->isPathPreviewed() && bu->isKneeled())
-		{
-			_battleGame->getPathfinding()->calculate(_battleGame->getCurrentAction()->actor, _battleGame->getCurrentAction()->target);
-			_battleGame->getPathfinding()->removePreview();
-			_battleGame->getPathfinding()->previewPath();
+			// update any path preview when unit kneels
+			if (_battleGame->getPathfinding()->isPathPreviewed())
+			{
+				_battleGame->getPathfinding()->calculate(_battleGame->getCurrentAction()->actor, _battleGame->getCurrentAction()->target);
+				_battleGame->getPathfinding()->removePreview();
+				_battleGame->getPathfinding()->previewPath();
+			}
 		}
 	}
 }
@@ -1452,7 +1490,6 @@ bool BattlescapeState::playableUnitSelected()
  */
 void BattlescapeState::updateSoldierInfo()
 {
-	static Uint8 barHealthColor = _barHealth->getColor();
 	BattleUnit *battleUnit = _save->getSelectedUnit();
 
 	for (int i = 0; i < VISIBLE_MAX; ++i)
@@ -1488,6 +1525,7 @@ void BattlescapeState::updateSoldierInfo()
 #endif
 		_txtName->setText(L"");
 		showPsiButton(false);
+		toggleKneelButton(0);
 		return;
 	}
 
@@ -1512,10 +1550,11 @@ void BattlescapeState::updateSoldierInfo()
 	_barHealth->setMax(battleUnit->getBaseStats()->health);
 	_barHealth->setValue(battleUnit->getHealth());
 	_barHealth->setValue2(battleUnit->getStunlevel());
-	_barHealth->setColor(barHealthColor);
 	_numMorale->setValue(battleUnit->getMorale());
 	_barMorale->setMax(100);
 	_barMorale->setValue(battleUnit->getMorale());
+
+	toggleKneelButton(battleUnit);
 
 	BattleItem *leftHandItem = battleUnit->getItem("STR_LEFT_HAND");
 	_btnLeftHandItem->clear();
@@ -1608,9 +1647,9 @@ void BattlescapeState::blinkVisibleUnitButtons()
  */
 void BattlescapeState::blinkHealthBar()
 {
-	static Uint8 color = _barHealth->getColor(), maxcolor = color + 3, step = 0;
+	static Uint8 color = 0, maxcolor = 3, step = 0;
 
-	step ^= 1;	// 1, 0, 1, 0, ...
+	step = 1 - step;	// 1, 0, 1, 0, ...
 	BattleUnit *bu = _save->getSelectedUnit();
 	if (step == 0 || bu == 0 || !_barHealth->getVisible()) return;
 
@@ -1620,10 +1659,12 @@ void BattlescapeState::blinkHealthBar()
 	{
 		if (bu->getFatalWound(i) > 0)
 		{
-			_barHealth->setColor(color);
-			break;
+			_barHealth->setColor(_barHealthColor + color);
+			return;
 		}
 	}
+	if (_barHealth->getColor() != _barHealthColor) // avoid redrawing if we don't have to
+		_barHealth->setColor(_barHealthColor);
 }
 
 /**
@@ -1743,8 +1784,8 @@ inline void BattlescapeState::handle(Action *action)
 		if (_game->getCursor()->getVisible() || ((action->getDetails()->type == SDL_MOUSEBUTTONDOWN || action->getDetails()->type == SDL_MOUSEBUTTONUP) && action->getDetails()->button.button == SDL_BUTTON_RIGHT))
 		{
 			State::handle(action);
-
-			if (_isMouseScrolling && !Options::battleDragScrollInvert)
+			
+			if (Options::touchEnabled == false && _isMouseScrolling && !Options::battleDragScrollInvert)
 			{
 				_map->setSelectorPosition((_cursorPosition.x - _game->getScreen()->getCursorLeftBlackBand()) / action->getXScale(), (_cursorPosition.y - _game->getScreen()->getCursorTopBlackBand()) / action->getYScale());
 			}
@@ -1794,7 +1835,7 @@ inline void BattlescapeState::handle(Action *action)
 					// "ctrl-j" - stun all aliens
 					else if (_save->getDebugMode() && action->getDetails()->key.keysym.sym == SDLK_j && (SDL_GetModState() & KMOD_CTRL) != 0)
 					{
-						debug(L"Deploying Celine Dione album");
+						debug(L"Deploying Celine Dion album");
 						for (std::vector<BattleUnit*>::iterator i = _save->getUnits()->begin(); i !=_save->getUnits()->end(); ++i)
 						{
 							if ((*i)->getOriginalFaction() == FACTION_HOSTILE && !(*i)->isOut())
@@ -1876,8 +1917,6 @@ void BattlescapeState::saveAIMap()
 
 		}
 	}
-
-	if (expMax < 100) expMax = 100;
 
 	for (int y = 0; y < h; ++y)
 	{
@@ -2233,6 +2272,21 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 			// pushed above will get popped without being shown.  otherwise
 			// it will get shown after the cutscene.
 			_game->pushState(new CutsceneState(cutscene));
+
+			if (cutscene == CutsceneState::WIN_GAME)
+			{
+				_game->getSavedGame()->setEnding(END_WIN);
+			}
+			else if (cutscene == CutsceneState::LOSE_GAME)
+			{
+				_game->getSavedGame()->setEnding(END_LOSE);				
+			}
+			// Autosave if game is over
+			if (_game->getSavedGame()->getEnding() != END_NONE && _game->getSavedGame()->isIronman())
+			{
+				_game->getSavedGame()->setBattleGame(0);
+				_game->pushState(new SaveGameState(OPT_GEOSCAPE, SAVE_IRONMAN, _palette));
+			}
 		}
 	}
 }
@@ -2504,10 +2558,17 @@ void BattlescapeState::stopScrolling(Action *action)
 	_cursorPosition.z = 0;
 }
 
+/**
+ * Autosave the game the next time the battlescape is displayed.
+ */
+void BattlescapeState::autosave()
+{
+	_autosave = true;
+}
+
 void BattlescapeState::consumeEvent(Action *action)
 {
 	action->getDetails()->type = SDL_FIRSTEVENT;
 }
-
 
 }

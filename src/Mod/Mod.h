@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_MOD_H
-#define OPENXCOM_MOD_H
-
 #include <map>
 #include <vector>
 #include <string>
@@ -388,8 +386,8 @@ public:
 	/// Gets the list of transparency colors, 
 	const std::vector<SDL_Color> *getTransparencies() const;
 	const std::vector<MapScript*> *getMapScript(std::string id) const;
-	/// Gets the list videos for intro/outro etc.
-	const std::map<std::string, RuleVideo *> *getVideos() const;
+	/// Gets a video for intro/outro etc.
+	RuleVideo *getVideo(const std::string &id) const;
 	const std::map<std::string, RuleMusic *> *getMusic() const;
 	const std::vector<std::string> *getMissionScriptList() const;
 	RuleMissionScript *getMissionScript(const std::string &name) const;
@@ -398,5 +396,3 @@ public:
 };
 
 }
-
-#endif

@@ -163,7 +163,6 @@ set ( battlescape_src
   Battlescape/PathfindingNode.h
   Battlescape/PathfindingOpenSet.cpp
   Battlescape/PathfindingOpenSet.h
-  Battlescape/Position.cpp
   Battlescape/Position.h
   Battlescape/PrimeGrenadeState.cpp
   Battlescape/PrimeGrenadeState.h
@@ -213,7 +212,6 @@ set ( engine_src
   Engine/CrossPlatform.cpp
   Engine/CrossPlatform.h
   Engine/DosFont.h
-  Engine/Exception.cpp
   Engine/Exception.h
   Engine/FastLineClip.cpp
   Engine/FastLineClip.h
@@ -455,6 +453,8 @@ set ( menu_src
   Menu/SlideshowState.h
   Menu/StartState.cpp
   Menu/StartState.h
+  Menu/StatisticsState.cpp
+  Menu/StatisticsState.h
   Menu/TestState.cpp
   Menu/TestState.h
   Menu/VideoState.cpp

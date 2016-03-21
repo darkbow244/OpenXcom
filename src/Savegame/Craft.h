@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_CRAFT_H
-#define OPENXCOM_CRAFT_H
-
 #include "MovingTarget.h"
 #include <utility>
 #include <vector>
@@ -152,7 +150,7 @@ public:
 	/// Refuels the craft.
 	void refuel();
 	/// Rearms the craft.
-	std::string rearm(Mod *mod);
+	std::string rearm(const Mod *mod);
 	/// Sets the craft's battlescape status.
 	void setInBattlescape(bool inbattle);
 	/// Gets if the craft is in battlescape.
@@ -175,8 +173,8 @@ public:
 	int getInterceptionOrder() const;
 	/// Gets the craft's unique id.
 	CraftId getUniqueId() const;
+	/// Unloads the craft.
+	void unload(const Mod *mod);
 };
 
 }
-
-#endif

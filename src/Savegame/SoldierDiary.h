@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2015 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_SOLDIERDIARY_H
-#define OPENXCOM_SOLDIERDIARY_H
-
 #include <yaml-cpp/yaml.h>
 #include "BattleUnit.h"
 #include "SavedGame.h"
@@ -136,6 +134,8 @@ public:
 	bool manageCommendations(Mod *rules);
 	/// Increment the soldier's service time.
 	void addMonthlyService();
+	/// Get the total months in service.
+	int getMonthsService() const;
     /// Get the mission id list.
     std::vector<int> &getMissionIdList();
     /// Get the kill list.
@@ -149,5 +149,5 @@ public:
     /// Award post-humous kills commendation.
     void awardPostMortemKill(int kills);
 };
+
 }
-#endif
