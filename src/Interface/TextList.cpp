@@ -1208,7 +1208,7 @@ void TextList::mouseOver(Action *action, State *state)
 			_selector->copy(_bg);
 			if (_contrast)
 			{
-				_selector->offset(-10, 1);
+				_selector->offsetBlock(-5);
 			}
 			else if (_comboBox)
 			{
@@ -1216,7 +1216,7 @@ void TextList::mouseOver(Action *action, State *state)
 			}
 			else
 			{
-				_selector->offset(-10, Palette::backPos);
+				_selector->offsetBlock(-10);
 			}
 			_selector->setVisible(true);
 		}
