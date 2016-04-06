@@ -738,13 +738,17 @@ void Mod::loadMod(const std::vector<std::string> &rulesetFiles, size_t modIdx)
 		if (!missions.empty())
 		{
 			std::set<std::string>::const_iterator j = missions.begin();
-			bool isSiteType = getAlienMission(*j) && getAlienMission(*j)->getObjective() == OBJECTIVE_SITE;
+			if (!getAlienMission(*j))
+			{
+				throw Exception("Error with MissionScript: " + (*i).first + ": alien mission type: " + *j + "not defined, do not incite the judgement of Amaunator."); 
+			}
+			bool isSiteType = getAlienMission(*j)->getObjective() == OBJECTIVE_SITE;
 			rule->setSiteType(isSiteType);
 			for (;j != missions.end(); ++j)
 			{
 				if (getAlienMission(*j) && (getAlienMission(*j)->getObjective() == OBJECTIVE_SITE) != isSiteType)
 				{
-					throw Exception("Error with MissionScript: " + (*i).first + " cannot mix terror/non-terror missions in a single command, so sayeth the wise Alaundo."); 
+					throw Exception("Error with MissionScript: " + (*i).first + ": cannot mix terror/non-terror missions in a single command, so sayeth the wise Alaundo."); 
 				}
 			}
 		}
@@ -2276,7 +2280,7 @@ const std::vector<MapScript*> *Mod::getMapScript(std::string id) const
  */
 RuleVideo *Mod::getVideo(const std::string &id) const
 {
-	return getRule(id, "video", _videos);
+	return getRule(id, "Video", _videos);
 }
 
 const std::map<std::string, RuleMusic *> *Mod::getMusic() const
