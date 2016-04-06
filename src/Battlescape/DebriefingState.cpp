@@ -726,6 +726,16 @@ void DebriefingState::prepareDebriefing()
 					break;
 				}
 			}
+			// Loop through the UFOs and see which one is sitting on top of the base... that is probably the one attacking you.
+			for (std::vector<Ufo*>::iterator k = save->getUfos()->begin(); k != save->getUfos()->end(); ++k)
+			{
+				if (AreSame((*k)->getLongitude(), base->getLongitude()) && AreSame((*k)->getLatitude(), base->getLatitude()))
+				{
+					_missionStatistics->ufo = (*k)->getRules()->getType();
+					_missionStatistics->alienRace = (*k)->getAlienRace();
+					break;
+				}
+			}
 			if (aborted)
 			{
 				_destroyBase = true;
@@ -952,9 +962,11 @@ void DebriefingState::prepareDebriefing()
 				{ // so game is not aborted or aborted and unit is on exit area
 					(*j)->postMissionProcedures(save);
 					playerInExitArea++;
+
+					recoverItems((*j)->getInventory(), base);
+
 					if (soldier != 0)
 					{
-						recoverItems((*j)->getInventory(), base);
 						// calculate new statString
 						soldier->calcStatString(_game->getMod()->getStatStrings(), (Options::psiStrengthEval && _game->getSavedGame()->isResearched(_game->getMod()->getPsiRequirements())));
 					}
