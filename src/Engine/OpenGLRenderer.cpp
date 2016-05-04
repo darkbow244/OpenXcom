@@ -170,11 +170,11 @@ void OpenGLRenderer::clear() {
         if(fragment_source != "") set_fragment_shader(fragment_source.c_str());
         if(vertex_source != "") set_vertex_shader(vertex_source.c_str());
       }
-    }
 	  }
 	  catch (YAML::Exception &e) {
 	    Log(LOG_ERROR) << source_yaml_filename << ": " << e.what();
 	  }
+    }
     glLinkProgram(glprogram);
   }
 
