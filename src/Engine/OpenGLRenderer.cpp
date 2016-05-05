@@ -171,11 +171,11 @@ void OpenGLRenderer::clear() {
         if(fragment_source != "") set_fragment_shader(fragment_source.c_str());
         if(vertex_source != "") set_vertex_shader(vertex_source.c_str());
       }
-    }
+	  }
 	  catch (YAML::Exception &e) {
 	    Log(LOG_ERROR) << source_yaml_filename << ": " << e.what();
 	  }
-	}
+    }
     glLinkProgram(glprogram);
   }
 
@@ -196,7 +196,7 @@ void OpenGLRenderer::clear() {
  void OpenGLRenderer::refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight) {
     while (glGetError() != GL_NO_ERROR); // clear possible error from who knows where
 	clear();
-    if (shader_support && (fragmentshader || vertexshader)) {    
+    if(shader_support && (fragmentshader || vertexshader)) {    
       glUseProgram(glprogram);
       GLint location;
 
