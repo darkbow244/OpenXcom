@@ -173,4 +173,5 @@ void Palette::setColors(SDL_Color* pal, int ncolors)
 	_colors[0].a = 0;
 	
 }
+
 }

@@ -57,8 +57,6 @@
 #include "../Engine/Screen.h"
 #include "../Engine/CrossPlatform.h"
 
-#include <limits>
-
 namespace OpenXcom
 {
 
@@ -352,13 +350,6 @@ void Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 	y -= _cenY;
 
 	double rho = sqrt((double)(x*x + y*y));
-    // Workaround for Android version (otherwise fastmath screws up)
-	if (rho > _radius)
-	{
-		*lat = std::numeric_limits<double>::quiet_NaN();
-		*lon = std::numeric_limits<double>::quiet_NaN();
-		return;
-	}
 	double c = asin(rho / _radius);
 	if ( AreSame(rho, 0.0) )
 	{
@@ -757,7 +748,7 @@ std::vector<Target*> Globe::getTargets(int x, int y, bool craft) const
 		}
 	}
 	for (std::vector<AlienBase*>::iterator i = _game->getSavedGame()->getAlienBases()->begin(); i != _game->getSavedGame()->getAlienBases()->end(); ++i)
- 	{
+	{
 		if (!(*i)->isDiscovered())
 		{
 			continue;
@@ -1177,25 +1168,26 @@ void Globe::drawGlobeCircle(double lat, double lon, double radius, int segments)
 	}
 }
 
-
 void Globe::setNewBaseHover(void)
 {
 	_hover=true;
 }
+
 void Globe::unsetNewBaseHover(void)
 {
 	_hover=false;
 }
-bool Globe::getNewBaseHover(void)
+
+bool Globe::getNewBaseHover(void) const
 {
 	return _hover;
 }
+
 void Globe::setNewBaseHoverPos(double lon, double lat)
 {
 	_hoverLon=lon;
 	_hoverLat=lat;
 }
-
 
 void Globe::drawVHLine(Surface *surface, double lon1, double lat1, double lon2, double lat2, Uint8 color)
 {

@@ -24,6 +24,7 @@
 #include "../Engine/Action.h"
 #include "../Engine/Options.h"
 #include "../Engine/Timer.h"
+#include "../fmath.h"
 #include "../Engine/CrossPlatform.h"
 
 namespace OpenXcom
@@ -546,7 +547,7 @@ int Camera::getMapSizeY() const
  * Gets the map offset.
  * @return The map offset.
  */
-Position Camera::getMapOffset()
+Position Camera::getMapOffset() const
 {
 	return _mapOffset;
 }
@@ -650,4 +651,5 @@ void Camera::stopMouseScrolling()
 {
 	_scrollMouseTimer->stop();
 }
+
 }

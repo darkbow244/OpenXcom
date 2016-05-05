@@ -40,7 +40,7 @@ OptionsControlsState::OptionsControlsState(OptionsOrigin origin) : OptionsBaseSt
 #endif
 
 	// Create objects
-	_lstControls = new TextList(200, 136, 94, 8);	
+	_lstControls = new TextList(200, 136, 94, 8);
 	
 	if (origin != OPT_BATTLESCAPE)
 	{

@@ -316,7 +316,7 @@ void TextButton::mousePress(Action *action, State *state)
 void TextButton::mouseRelease(Action *action, State *state)
 {
 	if (isButtonHandled(action->getDetails()->button.button))
-	{	
+	{
 		draw();
 		//_redraw = true;
 	}

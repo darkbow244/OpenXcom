@@ -16,10 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define _USE_MATH_DEFINES
 #include "BattleUnit.h"
 #include "BattleItem.h"
-#include <cmath>
 #include <sstream>
 #include "../Engine/Surface.h"
 #include "../Engine/Language.h"
@@ -38,6 +36,7 @@
 #include "SavedGame.h"
 #include "SavedBattleGame.h"
 #include "BattleUnitStatistics.h"
+#include "../fmath.h"
 
 namespace OpenXcom
 {
@@ -48,7 +47,7 @@ namespace OpenXcom
  * @param depth the depth of the battlefield (used to determine movement type in case of MT_FLOAT).
  */
 BattleUnit::BattleUnit(Soldier *soldier, int depth) :
-	_faction(FACTION_PLAYER), _originalFaction(FACTION_PLAYER), _killedBy(FACTION_PLAYER), _id(0), _pos(Position()), _tile(0),
+	_faction(FACTION_PLAYER), _originalFaction(FACTION_PLAYER), _killedBy(FACTION_PLAYER), _id(0), _tile(0),
 	_lastPos(Position()), _direction(0), _toDirection(0), _directionTurret(0), _toDirectionTurret(0),
 	_verticalDirection(0), _status(STATUS_STANDING), _walkPhase(0), _fallPhase(0), _kneeled(false), _floating(false),
 	_dontReselect(false), _fire(0), _currentAIState(0), _visible(false), _cacheInvalid(true),
@@ -160,16 +159,16 @@ BattleUnit::BattleUnit(Soldier *soldier, int depth) :
  * @param depth the depth of the battlefield (used to determine movement type in case of MT_FLOAT).
  */
 BattleUnit::BattleUnit(Unit *unit, UnitFaction faction, int id, Armor *armor, StatAdjustment *adjustment, int depth) :
-	_faction(faction), _originalFaction(faction), _killedBy(faction), _id(id), _pos(Position()),
+	_faction(faction), _originalFaction(faction), _killedBy(faction), _id(id),
 	_tile(0), _lastPos(Position()), _direction(0), _toDirection(0), _directionTurret(0),
 	_toDirectionTurret(0),  _verticalDirection(0), _status(STATUS_STANDING), _walkPhase(0),
 	_fallPhase(0), _kneeled(false), _floating(false), _dontReselect(false), _fire(0), _currentAIState(0),
 	_visible(false), _cacheInvalid(true), _expBravery(0), _expReactions(0), _expFiring(0),
 	_expThrowing(0), _expPsiSkill(0), _expPsiStrength(0), _expMelee(0), _motionPoints(0), _kills(0), _hitByFire(false),
 	_moraleRestored(0), _coverReserve(0), _charging(0), _turnsSinceSpotted(255),
-	_statistics(), _murdererId(0), _fatalShotSide(SIDE_FRONT), _fatalShotBodyPart(BODYPART_HEAD),
-	_armor(armor), _geoscapeSoldier(0),  _unitRules(unit), _rankInt(0),
-	_turretType(-1), _hidingForTurn(false), _respawn(false), _mindControllerID(0)
+	_statistics(), _murdererId(0), _mindControllerID(0), _fatalShotSide(SIDE_FRONT),
+	_fatalShotBodyPart(BODYPART_HEAD), _armor(armor),  _geoscapeSoldier(0), _unitRules(unit),
+	_rankInt(0), _turretType(-1), _hidingForTurn(false), _respawn(false)
 {
 	_type = unit->getType();
 	_rank = unit->getRank();
@@ -1201,7 +1200,7 @@ int BattleUnit::damage(const Position &relative, int power, ItemDamageType type,
 		}
 	}
 
-    setFatalShotInfo(side, bodypart);
+	setFatalShotInfo(side, bodypart);
 
 	return power < 0 ? 0:power;
 }
@@ -2145,7 +2144,7 @@ void BattleUnit::addMeleeExp()
 	_expMelee++;
 }
 
-void BattleUnit::updateGeoscapeStats(Soldier *soldier)
+void BattleUnit::updateGeoscapeStats(Soldier *soldier) const
 {
 	soldier->addMissionCount();
 	soldier->addKillCount(_kills);
@@ -2228,7 +2227,7 @@ bool BattleUnit::postMissionProcedures(SavedGame *geoscape)
  * @param Experience counter.
  * @return Stat increase.
  */
-int BattleUnit::improveStat(int exp)
+int BattleUnit::improveStat(int exp) const
 {
 	if      (exp > 10) return RNG::generate(2, 6);
 	else if (exp > 5)  return RNG::generate(1, 4);
@@ -2327,7 +2326,7 @@ void BattleUnit::painKillers()
 	int lostHealth = getBaseStats()->health - _health;
 	if (lostHealth > _moraleRestored)
 	{
-        _morale = std::min(100, (lostHealth - _moraleRestored + _morale));
+		_morale = std::min(100, (lostHealth - _moraleRestored + _morale));
 		_moraleRestored = lostHealth;
 	}
 }
@@ -2538,7 +2537,7 @@ void BattleUnit::setRespawn(bool respawn)
 /**
  * Gets this unit's respawn flag.
  */
-bool BattleUnit::getRespawn()
+bool BattleUnit::getRespawn() const
 {
 	return _respawn;
 }
@@ -2991,7 +2990,7 @@ void BattleUnit::setFloorAbove(bool floor)
  * Checks if the floor above flag has been set.
  * @return if we're under cover.
  */
-bool BattleUnit::getFloorAbove()
+bool BattleUnit::getFloorAbove() const
 {
 	return _floorAbove;
 }
@@ -3165,8 +3164,8 @@ int BattleUnit::getMurdererId() const
  */
 void BattleUnit::setFatalShotInfo(UnitSide side, UnitBodyPart bodypart)
 {
-    _fatalShotSide = side;
-    _fatalShotBodyPart = bodypart;
+	_fatalShotSide = side;
+	_fatalShotBodyPart = bodypart;
 }
 
 /**
@@ -3175,7 +3174,7 @@ void BattleUnit::setFatalShotInfo(UnitSide side, UnitBodyPart bodypart)
  */
 UnitSide BattleUnit::getFatalShotSide() const
 {
-    return _fatalShotSide;
+	return _fatalShotSide;
 }
 
 /**
@@ -3184,7 +3183,7 @@ UnitSide BattleUnit::getFatalShotSide() const
  */
 UnitBodyPart BattleUnit::getFatalShotBodyPart() const
 {
-    return _fatalShotBodyPart;
+	return _fatalShotBodyPart;
 }
 
 /**
@@ -3202,7 +3201,7 @@ std::string BattleUnit::getMurdererWeapon() const
  */
 void BattleUnit::setMurdererWeapon(std::string weapon)
 {
-    _murdererWeapon = weapon;
+	_murdererWeapon = weapon;
 }
 
 /**
@@ -3220,7 +3219,7 @@ std::string BattleUnit::getMurdererWeaponAmmo() const
  */
 void BattleUnit::setMurdererWeaponAmmo(std::string weaponAmmo)
 {
-    _murdererWeaponAmmo = weaponAmmo;
+	_murdererWeaponAmmo = weaponAmmo;
 }
 
 /**

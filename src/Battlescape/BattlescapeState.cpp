@@ -16,8 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define _USE_MATH_DEFINES
-#include <cmath>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
@@ -2279,7 +2277,7 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 			}
 			else if (cutscene == CutsceneState::LOSE_GAME)
 			{
-				_game->getSavedGame()->setEnding(END_LOSE);				
+				_game->getSavedGame()->setEnding(END_LOSE);
 			}
 			// Autosave if game is over
 			if (_game->getSavedGame()->getEnding() != END_NONE && _game->getSavedGame()->isIronman())

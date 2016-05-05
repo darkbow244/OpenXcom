@@ -643,7 +643,7 @@ void Surface::copy(Surface *surface)
 	SDL_BlitSurface uses colour matching,
 	and is therefor unreliable as a means
 	to copy the contents of one surface to another
-	instead we have to do this manually 
+	instead we have to do this manually
 
 	SDL_Rect from;
 	from.x = getX() - surface->getX();
@@ -1051,8 +1051,9 @@ void Surface::setTFTDMode(bool mode)
  * checks TFTD mode.
  * @return TFTD mode.
  */
-bool Surface::isTFTDMode()
+bool Surface::isTFTDMode() const
 {
 	return _tftdMode;
 }
+
 }

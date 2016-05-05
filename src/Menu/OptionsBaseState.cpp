@@ -360,6 +360,6 @@ void OptionsBaseState::resize(int &dX, int &dY)
 	Options::newDisplayWidth = Options::displayWidth;
 	Options::newDisplayHeight = Options::displayHeight;
 	State::resize(dX, dY);
-
 }
+
 }

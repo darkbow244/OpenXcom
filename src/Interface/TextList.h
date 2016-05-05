@@ -201,8 +201,8 @@ public:
 	ComboBox *getComboBox() const;
 	void setBorderColor(Uint8 color);
 	int getScrollbarColor();
-    /// Allows the cell to flood into other columns.
-    void setFlooding(bool flooding);
+	/// Allows the cell to flood into other columns.
+	void setFlooding(bool flooding);
 	/// Set drag-scrolling for this TextList
 	void setDragScrollable(bool scrollable);
 	/// Check if the list supports drag-scrolling

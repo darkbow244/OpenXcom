@@ -16,8 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define _USE_MATH_DEFINES
-#include <cmath>
 #include "CivilianBAIState.h"
 #include "TileEngine.h"
 #include "Pathfinding.h"
@@ -28,6 +26,7 @@
 #include "../Engine/Logger.h"
 #include "../Engine/Options.h"
 #include "../Savegame/Tile.h"
+#include "../fmath.h"
 
 namespace OpenXcom
 {
@@ -336,10 +335,10 @@ void CivilianBAIState::setupEscape()
 		{
 			
 			if (tries == 121) 
-			{ 
+			{
 				if (_traceAI) 
 				{
-					Log(LOG_INFO) << "best score after systematic search was: " << bestTileScore; 
+					Log(LOG_INFO) << "best score after systematic search was: " << bestTileScore;
 				}
 			}
 						
@@ -482,8 +481,8 @@ void CivilianBAIState::setupPatrol()
 			}
 			node = *i;
 			int d = _save->getTileEngine()->distanceSq(_unit->getPosition(), node->getPosition());
-			if (_unit->getPosition().z == node->getPosition().z 
-				&& d < closest 
+			if (_unit->getPosition().z == node->getPosition().z
+				&& d < closest
 				&& node->getType() & Node::TYPE_SMALL)
 			{
 				_fromNode = node;
@@ -604,4 +603,5 @@ void CivilianBAIState::evaluateAIMode()
 
 	_AIMode = AI_ESCAPE;
 }
+
 }

@@ -200,7 +200,7 @@ void BattlescapeGenerator::nextStage()
 	{
 		if ((*i)->getStatus() != STATUS_DEAD                              // if they're not dead
 			&& (((*i)->getOriginalFaction() == FACTION_PLAYER               // and they're a soldier
-			&& _game->getSavedGame()->getSavedBattle()->isAborted()           // and you aborted
+			&& _save->isAborted()           // and you aborted
 			&& !(*i)->isInExitArea(END_POINT))                                // and they're not on the exit
 			|| (*i)->getOriginalFaction() != FACTION_PLAYER))               // or they're not a soldier
 		{
@@ -212,7 +212,15 @@ void BattlescapeGenerator::nextStage()
 		}
 		if ((*i)->getTile())
 		{
-			(*i)->getTile()->setUnit(0);
+			const Position pos = (*i)->getPosition();
+			const int size = (*i)->getArmor()->getSize();
+			for (int x = 0; x != size; ++x)
+			{
+				for (int y = 0; y != size; ++y)
+				{
+					_save->getTile(pos + Position(x,y,0))->setUnit(0);
+				}
+			}
 		}
 		(*i)->setTile(0);
 		(*i)->setPosition(Position(-1,-1,-1), false);
@@ -397,8 +405,8 @@ void BattlescapeGenerator::nextStage()
 			}
 		}
 	}
-	// tanks only i guess?
-	if (_save->getSelectedUnit() == 0 || _save->getSelectedUnit()->getFaction() != FACTION_PLAYER)
+
+	if (_save->getSelectedUnit() == 0 || _save->getSelectedUnit()->isOut() || _save->getSelectedUnit()->getFaction() != FACTION_PLAYER)
 	{
 		_save->selectNextPlayerUnit();
 	}
@@ -1619,7 +1627,9 @@ void BattlescapeGenerator::loadRMP(MapBlock *mapblock, int xoff, int yoff, int s
 		int pos_y = value[0];
 		int pos_z = value[2];
 		Node *node;
-		if (pos_x < mapblock->getSizeX() && pos_y < mapblock->getSizeY() && pos_z < _mapsize_z)
+		if (pos_x >= 0 && pos_x < mapblock->getSizeX() &&
+			pos_y >= 0 && pos_y < mapblock->getSizeY() &&
+			pos_z >= 0 && pos_z < _mapsize_z)
 		{
 			Position pos = Position(xoff + pos_x, yoff + pos_y, mapblock->getSizeZ() - 1 - pos_z);
 			int type     = value[19];
@@ -2903,4 +2913,5 @@ void BattlescapeGenerator::setupObjectives(AlienDeployment *ruleDeploy)
 		}
 	}
 }
+
 }

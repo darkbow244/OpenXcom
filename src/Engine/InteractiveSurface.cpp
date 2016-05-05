@@ -57,7 +57,7 @@ bool InteractiveSurface::isButtonHandled(Uint8 button)
 	return handled;
 }
 
-bool InteractiveSurface::isButtonPressed(Uint8 button)
+bool InteractiveSurface::isButtonPressed(Uint8 button) const
 {
 	if (button == 0)
 	{

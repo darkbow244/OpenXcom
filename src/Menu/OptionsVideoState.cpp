@@ -363,7 +363,7 @@ void OptionsVideoState::btnDisplayResolutionDownClick(Action *)
  * Updates the display resolution based on the selection.
  */
 void OptionsVideoState::updateDisplayResolution()
-{	
+{
 	std::wostringstream ssW, ssH;
 	ssW << _res[_resCurrent].w;
 	ssH << _res[_resCurrent].h;
@@ -573,4 +573,5 @@ void OptionsVideoState::handle(Action *action)
 	}
 	
 }
+
 }

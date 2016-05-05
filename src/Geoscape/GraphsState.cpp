@@ -1155,6 +1155,7 @@ void GraphsState::shiftButtons(Action *action)
 		}
 	}
 }
+
 void GraphsState::scrollButtons(std::vector<GraphButInfo *> &toggles, std::vector<ToggleTextButton *> &buttons, size_t &offset, int step)
 {
 	// minus one, 'cause we'll already added the TOTAL button to toggles
@@ -1169,10 +1170,12 @@ void GraphsState::scrollButtons(std::vector<GraphButInfo *> &toggles, std::vecto
 		updateButton(*itert, *iterb);
 	}
 }
+
 void GraphsState::updateButton(GraphButInfo *from,ToggleTextButton *to)
 {
 	to->setText(from->_name);
 	to->setInvertColor(from->_color);
 	to->setPressed(from->_pushed);
 }
+
 }
