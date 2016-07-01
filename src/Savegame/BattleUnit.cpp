@@ -24,7 +24,7 @@
 #include "../Engine/Options.h"
 #include "../Battlescape/Pathfinding.h"
 #include "../Battlescape/BattlescapeGame.h"
-#include "../Battlescape/BattleAIState.h"
+#include "../Battlescape/AIModule.h"
 #include "Soldier.h"
 #include "../Mod/Armor.h"
 #include "../Mod/Unit.h"
@@ -370,7 +370,7 @@ void BattleUnit::load(const YAML::Node &node)
 			_recolor.push_back(std::make_pair(p[i][0].as<int>(), p[i][1].as<int>()));
 		}
 	}
-	_mindControllerID = node["mincControllerID"].as<int>(_mindControllerID);
+	_mindControllerID = node["mindControllerID"].as<int>(_mindControllerID);
 }
 
 /**
@@ -411,9 +411,9 @@ YAML::Node BattleUnit::save() const
 	node["turnsSinceSpotted"] = _turnsSinceSpotted;
 	node["rankInt"] = _rankInt;
 	node["moraleRestored"] = _moraleRestored;
-	if (getCurrentAIState())
+	if (getAIModule())
 	{
-		node["AI"] = getCurrentAIState()->save();
+		node["AI"] = getAIModule()->save();
 	}
 	node["killedBy"] = (int)_killedBy;
 	if (_originalFaction != _faction)
@@ -1671,7 +1671,6 @@ void BattleUnit::prepareNewTurn(bool fullProcess)
 	// if unit is dead, AI state should be gone
 	if (_health == 0 && _currentAIState)
 	{
-		_currentAIState->exit();
 		delete _currentAIState;
 		_currentAIState = 0;
 	}
@@ -1784,22 +1783,20 @@ void BattleUnit::think(BattleAction *action)
  * Changes the current AI state.
  * @param aiState Pointer to AI state.
  */
-void BattleUnit::setAIState(BattleAIState *aiState)
+void BattleUnit::setAIModule(AIModule *ai)
 {
 	if (_currentAIState)
 	{
-		_currentAIState->exit();
 		delete _currentAIState;
 	}
-	_currentAIState = aiState;
-	_currentAIState->enter();
+	_currentAIState = ai;
 }
 
 /**
  * Returns the current AI state.
  * @return Pointer to AI state.
  */
-BattleAIState *BattleUnit::getCurrentAIState() const
+AIModule *BattleUnit::getAIModule() const
 {
 	return _currentAIState;
 }
@@ -2959,7 +2956,7 @@ void BattleUnit::breathe()
 	{
 		// deviation from original: TFTD used a static 10% chance for every animation frame,
 		// instead let's use 5%, but allow morale to affect it.
-		_breathing = (_status != STATUS_WALKING && RNG::percent(105 - _morale));
+		_breathing = (_status != STATUS_WALKING && RNG::seedless(0, 99) < (105 - _morale));
 		_breathFrame = 0;
 	}
 

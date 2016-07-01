@@ -17,13 +17,13 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <sstream>
 #include <string>
 #include <stdio.h>
 #include "CrossPlatform.h"
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
 #ifdef ANDROID
 #include <android/log.h>
 #endif
@@ -86,25 +86,28 @@ inline std::ostringstream& Logger::get(SeverityLevel level)
 inline Logger::~Logger()
 {
 	os << std::endl;
-	if (reportingLevel() == LOG_DEBUG || reportingLevel() == LOG_VERBOSE)
-	{
-		fprintf(stderr, "%s", os.str().c_str());
-		fflush(stderr);
-	}
 	std::ostringstream ss;
 	ss << "[" << CrossPlatform::now() << "]" << "\t" << os.str();
 #ifdef __ANDROID__
-	if (Logger::logToSystem())
+	if (logToSystem())
 	{
 		__android_log_print(ANDROID_LOG_INFO, "OpenXcom", "%s", ss.str().c_str());
 	}
 #endif
-	if (Logger::logToFile())
+	if (logToFile())
 	{
 		FILE *file = fopen(logFile().c_str(), "a");
-		fprintf(file, "%s", ss.str().c_str());
-		fflush(file);
-		fclose(file);
+		if (file)
+		{
+			fprintf(file, "%s", ss.str().c_str());
+			fflush(file);
+			fclose(file);
+		}
+		if (!file || reportingLevel() == LOG_DEBUG || reportingLevel() == LOG_VERBOSE)
+		{
+			fprintf(stderr, "%s", os.str().c_str());
+			fflush(stderr);
+		}
 	}
 }
 
@@ -122,8 +125,8 @@ inline std::string& Logger::logFile()
 
 inline std::string Logger::toString(SeverityLevel level)
 {
-    	static const char* const buffer[] = {"FATAL", "ERROR", "WARN", "INFO", "DEBUG", "VERB"};
-    	return buffer[level];
+	static const char* const buffer[] = {"FATAL", "ERROR", "WARN", "INFO", "DEBUG", "VERB"};
+	return buffer[level];
 }
 
 inline bool& Logger::logToFile()

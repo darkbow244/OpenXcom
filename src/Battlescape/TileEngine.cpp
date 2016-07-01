@@ -21,7 +21,7 @@
 #include <set>
 #include "TileEngine.h"
 #include <SDL.h>
-#include "AlienBAIState.h"
+#include "AIModule.h"
 #include "Map.h"
 #include "Camera.h"
 #include "../Savegame/SavedGame.h"
@@ -831,39 +831,42 @@ std::vector<std::pair<BattleUnit *, int> > TileEngine::getSpottingUnits(BattleUn
 {
 	std::vector<std::pair<BattleUnit *, int> > spotters;
 	Tile *tile = unit->getTile();
-	for (std::vector<BattleUnit*>::const_iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
+	
+	// no reaction on civilian turn.
+	if (_save->getSide() != FACTION_NEUTRAL)
 	{
-			// not dead/unconscious
-		if (!(*i)->isOut() &&
-			// not dying
-			(*i)->getHealth() != 0 &&
-			// not about to pass out
-			(*i)->getStunlevel() < (*i)->getHealth() &&
-			// not a friend
-			(*i)->getFaction() != _save->getSide() &&
-			// closer than 20 tiles
-			distanceSq(unit->getPosition(), (*i)->getPosition()) <= MAX_VIEW_DISTANCE_SQR)
+		for (std::vector<BattleUnit*>::const_iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
 		{
-			Position originVoxel = _save->getTileEngine()->getSightOriginVoxel(*i);
-			originVoxel.z -= 2;
-			Position targetVoxel;
-			AlienBAIState *aggro = dynamic_cast<AlienBAIState*>((*i)->getCurrentAIState());
-			bool gotHit = (aggro != 0 && aggro->getWasHitBy(unit->getId()));
-				// can actually see the target Tile, or we got hit
-			if (((*i)->checkViewSector(unit->getPosition()) || gotHit) &&
-				// can actually target the unit
-				canTargetUnit(&originVoxel, tile, &targetVoxel, *i) &&
-				// can actually see the unit
-				visible(*i, tile))
+				// not dead/unconscious
+			if (!(*i)->isOut() &&
+				// not dying
+				(*i)->getHealth() != 0 &&
+				// not about to pass out
+				(*i)->getStunlevel() < (*i)->getHealth() &&
+				// not a friend
+				(*i)->getFaction() != _save->getSide() &&
+				// not a civilian
+				(*i)->getFaction() != FACTION_NEUTRAL &&
+				// closer than 20 tiles
+				distanceSq(unit->getPosition(), (*i)->getPosition()) <= MAX_VIEW_DISTANCE_SQR)
 			{
-				if ((*i)->getFaction() == FACTION_PLAYER)
+				Position originVoxel = _save->getTileEngine()->getSightOriginVoxel(*i);
+				originVoxel.z -= 2;
+				Position targetVoxel;
+				AIModule *ai = (*i)->getAIModule();
+				bool gotHit = (ai != 0 && ai->getWasHitBy(unit->getId()));
+					// can actually see the target Tile, or we got hit
+				if (((*i)->checkViewSector(unit->getPosition()) || gotHit) &&
+					// can actually target the unit
+					canTargetUnit(&originVoxel, tile, &targetVoxel, *i) &&
+					// can actually see the unit
+					visible(*i, tile))
 				{
-					unit->setVisible(true);
-				}
-				(*i)->addToVisibleUnits(unit);
-				// no reaction on civilian turn.
-				if (_save->getSide() != FACTION_NEUTRAL)
-				{
+					if ((*i)->getFaction() == FACTION_PLAYER)
+					{
+						unit->setVisible(true);
+					}
+					(*i)->addToVisibleUnits(unit);
 					int attackType = determineReactionType(*i, unit);
 					if (attackType != BA_NONE)
 					{
@@ -990,16 +993,16 @@ bool TileEngine::tryReaction(BattleUnit *unit, BattleUnit *target, int attackTyp
 		// hostile units will go into an "aggro" state when they react.
 		if (unit->getFaction() == FACTION_HOSTILE)
 		{
-			AlienBAIState *aggro = dynamic_cast<AlienBAIState*>(unit->getCurrentAIState());
-			if (aggro == 0)
+			AIModule *ai = unit->getAIModule();
+			if (ai == 0)
 			{
 				// should not happen, but just in case...
-				aggro = new AlienBAIState(_save, unit, 0);
-				unit->setAIState(aggro);
+				ai = new AIModule(_save, unit, 0);
+				unit->setAIModule(ai);
 			}
 
 			if (action.weapon->getAmmoItem()->getRules()->getExplosionRadius() &&
-				aggro->explosiveEfficacy(action.target, unit, action.weapon->getAmmoItem()->getRules()->getExplosionRadius(), -1) == false)
+				ai->explosiveEfficacy(action.target, unit, action.weapon->getAmmoItem()->getRules()->getExplosionRadius(), -1) == false)
 			{
 				action.targeting = false;
 			}

@@ -23,7 +23,7 @@
 #include "TileEngine.h"
 #include "Map.h"
 #include "Camera.h"
-#include "AlienBAIState.h"
+#include "AIModule.h"
 #include "../Savegame/Tile.h"
 #include "../Engine/RNG.h"
 #include "../Savegame/SavedBattleGame.h"
@@ -107,7 +107,7 @@ void MeleeAttackBState::init()
 	}
 
 	
-	AlienBAIState *ai = dynamic_cast<AlienBAIState*>(_unit->getCurrentAIState());
+	AIModule *ai = _unit->getAIModule();
 
 	if (_unit->getFaction() == _parent->getSave()->getSide() &&
 		_unit->getFaction() != FACTION_PLAYER &&
@@ -239,10 +239,10 @@ void MeleeAttackBState::resolveHit()
 			_target->setSpawnUnit(_ammo->getRules()->getZombieUnit());
 		}
 
+		// assume rifle butt to begin with.
 		ItemDamageType type = DT_STUN;
 		int power = _weapon->getRules()->getMeleePower();
-
-		// special code for attacking with a rifle butt.
+		// override it as needed.
 		if (_weapon->getRules()->getBattleType() == BT_MELEE && _ammo)
 		{
 			type = _ammo->getRules()->getDamageType();;

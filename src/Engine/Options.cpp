@@ -135,8 +135,8 @@ void create()
 	_info.push_back(OptionInfo("battleNotifyDeath", &battleNotifyDeath, false));
 	_info.push_back(OptionInfo("showFundsOnGeoscape", &showFundsOnGeoscape, false));
 	_info.push_back(OptionInfo("allowResize", &allowResize, false));
-	_info.push_back(OptionInfo("windowedModePositionX", &windowedModePositionX, -1));
-	_info.push_back(OptionInfo("windowedModePositionY", &windowedModePositionY, -1));
+	_info.push_back(OptionInfo("windowedModePositionX", &windowedModePositionX, 0));
+	_info.push_back(OptionInfo("windowedModePositionY", &windowedModePositionY, 0));
 	_info.push_back(OptionInfo("borderless", &borderless, false));
 	_info.push_back(OptionInfo("captureMouse", (bool*)&captureMouse, false));
 	_info.push_back(OptionInfo("battleTooltips", &battleTooltips, true));
@@ -163,6 +163,7 @@ void create()
 #else
 	_info.push_back(OptionInfo("touchEnabled", &touchEnabled, false));
 #endif
+	_info.push_back(OptionInfo("rootWindowedMode", &rootWindowedMode, false));
 	// SDL2 scaler options
 	_info.push_back(OptionInfo("useNearestScaler", &useNearestScaler, false));
 	_info.push_back(OptionInfo("useLinearScaler", &useLinearScaler, true));
@@ -208,7 +209,7 @@ void create()
 	_info.push_back(OptionInfo("globeSeasons", &globeSeasons, false, "STR_GLOBESEASONS", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("psiStrengthEval", &psiStrengthEval, false, "STR_PSISTRENGTHEVAL", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("canTransferCraftsWhileAirborne", &canTransferCraftsWhileAirborne, false, "STR_CANTRANSFERCRAFTSWHILEAIRBORNE", "STR_GEOSCAPE")); // When the craft can reach the destination base with its fuel
-	_info.push_back(OptionInfo("spendResearchedItems", &spendResearchedItems, false, "STR_SPENDRESEARCHEDITEMS", "STR_GEOSCAPE"));
+	_info.push_back(OptionInfo("retainCorpses", &retainCorpses, false, "STR_RETAINCORPSES", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("fieldPromotions", &fieldPromotions, false, "STR_FIELDPROMOTIONS", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("meetingPoint", &meetingPoint, false, "STR_MEETINGPOINT", "STR_GEOSCAPE"));
 #ifdef __MOBILE__
@@ -339,7 +340,7 @@ void create()
 	_info.push_back(KeyOptionInfo("keyBattleVoxelView", &keyBattleVoxelView, SDLK_F10, "STR_SAVE_VOXEL_VIEW", "STR_BATTLESCAPE"));
 	_info.push_back(KeyOptionInfo("keyInvCreateTemplate", &keyInvCreateTemplate, SDLK_c, "STR_CREATE_INVENTORY_TEMPLATE", "STR_BATTLESCAPE"));
 	_info.push_back(KeyOptionInfo("keyInvApplyTemplate", &keyInvApplyTemplate, SDLK_v, "STR_APPLY_INVENTORY_TEMPLATE", "STR_BATTLESCAPE"));
-    _info.push_back(KeyOptionInfo("keyInvClear", &keyInvClear, SDLK_x, "STR_CLEAR_INVENTORY", "STR_BATTLESCAPE"));
+	_info.push_back(KeyOptionInfo("keyInvClear", &keyInvClear, SDLK_x, "STR_CLEAR_INVENTORY", "STR_BATTLESCAPE"));
 	_info.push_back(KeyOptionInfo("keyInvAutoEquip", &keyInvAutoEquip, SDLK_z, "STR_AUTO_EQUIP", "STR_BATTLESCAPE"));
 
 #ifdef __MORPHOS__
@@ -589,7 +590,12 @@ bool init(int argc, char *argv[])
 	s += "openxcom.log";
 	Logger::logFile() = s;
 	FILE *file = fopen(Logger::logFile().c_str(), "w");
-	if (!file)
+	if (file)
+	{
+		fflush(file);
+		fclose(file);
+	}
+	else
 	{
 #ifdef __ANDROID__
 		// Well, that's unfortunate, but that's not the end of the world.
@@ -598,13 +604,8 @@ bool init(int argc, char *argv[])
 		Logger::logToSystem() = true;
 		Log(LOG_WARNING) << "Couldn't open the log file! (Maybe you don't have your paths set?)";
 #else
-		throw Exception(s + " not found");
+		Log(LOG_WARNING) << "Couldn't create log file, switching to stderr";
 #endif
-	}
-	else
-	{
-		fflush(file);
-		fclose(file);
 	}
 #ifdef __ANDROID__
 	Logger::logToFile() = Options::logToFile;
@@ -629,6 +630,9 @@ bool init(int argc, char *argv[])
 
 void updateMods()
 {
+	// pick up stuff in common before-hand
+	FileMap::load("common", CrossPlatform::searchDataFolder("common"), true);
+
 	std::string modPath = CrossPlatform::searchDataFolder("standard");
 	Log(LOG_INFO) << "Scanning standard mods in '" << modPath << "'...";
 	_scanMods(modPath);
@@ -826,7 +830,7 @@ void mapResources()
 		std::set<std::string> circDepCheck;
 		_loadMod(modInfo, circDepCheck);
 	}
-	// pick up stuff in common
+	// TODO: Figure out why we still need to check common here
 	FileMap::load("common", CrossPlatform::searchDataFolder("common"), true);
 	Log(LOG_INFO) << "Resources files mapped successfully.";
 }
@@ -846,7 +850,11 @@ void setFolders()
 	if (_userFolder.empty())
 	{
 		std::vector<std::string> user = CrossPlatform::findUserFolders();
-		_configFolder = CrossPlatform::findConfigFolder();
+
+		if (_configFolder.empty())
+		{
+			_configFolder = CrossPlatform::findConfigFolder();
+		}
 
 		// Look for an existing user folder
 		for (std::vector<std::string>::reverse_iterator i = user.rbegin(); i != user.rend(); ++i)
@@ -1141,6 +1149,12 @@ void backupDisplay()
 	Options::newHQXFilter = Options::useHQXFilter;
 	Options::newOpenGLShader = Options::useOpenGLShader;
 	Options::newXBRZFilter = Options::useXBRZFilter;
+	Options::newRootWindowedMode = Options::rootWindowedMode;
+	Options::newWindowedModePositionX = Options::windowedModePositionX;
+	Options::newWindowedModePositionY = Options::windowedModePositionY;
+	Options::newFullscreen = Options::fullscreen;
+	Options::newAllowResize = Options::allowResize;
+	Options::newBorderless = Options::borderless;
 	Options::newNearestScaler = Options::useNearestScaler;
 	Options::newLinearScaler = Options::useLinearScaler;
 	Options::newAnisotropicScaler = Options::useAnisotropicScaler;
@@ -1161,6 +1175,12 @@ void switchDisplay()
 	std::swap(useHQXFilter, newHQXFilter);
 	std::swap(useOpenGLShader, newOpenGLShader);
 	std::swap(useXBRZFilter, newXBRZFilter);
+	std::swap(rootWindowedMode, newRootWindowedMode);
+	std::swap(windowedModePositionX, newWindowedModePositionX);
+	std::swap(windowedModePositionY, newWindowedModePositionY);
+	std::swap(fullscreen, newFullscreen);
+	std::swap(allowResize, newAllowResize);
+	std::swap(borderless, newBorderless);
 	std::swap(useNearestScaler, newNearestScaler);
 	std::swap(useLinearScaler, newLinearScaler);
 	std::swap(useAnisotropicScaler, newAnisotropicScaler);

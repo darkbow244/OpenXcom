@@ -29,6 +29,8 @@
 #include "../Engine/FileMap.h"
 #include "../Engine/Logger.h"
 #include "../Interface/ComboBox.h"
+#include "../Engine/Game.h"
+#include "SetWindowedRootState.h"
 
 namespace OpenXcom
 {
@@ -73,6 +75,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	_txtOptions = new Text(114, 9, 206, 82);
 	_btnLetterbox = new ToggleTextButton(104, 16, 206, 92);
 	_btnLockMouse = new ToggleTextButton(104, 16, 206, 110);
+	_btnRootWindowedMode = new ToggleTextButton(104, 16, 206, 128);
 
 	/* TODO: add current mode */
 	/* Get available fullscreen modes */
@@ -119,7 +122,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	add(_txtOptions, "text", "videoMenu");
 	add(_btnLetterbox, "button", "videoMenu");
 	add(_btnLockMouse, "button", "videoMenu");
-
+	add(_btnRootWindowedMode, "button", "videoMenu");
 
 	add(_cbxFilter, "button", "videoMenu");
 	add(_cbxDisplayMode, "button", "videoMenu");
@@ -142,7 +145,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 
 	_txtDisplayWidth->setAlign(ALIGN_CENTER);
 	_txtDisplayWidth->setBig();
-	_txtDisplayWidth->setNumerical(true);
+	_txtDisplayWidth->setConstraint(TEC_NUMERIC_POSITIVE);
 	_txtDisplayWidth->onChange((ActionHandler)&OptionsVideoState::txtDisplayWidthChange);
 
 	_txtDisplayX->setAlign(ALIGN_CENTER);
@@ -151,7 +154,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 
 	_txtDisplayHeight->setAlign(ALIGN_CENTER);
 	_txtDisplayHeight->setBig();
-	_txtDisplayHeight->setNumerical(true);
+	_txtDisplayHeight->setConstraint(TEC_NUMERIC_POSITIVE);
 	_txtDisplayHeight->onChange((ActionHandler)&OptionsVideoState::txtDisplayHeightChange);
 
 	std::wostringstream ssW, ssH;
@@ -180,6 +183,13 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	_btnLockMouse->setTooltip("STR_LOCK_MOUSE_DESC");
 	_btnLockMouse->onMouseIn((ActionHandler)&OptionsVideoState::txtTooltipIn);
 	_btnLockMouse->onMouseOut((ActionHandler)&OptionsVideoState::txtTooltipOut);
+
+	_btnRootWindowedMode->setText(tr("STR_FIXED_WINDOW_POSITION"));
+	_btnRootWindowedMode->setPressed(Options::rootWindowedMode);
+	_btnRootWindowedMode->onMouseClick((ActionHandler)&OptionsVideoState::btnRootWindowedModeClick);
+	_btnRootWindowedMode->setTooltip("STR_FIXED_WINDOW_POSITION_DESC");
+	_btnRootWindowedMode->onMouseIn((ActionHandler)&OptionsVideoState::txtTooltipIn);
+	_btnRootWindowedMode->onMouseOut((ActionHandler)&OptionsVideoState::txtTooltipOut);
 	
 	_txtLanguage->setText(tr("STR_DISPLAY_LANGUAGE"));
 	
@@ -482,24 +492,24 @@ void OptionsVideoState::updateDisplayMode(Action *)
 	switch(_cbxDisplayMode->getSelected())
 	{
 	case 0:
-		Options::fullscreen = false;
-		Options::borderless = false;
-		Options::allowResize = false;
+		Options::newFullscreen = false;
+		Options::newBorderless = false;
+		Options::newAllowResize = false;
 		break;
 	case 1:
-		Options::fullscreen = true;
-		Options::borderless = false;
-		Options::allowResize = false;
+		Options::newFullscreen = true;
+		Options::newBorderless = false;
+		Options::newAllowResize = false;
 		break;
 	case 2:
-		Options::fullscreen = false;
-		Options::borderless = true;
-		Options::allowResize = false;
+		Options::newFullscreen = false;
+		Options::newBorderless = true;
+		Options::newAllowResize = false;
 		break;
 	case 3:
-		Options::fullscreen = false;
-		Options::borderless = false;
-		Options::allowResize = true;
+		Options::newFullscreen = false;
+		Options::newBorderless = false;
+		Options::newAllowResize = true;
 		break;
 	default:
 		break;
@@ -524,6 +534,22 @@ void OptionsVideoState::btnLockMouseClick(Action *)
 	// Don't do that! Breaks stuff hard.
 	Options::captureMouse = _btnLockMouse->getPressed();
 	//SDL_SetRelativeMouseMode((Options::captureMouse)?SDL_TRUE:SDL_FALSE); //because a typecast is not enough
+}
+
+/**
+ * Ask user where he wants to root screen.
+ * @param action Pointer to an action.
+ */
+void OptionsVideoState::btnRootWindowedModeClick(Action *)
+{
+	if (_btnRootWindowedMode->getPressed())
+	{
+		_game->pushState(new SetWindowedRootState(_origin, this));
+	}
+	else
+	{
+		Options::newRootWindowedMode = false;
+	}
 }
 
 /**
@@ -572,6 +598,14 @@ void OptionsVideoState::handle(Action *action)
 		_btnLockMouse->setPressed(Options::captureMouse);
 	}
 	
+}
+
+/**
+ * Unpresses Fixed Borderless Pos button
+ */
+void OptionsVideoState::unpressRootWindowedMode()
+{
+	_btnRootWindowedMode->setPressed(false);
 }
 
 }

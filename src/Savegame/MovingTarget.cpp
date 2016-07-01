@@ -219,6 +219,10 @@ void MovingTarget::move()
  */
 void MovingTarget::calculateMeetPoint()
 {
+    // It's 2016 already... isn't it about time to move to c++11 already? -sfalexrog
+#ifdef ANDROID
+#define abs(x) fabs(x)
+#endif
 	// Initialize
 	if (_dest != 0)
 	{
@@ -272,6 +276,9 @@ void MovingTarget::calculateMeetPoint()
 	while (abs(_meetPointLon) > M_PI) _meetPointLon -= lonSign * 2 * M_PI;
 	while (abs(_meetPointLat) > M_PI) _meetPointLat -= latSign * 2 * M_PI;
 	if (abs(_meetPointLat) > M_PI_2) { _meetPointLat = latSign * abs(2 * M_PI - abs(_meetPointLat)); _meetPointLon -= lonSign * M_PI; }
+#ifdef ANDROID
+#undef abs
+#endif
 }
 
 /**

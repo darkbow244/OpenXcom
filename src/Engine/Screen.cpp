@@ -111,7 +111,7 @@ Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _sc
 	, _prevWidth(0), _prevHeight(0)
 {
 	// The default values for _window and _renderer are set to NULL so that we can check if there's a window already
-	resetDisplay();	
+	resetDisplay();
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }
 
@@ -151,7 +151,7 @@ void Screen::handle(Action *action)
 				case 1: Timer::gameSlowSpeed = 5; break;
 				case 5: Timer::gameSlowSpeed = 15; break;
 				default: Timer::gameSlowSpeed = 1; break;
-			}				
+			}
 		}
 	}
 	
@@ -370,7 +370,9 @@ void Screen::resetDisplay(bool resetVideo)
 			}
 			else
 			{
-				if ((Options::windowedModePositionX != -1) && (Options::windowedModePositionY != -1))
+				// FIXME: Check if this code is correct w.r.t. latest patches
+				//if ((Options::windowedModePositionX != -1) && (Options::windowedModePositionY != -1))
+				if (!Options::fullscreen && Options::rootWindowedMode)
 				{
 					winX = Options::windowedModePositionX;
 					winY = Options::windowedModePositionY;
@@ -510,7 +512,7 @@ void Screen::resetDisplay(bool resetVideo)
 		else
 		{
 			_cursorLeftBlackBand = 0;
-		}		
+		}
 	}
 	else if (_scaleY > _scaleX && Options::keepAspectRatio)
 	{
@@ -520,7 +522,7 @@ void Screen::resetDisplay(bool resetVideo)
 		{
 			_topBlackBand = 0;
 		}
-        _bottomBlackBand = getHeight() - targetHeight - _topBlackBand;
+		_bottomBlackBand = getHeight() - targetHeight - _topBlackBand;
 		if (_bottomBlackBand < 0)
 		{
 			_bottomBlackBand = 0;
@@ -536,7 +538,7 @@ void Screen::resetDisplay(bool resetVideo)
 		else
 		{
 			_cursorTopBlackBand = 0;
-		}		
+		}
 	}
 	else
 	{
@@ -633,7 +635,7 @@ void Screen::screenshot(const std::string &filename) const
 }
 
 
-/** 
+/**
  * Check whether a 32bpp scaler has been selected.
  * @return if it is enabled with a compatible resolution.
  */

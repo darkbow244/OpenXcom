@@ -5,6 +5,11 @@
 //#include <stdlib.h>
 //#include <crtdbg.h>
 
+// c++ headers
+#ifdef _MSC_VER
+#define _SCL_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #define NOMINMAX
 
 #define _USE_MATH_DEFINES
