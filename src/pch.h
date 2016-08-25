@@ -64,7 +64,6 @@
 #include <windows.h>
 #include <malloc.h>
 #else
-#include <alloca.h>
 #include <dirent.h>
 #include <execinfo.h>
 #include <pwd.h>

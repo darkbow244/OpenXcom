@@ -1020,13 +1020,16 @@ void DebriefingState::prepareDebriefing()
 			}
 			else if (oldFaction == FACTION_HOSTILE && (!aborted || (*j)->isInExitArea())
 				// mind controlled units may as well count as unconscious
-				&& faction == FACTION_PLAYER && !(*j)->isOut())
+				&& faction == FACTION_PLAYER && (!(*j)->isOut() || (*j)->getStatus() == STATUS_IGNORE_ME))
 			{
-				for (std::vector<BattleItem*>::iterator k = (*j)->getInventory()->begin(); k != (*j)->getInventory()->end(); ++k)
+				if ((*j)->getTile())
 				{
-					if (!(*k)->getRules()->isFixed())
+					for (std::vector<BattleItem*>::iterator k = (*j)->getInventory()->begin(); k != (*j)->getInventory()->end(); ++k)
 					{
-						(*j)->getTile()->addItem(*k, _game->getMod()->getInventory("STR_GROUND"));
+						if (!(*k)->getRules()->isFixed())
+						{
+							(*j)->getTile()->addItem(*k, _game->getMod()->getInventory("STR_GROUND"));
+						}
 					}
 				}
 				recoverAlien(*j, base);
@@ -1056,6 +1059,7 @@ void DebriefingState::prepareDebriefing()
 		base->getCrafts()->erase(craftIterator);
 		_txtTitle->setText(tr("STR_CRAFT_IS_LOST"));
 		playersSurvived = 0; // assuming you aborted and left everyone behind
+		success = false;
 	}
 	if ((aborted || playersSurvived == 0) && target == "STR_BASE")
 	{
@@ -1064,6 +1068,7 @@ void DebriefingState::prepareDebriefing()
 			addStat("STR_XCOM_CRAFT_LOST", 1, -(*i)->getRules()->getScore());
 		}
 		playersSurvived = 0; // assuming you aborted and left everyone behind
+		success = false;
 	}
 	if ((!aborted || success) && playersSurvived > 0) 	// RECOVER UFO : run through all tiles to recover UFO components and items
 	{
@@ -1093,7 +1098,11 @@ void DebriefingState::prepareDebriefing()
 			// if this was a 2-stage mission, and we didn't abort (ie: we have time to clean up)
 			// we can recover items from the earlier stages as well
 			recoverItems(battle->getConditionalRecoveredItems(), base);
-
+			int nonRecoverType = 0;
+			if (deployment && deployment->getObjectiveType())
+			{
+				nonRecoverType = deployment->getObjectiveType();
+			}
 			for (int i = 0; i < battle->getMapSizeXYZ(); ++i)
 			{
 				// get recoverable map data objects from the battlescape map
@@ -1101,8 +1110,8 @@ void DebriefingState::prepareDebriefing()
 				{
 					if (battle->getTiles()[i]->getMapData(part))
 					{
-						size_t specialType = battle->getTiles()[i]->getMapData(part)->getSpecialType();
-						if (_recoveryStats.find(specialType) != _recoveryStats.end())
+						int specialType = battle->getTiles()[i]->getMapData(part)->getSpecialType();
+						if (specialType != nonRecoverType && _recoveryStats.find(specialType) != _recoveryStats.end())
 						{
 							addStat(_recoveryStats[specialType]->name, 1, _recoveryStats[specialType]->value);
 						}
