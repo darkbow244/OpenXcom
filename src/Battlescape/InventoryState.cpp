@@ -48,6 +48,8 @@
 #include "../Engine/CrossPlatform.h"
 #include "../Mod/RuleInterface.h"
 
+#include "../Engine/Logger.h"
+
 namespace OpenXcom
 {
 
@@ -344,7 +346,16 @@ void InventoryState::init()
 		{
 			look = s->getArmor()->getSpriteInventory() + ".SPK";
 		}
-		_game->getMod()->getSurface(look)->blit(_soldier);
+		Surface *lookSurface = _game->getMod()->getSurface(look);
+		if (!lookSurface)
+		{
+			Log(LOG_WARNING) << "Could not load look surface " << look;
+		}
+		else
+		{
+			lookSurface->blit(_soldier);
+
+		}
 	}
 	else
 	{
