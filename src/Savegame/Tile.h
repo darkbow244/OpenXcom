@@ -82,7 +82,7 @@ protected:
 	bool _aimed;
 public:
 	/// Creates a tile.
-	Tile(const Position& pos);
+	Tile(Position pos);
 	/// Cleans up a tile.
 	~Tile();
 	/// Load the tile from yaml
@@ -123,7 +123,7 @@ public:
 	 * Gets the tile's position.
 	 * @return position
 	 */
-	const Position& getPosition() const
+	Position getPosition() const
 	{
 		return _pos;
 	}

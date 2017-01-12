@@ -1,5 +1,6 @@
 // This file was copied from the bsnes project. 
 
+// This is the license info, from ruby.hpp:
 
 /*
   ruby

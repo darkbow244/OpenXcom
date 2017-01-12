@@ -77,7 +77,6 @@ void Screen::makeVideoFlags()
 	{
 		_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
-
 	if (Options::borderless)
 	{
 		_flags |= SDL_WINDOW_BORDERLESS;
@@ -110,7 +109,6 @@ void Screen::makeVideoFlags()
 Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL), _texture(NULL)
 	, _prevWidth(0), _prevHeight(0)
 {
-	// The default values for _window and _renderer are set to NULL so that we can check if there's a window already
 	resetDisplay();
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }

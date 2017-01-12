@@ -57,6 +57,7 @@ private:
 	int _resCurrent;
 	std::vector<std::string> _langs, _filters;
 
+	std::string ucWords(std::string str);
 	void updateDisplayResolution();
 public:
 	/// Creates the Options state.

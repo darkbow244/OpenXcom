@@ -342,7 +342,7 @@ void InventoryState::init()
 		const std::set<std::string> &ufographContents = FileMap::getVFolderContents("UFOGRAPH");
 		std::string lcaseLook = look;
 		std::transform(lcaseLook.begin(), lcaseLook.end(), lcaseLook.begin(), tolower);
-		if (ufographContents.find("lcaseLook") == ufographContents.end() && !_game->getMod()->getSurface(look))
+		if (ufographContents.find("lcaseLook") == ufographContents.end() && !_game->getMod()->getSurface(look, false))
 		{
 			look = s->getArmor()->getSpriteInventory() + ".SPK";
 		}
@@ -359,7 +359,7 @@ void InventoryState::init()
 	}
 	else
 	{
-		Surface *armorSurface = _game->getMod()->getSurface(unit->getArmor()->getSpriteInventory());
+		Surface *armorSurface = _game->getMod()->getSurface(unit->getArmor()->getSpriteInventory(), false);
 		if (armorSurface)
 		{
 			armorSurface->blit(_soldier);
@@ -609,7 +609,7 @@ void InventoryState::btnCreateTemplateClick(Action *)
 
 static void _clearInventory(Game *game, std::vector<BattleItem*> *unitInv, Tile *groundTile)
 {
-	RuleInventory *groundRuleInv = game->getMod()->getInventory("STR_GROUND");
+	RuleInventory *groundRuleInv = game->getMod()->getInventory("STR_GROUND", true);
 
 	// clear unit's inventory (i.e. move everything to the ground)
 	for (std::vector<BattleItem*>::iterator i = unitInv->begin(); i != unitInv->end(); )
@@ -634,7 +634,7 @@ void InventoryState::btnApplyTemplateClick(Action *)
 	std::vector<BattleItem*> *unitInv       = unit->getInventory();
 	Tile                     *groundTile    = unit->getTile();
 	std::vector<BattleItem*> *groundInv     = groundTile->getInventory();
-	RuleInventory            *groundRuleInv = _game->getMod()->getInventory("STR_GROUND");
+	RuleInventory            *groundRuleInv = _game->getMod()->getInventory("STR_GROUND", true);
 
 	_clearInventory(_game, unitInv, groundTile);
 
@@ -647,7 +647,7 @@ void InventoryState::btnApplyTemplateClick(Action *)
 	{
 		// search for template item in ground inventory
 		std::vector<BattleItem*>::iterator groundItem;
-		const bool needsAmmo = !_game->getMod()->getItem((*templateIt)->getItemType())->getCompatibleAmmo()->empty();
+		const bool needsAmmo = !_game->getMod()->getItem((*templateIt)->getItemType(), true)->getCompatibleAmmo()->empty();
 		bool found = false;
 		bool rescan = true;
 		while (rescan)
@@ -685,7 +685,7 @@ void InventoryState::btnApplyTemplateClick(Action *)
 
 					// move matched item from ground to the appropriate inv slot
 					(*groundItem)->setOwner(unit);
-					(*groundItem)->setSlot(_game->getMod()->getInventory((*templateIt)->getSlot()));
+					(*groundItem)->setSlot(_game->getMod()->getInventory((*templateIt)->getSlot(), true));
 					(*groundItem)->setSlotX((*templateIt)->getSlotX());
 					(*groundItem)->setSlotY((*templateIt)->getSlotY());
 					(*groundItem)->setFuseTimer((*templateIt)->getFuseTimer());
@@ -786,7 +786,7 @@ void InventoryState::onAutoequip(Action *)
 	Tile                     *groundTile    = unit->getTile();
 	std::vector<BattleItem*> *groundInv     = groundTile->getInventory();
 	Mod                      *mod           = _game->getMod();
-	RuleInventory            *groundRuleInv = mod->getInventory("STR_GROUND");
+	RuleInventory            *groundRuleInv = mod->getInventory("STR_GROUND", true);
 	int                       worldShade    = _battleGame->getGlobalShade();
 
 	std::vector<BattleUnit*> units;
