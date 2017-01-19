@@ -342,8 +342,9 @@ void Globe::polarToCart(double lon, double lat, double *x, double *y) const
  * @param y Y position of the cartesian point.
  * @param lon Pointer to the output longitude.
  * @param lat Pointer to the output latitude.
+ * @return True if conversion is possible, false otherwise
  */
-void Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
+	bool Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 {
 	// Orthographic projection
 	x -= _cenX;
@@ -352,16 +353,15 @@ void Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 	double rho = sqrt((double)(x*x + y*y));
 	if (rho > _radius)
 	{
-		*lat = std::numeric_limits<double>::quiet_NaN();
-		*lon = std::numeric_limits<double>::quiet_NaN();
-		return;
+		*lat = 4 * M_PI;
+		*lon = 4 * M_PI;
+		return false;
 	}
 	double c = asin(rho / _radius);
 	if ( AreSame(rho, 0.0) )
 	{
 		*lat = _cenLat;
 		*lon = _cenLon;
-
 	}
 	else
 	{
@@ -374,6 +374,7 @@ void Globe::cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const
 		*lon += 2 * M_PI;
 	while (*lon >= 2 * M_PI)
 		*lon -= 2 * M_PI;
+	return true;
 }
 
 /**
@@ -1586,7 +1587,7 @@ void Globe::blit(Surface *surface)
 void Globe::mouseOver(Action *action, State *state)
 {
 	double lon, lat;
-	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
+	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 
 	if (_isMouseScrolling && action->getDetails()->type == SDL_MOUSEMOTION)
 	{
@@ -1659,7 +1660,7 @@ void Globe::mouseOver(Action *action, State *state)
 		action->getDetails()->motion.x = _xBeforeMouseScrolling; action->getDetails()->motion.y = _yBeforeMouseScrolling;
 	}
 	// Check for errors
-	if (lat == lat && lon == lon)
+	if (converted)
 	{
 		InteractiveSurface::mouseOver(action, state);
 	}
@@ -1673,7 +1674,7 @@ void Globe::mouseOver(Action *action, State *state)
 void Globe::mousePress(Action *action, State *state)
 {
 	double lon, lat;
-	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
+	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 
 	if (action->getDetails()->button.button == Options::geoDragScrollButton)
 	{
@@ -1689,7 +1690,7 @@ void Globe::mousePress(Action *action, State *state)
 		_mouseScrollingStartTime = SDL_GetTicks();
 	}
 	// Check for errors
-	if (lat == lat && lon == lon)
+	if (converted)
 	{
 		InteractiveSurface::mousePress(action, state);
 	}
@@ -1703,13 +1704,13 @@ void Globe::mousePress(Action *action, State *state)
 void Globe::mouseRelease(Action *action, State *state)
 {
 	double lon, lat;
-	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
+	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 	if (action->getDetails()->button.button == Options::geoDragScrollButton)
 	{
 		stopScrolling(action);
 	}
 	// Check for errors
-	if (lat == lat && lon == lon)
+	if (converted)
 	{
 		InteractiveSurface::mouseRelease(action, state);
 	}
@@ -1745,7 +1746,7 @@ void Globe::mouseWheel(Action *action, State *state)
 void Globe::mouseClick(Action *action, State *state)
 {
 	double lon, lat;
-	cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
+	bool converted = cartToPolar((Sint16)floor(action->getAbsoluteXMouse()), (Sint16)floor(action->getAbsoluteYMouse()), &lon, &lat);
 
 	// The following is the workaround for a rare problem where sometimes
 	// the mouse-release event is missed for any reason.
@@ -1790,7 +1791,7 @@ void Globe::mouseClick(Action *action, State *state)
 	}
 
 	// Check for errors
-	if (lat == lat && lon == lon)
+	if (converted)
 	{
 		InteractiveSurface::mouseClick(action, state);
 		if (action->getDetails()->button.button == SDL_BUTTON_RIGHT)
