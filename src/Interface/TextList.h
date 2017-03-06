@@ -68,6 +68,10 @@ private:
 	int _accumulatedDelta;  // How much did the cursor travel?
 	bool _overThreshold;    // Did we go over threshold?
 	bool _dragScrollable;   // Is drag-scrolling enabled for this TextList?
+	/// And this, well, is a hack to unpress arrow buttons if they're stuck
+	State *_parentState;
+	SDL_Event _releaseEvent;
+	Action *_releaseAction;
 public:
 	/// Creates a text list with the specified size and position.
 	TextList(int width, int height, int x = 0, int y = 0);

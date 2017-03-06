@@ -27,6 +27,7 @@
 #include "ArrowButton.h"
 #include "ComboBox.h"
 #include "ScrollBar.h"
+#include "../Engine/CrossPlatform.h"
 
 namespace OpenXcom
 {
@@ -40,7 +41,8 @@ namespace OpenXcom
  */
 TextList::TextList(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _big(0), _small(0), _font(0), _scroll(0), _visibleRows(0), _selRow(0), _color(0), _dot(false), _selectable(false), _condensed(false), _contrast(false), _wrap(false), _flooding(false),
 																								   _bg(0), _selector(0), _margin(0), _scrolling(true), _arrowPos(-1), _scrollPos(4), _arrowType(ARROW_VERTICAL),
-																								   _leftClick(0), _leftPress(0), _leftRelease(0), _rightClick(0), _rightPress(0), _rightRelease(0), _arrowsLeftEdge(0), _arrowsRightEdge(0), _comboBox(0)
+																								   _leftClick(0), _leftPress(0), _leftRelease(0), _rightClick(0), _rightPress(0), _rightRelease(0), _arrowsLeftEdge(0), _arrowsRightEdge(0), _comboBox(0),
+														  										   _parentState(0)
 {
 	_up = new ArrowButton(ARROW_BIG_UP, 13, 14, getX() + getWidth() + _scrollPos, getY());
 	_up->setVisible(false);
@@ -52,6 +54,12 @@ TextList::TextList(int width, int height, int x, int y) : InteractiveSurface(wid
 	_scrollbar = new ScrollBar(_up->getWidth(), h, getX() + getWidth() + _scrollPos, _up->getY() + _up->getHeight());
 	_scrollbar->setVisible(false);
 	_scrollbar->setTextList(this);
+	_releaseEvent.type = SDL_MOUSEBUTTONUP;
+	_releaseEvent.button.button = SDL_BUTTON_LEFT;
+	_releaseEvent.button.x = 0;
+	_releaseEvent.button.y = 0;
+	_releaseEvent.button.state = SDL_RELEASED;
+	_releaseAction = new Action(&_releaseEvent, 1, 1, 0, 0);
 }
 
 /**
@@ -78,6 +86,7 @@ TextList::~TextList()
 	delete _up;
 	delete _down;
 	delete _scrollbar;
+	delete _releaseAction;
 }
 
 /**
@@ -1010,6 +1019,13 @@ void TextList::blit(Surface *surface)
  */
 void TextList::handle(Action *action, State *state)
 {
+	// This seems like a reasonable time to store the State pointer.
+	// If my understanding is correct, the handle() should be called from the parental state
+	// (if there's any)
+	if (state)
+	{
+		_parentState = state;
+	}
 	InteractiveSurface::handle(action, state);
 	_up->handle(action, state);
 	_down->handle(action, state);
@@ -1048,13 +1064,23 @@ void TextList::think()
 	_up->think();
 	_down->think();
 	_scrollbar->think();
+	// Try to unstick the arrows here
+	bool isPointerPressed = (CrossPlatform::getPointerState(0, 0) != 0);
 	for (std::vector<ArrowButton*>::iterator i = _arrowLeft.begin(); i < _arrowLeft.end(); ++i)
 	{
 		(*i)->think();
+		if (!isPointerPressed && _parentState)
+		{
+			(*i)->mouseRelease(_releaseAction, _parentState);
+		}
 	}
 	for (std::vector<ArrowButton*>::iterator i = _arrowRight.begin(); i < _arrowRight.end(); ++i)
 	{
 		(*i)->think();
+		if (!isPointerPressed && _parentState)
+		{
+			(*i)->mouseRelease(_releaseAction, _parentState);
+		}
 	}
 }
 
