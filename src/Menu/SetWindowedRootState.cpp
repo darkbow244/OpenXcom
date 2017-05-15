@@ -76,6 +76,7 @@ SetWindowedRootState::SetWindowedRootState(OptionsOrigin origin, OptionsVideoSta
 	_txtWindowedModePositionY->setText(tr("STR_DISPLAY_WINDOW_POSITION_NEW_Y"));
 
 	std::wostringstream wss, wss2;
+
 	wss << Options::newWindowedModePositionX;
 	wss2 << Options::newWindowedModePositionY;
 
