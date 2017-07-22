@@ -209,7 +209,7 @@ public:
 	/// Get top-most item
 	int getTopItemSprite();
 	/// New turn preparations.
-	void prepareNewTurn();
+	void prepareNewTurn(bool smokeDamage);
 	/// Get inventory on this tile.
 	std::vector<BattleItem *> *getInventory();
 	/// Set the tile marker color.
@@ -233,7 +233,7 @@ public:
 	/// increment the overlap value on this tile.
 	void addOverlap();
 	/// set the danger flag on this tile (so the AI will avoid it).
-	void setDangerous();
+	void setDangerous(bool danger);
 	/// check the danger flag on this tile.
 	bool getDangerous() const;
 	/// adds a particle to this tile's array.

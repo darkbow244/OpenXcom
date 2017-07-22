@@ -1365,6 +1365,7 @@ void SavedBattleGame::prepareNewTurn()
 		{
 			tilesOnSmoke.push_back(getTiles()[i]);
 		}
+		getTiles()[i]->setDangerous(false);
 	}
 
 	// now make the smoke spread.
@@ -1425,7 +1426,7 @@ void SavedBattleGame::prepareNewTurn()
 		for (int i = 0; i < _mapsize_x * _mapsize_y * _mapsize_z; ++i)
 		{
 			if (getTiles()[i]->getSmoke() != 0)
-				getTiles()[i]->prepareNewTurn();
+				getTiles()[i]->prepareNewTurn(getDepth() == 0);
 		}
 		// fires could have been started, stopped or smoke could reveal/conceal units.
 		getTileEngine()->calculateTerrainLighting();

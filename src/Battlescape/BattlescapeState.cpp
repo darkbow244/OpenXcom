@@ -564,10 +564,17 @@ void BattlescapeState::init()
 		_reserve = _btnReserveNone;
 		break;
 	}
-	if (_firstInit && playableUnitSelected())
+	if (_firstInit)
 	{
-		_battleGame->setupCursor();
-		_map->getCamera()->centerOnPosition(_save->getSelectedUnit()->getPosition());
+		if (!playableUnitSelected())
+		{
+			selectNextPlayerUnit();
+		}
+		if (playableUnitSelected())
+		{
+			_battleGame->setupCursor();
+			_map->getCamera()->centerOnPosition(_save->getSelectedUnit()->getPosition());
+		}
 		_firstInit = false;
 		_btnReserveNone->setGroup(&_reserve);
 		_btnReserveSnap->setGroup(&_reserve);
@@ -2272,7 +2279,11 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 		std::string cutscene;
 		if (ruleDeploy)
 		{
-			if (abort || inExitArea == 0)
+			if (abort)
+			{
+				cutscene = ruleDeploy->getAbortCutscene();
+			}
+			else if (inExitArea == 0)
 			{
 				cutscene = ruleDeploy->getLoseCutscene();
 			}
