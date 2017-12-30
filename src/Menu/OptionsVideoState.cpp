@@ -31,6 +31,7 @@
 #include "../Interface/ComboBox.h"
 #include "../Engine/Game.h"
 #include "SetWindowedRootState.h"
+#include "../Engine/Renderer.h"
 
 namespace OpenXcom
 {
@@ -210,6 +211,21 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	_cbxLanguage->onMouseOut((ActionHandler)&OptionsVideoState::txtTooltipOut);
 
 	std::vector<std::wstring> filterNames;
+	auto upscalers = getRegisteredUpscalers();
+	size_t selFilter = 0;
+	for(size_t i = 0; i < upscalers.size(); ++i)
+	{
+		const auto& upscaler = upscalers[i];
+		std::wstringstream wss;
+		wss << L"(" << Language::utf8ToWstr(upscaler.first) << L") " << Language::utf8ToWstr(upscaler.second);
+		filterNames.push_back(wss.str());
+		_filters.push_back(upscaler.second);
+		if (upscaler.first == Options::renderer && upscaler.second == Options::scalerName)
+		{
+			selFilter = i;
+		}
+	}
+/*
 	filterNames.push_back(tr("STR_DISABLED"));
 	filterNames.push_back(L"Linear");
 	filterNames.push_back(L"Anisotropic (disabled)");
@@ -218,7 +234,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
     _filters.push_back("");
 	_filters.push_back("");
 	_filters.push_back("");
-	
+*/
 #ifndef __NO_OPENGL
 	std::set<std::string> filters = FileMap::filterFiles(FileMap::getVFolderContents(GL_FOLDER), GL_EXT);
 	for (std::set<std::string>::iterator i = filters.begin(); i != filters.end(); ++i)
@@ -231,7 +247,7 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 	}
 #endif
 	
-	size_t selFilter = 0;
+
 	if (Screen::isOpenGLEnabled())
 	{
 #ifndef __NO_OPENGL
@@ -463,6 +479,11 @@ void OptionsVideoState::cbxLanguageChange(Action *)
  */
 void OptionsVideoState::cbxFilterChange(Action *)
 {
+	const auto upscalers = getRegisteredUpscalers();
+	size_t selectedFilter = _cbxFilter->getSelected();
+	Options::newRenderer = upscalers[selectedFilter].first;
+	Options::newScalerName = upscalers[selectedFilter].second;
+
 	// FIXME
 	/*
 	switch (_cbxFilter->getSelected())

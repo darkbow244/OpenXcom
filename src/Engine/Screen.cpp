@@ -126,6 +126,16 @@ void Screen::makeVideoFlags()
 Screen::Screen() : _baseWidth(ORIGINAL_WIDTH), _baseHeight(ORIGINAL_HEIGHT), _scaleX(1.0), _scaleY(1.0), _numColors(0), _firstColor(0), _pushPalette(false), _surface(0), _window(NULL), _renderer(NULL), _texture(NULL)
 	, _prevWidth(0), _prevHeight(0)
 {
+
+    _renderer = new SDLRenderer(*this);
+	auto upscalers = _renderer->getUpscalers();
+    for(const auto& scaler : upscalers)
+    {
+        registerUpscaler(_renderer->getRendererName(), scaler);
+    }
+    delete _renderer;
+    _renderer = nullptr;
+
 	resetDisplay();
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }
@@ -324,8 +334,6 @@ void Screen::resetDisplay(bool resetVideo)
 	Uint32 oldFlags = _flags;
 #endif
 	makeVideoFlags();
-	// A kludge to make video resolution changing work
-	//resetVideo = ( (_prevWidth != _baseWidth) || (_prevHeight != _baseHeight) ) || resetVideo;
 
 	Log(LOG_INFO) << "Current _baseWidth x _baseHeight: " << _baseWidth << "x" << _baseHeight;
 
@@ -334,7 +342,6 @@ void Screen::resetDisplay(bool resetVideo)
 		_surface->getSurface()->h != _baseHeight)) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
 	{
 		if (_surface) delete _surface;
-		//_surface = new Surface(_baseWidth, _baseHeight, 0, 0, Screen::isHQXEnabled() ? 32 : 8); // only HQX needs 32bpp for this surface; the OpenGL class has its own 32bpp buffer
 		/* So why exactly does the new surface have fixed size? */
 		_surface = new Surface(_baseWidth, _baseHeight, 0, 0, 32);
 		if (_surface->getSurface()->format->BitsPerPixel == 8) _surface->setPalette(deferredPalette);
@@ -408,6 +415,7 @@ void Screen::resetDisplay(bool resetVideo)
 		{
 			_renderer = createRenderer();
 		}
+		_renderer->setUpscalerByName(Options::scalerName);
 		SDL_Rect baseRect;
 		baseRect.x = baseRect.y = 0;
 		baseRect.w = _baseWidth;

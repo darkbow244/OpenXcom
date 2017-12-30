@@ -53,5 +53,10 @@ public:
     virtual std::string getRendererName() = 0;
 
 };
+
+/// Register an upscaler
+void registerUpscaler(std::string rendererName, std::string upscalerName);
+/// Get all available upscalers
+std::vector<std::pair<std::string, std::string>> getRegisteredUpscalers();
 }
 #endif

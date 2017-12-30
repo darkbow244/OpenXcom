@@ -16,10 +16,15 @@ std::string SDLRenderer::upscalerHintById(int id)
 	return hints[id];
 }
 
+SDLRenderer::SDLRenderer(Screen &gameScreen) : Renderer(gameScreen, nullptr), _gameScreen(gameScreen), _window(nullptr),
+											   _texture(nullptr), _renderer(nullptr)
+{
+	_upscalers = {"nearest", "linear"};
+}
 
 SDLRenderer::SDLRenderer(Screen& gameScreen, SDL_Window *window) : Renderer(gameScreen, window), _gameScreen(gameScreen), _window(window)
 {
-	_upscalers = {"Nearest", "Linear"};
+	_upscalers = {"nearest", "linear"};
 
 	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 	_srcRect.x = _srcRect.y = _srcRect.w = _srcRect.h = 0;
@@ -48,6 +53,10 @@ SDLRenderer::SDLRenderer(Screen& gameScreen, SDL_Window *window) : Renderer(game
 void SDLRenderer::setUpscaler(int upscalerId)
 {
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, upscalerHintById(upscalerId).c_str());
+	SDL_DestroyTexture(_texture);
+	SDL_DestroyRenderer(_renderer);
+	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
+	_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, _srcRect.w, _srcRect.h);
 }
 
 void SDLRenderer::setUpscalerByName(const std::string &scalerName)
@@ -74,8 +83,8 @@ void SDLRenderer::setOutputRect(SDL_Rect *dstRect)
 
 SDLRenderer::~SDLRenderer()
 {
-	SDL_DestroyTexture(_texture);
-	SDL_DestroyRenderer(_renderer);
+	if (_texture) SDL_DestroyTexture(_texture);
+	if (_renderer) SDL_DestroyRenderer(_renderer);
 }
 
 void SDLRenderer::flip()

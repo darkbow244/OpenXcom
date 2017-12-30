@@ -29,11 +29,13 @@ private:
 	std::string upscalerHintById(int id);
 
 public:
+    /// Creates an unbound renderer (to enumerate available scalers)
+    explicit SDLRenderer(Screen &gameScreen);
 	/// Creates a renderer and binds it to the screen surface
 	SDLRenderer(Screen &gameScreen, SDL_Window* window);
 	~SDLRenderer() override;
 	/// Returns a human-readable list of upscalers
-	std::vector<std::string> getUpscalers() override {return _upscalers;}
+	std::vector<std::string> getUpscalers() override { return _upscalers; }
 	/// Sets the desired upscaler
 	void setUpscaler(int upscalerId) override;
 	void setUpscalerByName(const std::string &scalerName) override;
