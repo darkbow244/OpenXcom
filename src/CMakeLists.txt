@@ -117,7 +117,7 @@ set ( engine_src
   Engine/LocalizedText.cpp
   Engine/ModInfo.cpp
   Engine/Music.cpp
-  Engine/OpenGLRenderer.cpp
+  #Engine/OpenGLRenderer.cpp
   Engine/OptionInfo.cpp
   Engine/Options.cpp
   Engine/Palette.cpp
@@ -455,7 +455,17 @@ if (${CMAKE_SYSTEM_NAME} MATCHES FreeBSD OR ${CMAKE_SYSTEM_NAME} MATCHES NetBSD 
   set ( system_libs -lexecinfo )
 endif ()
 
-target_link_libraries ( openxcom ${system_libs} ${SDLIMAGE_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLGFX_LIBRARY} ${SDL_LIBRARY} ${OPENGL_gl_LIBRARY} debug ${YAMLCPP_LIBRARY_DEBUG} optimized ${YAMLCPP_LIBRARY} )
+target_link_libraries ( openxcom
+        ${system_libs}
+        SDL2
+        SDL2_image
+        SDL2_mixer
+        SDL_gfx
+        yaml-cpp
+        ${OPENGL_gl_LIBRARY}
+        )
+
+target_compile_features(openxcom PRIVATE cxx_std_11)
 
 set ( bin_data_dirs TFTD UFO common standard )
 foreach ( binpath ${bin_data_dirs} )

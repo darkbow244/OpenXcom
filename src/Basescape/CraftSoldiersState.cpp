@@ -18,6 +18,7 @@
  */
 #include "CraftSoldiersState.h"
 #include <climits>
+#include <algorithm>
 #include "../Engine/Action.h"
 #include "../Engine/Game.h"
 #include "../Mod/Mod.h"

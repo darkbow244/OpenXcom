@@ -15,9 +15,7 @@ set ( DATADIR "" CACHE STRING "Where to place datafiles" )
 set ( OPENXCOM_VERSION_STRING "" CACHE STRING "Version string (after x.x)" )
 
 
-if ( WIN32 )
-  set ( default_deps_dir "${CMAKE_SOURCE_DIR}/deps" )
-endif ()
+set ( default_deps_dir "${CMAKE_SOURCE_DIR}/deps" )
 
 if ( APPLE )
   set ( MACOS_SDLMAIN_M_PATH "${CMAKE_SOURCE_DIR}" CACHE STRING "Path to SDLMain.m file" )
@@ -29,47 +27,90 @@ endif ()
 
 set ( DEPS_DIR "${default_deps_dir}" CACHE STRING "Dependencies directory" )
 
-# Add check for library (SDL_gfx, yaml-cpp )
-if ( IS_DIRECTORY ${DEPS_DIR} )
-   include_directories ( ${DEPS_DIR}/include/SDL ${DEPS_DIR}/include/yaml-cpp ${DEPS_DIR}/include )
-   if ( CMAKE_CL_64 )
-     link_directories ( ${DEPS_DIR}/lib/x64 )
-   else ( )
-     link_directories ( ${DEPS_DIR}/lib/Win32 )
-   endif()
-   set( SDL_LIBRARY SDL2 )
-   set ( SDLMIXER_LIBRARY SDL_mixer )
-   set ( SDLIMAGE_LIBRARY SDL_image )
-   set ( YAMLCPP_LIBRARY yaml-cpp )
-   set ( YAMLCPP_LIBRARY_DEBUG yaml-cppd )
-else ( )
-  find_package ( SDL2 REQUIRED mixer image )
-  find_package ( SDL_gfx REQUIRED )
-  find_package ( Yaml_cpp 0.5.0)
-  set ( YAMLCPP_LIBRARY_DEBUG ${YAMLCPP_LIBRARY} )
-
-  if ( NOT SDL2_FOUND )
-    message ( FATAL_ERROR "Can't find SDL which is required" )
-  else ()
-    include_directories ( ${SDL2_INCLUDE_DIRS} )
-    message ( "found SDL2 ${SDL_MAJOR}.${SDL_MINOR}.${SDL_MICRO} (${SDL2_LIBRARIES}:${SDL2_INCLUDE_DIRS})" )
-  endif ()
-
-  if ( NOT SDLGFX_FOUND )
-	message ( FATAL_ERROR "Can't find SDL_gfx which is required" )
-  else ()
-    include_directories ( ${SDLGFX_INCLUDE_DIR} )
-	message ( "found SDL_gfx(${SDLGFX_LIBRARY}:${SDLGFX_INCLUDE_DIR})" )
-  endif ()
-
+if (CMAKE_CL_64)
+  set(_WIN_ABI_PREFIX x64)
+else()
+  set(_WIN_ABI_PREFIX Win32)
+endif()
+if ((IS_DIRECTORY ${DEPS_DIR}/yaml-cpp) AND (NOT TARGET SDL_gfx))
+  message(STATUS "Building yaml-cpp from source")
+  add_subdirectory(${DEPS_DIR}/yaml-cpp)
+else()
+  message(STATUS "Searching for yaml-cpp on your system")
+  find_package(Yaml_cpp 0.5.0)
   if ( NOT YAMLCPP_FOUND )
     message ( FATAL_ERROR "Can't find yaml-cpp which is required" )
   else ()
     include_directories ( ${YAMLCPP_INCLUDE_DIR} )
     message ( "found yaml-cpp(${YAMLCPP_LIBRARY_DIRS}:${YAMLCPP_INCLUDE_DIR})" )
   endif ( NOT YAMLCPP_FOUND )
+  add_library(yaml-cpp SHARED IMPORTED)
+  set_taget_properties(yaml-cpp
+          PROPERTIES
+          IMPORTED_LOCATION ${YAMLCPP_LIBRARY}
+          INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIR}
+          )
 endif()
-
+if ((IS_DIRECTORY ${DEPS_DIR}/SDL_gfx) AND (NOT TARGET SDL_gfx))
+  message(STATUS "Building patched SDL_gfx from source")
+  add_subdirectory(${DEPS_DIR}/SDL_gfx)
+else()
+  message(FATAL_ERROR "You need SDL_gfx specifically patched for SDL2 - you have to build from sources")
+endif()
+if ((IS_DIRECTORY ${DEPS_DIR}/SDL) AND (NOT TARGET SDL2))
+  message(STATUS "Building SDL2 from source")
+  add_subdirectory(${DEPS_DIR}/SDL)
+else()
+  message(STATUS "Searching for SDL2 on your system")
+  find_library(_SDL2_LIBRARY SDL2)
+  find_library(_SDL2MAIN_LIBRARY SDL2main)
+  find_path(_SDL2_INCLUDE_DIR SDL2/SDL.h)
+  message("Using SDL2 library ${_SDL2_LIBRARY}")
+  add_library(SDL2 SHARED IMPORTED)
+  set_target_properties(SDL2
+          PROPERTIES
+          IMPORTED_LOCATION ${_SDL2_LIBRARY}
+          INTERFACE_LINK_LIBRARIES ${_SDL2MAIN_LIBRARY}
+          INTERFACE_INCLUDE_DIRECTORIES ${_SDL2_INCLUDE_DIR}/SDL2
+          )
+endif()
+# TODO: Suppy CMakeLists.txt for SDL2_image and SDL2_mixer
+if ((IS_DIRECTORY ${DEPS_DIR}/SDL2_image) AND (NOT TARGET SDL2_image))
+  message(STATUS "Building SDL2_image from source")
+  add_subdirectory(${DEPS_DIR}/SDL2_image)
+else()
+  message(STATUS "Searching for SDL2_image on your system")
+  find_library(_SDL2_IMAGE_LIBRARY SDL2_image)
+  find_path(_SDL2_IMAGE_INCLUDE_DIR SDL2/SDL_image.h)
+  message("Using SDL2_Image library ${_SDL2_IMAGE_LIBRARY}")
+  add_library(SDL2_image SHARED IMPORTED)
+  set_target_properties(SDL2_image
+          PROPERTIES
+          IMPORTED_LOCATION ${_SDL2_IMAGE_LIBRARY}
+          INTERFACE_LINK_LIBRARIES SDL2
+          INTERFACE_INCLUDE_DIRECTORIES ${_SDL2_IMAGE_INCLUDE_DIR}/SDL2
+          )
+endif()
+if ((IS_DIRECTORY ${DEPS_DIR}/SDL2_mixer) AND (NOT TARGET SDL2_mixer))
+  message(STATUS "Building SDL2_mixer from source")
+  add_subdirectory(${DEPS_DIR}/SDL2_mixer)
+else()
+  message(STATUS "Searching for SDL2_mixer on your system")
+  find_library(_SDL2_MIXER_LIBRARY SDL2_mixer)
+  find_path(_SDL2_MIXER_INCLUDE_DIR SDL2/SDL_mixer.h)
+  message("Using SDL2_Mixer library ${_SDL2_MIXER_LIBRARY}")
+  add_library(SDL2_mixer SHARED IMPORTED)
+  set_target_properties(SDL2_mixer
+          PROPERTIES
+          IMPORTED_LOCATION ${_SDL2_MIXER_LIBRARY}
+          INTERFACE_LINK_LIBRARIES SDL2
+          INTERFACE_INCLUDE_DIRECTORIES ${_SDL2_MIXER_INCLUDE_DIR}/SDL2
+          )
+endif()
+# Sanity check
+if (NOT TARGET yaml-cpp)
+  message(FATAL_ERROR "yaml-cpp is not a target!")
+endif()
 # Find OpenGL
 find_package ( OpenGL )
 if ( NOT OPENGL_FOUND )
@@ -78,6 +119,8 @@ if ( NOT OPENGL_FOUND )
     )
   add_definitions(-D__NO_OPENGL)
 else ()
+  message(WARNING "OpenGL temporarily disabled, REMOVE BEFORE SENDING INTO PRODUCTION")
+    add_definitions(-D__NO_OPENGL)
     include_directories ( ${OPENGL_INCLUDE_DIR} )
 endif ()
 
