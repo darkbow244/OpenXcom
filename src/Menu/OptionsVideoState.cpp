@@ -245,18 +245,18 @@ OptionsVideoState::OptionsVideoState(OptionsOrigin origin) : OptionsBaseState(or
 		}
 #endif
 	}
-	else if (Options::useLinearScaler)
-	{
-		selFilter = 1;
-	}
-	else if (Options::useAnisotropicScaler)
-	{
-		selFilter = 2;
-	}
-	else if (Options::useXBRZFilter)
-	{
-		selFilter = 3;
-	}
+	//else if (Options::useLinearScaler)
+	//{
+	//	selFilter = 1;
+	//}
+	//else if (Options::useAnisotropicScaler)
+	//{
+	//	selFilter = 2;
+	//}
+	//else if (Options::useXBRZFilter)
+	//{
+	//	selFilter = 3;
+	//}
 
 	_txtFilter->setText(tr("STR_DISPLAY_FILTER"));
 
@@ -463,6 +463,8 @@ void OptionsVideoState::cbxLanguageChange(Action *)
  */
 void OptionsVideoState::cbxFilterChange(Action *)
 {
+	// FIXME
+	/*
 	switch (_cbxFilter->getSelected())
 	{
 	case 0:
@@ -501,7 +503,7 @@ void OptionsVideoState::cbxFilterChange(Action *)
 		Options::newXBRZFilter = false;
 		Options::newOpenGLShader = _filters[_cbxFilter->getSelected()];
 		break;
-	}
+	}*/
 }
 
 /**

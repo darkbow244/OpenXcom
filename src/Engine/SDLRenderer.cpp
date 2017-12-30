@@ -1,19 +1,27 @@
-
-
-
 #include "SDLRenderer.h"
-#include <assert.h>
 #include "Exception.h"
 #include "Logger.h"
 #include "../lodepng.h"
 
+#include "Screen.h"
+#include "Options.h"
+
 namespace OpenXcom
 {
 
-SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(window), _texture(NULL), _renderer(NULL), _format(SDL_PIXELFORMAT_ARGB8888)
+std::string SDLRenderer::upscalerHintById(int id)
 {
-	listSDLRendererDrivers();
-	_renderer = SDL_CreateRenderer(window, -1, flags);
+	static std::string hints[] = {"nearest", "linear"};
+	if (id > 1) return "";
+	return hints[id];
+}
+
+
+SDLRenderer::SDLRenderer(Screen& gameScreen, SDL_Window *window) : Renderer(gameScreen, window), _gameScreen(gameScreen), _window(window)
+{
+	_upscalers = {"Nearest", "Linear"};
+
+	_renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
 	_srcRect.x = _srcRect.y = _srcRect.w = _srcRect.h = 0;
 	_dstRect.x = _dstRect.y = _dstRect.w = _dstRect.h = 0;
 	if (_renderer == NULL)
@@ -22,66 +30,36 @@ SDLRenderer::SDLRenderer(SDL_Window *window, int driver, Uint32 flags): _window(
 		throw Exception(SDL_GetError());
 	}
 	Log(LOG_INFO) << "[SDLRenderer] Renderer created";
-	const char *scaleHint = SDL_GetHint(SDL_HINT_RENDER_SCALE_QUALITY);
-	if (!scaleHint)
-	{
-		_scaleHint = "nearest";
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, _scaleHint.c_str());
-	}
-	else
-	{
-		_scaleHint = scaleHint;
-	}
+
+	setUpscalerByName(Options::scalerName);
 	SDL_RendererInfo info;
 	SDL_GetRendererInfo(_renderer, &info);
 	Log(LOG_INFO) << "[SDLRenderer] Created new SDLRenderer, using " << info.name;
-	Log(LOG_INFO) << "[SDLRenderer] Current scaler is " << _scaleHint;
+
+	_srcRect.w = _gameScreen.getSurface()->getWidth();
+	_srcRect.h = _gameScreen.getSurface()->getHeight();
+
+	_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
+								 SDL_TEXTUREACCESS_STREAMING,
+								 _srcRect.w,
+								 _srcRect.h);
 }
 
-void SDLRenderer::setPixelFormat(Uint32 format)
+void SDLRenderer::setUpscaler(int upscalerId)
 {
-	_format = format;
-	Log(LOG_INFO) << "[SDLRenderer] Texture pixel format set to " << SDL_GetPixelFormatName(_format);
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, upscalerHintById(upscalerId).c_str());
 }
 
-void SDLRenderer::setInternalRect(SDL_Rect *srcRect)
+void SDLRenderer::setUpscalerByName(const std::string &scalerName)
 {
-	// Internal rectangle should not have any X or Y offset.
-	assert(srcRect->x == 0 && srcRect->y == 0);
-	if (!_texture)
+	if (scalerName == "linear")
 	{
-		_texture = SDL_CreateTexture(_renderer,
-						_format,
-						SDL_TEXTUREACCESS_STREAMING,
-						srcRect->w,
-						srcRect->h);
+		setUpscaler(1);
 	}
 	else
 	{
-		int w, h, access;
-		Uint32 format;
-		const char *scaleHint = SDL_GetHint(SDL_HINT_RENDER_SCALE_QUALITY);
-		SDL_QueryTexture(_texture, &format, &access, &w, &h);
-		Log(LOG_INFO) << "[SDLRenderer] Old scale hint: " << _scaleHint << ", new scale hint: " << scaleHint;
-		if ( (w != srcRect->w) || (h != srcRect->h)
-			|| (_scaleHint != scaleHint) )
-		{
-			SDL_DestroyTexture(_texture);
-			_texture = SDL_CreateTexture(_renderer,
-							format,
-							access,
-							srcRect->w,
-							srcRect->h);
-			_scaleHint = scaleHint;
-		}
+		setUpscaler(0);
 	}
-	if (_texture == NULL)
-	{
-		throw Exception(SDL_GetError());
-	}
-	_srcRect.w = srcRect->w;
-	_srcRect.h = srcRect->h;
-	Log(LOG_INFO) << "[SDLRenderer] Texture resolution set to " << _srcRect.w << "x" << _srcRect.h;
 }
 
 void SDLRenderer::setOutputRect(SDL_Rect *dstRect)
@@ -94,38 +72,39 @@ void SDLRenderer::setOutputRect(SDL_Rect *dstRect)
 	Log(LOG_INFO) << "[SDLRenderer] Offset: " << _dstRect.x << "x" << _dstRect.y;
 }
 
-
-SDLRenderer::~SDLRenderer(void)
+SDLRenderer::~SDLRenderer()
 {
 	SDL_DestroyTexture(_texture);
 	SDL_DestroyRenderer(_renderer);
 }
 
-void SDLRenderer::flip(SDL_Surface *srcSurface)
+void SDLRenderer::flip()
 {
-	SDL_UpdateTexture(_texture, &_srcRect, srcSurface->pixels,
-			srcSurface->pitch);
+	if (_srcRect.w != _gameScreen.getSurface()->getWidth() ||
+            _srcRect.h != _gameScreen.getSurface()->getHeight())
+	{
+		SDL_DestroyTexture(_texture);
+		_srcRect.w = _gameScreen.getSurface()->getWidth();
+		_srcRect.h = _gameScreen.getSurface()->getHeight();
+		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
+									 SDL_TEXTUREACCESS_STREAMING,
+									 _srcRect.w, _srcRect.h);
+	}
+	void *pixels;
+	int pitch;
+	/*SDL_LockTexture(_texture, &_srcRect, &pixels, &pitch);
+    char *pixBytes = (char*)pixels;
+	for(int y = 0; y < _gameScreen.getSurface()->getSurface()->pitch; ++y)
+	{
+		SDL_memcpy(pixBytes + y * pitch, (char*)_gameScreen.getSurface()->getSurface()->pixels + y * _gameScreen.getSurface()->getSurface()->pitch,
+				   _gameScreen.getSurface()->getSurface()->pitch);
+	}
+	SDL_UnlockTexture(_texture);*/
+    SDL_UpdateTexture(_texture, &_srcRect, _gameScreen.getSurface()->getSurface()->pixels, _gameScreen.getSurface()->getSurface()->pitch);
+
 	SDL_RenderClear(_renderer);
 	SDL_RenderCopy(_renderer, _texture, &_srcRect, &_dstRect);
 	SDL_RenderPresent(_renderer); //TODO: check error?
-}
-
-void SDLRenderer::listSDLRendererDrivers()
-{
-	int numRenderDrivers = SDL_GetNumRenderDrivers();
-	Log(LOG_INFO) << "[SDLRenderer] Listing available rendering drivers:";
-	Log(LOG_INFO) << "[SDLRenderer]  Number of drivers: " << numRenderDrivers;
-	for (int i = 0; i < numRenderDrivers; ++i)
-	{
-		SDL_RendererInfo info;
-		SDL_GetRenderDriverInfo(i, &info);
-		Log(LOG_INFO) << "[SDLRenderer]  Driver " << i << ": " << info.name;
-		Log(LOG_INFO) << "[SDLRenderer]    Number of texture formats: " << info.num_texture_formats;
-		for (Uint32 j = 0; j < info.num_texture_formats; ++j)
-		{
-			Log(LOG_INFO) << "[SDLRenderer]     Texture format " << j << ": " << SDL_GetPixelFormatName(info.texture_formats[j]);
-		}
-	}
 }
 
 void SDLRenderer::screenshot(const std::string &filename) const
@@ -133,7 +112,7 @@ void SDLRenderer::screenshot(const std::string &filename) const
 	int width, height;
 	SDL_GetWindowSize(_window, &width, &height);
 	unsigned char *pixels = new unsigned char[width * height * 4];
-	unsigned error = SDL_RenderReadPixels(_renderer, NULL, SDL_PIXELFORMAT_ABGR8888, (void*)pixels, width * 4);
+	int error = SDL_RenderReadPixels(_renderer, NULL, SDL_PIXELFORMAT_ABGR8888, (void*)pixels, width * 4);
 	if (error)
 	{
 		Log(LOG_ERROR) << "Acquiring pixels failed while trying to save screenshot: " << SDL_GetError();

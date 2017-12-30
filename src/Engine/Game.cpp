@@ -424,8 +424,10 @@ void Game::run()
 							// Okay, if you got this event, this probably means that your window IS resizable.
 							//if (Options::allowResize)
 							{
-								Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, _event.window.data1);
-								Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, _event.window.data2);
+								int newWidth, newHeight;
+								SDL_GetWindowSize(_screen->getWindow(), &newWidth, &newHeight);
+								Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, newWidth);
+								Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, newHeight);
 								int dX = 0, dY = 0;
 								Screen::updateScale(Options::battlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, false);
 								Screen::updateScale(Options::geoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, false);
@@ -525,7 +527,7 @@ void Game::run()
 			// Process logic
 			_states.back()->think();
 			_fpsCounter->think();
-			if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
+			if (Options::FPS > 0 && !(Options::scalerName == "GL" && Options::vsync))
 			{
 				// Update our FPS delay time based on the time of the last draw.
 				int fps = SDL_GetWindowFlags(getScreen()->getWindow()) & SDL_WINDOW_INPUT_FOCUS ? Options::FPS : Options::FPSInactive;

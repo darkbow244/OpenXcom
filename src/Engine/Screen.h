@@ -58,6 +58,7 @@ private:
 	void makeVideoFlags();
 	SDL_Texture *_texture;
 	int _prevWidth, _prevHeight;
+	Renderer *createRenderer();
 	
 public:
 	static const int ORIGINAL_WIDTH;

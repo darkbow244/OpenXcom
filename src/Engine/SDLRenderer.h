@@ -6,6 +6,7 @@
 
 #include <SDL.h>
 #include "Renderer.h"
+#include "Surface.h"
 #include <string>
 
 namespace OpenXcom
@@ -16,25 +17,36 @@ class SDLRenderer :
 {
 private:
 	static const RendererType _rendererType = RENDERER_SDL2;
+	Screen &_gameScreen;
+
+    std::vector<std::string> _upscalers;
 	SDL_Window *_window;
 	SDL_Renderer *_renderer;
 	SDL_Texture *_texture;
+
 	SDL_Rect _srcRect, _dstRect;
-	Uint32 _format;
-	std::string _scaleHint;
+	/// Gets upscaler hint name by its ID
+	std::string upscalerHintById(int id);
+
 public:
-	SDLRenderer(SDL_Window *window, int driver, Uint32 flags);
-	~SDLRenderer(void);
-	void setPixelFormat(Uint32 format);
-	void setInternalRect(SDL_Rect *srcRect);
+	/// Creates a renderer and binds it to the screen surface
+	SDLRenderer(Screen &gameScreen, SDL_Window* window);
+	~SDLRenderer() override;
+	/// Returns a human-readable list of upscalers
+	std::vector<std::string> getUpscalers() override {return _upscalers;}
+	/// Sets the desired upscaler
+	void setUpscaler(int upscalerId) override;
+	void setUpscalerByName(const std::string &scalerName) override;
 	/// Sets the desired output rectangle.
-	void setOutputRect(SDL_Rect *dstRect);
+	void setOutputRect(SDL_Rect *dstRect) override;
 	/// Blits the contents of the SDL_Surface to the screen.
-	void flip(SDL_Surface *srcSurface);
-	/// INTERNAL: List available renderer drivers
-	void listSDLRendererDrivers();
-	void screenshot(const std::string &filename) const;
-	RendererType getRendererType() { return _rendererType; };
+	void flip() override;
+	/// Saves a screenshot to filename.
+	void screenshot(const std::string &filename) const override;
+	/// Returns the renderer type.
+	RendererType getRendererType() override { return RendererType::RENDERER_SDL2; }
+    /// Returns the renderer name
+    std::string getRendererName() override { return "SDL"; }
 };
 
 }
