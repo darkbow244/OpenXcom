@@ -6,6 +6,9 @@ vertex: |
   }
 linear: false
 fragment: |
+  #ifdef GL_ES
+  #extension GL_OES_standard_derivatives : enable
+  #endif
   uniform sampler2D rubyTexture;
   uniform vec2      rubyTextureSize;
 
@@ -26,7 +29,7 @@ fragment: |
     vec4 bottomLeftColor  = texture2D(rubyTexture, (floor(vec2(left, bottom)  / texelSize) + 0.5) * texelSize);
     vec4 topRightColor    = texture2D(rubyTexture, (floor(vec2(right, top)    / texelSize) + 0.5) * texelSize);
 
-    vec2 border = clamp(round(gl_TexCoord[0] / texelSize) * texelSize, vec2(left, bottom), vec2(right, top));
+    vec2 border = clamp(floor(gl_TexCoord[0].xy / texelSize + 0.5) * texelSize, vec2(left, bottom), vec2(right, top));
 
     float totalArea = 4.0 * range.x * range.y;
 

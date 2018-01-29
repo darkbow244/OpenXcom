@@ -138,6 +138,9 @@ vertex: |
         }
 linear: false
 fragment: |
+        #ifdef GL_ES
+        #extension GL_OES_standard_derivatives : enable
+        #endif
         // Comment the next line to disable interpolation in linear gamma (and
         // gain speed).
         #define LINEAR_PROCESSING

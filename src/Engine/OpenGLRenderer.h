@@ -8,7 +8,7 @@
 
 #ifndef __NO_OPENGL
 
-#include <SDL_opengl.h>
+#include <GLES2/gl2.h>
 #include <string>
 #include "Renderer.h"
 
@@ -16,22 +16,8 @@ namespace OpenXcom
 {
 
 class Surface;
+class Screen;
 
-#ifndef __APPLE__
-extern PFNGLCREATEPROGRAMPROC glCreateProgram;
-extern PFNGLUSEPROGRAMPROC glUseProgram;
-extern PFNGLCREATESHADERPROC glCreateShader;
-extern PFNGLDELETESHADERPROC glDeleteShader;
-extern PFNGLSHADERSOURCEPROC glShaderSource;
-extern PFNGLCOMPILESHADERPROC glCompileShader;
-extern PFNGLATTACHSHADERPROC glAttachShader;
-extern PFNGLDETACHSHADERPROC glDetachShader;
-extern PFNGLLINKPROGRAMPROC glLinkProgram;
-extern PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
-extern PFNGLUNIFORM1IPROC glUniform1i;
-extern PFNGLUNIFORM2FVPROC glUniform2fv;
-extern PFNGLUNIFORM4FVPROC glUniform4fv;
-#endif
 
 std::string strGLError(GLenum glErr);
 
@@ -56,53 +42,54 @@ class OpenGLRenderer :
 {
 private:
 	static const RendererType _rendererType = RENDERER_OPENGL;
-
+    Screen &_screen;
 	SDL_Window *_window;
-	SDL_Rect _srcRect, _dstRect;
 
-	bool _resizeRequested;
-	
-	GLuint gltexture;
-	GLuint glprogram;
-	GLuint fragmentshader;
-	bool linear;
-	GLuint vertexshader;
-	bool shader_support;
+    SDL_GLContext _ctx;
 
-	SDL_GLContext glContext;
+	SDL_Rect _dstRect;
 
-	SDL_Surface *bufSurface;
-	uint32_t *buffer;
-	//Surface *buffer_surface;
-	unsigned iwidth, iheight, iformat, ibpp;
-	
+    struct ScalerInfo
+    {
+        std::string name;
+        std::string path;
+        GLint program;
+    };
 
-	void resize(unsigned width, unsigned height);
-	bool lock(uint32_t *&data, unsigned &pitch);
-	void clear();
-	void set_shader(const char *source);
-	void set_fragment_shader(const char *source);
-	void set_vertex_shader(const char *source);
-	void refresh(bool smooth, unsigned inwidth, unsigned inheight, unsigned outwidth, unsigned outheight);
-	void init(int width, int height);
-	void term();
+    struct
+    {
+        GLint pos;
+        GLint texCoord0;
+        GLint MVP;
+    } _shaderData;
+
+	struct
+	{
+
+	};
+
+    static std::vector<ScalerInfo> _scalers;
+    static void _scanScalers();
+
 public:
 	static bool checkErrors;
+    /// Create a dummy renderer to populate scalers
+    OpenGLRenderer(Screen& gameScreen);
+    /// Create an OpenGL (ES) renderer and make it current
+	OpenGLRenderer(Screen& gameScreen, SDL_Window *window);
+	~OpenGLRenderer() override;
 
-	OpenGLRenderer(SDL_Window *window);
-	~OpenGLRenderer(void);
-	/// Sets the surface's pixel format
-	void setPixelFormat(Uint32 format);
-	/// Sets the size of the expected SDL_Surface.
-	void setInternalRect(SDL_Rect *srcRect);
+    virtual std::vector<std::string> getUpscalers() override;
+
+    void setUpscaler(int upscalerId) override;
+    void setUpscalerByName(const std::string &scalerName) override;
 	/// Sets the desired output rectangle.
-	void setOutputRect(SDL_Rect *dstRect);
-	/// Blits the contents of the SDL_Surface to the screen.
-	void flip(SDL_Surface *srcSurface);
-	void setShader(std::string shaderPath);
-	RendererType getRendererType() { return _rendererType; };
-	void setVSync(bool sync);
+	void setOutputRect(SDL_Rect *dstRect) override;
+	void flip() override;
+	RendererType getRendererType() override { return _rendererType; };
 	void screenshot(const std::string &filename) const;
+    /// Returns the renderer name
+    std::string getRendererName() override {return "GL";}
 };
 }
 #endif //__NO_OPENGL

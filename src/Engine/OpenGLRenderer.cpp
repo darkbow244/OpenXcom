@@ -8,10 +8,9 @@
   license: public domain
  */
 
-#ifndef __NO_OPENGL
+#if !defined (__NO_OPENGL)
 
 #include <SDL.h>
-#include <SDL_opengl.h>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 
@@ -22,6 +21,7 @@
 #include "CrossPlatform.h"
 #include "FileMap.h"
 #include "../lodepng.h"
+#include "Screen.h"
 
 namespace OpenXcom
 {
@@ -44,12 +44,6 @@ std::string strGLError(GLenum glErr)
 	case GL_INVALID_OPERATION:
 		err = "GL_INVALID_OPERATION";
 		break;
-	case GL_STACK_OVERFLOW:
-		err = "GL_STACK_OVERFLOW";
-		break;
-	case GL_STACK_UNDERFLOW:
-		err = "GL_STACK_UNDERFLOW";
-		break;
 	case GL_OUT_OF_MEMORY:
 		err = "GL_OUT_OF_MEMORY";
 		break;
@@ -64,43 +58,236 @@ std::string strGLError(GLenum glErr)
 	return err;
 }
 
-/* Helper types to convert between object pointers and function pointers.
-   Although ignored by some compilers, this conversion is an extension
-   and not guaranteed to be sane for every architecture.
- */
-typedef void (*GenericFunctionPointer)();
-typedef union {
-    GenericFunctionPointer FunctionPointer;
-    void *ObjectPointer;
-} UnsafePointerContainer;
+class Shader
+{
 
-inline static GenericFunctionPointer glGetProcAddress(const char *name) {
-    UnsafePointerContainer pc;
-    pc.ObjectPointer = SDL_GL_GetProcAddress(name);
-    return pc.FunctionPointer;
+};
+
+
+std::vector<ScalerInfo> OpenGLRenderer::_scalers;
+
+const std::string SHADER_FOLDER = "ShadersModern/";
+const std::string SHADER_EXT = "glsl.shader";
+
+
+const std::string VERTEX_PREAMBLE_ES100 =
+        "#version 100\n"
+        "\n"
+        "#define gl_Vertex pos\n"
+        "#define gl_ModelViewProjectionMatrix MVP\n"
+        "#define gl_MultiTexCoord0 texCoord0\n"
+        "#define gl_TexCoord vTexCoord\n"
+        "\n"
+        "attribute vec4 pos;\n"
+        "attribute vec4 texCoord0;\n"
+        "uniform mat4 MVP;\n"
+        "varying vec4 vTexCoord[8];\n"
+        "\n"
+        "vec4 ftransform()\n"
+        "{\n"
+        "    return MVP * pos;\n"
+        "}\n";
+
+const std::string FRAGMENT_PREAMBLE_ES100 =
+        "#version 100\n"
+        "\n"
+        "#define gl_TexCoord vTexCoord\n"
+        "#define filter safe_filter\n"
+        "\n"
+        "precision mediump float;\n"
+        "varying vec4 vTexCoord[8];";
+
+const std::string VERTEX_FALLBACK_ES100 =
+"varying vec2 vTexCoord0;\n"
+"void main()\n"
+"{\n"
+"  vTexCoord0 = texCoord0;\n"
+"  gl_Position = MVP * pos;\n"
+"}\n";
+
+
+const std::string FRAGMENT_FALLBACK_ES100 =
+"varying vec2 vTexCoord0;\n"
+"uniform sampler2D rubyTexture;\n"
+"void main()\n"
+"{\n"
+"  gl_FragColor = texture2D(rubyTexture, vTexCoord0);\n"
+"}\n";
+
+void OpenGLRenderer::_scanScalers()
+{
+	std::set<std::string> shaders = FileMap::filterFiles(FileMap::getVFolderContents(SHADER_FOLDER), SHADER_EXT);
+	for(const auto& sname : shaders)
+	{
+		ScalerInfo si;
+		si.program = -1;
+		si.path = SHADER_FOLDER + sname;
+		YAML::Node shaderDoc = YAML::LoadFile(FileMap::getFilePath(si.path));
+		si.name = shaderDoc["name"].as<std::string>(sname.substr(0, sname.length() - SHADER_EXT.length() - 1));
+		std::string shaderVer = shaderDoc["version"].as<std::string>("bad_version");
+		if (shaderVer == "essl100")
+		{
+			_scalers.push_back(si);
+		}
+	}
 }
 
-#ifndef __APPLE__
-PFNGLCREATEPROGRAMPROC glCreateProgram = 0;
-PFNGLUSEPROGRAMPROC glUseProgram = 0;
-PFNGLCREATESHADERPROC glCreateShader = 0;
-PFNGLDELETESHADERPROC glDeleteShader = 0;
-PFNGLSHADERSOURCEPROC glShaderSource = 0;
-PFNGLCOMPILESHADERPROC glCompileShader = 0;
-PFNGLATTACHSHADERPROC glAttachShader = 0;
-PFNGLDETACHSHADERPROC glDetachShader = 0;
-PFNGLLINKPROGRAMPROC glLinkProgram = 0;
-PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = 0;
-PFNGLUNIFORM1IPROC glUniform1i = 0;
-PFNGLUNIFORM2FVPROC glUniform2fv = 0;
-PFNGLUNIFORM4FVPROC glUniform4fv = 0;
-#endif
+GLint compileShader(const std::string &shaderSource, GLenum shaderType)
+{
+	GLuint shader = glCreateShader(shaderType);
+	const char* cShaderSource = shaderSource.c_str();
+	glShaderSource(shader, 1, &cShaderSource, nullptr);
+	glCompileShader(shader);
+	GLint status;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+	if (status == GL_TRUE)
+	{
+		return shader;
+	}
+	else
+	{
+		int infoLogLength;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+		char *infoLog = new char[infoLogLength];
+		glGetShaderInfoLog(shader, infoLogLength, nullptr, infoLog);
+		Log(LOG_ERROR) << "[GLRenderer] Error while compiling shader";
+		Log(LOG_ERROR) << "[GLRenderer] Shader source:\n" << shaderSource;
+		Log(LOG_ERROR) << "[GLRenderer] Compiler errors:\n" << infoLog;
+		delete[] infoLog;
+		glDeleteShader(shader);
+		return -1;
+	}
+}
 
-void * (APIENTRYP glXGetCurrentDisplay)() = 0;
-Uint32 (APIENTRYP glXGetCurrentDrawable)() = 0;
-void (APIENTRYP glXSwapIntervalEXT)(void *display, Uint32 GLXDrawable, int interval);
+GLint linkProgram(GLuint vertex, GLuint fragment)
+{
+	GLuint program = glCreateProgram();
+	glAttachShader(program, vertex);
+	glAttachShader(program, fragment);
+	glLinkProgram(program);
+	glDeleteShader(vertex);
+	glDeleteShader(fragment);
+	GLint status;
+	glGetProgramiv(program, GL_LINK_STATUS, &status);
+	if (status == GL_TRUE)
+	{
+		return program;
+	}
+	int infoLogLength;
+	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
+	char *infoLog = new char[infoLogLength];
+	glGetProgramInfoLog(program, infoLogLength, nullptr, infoLog);
+	Log(LOG_ERROR) << "[GLRenderer] Error while linking shading program";
+	Log(LOG_ERROR) << "[GLRenderer] Linker errors:\n" << infoLog;
+	delete[] infoLog;
+	glDeleteProgram(program);
+	return -1;
+}
 
-Uint32 (APIENTRYP wglSwapIntervalEXT)(int interval);
+void OpenGLRenderer::setUpscaler(int upscalerId)
+{
+	ScalerInfo &si = _scalers[upscalerId];
+	if (si.program == -1)
+	{
+		Log(LOG_DEBUG) << "[GLRenderer] Scaler " << si.name << " not in shader cache, compiling...";
+		YAML::Node shaderDoc = YAML::LoadFile(FileMap::getFilePath(si.path));
+		std::stringstream vtxSource, frgSource;
+		vtxSource << VERTEX_PREAMBLE_ES100
+				  << shaderDoc["vertex"].as<std::string>(VERTEX_FALLBACK_ES100);
+		frgSource << FRAGMENT_PREAMBLE_ES100
+				  << shaderDoc["fragment"].as<std::string>(FRAGMENT_FALLBACK_ES100);
+		GLint vertex = compileShader(vtxSource.str(), GL_VERTEX_SHADER);
+		if (vertex < 0)
+		{
+			Log(LOG_ERROR) << "[GLRenderer] Unable to compile vertex shader! Not switching scalers";
+			return;
+		}
+		GLint fragment = compileShader(frgSource.str(), GL_FRAGMENT_SHADER);
+		if (fragment < 0)
+		{
+			Log(LOG_ERROR) << "[GLRenderer] Unable to compile fragment shader! Not switching scalers";
+			glDeleteShader(vertex);
+			return;
+		}
+		si.program = linkProgram(vertex, fragment);
+		if (si.program < 0)
+		{
+			Log(LOG_ERROR) << "[GLRenderer] Could not link shader program! Not switching scalers";
+			return;
+		}
+		Log(LOG_DEBUG) << "[GLRenderer] Scaler " << si.name << " now in shader cache with number " << si.program;
+	}
+	glUseProgram(si.program);
+	_shaderData.pos = glGetAttribLocation(si.program, "pos");
+	_shaderData.texCoord0 = glGetAttribLocation(si.program, "texCoord0");
+	_shaderData.MVP = glGetUniformLocation(si.program, "MVP");
+}
+
+std::vector<std::string> OpenGLRenderer::getUpscalers()
+{
+	std::vector<std::string> result;
+	result.reserve(_scalers.size());
+	for(const auto& si : _scalers)
+	{
+		result.push_back(si.name);
+	}
+	return result;
+}
+
+void OpenGLRenderer::setUpscalerByName(const std::string &scalerName)
+{
+	for(size_t i = 0; i < _scalers.size(); ++i)
+	{
+		if (_scalers[i].name == scalerName)
+		{
+			setUpscaler(i);
+		}
+	}
+}
+
+OpenGLRenderer::flip()
+{
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+
+	SDL_GL_SwapWindow(_window);
+}
+
+OpenGLRenderer::OpenGLRenderer(Screen &gameScreen) : Renderer(gameScreen, nullptr), _screen(gameScreen), _window(nullptr)
+{
+	if (_scalers.size() == 0)
+	{
+		_scanScalers();
+	}
+}
+
+
+OpenGLRenderer::OpenGLRenderer(Screen &gameScreen, SDL_Window *window) : Renderer(gameScreen, window), _screen(gameScreen), _window(window)
+{
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+	if (_scalers.size() == 0)
+	{
+		_scanScalers();
+	}
+
+	_ctx = SDL_GL_CreateContext(_window);
+
+}
+
+OpenGLRenderer::~OpenGLRenderer()
+{
+	for(auto& si : _scalers)
+	{
+		si.program = -1;
+	}
+}
 
 
 void OpenGLRenderer::resize(unsigned width, unsigned height)
@@ -110,9 +297,6 @@ void OpenGLRenderer::resize(unsigned width, unsigned height)
 	
 	iwidth = width;
 	iheight = height;
-    //if(buffer_surface) delete buffer_surface;
-    //buffer_surface = new Surface(iwidth, iheight, 0, 0, ibpp); // use OpenXcom's Surface class to get an aligned buffer with bonus SDL_Surface
-	//buffer = (uint32_t*) buffer_surface->getSurface()->pixels;
 
     glBindTexture(GL_TEXTURE_2D, gltexture);
 	glErrorCheck();
@@ -346,16 +530,6 @@ OpenGLRenderer::OpenGLRenderer(SDL_Window *window): _window(window), gltexture(0
 }
 
 
-OpenGLRenderer::~OpenGLRenderer(void)
-{
-	term();
-	SDL_GL_DeleteContext(glContext);
-}
-
-void OpenGLRenderer::setPixelFormat(Uint32 format)
-{
-	// This should not be called, right?
-}
 void OpenGLRenderer::setInternalRect(SDL_Rect *srcRect)
 {
 	_srcRect.x = srcRect->x;

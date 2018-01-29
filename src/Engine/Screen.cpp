@@ -353,8 +353,7 @@ void Screen::resetDisplay(bool resetVideo)
 		/* FIXME: leak? */
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
 		/* Attempt to set scaling */
-		// Hack: you have to destroy and recreate a window to make it resizable.
-		SDL_SetWindowResizable(_window, (_flags & SDL_WINDOW_RESIZABLE) ? SDL_TRUE : SDL_FALSE);
+		if (_window) SDL_SetWindowResizable(_window, (_flags & SDL_WINDOW_RESIZABLE) ? SDL_TRUE : SDL_FALSE);
 		/* Now, we only need to create a window AND a renderer when we have none*/
 		if (_window == NULL)
 		{
@@ -649,7 +648,7 @@ bool Screen::isOpenGLEnabled()
 #ifdef __NO_OPENGL
 	return false;
 #else
-	return Options::useOpenGL;
+	return Options::renderer == "GL";
 #endif
 }
 
