@@ -420,7 +420,7 @@
 		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B235EF5E201C4DF200FF7AC3 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B235EF5F201C4DF200FF7AC3 /* OpenXcom-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "OpenXcom-Info.plist"; path = "/Users/sf/devel/openxcom-ios/Sources/OpenXcom/xcode-ios/OpenXcom-Info.plist"; sourceTree = "<absolute>"; };
+		B235EF5F201C4DF200FF7AC3 /* OpenXcom-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "OpenXcom-Info.plist"; sourceTree = SOURCE_ROOT; };
 		B235EF60201C4F2A00FF7AC3 /* xcom-main-image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "xcom-main-image.png"; sourceTree = SOURCE_ROOT; };
 		B235EF62201C5F1A00FF7AC3 /* SDL_image.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SDL_image.xcodeproj; path = "../../SDL_image/Xcode-iOS/SDL_image.xcodeproj"; sourceTree = "<group>"; };
 		B235EF6D201C5F3100FF7AC3 /* SDL_mixer.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = SDL_mixer.xcodeproj; path = "../../SDL_mixer/Xcode-iOS/SDL_mixer.xcodeproj"; sourceTree = "<group>"; };
@@ -431,8 +431,8 @@
 		B242423A201CB02000EB6722 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		B242423C201E2BAA00EB6722 /* bin */ = {isa = PBXFileReference; lastKnownFileType = folder; name = bin; path = ../bin; sourceTree = "<group>"; };
 		B242423E201E2BF300EB6722 /* openxcom_128x128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = openxcom_128x128.png; sourceTree = "<group>"; };
-		B28341D5201F6D7E00BAEC9D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../../src/main.cpp; sourceTree = "<group>"; };
-		B28341D6201F6D7E00BAEC9D /* lodepng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lodepng.cpp; path = ../../src/lodepng.cpp; sourceTree = "<group>"; };
+		B28341D5201F6D7E00BAEC9D /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		B28341D6201F6D7E00BAEC9D /* lodepng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lodepng.cpp; sourceTree = "<group>"; };
 		B28341DA201F6D9B00BAEC9D /* ErrorMessageState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ErrorMessageState.cpp; sourceTree = "<group>"; };
 		B28341DB201F6D9B00BAEC9D /* OptionsAdvancedState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OptionsAdvancedState.h; sourceTree = "<group>"; };
 		B28341DC201F6D9B00BAEC9D /* DeleteGameState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DeleteGameState.cpp; sourceTree = "<group>"; };
@@ -1215,7 +1215,8 @@
 				B28341D6201F6D7E00BAEC9D /* lodepng.cpp */,
 				B28341D5201F6D7E00BAEC9D /* main.cpp */,
 			);
-			path = src;
+			name = src;
+			path = ../src;
 			sourceTree = "<group>";
 		};
 		B28341D9201F6D9B00BAEC9D /* Menu */ = {
@@ -1288,8 +1289,7 @@
 				B283421A201F6D9B00BAEC9D /* ListLoadOriginalState.h */,
 				B283421B201F6D9B00BAEC9D /* CutsceneState.h */,
 			);
-			name = Menu;
-			path = ../../src/Menu;
+			path = Menu;
 			sourceTree = "<group>";
 		};
 		B283421C201F6D9B00BAEC9D /* Geoscape */ = {
@@ -1367,8 +1367,7 @@
 				B2834262201F6D9B00BAEC9D /* MultipleTargetsState.cpp */,
 				B2834263201F6D9B00BAEC9D /* Globe.h */,
 			);
-			name = Geoscape;
-			path = ../../src/Geoscape;
+			path = Geoscape;
 			sourceTree = "<group>";
 		};
 		B2834264201F6D9C00BAEC9D /* Engine */ = {
@@ -1450,8 +1449,7 @@
 				B28342C1201F6D9C00BAEC9D /* Game.cpp */,
 				B28342C2201F6D9C00BAEC9D /* ModInfo.h */,
 			);
-			name = Engine;
-			path = ../../src/Engine;
+			path = Engine;
 			sourceTree = "<group>";
 		};
 		B2834276201F6D9C00BAEC9D /* Adlib */ = {
@@ -1561,8 +1559,7 @@
 				B2834308201F6D9C00BAEC9D /* Base.h */,
 				B2834309201F6D9C00BAEC9D /* CraftWeapon.cpp */,
 			);
-			name = Savegame;
-			path = ../../src/Savegame;
+			path = Savegame;
 			sourceTree = "<group>";
 		};
 		B283430A201F6D9C00BAEC9D /* Battlescape */ = {
@@ -1669,8 +1666,7 @@
 				B283436D201F6D9C00BAEC9D /* CommendationState.h */,
 				B283436E201F6D9C00BAEC9D /* MedikitView.cpp */,
 			);
-			name = Battlescape;
-			path = ../../src/Battlescape;
+			path = Battlescape;
 			sourceTree = "<group>";
 		};
 		B283436F201F6D9C00BAEC9D /* Ufopaedia */ = {
@@ -1719,8 +1715,7 @@
 				B2834398201F6D9C00BAEC9D /* ArticleStateCraft.h */,
 				B2834399201F6D9C00BAEC9D /* ArticleStateTFTDUso.cpp */,
 			);
-			name = Ufopaedia;
-			path = ../../src/Ufopaedia;
+			path = Ufopaedia;
 			sourceTree = "<group>";
 		};
 		B283439A201F6D9C00BAEC9D /* Interface */ = {
@@ -1761,8 +1756,7 @@
 				B28343BB201F6D9C00BAEC9D /* Slider.cpp */,
 				B28343BC201F6D9C00BAEC9D /* ImageButton.cpp */,
 			);
-			name = Interface;
-			path = ../../src/Interface;
+			path = Interface;
 			sourceTree = "<group>";
 		};
 		B28343BD201F6D9D00BAEC9D /* Basescape */ = {
@@ -1849,8 +1843,7 @@
 				B283440C201F6D9D00BAEC9D /* TransfersState.h */,
 				B283440D201F6D9D00BAEC9D /* ManufactureInfoState.h */,
 			);
-			name = Basescape;
-			path = ../../src/Basescape;
+			path = Basescape;
 			sourceTree = "<group>";
 		};
 		B283440E201F6D9D00BAEC9D /* Mod */ = {
@@ -1943,8 +1936,7 @@
 				B2834463201F6D9D00BAEC9D /* RuleMissionScript.h */,
 				B2834464201F6D9D00BAEC9D /* SoundDefinition.cpp */,
 			);
-			name = Mod;
-			path = ../../src/Mod;
+			path = Mod;
 			sourceTree = "<group>";
 		};
 		B28C40E1201F6FEA008FBBCB /* Products */ = {
