@@ -1,0 +1,25 @@
+OpenXcom for iOS - Project File
+
+This project file builds OpenXcom and its dependencies to run on iOS-based devices. Be sure to have these dependencies in the proper locations! This project file assumes a directory structure like this:
+
+
+<base directory>/
+  Projects/
+    SDL_gfx/
+      SDL_gfx.xcodeproj    <-- Xcode project for SDL_gfx
+    yaml-cpp/
+      yaml-cpp.xcodeproj   <-- Xcode project for yaml-cpp
+  Sources/
+    OpenXcom/
+      xcode-ios/
+        OpenXcom.xcodeproj <-- This Xcode project
+    SDL/
+    SDL_gfx/
+    SDL_image/
+    SDL_mixer/
+    yaml-cpp/
+
+
+Note that SDL, SDL_image and SDL_mixer _must_ contain Xcode-iOS folders (with the appropriate Xcode projects).
+
+If unsure, use the https://github.com/sfalexrog/openxcom-ios convenience project.
