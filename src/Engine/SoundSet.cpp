@@ -21,6 +21,8 @@
 #include "Sound.h"
 #include "Exception.h"
 #include <sstream>
+#include <memory.h>
+
 namespace OpenXcom
 {
 

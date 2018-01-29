@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <sstream>
 #include <cfloat>
+#include <memory.h>
 
 namespace OpenXcom
 {

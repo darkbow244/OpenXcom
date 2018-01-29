@@ -38,6 +38,7 @@
 #include "../Interface/FpsCounter.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Mod/RuleInterface.h"
+#include <memory.h>
 
 namespace OpenXcom
 {

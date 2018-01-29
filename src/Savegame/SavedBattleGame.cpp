@@ -39,6 +39,7 @@
 #include "../Engine/Options.h"
 #include "../Engine/Logger.h"
 #include "SerializationHelper.h"
+#include <memory.h>
 
 namespace OpenXcom
 {
