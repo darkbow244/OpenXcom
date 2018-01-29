@@ -5,7 +5,7 @@ set ( CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules" )
 include(GNUInstallDirs)
 
 option ( DEV_BUILD "Development Build. Disable this for release builds" ON )
-option ( BUILD_PACKAGE "Prepares build for creation of a package with CPack" ON )
+option ( BUILD_PACKAGE "Prepares build for creation of a package with CPack" OFF )
 option ( ENABLE_WARNING "Always show warnings (even for release builds)" OFF )
 option ( FATAL_WARNING "Treat warnings as errors" OFF )
 option ( ENABLE_CLANG_ANALYSIS "When building with clang, enable the static analyzer" OFF )
@@ -32,9 +32,13 @@ if (CMAKE_CL_64)
 else()
   set(_WIN_ABI_PREFIX Win32)
 endif()
-if ((IS_DIRECTORY ${DEPS_DIR}/yaml-cpp) AND (NOT TARGET SDL_gfx))
+if ((IS_DIRECTORY ${DEPS_DIR}/yaml-cpp) AND (NOT TARGET YAML_CPP))
   message(STATUS "Building yaml-cpp from source")
   add_subdirectory(${DEPS_DIR}/yaml-cpp)
+elseif(TARGET YAML_CPP)
+  message(STATUS "Using external target YAML_CPP (probably because of cross-compilation)")
+  add_library(yaml-cpp INTERFACE)
+  target_link_libraries(yaml-cpp INTERFACE YAML_CPP)
 else()
   message(STATUS "Searching for yaml-cpp on your system")
   find_package(Yaml_cpp 0.5.0)
@@ -54,20 +58,31 @@ endif()
 if ((IS_DIRECTORY ${DEPS_DIR}/SDL_gfx) AND (NOT TARGET SDL_gfx))
   message(STATUS "Building patched SDL_gfx from source")
   add_subdirectory(${DEPS_DIR}/SDL_gfx)
+elseif(TARGET SDL_gfx)
+  message(STATUS "Using external target SDL_gfx - if you are seeing this, you should be cross-compiling")
 else()
   message(FATAL_ERROR "You need SDL_gfx specifically patched for SDL2 - you have to build from sources")
 endif()
 if ((IS_DIRECTORY ${DEPS_DIR}/SDL) AND (NOT TARGET SDL2))
   message(STATUS "Building SDL2 from source")
   add_subdirectory(${DEPS_DIR}/SDL)
+  # We use an interface target so that we'd be able to easily swap shared library for a static one
+  add_library(Sdl2Lib INTERFACE)
+  target_link_libraries(Sdl2Lib INTERFACE SDL2main SDL2)
+  target_include_directories(Sdl2Lib INTERFACE ${DEPS_DIR}/SDL/include)
+elseif(TARGET SDL2)
+  message(STATUS "Using external target SDL2 - if you are seeing this, you should be cross-compiling")
+  add_library(Sdl2Lib INTERFACE)
+  # Here's hoping your SDL2-static target has its headers patched in!
+  target_link_libraries(Sdl2Lib INTERFACE SDL2main SDL2-static)
 else()
   message(STATUS "Searching for SDL2 on your system")
   find_library(_SDL2_LIBRARY SDL2)
   find_library(_SDL2MAIN_LIBRARY SDL2main)
   find_path(_SDL2_INCLUDE_DIR SDL2/SDL.h)
   message("Using SDL2 library ${_SDL2_LIBRARY}")
-  add_library(SDL2 SHARED IMPORTED)
-  set_target_properties(SDL2
+  add_library(Sdl2Lib SHARED IMPORTED)
+  set_target_properties(Sdl2Lib
           PROPERTIES
           IMPORTED_LOCATION ${_SDL2_LIBRARY}
           INTERFACE_LINK_LIBRARIES ${_SDL2MAIN_LIBRARY}
@@ -78,6 +93,8 @@ endif()
 if ((IS_DIRECTORY ${DEPS_DIR}/SDL2_image) AND (NOT TARGET SDL2_image))
   message(STATUS "Building SDL2_image from source")
   add_subdirectory(${DEPS_DIR}/SDL2_image)
+elseif(TARGET SDL2_image)
+  message(STATUS "Using external target SDL2_image")
 else()
   message(STATUS "Searching for SDL2_image on your system")
   find_library(_SDL2_IMAGE_LIBRARY SDL2_image)
@@ -94,6 +111,8 @@ endif()
 if ((IS_DIRECTORY ${DEPS_DIR}/SDL2_mixer) AND (NOT TARGET SDL2_mixer))
   message(STATUS "Building SDL2_mixer from source")
   add_subdirectory(${DEPS_DIR}/SDL2_mixer)
+elseif(TARGET SDL2_mixer)
+  message(STATUS "Using external target SDL2_mixer")
 else()
   message(STATUS "Searching for SDL2_mixer on your system")
   find_library(_SDL2_MIXER_LIBRARY SDL2_mixer)
@@ -112,20 +131,26 @@ if (NOT TARGET yaml-cpp)
   message(FATAL_ERROR "yaml-cpp is not a target!")
 endif()
 # Find OpenGL
-find_package ( OpenGL )
-if ( NOT OPENGL_FOUND )
-  message ( WARNING "Can't find OpenGL; how does that even happen?\n"
-    "Continuing building without OpenGL support."
-    )
+if (ANDROID OR TRUE)
+  message(STATUS "Using OpenGL ES libraries")
+  find_library(Gles2 GLESv2)
+  set(OPENGL_gl_LIBRARY ${Gles2})
   add_definitions(-D__NO_OPENGL)
-else ()
-  message(WARNING "OpenGL temporarily disabled, REMOVE BEFORE SENDING INTO PRODUCTION")
+else()
+  find_package ( OpenGL )
+  if ( NOT OPENGL_FOUND )
+    message ( WARNING "Can't find OpenGL; how does that even happen?\n"
+            "Continuing building without OpenGL support."
+            )
     add_definitions(-D__NO_OPENGL)
+  else ()
     include_directories ( ${OPENGL_INCLUDE_DIR} )
-endif ()
+  endif ()
+endif()
+
 
 # Read version number
-set ( file "${CMAKE_SOURCE_DIR}/src/version.h" )
+set ( file "${PROJECT_SOURCE_DIR}/src/version.h" )
 file ( READ ${file} lines )
 string ( REGEX MATCH "[.]*OPENXCOM_VERSION_SHORT \"([0-9]).([0-9])" version_line "${lines}" )
 set ( CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1} )
@@ -137,7 +162,7 @@ if ( "${OPENXCOM_VERSION_STRING}" STREQUAL "" )
   if ( GIT_FOUND )
     message("git found: ${GIT_EXECUTABLE}")
     execute_process ( COMMAND ${GIT_EXECUTABLE} describe --dirty
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
       OUTPUT_VARIABLE git_describe_out
       ERROR_VARIABLE git_describe_error
       RESULT_VARIABLE git_describe_result
@@ -153,7 +178,7 @@ endif()
 
 add_definitions( -DGIT_BUILD=1 )
 
-configure_file("${CMAKE_SOURCE_DIR}/src/git_version.h.in" "${CMAKE_CURRENT_BINARY_DIR}/git_version.h" )
+configure_file("${PROJECT_SOURCE_DIR}/src/git_version.h.in" "${CMAKE_CURRENT_BINARY_DIR}/git_version.h" )
 include_directories ( "${CMAKE_CURRENT_BINARY_DIR}" )
 
 
@@ -186,10 +211,10 @@ if ( BUILD_PACKAGE )
 
   set ( CPACK_PACKAGE_VENDOR "The OpenXcom project" )
   set ( CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open-source clone of UFO: Enemy Unknown" )
-  set ( CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/cmake/modules/Description.txt" )
-  set ( CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md" )
+  set ( CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_SOURCE_DIR}/cmake/modules/Description.txt" )
+  set ( CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md" )
   if ( NOT APPLE )
-    set ( CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt" )
+    set ( CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE.txt" )
   endif ()
   set ( CPACK_PACKAGE_CONTACT "The OpenXcom project (http://www.openxcom.org)" )
 
@@ -203,13 +228,13 @@ if ( BUILD_PACKAGE )
 endif()
 
 if ( NOT WIN32 )
-  install(FILES "${CMAKE_SOURCE_DIR}/res/linux/openxcom.desktop"
+  install(FILES "${PROJECT_SOURCE_DIR}/res/linux/openxcom.desktop"
     DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/applications")
-  install(FILES "${CMAKE_SOURCE_DIR}/res/linux/icons/openxcom_48x48.png"
+  install(FILES "${PROJECT_SOURCE_DIR}/res/linux/icons/openxcom_48x48.png"
     DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/48x48/apps" RENAME openxcom.png)
-  install(FILES "${CMAKE_SOURCE_DIR}/res/linux/icons/openxcom_128x128.png"
+  install(FILES "${PROJECT_SOURCE_DIR}/res/linux/icons/openxcom_128x128.png"
     DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/128x128/apps" RENAME openxcom.png)
-  install(FILES "${CMAKE_SOURCE_DIR}/res/linux/icons/openxcom.svg"
+  install(FILES "${PROJECT_SOURCE_DIR}/res/linux/icons/openxcom.svg"
     DESTINATION "${CMAKE_INSTALL_FULL_DATAROOTDIR}/icons/hicolor/scalable/apps")
 endif ()
 

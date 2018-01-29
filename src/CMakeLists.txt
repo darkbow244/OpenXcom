@@ -117,7 +117,7 @@ set ( engine_src
   Engine/LocalizedText.cpp
   Engine/ModInfo.cpp
   Engine/Music.cpp
-  #Engine/OpenGLRenderer.cpp
+  Engine/OpenGLRenderer.cpp
   Engine/OptionInfo.cpp
   Engine/Options.cpp
   Engine/Palette.cpp
@@ -433,7 +433,12 @@ if ( FORCE_INSTALL_DATA_TO_BIN )
   set ( data_install_dir bin )
 endif ()
 
-add_executable ( openxcom  ${application_type} ${openxcom_src} )
+if (ANDROID)
+  add_library( openxcom SHARED ${openxcom_src})
+else()
+  add_executable ( openxcom  ${application_type} ${openxcom_src} )
+endif()
+
 install ( TARGETS openxcom ${install_dest} DESTINATION ${CMAKE_INSTALL_BINDIR} )
 # Extra link flags for Windows. They need to be set before the SDL/YAML link flags, otherwise you will get strange link errors ('Undefined reference to WinMain@16')
 if ( WIN32 )
@@ -457,7 +462,7 @@ endif ()
 
 target_link_libraries ( openxcom
         ${system_libs}
-        SDL2
+        Sdl2Lib
         SDL2_image
         SDL2_mixer
         SDL_gfx
