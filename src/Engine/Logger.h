@@ -27,6 +27,9 @@
 #ifdef ANDROID
 #include <android/log.h>
 #endif
+#ifdef IPHONE
+#include <os/log.h>
+#endif
 
 namespace OpenXcom
 {
@@ -93,6 +96,9 @@ inline Logger::~Logger()
 	{
 		__android_log_print(ANDROID_LOG_INFO, "OpenXcom", "%s", ss.str().c_str());
 	}
+#endif
+#ifdef IPHONE
+    os_log(OS_LOG_DEFAULT, "%s", ss.str().c_str());
 #endif
 	if (logToFile())
 	{
