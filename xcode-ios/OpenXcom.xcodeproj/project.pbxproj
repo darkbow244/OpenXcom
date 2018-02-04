@@ -342,10 +342,10 @@
 		B283459D201F6D9E00BAEC9D /* Polyline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B283445D201F6D9D00BAEC9D /* Polyline.cpp */; };
 		B283459E201F6D9E00BAEC9D /* RuleTerrain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2834460201F6D9D00BAEC9D /* RuleTerrain.cpp */; };
 		B283459F201F6D9E00BAEC9D /* SoundDefinition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2834464201F6D9D00BAEC9D /* SoundDefinition.cpp */; };
-		B28C40EC201F7094008FBBCB /* libSDL2_image.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B28341CF201F6CAA00BAEC9D /* libSDL2_image.a */; };
-		B28C40ED201F709B008FBBCB /* libSDL2_mixer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B28341C5201F6C9700BAEC9D /* libSDL2_mixer.a */; };
 		B28C40EE201F70A1008FBBCB /* libSDL_gfx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B28C40EB201F700A008FBBCB /* libSDL_gfx.a */; };
 		B28C40EF201F70A6008FBBCB /* libyaml-cpp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B28C40E5201F6FEA008FBBCB /* libyaml-cpp.a */; };
+		B2954EFF202248B400F5E3DF /* libSDL2_image.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B28341CF201F6CAA00BAEC9D /* libSDL2_image.a */; };
+		B2954F00202248BA00F5E3DF /* libSDL2_mixer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B28341C5201F6C9700BAEC9D /* libSDL2_mixer.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -411,6 +411,34 @@
 			proxyType = 2;
 			remoteGlobalIDString = B28C403F201F6E08008FBBCB;
 			remoteInfo = SDL_gfx;
+		};
+		B2954F01202248FD00F5E3DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B2423E34201C7C2100EB6722 /* yaml-cpp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = B28C4074201F6F00008FBBCB;
+			remoteInfo = "yaml-cpp";
+		};
+		B2954F032022490800F5E3DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B28C40E6201F7009008FBBCB /* SDL_gfx.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = B28C403E201F6E08008FBBCB;
+			remoteInfo = SDL_gfx;
+		};
+		B2954F052022490D00F5E3DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B235EF6D201C5F3100FF7AC3 /* SDL_mixer.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = BE1FA90707AF96B2004B6283;
+			remoteInfo = "libSDL_mixer-iOS";
+		};
+		B2954F072022491100F5E3DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B235EF62201C5F1A00FF7AC3 /* SDL_image.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = BE1FA72F07AF4C45004B6283;
+			remoteInfo = "libSDL_image-iOS";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1092,13 +1120,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				B28C40EF201F70A6008FBBCB /* libyaml-cpp.a in Frameworks */,
-				B28C40EE201F70A1008FBBCB /* libSDL_gfx.a in Frameworks */,
-				B28C40ED201F709B008FBBCB /* libSDL2_mixer.a in Frameworks */,
-				B28C40EC201F7094008FBBCB /* libSDL2_image.a in Frameworks */,
 				B242423B201CB02000EB6722 /* Metal.framework in Frameworks */,
 				B2424236201C9D0F00EB6722 /* MobileCoreServices.framework in Frameworks */,
 				B2424234201C9CCF00EB6722 /* ImageIO.framework in Frameworks */,
 				B2423DB8201C6FAD00EB6722 /* libSDL2.a in Frameworks */,
+				B2954EFF202248B400F5E3DF /* libSDL2_image.a in Frameworks */,
+				B2954F00202248BA00F5E3DF /* libSDL2_mixer.a in Frameworks */,
+				B28C40EE201F70A1008FBBCB /* libSDL_gfx.a in Frameworks */,
 				B235EF51201C4DF200FF7AC3 /* AVFoundation.framework in Frameworks */,
 				B235EF52201C4DF200FF7AC3 /* GameController.framework in Frameworks */,
 				B235EF53201C4DF200FF7AC3 /* CoreMotion.framework in Frameworks */,
@@ -1969,6 +1997,10 @@
 			buildRules = (
 			);
 			dependencies = (
+				B2954F082022491100F5E3DF /* PBXTargetDependency */,
+				B2954F062022490D00F5E3DF /* PBXTargetDependency */,
+				B2954F042022490800F5E3DF /* PBXTargetDependency */,
+				B2954F02202248FD00F5E3DF /* PBXTargetDependency */,
 				B2424205201C915000EB6722 /* PBXTargetDependency */,
 			);
 			name = Game;
@@ -2437,6 +2469,26 @@
 			name = "libSDL-iOS";
 			targetProxy = B2424204201C915000EB6722 /* PBXContainerItemProxy */;
 		};
+		B2954F02202248FD00F5E3DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "yaml-cpp";
+			targetProxy = B2954F01202248FD00F5E3DF /* PBXContainerItemProxy */;
+		};
+		B2954F042022490800F5E3DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SDL_gfx;
+			targetProxy = B2954F032022490800F5E3DF /* PBXContainerItemProxy */;
+		};
+		B2954F062022490D00F5E3DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "libSDL_mixer-iOS";
+			targetProxy = B2954F052022490D00F5E3DF /* PBXContainerItemProxy */;
+		};
+		B2954F082022491100F5E3DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "libSDL_image-iOS";
+			targetProxy = B2954F072022491100F5E3DF /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -2459,6 +2511,7 @@
 					"../../yaml-cpp/include",
 				);
 				INFOPLIST_FILE = "OpenXcom-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.sfalexrog.OpenXcom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2484,6 +2537,7 @@
 					"../../yaml-cpp/include",
 				);
 				INFOPLIST_FILE = "OpenXcom-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				PRODUCT_BUNDLE_IDENTIFIER = me.sfalexrog.OpenXcom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
