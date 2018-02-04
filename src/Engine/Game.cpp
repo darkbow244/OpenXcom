@@ -241,16 +241,18 @@ void Game::run()
 					break;
 				/* Don't pause/resume twice, let Music handle the music */
 				case SDL_APP_WILLENTERBACKGROUND:
+                case SDL_APP_DIDENTERBACKGROUND:
 					Music::pause();
 					// Workaround for SDL2_mixer bug https://bugzilla.libsdl.org/show_bug.cgi?id=2480
-					SDL_LockAudio();
+					//SDL_LockAudio();
 					// Probably won't do a thing, but still
 					runningState = PAUSED;
 					break;
 				case SDL_APP_WILLENTERFOREGROUND:
+                case SDL_APP_DIDENTERFOREGROUND:
 					runningState = RUNNING;
 					// Workaround for SDL2_mixer bug https://bugzilla.libsdl.org/show_bug.cgi?id=2480
-					SDL_UnlockAudio();
+					//SDL_UnlockAudio();
 					Music::resume();
 					break;
 				/* Watch for these messages for debugging purposes */
